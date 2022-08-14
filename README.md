@@ -1,1 +1,1 @@
-# fuites-anarchive
+# repository for the fuites digital anarchive
