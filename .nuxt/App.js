@@ -6,6 +6,8 @@ import NuxtError from './components/nuxt-error.vue'
 import NuxtLoading from './components/nuxt-loading.vue'
 import NuxtBuildIndicator from './components/nuxt-build-indicator'
 
+import '../assets/scss/main.scss'
+
 import _4bffa4eb from '../layouts/compost.vue'
 import _78097199 from '../layouts/spaze.vue'
 import _6f6c098b from './layouts/default.vue'

@@ -1,0 +1,36 @@
+@import 'normalize';
+
+// ///////////////////////////////////////////////////////////////////// General
+// -----------------------------------------------------------------------------
+html, body {
+  background-color: white;
+  font-size: 16px;
+  color: $white;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  &.no-scroll {
+    overflow-y: hidden;
+  }
+  &.smooth-scroll {
+    scroll-behavior: smooth;
+  }
+  &.no-cursor {
+    cursor: none;
+  }
+  * {
+    box-sizing: border-box;
+    &:before,
+    &:after {
+      box-sizing: border-box;
+    }
+  }
+}
+
+a, button {
+  background-color: transparent;
+  text-decoration: none;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}

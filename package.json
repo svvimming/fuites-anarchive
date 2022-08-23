@@ -1,5 +1,6 @@
 {
   "name": "fuites-anarchive",
+  "version": "1.0.0",
   "scripts": {
     "dev": "nuxt",
     "build": "nuxt build",
@@ -7,7 +8,10 @@
     "start": "nuxt start"
   },
   "dependencies": {
+    "@nuxtjs/style-resources": "^1.2.1",
     "nuxt": "^2.15.8",
-    "sass": "^1.54.5"
+    "sass": "^1.43.5",
+    "sass-loader": "^10.3.1",
+    "webpack": "^4.45.0"
   }
 }

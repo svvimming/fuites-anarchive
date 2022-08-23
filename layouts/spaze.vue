@@ -8,7 +8,7 @@
 
     <section class="pocket-wrapper">
 
-      <button class="pocket-toggle" @click="togglePocket">*</button>
+      <button class="pocket-toggle" @click="togglePocket">*****</button>
 
       <div :class="['pocket-container', { open: pocketIsOpen }]">
         <Pocket />
@@ -21,7 +21,7 @@
 
 <script>
 // ====================================================================== Import
-import Pocket from '@/components/pocket'
+import Pocket from '@/modules/pocket/components/pocket'
 
 // ====================================================================== Export
 export default {
@@ -45,7 +45,8 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+// /////////////////////////////////////////////////////////////// Scoped Styles
 .super-container {
   position: relative;
 }
@@ -74,15 +75,15 @@ export default {
 
 .pocket-container {
   position: relative;
-  width: 0;
+  width: 50vw;
   height: 100vh;
   overflow: hidden;
   transition: 250ms ease;
+  transform: translateX(100%);
   background-color: rgba(0, 255, 100, 0.1);
-}
-
-.pocket-container.open {
-  width: 50vw;
+  &.open {
+    transform: translateX(0%);
+  }
 }
 
 .pocket-toggle {

@@ -4,9 +4,14 @@
 </template>
 
 <script>
+// ====================================================================== Export
 export default {
+  name: 'Index',
+
   layout: 'spaze',
 
-  name: 'Index'
+  async fetch ({ app, store }) {
+    await store.dispatch('pocket/retrieveThingies')
+  }
 }
 </script>
