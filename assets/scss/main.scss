@@ -34,3 +34,13 @@ a, button {
   margin: 0;
   border: 0;
 }
+
+.thingie {
+  position: absolute;
+  &.image,
+  &.text,
+  &.sound,
+  &.video {
+    position: absolute;
+  }
+}

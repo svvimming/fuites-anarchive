@@ -1,0 +1,23 @@
+{
+  "thingie": {
+    "consistency": "",
+    "component": "",
+    "props": {},
+    "current_location": {
+      "spaze": "",
+      "at": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "last_location": {
+      "spaze": "",
+      "at": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    }
+  }
+}

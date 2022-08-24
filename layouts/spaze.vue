@@ -6,11 +6,11 @@
     </section>
 
 
-    <section class="pocket-wrapper">
+    <section :class="['pocket-wrapper', { open: pocketIsOpen }]">
 
       <button class="pocket-toggle" @click="togglePocket">*****</button>
 
-      <div :class="['pocket-container', { open: pocketIsOpen }]">
+      <div class="pocket-container">
         <Pocket />
       </div>
 
@@ -33,8 +33,20 @@ export default {
 
   data () {
     return {
-      pocketIsOpen: false
+      pocketIsOpen: false,
+      tab: false
     }
+  },
+
+  mounted() {
+    this.tab = (e) => {
+      if (e.keyCode === 65) { this.togglePocket() };
+    }
+    document.addEventListener('keydown', this.tab)
+  },
+
+  beforeDestroy() {
+    document.removeEventListener('keydown', this.tab)
   },
 
   methods: {
@@ -71,6 +83,11 @@ export default {
   top: 0;
   width: auto;
   height: auto;
+  transition: 250ms ease;
+  transform: translateX(100%);
+  &.open {
+    transform: translateX(0%);
+  }
 }
 
 .pocket-container {
@@ -79,11 +96,7 @@ export default {
   height: 100vh;
   overflow: hidden;
   transition: 250ms ease;
-  transform: translateX(100%);
   background-color: rgba(0, 255, 100, 0.1);
-  &.open {
-    transform: translateX(0%);
-  }
 }
 
 .pocket-toggle {

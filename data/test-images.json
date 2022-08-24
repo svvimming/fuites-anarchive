@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "path": "/test-images/airplane-kiss.png",
+      "consistency": "floating-romantic-giants"
+    },
+    {
+      "path": "/test-images/typewriter.jpeg",
+      "consistency": "blue-clicky-flinging"
+    },
+    {
+      "path": "/test-images/wiioooples.jpeg",
+      "consistency": "liquid-swirling-sunburn"
+    }
+  ]
+}
