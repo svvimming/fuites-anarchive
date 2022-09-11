@@ -6,14 +6,16 @@ import CloneDeep from 'lodash/cloneDeep'
 // -----------------------------------------------------------------------------
 const state = () => ({
   spazeThingies: [],
-  pocketThingies: []
+  pocketThingies: [],
+  compostThingies: []
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
   spazeThingies: state => state.spazeThingies,
-  pocketThingies: state => state.pocketThingies
+  pocketThingies: state => state.pocketThingies,
+  compostThingies: state => state.compostThingies
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -62,6 +64,7 @@ const actions = {
   },
   // //////////////////////////////////////////////////////////////// addThingie
   moveThingie ({ commit, getters, dispatch }, incoming) {
+    console.log(getters)
     const consistency = incoming.consistency
     const collection = `${incoming.current_location}Thingies`
     const thingie = CloneDeep(getters[collection].find(obj => obj.consistency === consistency))
