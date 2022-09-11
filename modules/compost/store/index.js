@@ -1,32 +1,29 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  thingies: []
+  compostIsOpen: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
-  thingies: state => state.thingies
+  compostIsOpen: state => state.compostIsOpen
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
   // //////////////////////////////////////////////////////////////// addThingie
-  addThingies ({ commit, getters }, incoming) {
-    const newThingies = Array.isArray(incoming) ? incoming : [incoming]
-    commit('ADD_THINGIES', newThingies)
+  setCompostState ({ commit }, incoming) {
+    commit('SET_COMPOST_STATE', incoming)
   }
 }
 
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  ADD_THINGIES (state, incoming) {
-    incoming.forEach(thingie => {
-      state.thingies.push(thingie)
-    })
+  SET_COMPOST_STATE (state, incoming) {
+    state.compostIsOpen = incoming
   }
 }
 

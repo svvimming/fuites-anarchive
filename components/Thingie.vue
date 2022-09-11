@@ -2,15 +2,6 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-// =================================================================== Functions
-const updateThingie = (instance, update) => {
-  switch (instance.location) {
-    case 'pocket': instance.updatePocketThingie(update); break
-    case 'spaze': instance.updateSpazeThingie(update); break
-    case 'compost': instance.updateCompostThingie(update); break
-    default : console.log('this thingie is nowhere!')
-  }
-}
 // ====================================================================== Export
 export default {
   name: 'Thingie',
@@ -41,9 +32,8 @@ export default {
 
   computed: {
     ...mapGetters({
-      compostThingies: 'compost/thingies',
-      pocketThingies: 'pocket/thingies',
-      spazeThingies: 'spaze/thingies'
+      pocketThingies: 'collections/pocketThingies',
+      spazeThingies: 'collections/spazeThingies'
     }),
     thingie () {
       if (this.location) {
@@ -54,7 +44,7 @@ export default {
       return false
     },
     position () {
-      if (this.thingie) { return this.thingie.current_location.at }
+      if (this.thingie) { return this.thingie.at }
       return { x: 0, y: 0, z: 0 }
     },
     styles () {
@@ -71,8 +61,7 @@ export default {
 
   methods: {
     ...mapActions({
-      updatePocketThingie: 'pocket/updateThingie',
-      updateSpazeThingie: 'spaze/updateThingie'
+      updateThingie: 'collections/updateThingie'
     }),
     mousedown (evt) {
       if (!evt.shiftKey) {
@@ -103,18 +92,16 @@ export default {
       this.clientY = 0
       this.deltaX = 0
       this.deltaY = 0
-      updateThingie(this, {
+      this.updateThingie({
         consistency: this.consistency,
+        current_location: this.location,
         data: [
           {
-            key: 'current_location',
+            key: 'at',
             value: {
-              spaze: this.location,
-              at: {
-                x: this.position.x + deltaX,
-                y: this.position.y + deltaY,
-                z: this.position.z
-              }
+              x: this.position.x + deltaX,
+              y: this.position.y + deltaY,
+              z: this.position.z
             }
           }
         ]

@@ -9,7 +9,7 @@
 
       <Thingie
         :consistency="thingie.consistency"
-        :location="thingie.current_location.spaze">
+        :location="thingie.current_location">
         <img
           slot-scope="{ mousedown, startDrag, styles }"
           :src="thingie.props.src"
@@ -46,24 +46,24 @@ export default {
 
   computed: {
     ...mapGetters({
-      thingies: 'pocket/thingies'
+      thingies: 'collections/pocketThingies'
     })
   },
 
   methods: {
     ...mapActions({
-      moveSpazeThingie: 'spaze/moveThingie'
+      moveThingie: 'collections/moveThingie'
     }),
     onDrop (evt) {
       evt.preventDefault()
       const consistency = evt.dataTransfer.getData('consistency')
       const origin = evt.dataTransfer.getData('location')
-      switch (origin) {
-        case 'spaze': this.moveSpazeThingie({
+      if (origin !== this.zone) {
+        this.moveThingie({
           consistency,
-          newLocation: this.zone
-        }); break
-        default : null
+          current_location: origin,
+          new_location: this.zone
+        })
       }
     }
   }
