@@ -8,7 +8,7 @@
 
     <section :class="['pocket-wrapper', { open: pocketIsOpen }]">
 
-      <button class="pocket-toggle" @click="togglePocket">*****</button>
+      <button class="pocket-toggle" @click="togglePocket">Click Me!</button>
 
       <div class="pocket-container">
         <Pocket />
@@ -104,6 +104,14 @@ export default {
   top: 0;
   left: 0;
   transform: translateX(-100%);
+  color: rgba(tomato, 0.7);
+  padding: 0.5rem;
+  background-color: rgba(white, 0.7);
+  transition: 200ms ease;
+  &:hover {
+    color: rgba(tomato, 1);
+    background-color: rgba(white, 1);
+  }
 }
 
 </style>

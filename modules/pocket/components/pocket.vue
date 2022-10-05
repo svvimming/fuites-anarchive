@@ -5,6 +5,11 @@
     @dragover.prevent
     @dragenter.prevent>
 
+    <div class="help-me">
+      Drag items to reposition<br>
+      Hold shift while dragging to drag and drop
+    </div>
+
     <template v-for="thingie in thingies">
 
       <Thingie
@@ -80,5 +85,11 @@ export default {
 
 .image {
   width: 160px;
+}
+
+.help-me {
+  width: 100%;
+  text-align: center;
+  color: rgba(black, 0.7);
 }
 </style>
