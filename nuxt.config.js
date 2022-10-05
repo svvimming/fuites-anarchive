@@ -19,6 +19,7 @@ export default {
   // ---------------------------------------------------------------------------
   modules: [
     '@nuxtjs/style-resources',
+    '~/modules/https',
     '~/modules/pocket'
   ]
 }
