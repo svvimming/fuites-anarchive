@@ -5,6 +5,7 @@ import CloneDeep from 'lodash/cloneDeep'
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
+  authenticated: false,
   clipboard: false,
   filterValue: '',
   loaders: []
@@ -13,6 +14,7 @@ const state = () => ({
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
+  authenticated: state => state.authenticated,
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
   loaders: state => state.loaders
@@ -44,6 +46,25 @@ const actions = {
     if (index !== -1) {
       commit('REMOVE_LOADER', index)
     }
+  },
+  // ////////////////////////////////////////////////////////////// authenticate
+  async authenticate ({ commit, getters }, token) {
+    try {
+      const response = await this.$axiosAuth.get('/authenticate', {
+        params: { token }
+      })
+      const authenticated = response.data.payload
+      this.$toaster.addToast({
+        type: 'toast',
+        category: authenticated ? 'success' : 'error',
+        message: response.data.message
+      })
+      commit('SET_AUTHENTICATION_STATUS', authenticated)
+    } catch (e) {
+      console.log('====================== [Store Action: general/authenticate]')
+      console.log(e)
+      commit('SET_AUTHENTICATION_STATUS', false)
+    }
   }
 }
 
@@ -67,6 +88,9 @@ const mutations = {
   },
   REMOVE_LOADER (state, index) {
     state.loaders.splice(index, 1)
+  },
+  SET_AUTHENTICATION_STATUS (state, status) {
+    state.authenticated = status
   }
 }
 

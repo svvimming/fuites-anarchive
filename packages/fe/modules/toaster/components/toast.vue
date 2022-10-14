@@ -90,7 +90,6 @@ $toastError: red;
 
 // ///////////////////////////////////////////////////////////////////// General
 .toast {
-  @include shadow2;
   width: 30rem;
   overflow: hidden;
   @include customMaxMQ (32rem) {

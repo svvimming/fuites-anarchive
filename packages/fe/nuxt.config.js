@@ -56,7 +56,8 @@ export default {
     '@nuxtjs/axios', // Doc: https://axios.nuxtjs.org/usage
     'nuxt-socket-io', // Doc: https://nuxt-socket-io.netlify.app/
     '~/modules/https',
-    '~/modules/pocket'
+    '~/modules/pocket',
+    '~/modules/toaster'
   ],
   // /////////////////////////////////////////////////////////////////// Plugins
   // ---------------------------------------------------------------------------
@@ -79,5 +80,11 @@ export default {
         } return uri
       }())
     }]
+  },
+  // ////////////////////////////////////////////////////////// [Plugin] Toaster
+  // ---------------------------------------------------------------------------
+  toaster: {
+    display: 10,
+    timeout: 5000
   }
 }

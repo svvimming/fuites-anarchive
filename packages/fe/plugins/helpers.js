@@ -1,6 +1,7 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 import Filesize from 'filesize'
+import Cookie from 'cookie'
 import CloneDeepWith from 'lodash/cloneDeepWith'
 
 // /////////////////////////////////////////////////////////////////// Functions
@@ -323,6 +324,12 @@ const OmitDeep = (collection, excludeKeys) => {
   return CloneDeepWith(collection, omit)
 }
 
+// /////////////////////////////////////////////////////////////////// GetCookie
+const GetCookie = (string, key) => {
+  const cookies = Cookie.parse(string)
+  return cookies.hasOwnProperty(key) ? cookies[key] : false
+}
+
 // /////////////////////////////////////////////////////////////// ParseFilename
 const ParseFilename = (filename) => {
   return {
@@ -390,6 +397,7 @@ export default ({ $config, app }, inject) => {
   inject('addTextToClipboard', AddTextToClipboard)
   inject('downloadTextFile', DownloadTextFile)
   inject('omitDeep', OmitDeep)
+  inject('getCookie', GetCookie)
   inject('parseFilename', ParseFilename)
   inject('delay', Delay)
   inject('awaitServerReconnect', AwaitServerReconnect($config, app))
