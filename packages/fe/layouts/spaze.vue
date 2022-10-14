@@ -1,10 +1,11 @@
 <template>
   <div class="super-container viewport">
 
+    <Toaster />
+
     <section class="spaze-container">
       <Nuxt />
     </section>
-
 
     <section :class="['pocket-wrapper', { open: pocketIsOpen }]">
 
@@ -22,31 +23,21 @@
 <script>
 // ====================================================================== Import
 import Pocket from '@/modules/pocket/components/pocket'
+import Toaster from '@/modules/toaster/components/toaster'
 
 // ====================================================================== Export
 export default {
   name: 'spaze',
 
   components: {
-    Pocket
+    Pocket,
+    Toaster
   },
 
   data () {
     return {
-      pocketIsOpen: true,
-      tab: false
+      pocketIsOpen: true
     }
-  },
-
-  mounted () {
-    this.tab = (e) => {
-      if (e.keyCode === 65) { this.togglePocket() }
-    }
-    document.addEventListener('keydown', this.tab)
-  },
-
-  beforeDestroy () {
-    document.removeEventListener('keydown', this.tab)
   },
 
   methods: {
