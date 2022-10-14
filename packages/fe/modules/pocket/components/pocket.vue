@@ -26,7 +26,6 @@
           @mousedown="initMousedown($event, mousedown, thingie)"
           @mouseup="initMouseup($event, mouseup, thingie)"
           @dragstart="startDrag($event)">
-          {{ thingie.dragging }}
           <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
         </div>
       </Thingie>
