@@ -135,8 +135,7 @@ export default {
       }
     },
     clickFileInput () {
-      this.status = 'idle'
-      this.$refs.fileInput.value = null
+      this.clearFileInput()
       this.$refs.fileInput.click()
     },
     clearFileInput () {
