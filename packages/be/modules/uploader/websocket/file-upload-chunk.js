@@ -26,7 +26,6 @@ MC.socket.listeners.push({
       file.write(chunk)
       file.end()
       if (data.place > data.goal) {
-        console.log(`${TMP_UPLOADS_DIR}/${fileId}`, `${UPLOADS_DIR}/${fileId}.${fileExt}`)
         await Fs.move(`${TMP_UPLOADS_DIR}/${fileId}`, `${UPLOADS_DIR}/${fileId}.${fileExt}`)
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
