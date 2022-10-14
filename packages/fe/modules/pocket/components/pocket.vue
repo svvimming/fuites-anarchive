@@ -26,6 +26,7 @@
           @mousedown="initMousedown($event, mousedown, thingie)"
           @mouseup="initMouseup($event, mouseup, thingie)"
           @dragstart="startDrag($event)">
+          {{ thingie.dragging }}
           <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
         </div>
       </Thingie>
@@ -112,7 +113,8 @@ export default {
       const thingieId = evt.dataTransfer.getData('_id')
       this.socket.emit('update-thingie', {
         _id: thingieId,
-        location: 'pocket'
+        location: 'pocket',
+        dragging: false
       })
     }
   }
