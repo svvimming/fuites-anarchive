@@ -1,0 +1,55 @@
+{
+  "name": "fuites-anarchive-be",
+  "version": "1.0.0",
+  "description": "Backend",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon --exec 'npm run lint:staged && node app.js'",
+    "lint:staged": "./node_modules/.bin/eslint -c .eslintrc.js $(git diff HEAD --name-only --relative --diff-filter=ACMRTUXB | grep  -E \"(.js$|.ts$)\")",
+    "lint:full": "./node_modules/.bin/eslint ./ --ext .js --ext .ts",
+    "reload:production": "pm2 reload fuites-be",
+    "reload:stable": "pm2 reload fuites-stable-be"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "node_modules/*",
+      "cache/*",
+      "tmp/*",
+      "public/*"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svvimming/fuites-anarchive.git"
+  },
+  "devDependencies": {
+    "eslint": "^8.24.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.3.0",
+    "eslint-plugin-promise": "^6.0.1",
+    "nodemon": "^2.0.20"
+  },
+  "dependencies": {
+    "axios": "^1.1.2",
+    "body-parser": "^1.20.1",
+    "connect-mongo": "^4.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "filesize": "^10.0.5",
+    "fs-extra": "^10.1.0",
+    "helmet": "^6.0.0",
+    "lodash": "^4.17.20",
+    "mime": "^3.0.0",
+    "minimist": "^1.2.5",
+    "module-alias": "^2.2.2",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.37",
+    "mongoose": "^6.6.5",
+    "mongoose-slug-updater": "^3.2.3",
+    "socket.io": "^4.5.2",
+    "socket.io-client": "^4.5.2"
+  }
+}

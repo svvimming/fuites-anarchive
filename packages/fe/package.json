@@ -1,0 +1,25 @@
+{
+  "name": "fuites-anarchive-fe",
+  "version": "1.0.0",
+  "description": "Frontend",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svvimming/fuites-anarchive.git"
+  },
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "start": "nuxt start"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/style-resources": "^1.2.1",
+    "filesize": "^8.0.7",
+    "nuxt": "^2.15.8",
+    "nuxt-socket-io": "^2.0.3",
+    "sass": "^1.43.5",
+    "sass-loader": "^10.3.1",
+    "webpack": "^4.46.0"
+  }
+}

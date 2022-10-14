@@ -1,3 +1,8 @@
+# ================================================================= [package] be
+packages/be/public
+packages/be/tmp
+
+# ====================================================================== General
 # SSL keys
 localhost_cert.pem
 localhost_key.pem
