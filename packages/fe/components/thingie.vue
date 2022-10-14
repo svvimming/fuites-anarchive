@@ -13,25 +13,14 @@ export default {
     }
   },
 
-  data () {
-    return {
-      mouseX: false,
-      mouseY: false,
-      clientX: 0,
-      clientY: 0,
-      deltaX: 0,
-      deltaY: 0
-    }
-  },
-
   computed: {
     position () {
       return this.thingie.at
     },
     styles () {
       return {
-        left: this.position.x - this.deltaX + 'px',
-        top: this.position.y - this.deltaY + 'px',
+        left: this.position.x + 'px',
+        top: this.position.y + 'px',
         zIndex: this.position.z + 'px'
       }
     }
@@ -45,11 +34,6 @@ export default {
       console.log('mousedown')
       if (!evt.shiftKey) {
         evt.preventDefault()
-        // get the mouse cursor position at startup:
-        this.mouseX = evt.clientX
-        this.mouseY = evt.clientY
-        this.clientX = evt.clientX
-        this.clientY = evt.clientY
         document.onmousemove = this.drag
         document.onmouseup = this.mouseup
       }
@@ -57,17 +41,15 @@ export default {
     drag (evt) {
       console.log('drag')
       evt.preventDefault()
-      this.deltaX = this.deltaX + this.clientX - event.clientX
-      this.deltaY = this.deltaY + this.clientY - event.clientY
-      this.clientX = event.clientX
-      this.clientY = event.clientY
-      const deltaX = evt.clientX - this.mouseX
-      const deltaY = evt.clientY - this.mouseY
+      const parent = this.$parent.$el
+      const rect = parent.getBoundingClientRect()
+      const x = evt.clientX - rect.left
+      const y = evt.clientY - rect.top
       this.$emit('drag', {
         _id: this.thingie._id,
         at: {
-          x: deltaX,
-          y: deltaY,
+          x: x,
+          y: y,
           z: this.position.z
         }
       })
@@ -75,27 +57,8 @@ export default {
     mouseup (evt) {
       console.log('mouseup')
       evt.preventDefault()
-      const deltaX = evt.clientX - this.mouseX
-      const deltaY = evt.clientY - this.mouseY
       document.onmousemove = null
       document.onmouseup = null
-      this.clientX = 0
-      this.clientY = 0
-      this.deltaX = 0
-      this.deltaY = 0
-      // this.updateThingie({
-      //   // current_location: this.location,
-      //   data: [
-      //     {
-      //       key: 'at',
-      //       value: {
-      //         x: this.position.x + deltaX,
-      //         y: this.position.y + deltaY,
-      //         z: this.position.z
-      //       }
-      //     }
-      //   ]
-      // })
     },
     startDrag (evt) {
       console.log('startDrag')
