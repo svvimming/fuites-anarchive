@@ -31,8 +31,8 @@ module.exports = {
     const env = process.env.SERVER_ENV
     let uri = 'https://localhost:3001'
     switch (env) {
-      case 'stable': uri = 'https://stable.fuit.es'; break
-      case 'production': uri = 'https://fuit.es'; break
+      case 'stable': uri = 'https://stable.fuit.es/api'; break
+      case 'production': uri = 'https://fuit.es/api'; break
     } return uri
   }()),
   // ==================================================================== Server
