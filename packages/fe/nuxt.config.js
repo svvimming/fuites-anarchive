@@ -7,16 +7,16 @@ export default {
       const env = process.env.SERVER_ENV
       let uri = 'https://localhost:2001'
       switch (env) {
-        case 'stable': uri = ''; break
-        case 'production': uri = ''; break
+        case 'stable': uri = 'https://stable.fuit.es'; break
+        case 'production': uri = 'https://fuit.es'; break
       } return uri
     }()),
     backendUrl: (function () {
       const env = process.env.SERVER_ENV
       let uri = 'https://localhost:3001'
       switch (env) {
-        case 'stable': uri = ''; break
-        case 'production': uri = ''; break
+        case 'stable': uri = 'https://stable.fuit.es'; break
+        case 'production': uri = 'https://fuit.es'; break
       } return uri
     }()),
     serverFlag: process.env.SERVER_ENV,
@@ -75,8 +75,8 @@ export default {
         const env = process.env.SERVER_ENV
         let uri = 'https://localhost:3001' // development
         switch (env) {
-          case 'stable': uri = 'https://localhost:3001'; break
-          case 'production': uri = 'https://localhost:3001'; break
+          case 'stable': uri = 'https://stable.fuit.es'; break
+          case 'production': uri = 'https://fuit.es'; break
         } return uri
       }())
     }]
