@@ -7,10 +7,11 @@
     "url": "git+https://github.com/svvimming/fuites-anarchive.git"
   },
   "scripts": {
-    "dev": "nuxt",
-    "build": "nuxt build",
-    "generate": "nuxt generate",
-    "start": "nuxt start"
+    "dev": "node_modules/.bin/nuxt",
+    "start": "node_modules/.bin/nuxt start",
+    "build": "node_modules/.bin/nuxt build",
+    "launch": "node_modules/.bin/nuxt build && pm2 restart v1-fe",
+    "launch-stable": "node_modules/.bin/nuxt build && pm2 restart v1-stable-fe"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
