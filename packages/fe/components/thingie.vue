@@ -34,7 +34,7 @@ export default {
       console.log('mousedown')
       if (!evt.shiftKey) {
         evt.preventDefault()
-        document.onmousemove = this.drag
+        document.onmousemove = this.$throttle((e) => { this.drag(e) })
         document.onmouseup = this.mouseup
       }
     },
