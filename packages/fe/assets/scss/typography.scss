@@ -1,4 +1,9 @@
 // ////////////////////////////////////////////////////////////////// Typography
 // =============================================================================
 // -------------------------------------------------------------------- Families
-$fontNanumMyeongjo: 'Nanum Myeongjo', serif;
+@mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
+@mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
+
+// ---------------------------------------------------------------------- Sizing
+
+@mixin fontSize_Main { font-size: 0.8125rem; } // fontSize_Main | 13pt

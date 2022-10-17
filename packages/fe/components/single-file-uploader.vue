@@ -152,8 +152,6 @@ export default {
 .single-file-uploader {
   position: relative;
   padding: 1rem;
-  border: 2px solid black;
-  border-radius: 0.5rem;
   z-index: 10;
 }
 

@@ -13,8 +13,8 @@
         <!-- Uploader ********************************************************** -->
         <div class="uploader-wrapper">
           <div class="help-text">
-            Drag items to reposition<br>
-            Hold shift while dragging to drag and drop
+            drag a thingie to move it<br>
+            hold shift while dragging to drag and drop
           </div>
           <SingleFileUploader />
         </div>
@@ -200,5 +200,10 @@ export default {
   color: rgba(black, 0.7);
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 1000;
+}
+
+.help-text {
+  @include fontFamily_Merriweather;
+  @include fontSize_Main;
 }
 </style>

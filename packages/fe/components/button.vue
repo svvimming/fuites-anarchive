@@ -158,7 +158,6 @@ export default {
 .button {
   white-space: nowrap;
   padding: 0.25rem 1rem;
-  border-radius: 1.5rem;
   &:not([disabled]) {
     &:focus-visible {
       @include focusBoxShadow;
@@ -170,24 +169,13 @@ export default {
   }
 }
 
-.button-content {
-  font-weight: 500;
-}
-
-// ///////////////////////////////////////////////////////////////////// Formats
-.format__mini {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-}
-
 // //////////////////////////////////////////////////////////////////// [Type] A
 .type__A {
-  border: 2px solid black;
-  border-radius: 2rem;
+  @include fontFamily_Merriweather;
   &:not([disabled]) {
     &:hover,
     &.selected {
-      background-color: black;
+      // background-color: black;
     }
   }
   &[disabled] {
@@ -197,95 +185,19 @@ export default {
 
 // //////////////////////////////////////////////////////////////////// [Type] B
 .type__B {
-  border: 1px solid white;
-  border-radius: 2rem;
   &:not([disabled]) {
     &:hover {
-      background-color: white;
-      color: black;
+      // background-color: white;
+      // color: black;
     }
   }
   &.format__mini {
     padding: 0.125rem 0.5rem;
   }
   &.selected {
-    background-color: white;
-    color: black;
+    // background-color: white;
+    // color: black;
   }
 }
 
-// //////////////////////////////////////////////////////////////////// [Type] C
-.type__C {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  color: black;
-  white-space: nowrap;
-  opacity: 0.5;
-  border-radius: 0;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: calc(100% - 1px);
-    width: 1px;
-    height: 100%;
-    transition: 250ms ease-out;
-  }
-  &:not([disabled]) {
-    &:hover {
-      color: white;
-      padding-right: calc(1rem + 0.5rem);
-      &:before {
-        transform: scaleX(8) translateX(-50%);
-      }
-    }
-  }
-  &[disabled] {
-    opacity: 0.5;
-  }
-}
-
-// //////////////////////////////////////////////////////////////////// [Type] D
-.type__D {
-  padding: 0;
-  font-size: 1.125rem;
-  color: black;
-  border-radius: 0.5rem;
-  transition: 150ms ease-out;
-  &:after {
-    content: '';
-    position: absolute;
-    top: calc(100% + 0.25rem);
-    left: 0;
-    width: 100%;
-    height: 0px;
-    background-color: black;
-    transition: 150ms ease-out;
-  }
-  &:not([disabled]) {
-    &:hover {
-      &:after {
-        transition: 150ms ease-in;
-        height: 0.25rem;
-      }
-    }
-    &.selected {
-      transition: 150ms ease-in;
-      color: white;
-      &:after {
-        transition: 150ms ease-in;
-        height: 0.25rem;
-        background-color: white;
-      }
-    }
-  }
-  &:disabled {
-    opacity: 0.5;
-  }
-}
 </style>
