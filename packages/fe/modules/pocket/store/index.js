@@ -1,13 +1,15 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  pocket: ''
+  pocket: '',
+  pocketIsOpen: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
-  pocket: state => state.pocket
+  pocket: state => state.pocket,
+  pocketIsOpen: state => state.pocketIsOpen
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -17,6 +19,10 @@ const actions = {
   setPocketConsistency ({ commit }) {
     string = ''
     commit('SET_POCKET_CONSISTENCY', string)
+  },
+  // /////////////////////////////////////////////////////////// setPocketIsOpen
+  setPocketIsOpen ({ commit }, val) {
+    commit('SET_POCKET_IS_OPEN', val)
   }
 }
 
@@ -25,6 +31,9 @@ const actions = {
 const mutations = {
   SET_POCKET_CONSISTENCY (state, incoming) {
     state.pocket = incoming
+  },
+  SET_POCKET_IS_OPEN (state, val) {
+    state.pocketIsOpen = val
   }
 }
 
