@@ -205,5 +205,6 @@ export default {
 .help-text {
   @include fontFamily_Merriweather;
   @include fontSize_Main;
+  margin-bottom: 1rem;
 }
 </style>

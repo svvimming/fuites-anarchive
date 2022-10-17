@@ -3,7 +3,13 @@
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
+@mixin fontFamily_CourierPrime { font-family: 'Courier Prime', monospace; }
+@mixin fontFamily_Cousine { font-family: 'Cousine', monospace; }
+@mixin fontFamily_Anton { font-family: 'Anton', sans-serif; }
+@mixin fontFamily_Arvo { font-family: 'Arvo', serif; }
+@mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
 
 // ---------------------------------------------------------------------- Sizing
 
+@mixin fontSize_teeny { font-size: 0.6875rem; } // fontSize_teeny | 11pt
 @mixin fontSize_Main { font-size: 0.8125rem; } // fontSize_Main | 13pt

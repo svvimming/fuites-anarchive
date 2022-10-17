@@ -151,7 +151,7 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .single-file-uploader {
   position: relative;
-  padding: 1rem;
+  // padding: 1rem;
   z-index: 10;
 }
 
@@ -163,16 +163,24 @@ export default {
 }
 
 // //////////////////////////////////////////////////////////////////// Metadata
+:deep(.metadata) {
+  border: 1px solid rgba(black, 0.5);
+  border-radius: 0.25rem;
+}
+
 :deep(.filename) {
-  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
   line-height: 1.2;
+  @include fontFamily_Cousine;
+  @include fontSize_teeny;
   text-align: center;
 }
 
 :deep(.filesize),
 :deep(.mimetype) {
-  font-family: monospace;
-  font-size: 0.75rem;
+  @include fontFamily_Cousine;
+  @include fontSize_teeny;
+  text-align: center;
 }
 
 :deep(.filesize) {
@@ -235,5 +243,9 @@ export default {
 
 .cancel-button {
   margin-top: 0.5rem;
+}
+
+:deep(.button) {
+  @include fontFamily_Arvo;
 }
 </style>

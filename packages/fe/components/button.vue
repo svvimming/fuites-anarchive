@@ -171,7 +171,6 @@ export default {
 
 // //////////////////////////////////////////////////////////////////// [Type] A
 .type__A {
-  @include fontFamily_Merriweather;
   &:not([disabled]) {
     &:hover,
     &.selected {

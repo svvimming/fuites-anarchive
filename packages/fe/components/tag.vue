@@ -48,38 +48,13 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.tag {
-  font-weight: 500;
-  white-space: nowrap;
-  &.theme__dark-gray {
-    background-color: black;
-  }
-  &.theme__purple {
-    background-color: black;
-  }
-  &.theme__orange {
-    background-color: black;
-    color: black;
-  }
-  &.theme__green-muted {
-    background-color: black;
-  }
-  &.size__regular {
-    font-size: 0.9375rem;
-  }
-  &.size__mini {
-    font-size: 0.75rem;
-  }
-}
 
 .format__chiclet {
   padding: 0.25rem 0.75rem;
-  border-radius: 1.5rem;
 }
 
 .format__pre {
   padding: 0.25rem 0.75rem;
-  border-radius: 0.25rem;
 }
 
 .label {
