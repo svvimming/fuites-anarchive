@@ -7,11 +7,7 @@
       <Nuxt />
     </section>
 
-    <section :class="['pocket-wrapper', { open: pocketIsOpen }]">
-      <div class="pocket-container">
-        <Pocket />
-      </div>
-    </section>
+    <Pocket />
 
     <button
       v-if="authenticated"
@@ -33,8 +29,7 @@
 
       <div
         v-else
-        class="input-wrapper"
-        v-click-outside="test">
+        class="input-wrapper">
         <input
           v-if="authPanelOpen"
           v-model="token"
@@ -72,7 +67,6 @@ export default {
 
   data () {
     return {
-      pocketIsOpen: false,
       authPanelOpen: false,
       token: ''
     }
@@ -80,25 +74,24 @@ export default {
 
   computed: {
     ...mapGetters({
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      pocketIsOpen: 'pocket/pocketIsOpen'
     })
   },
 
   methods: {
     ...mapActions({
-      authenticate: 'general/authenticate'
+      authenticate: 'general/authenticate',
+      setPocketIsOpen: 'pocket/setPocketIsOpen'
     }),
     togglePocket () {
-      this.pocketIsOpen = !this.pocketIsOpen
+      this.setPocketIsOpen(!this.pocketIsOpen)
     },
     toggleAuthPanel (status) {
       this.authPanelOpen = status
       if (!status) {
         this.token = ''
       }
-    },
-    test () {
-      console.log('hit')
     }
   }
 }
@@ -123,30 +116,6 @@ export default {
   height: 100vh;
   top: 0;
   left: 0;
-}
-
-.pocket-wrapper {
-  z-index: 100;
-  right: 0;
-  bottom: 0;
-  width: auto;
-  height: auto;
-  transition: 250ms ease;
-  transform: scale(0.8);
-  opacity: 0;
-  &.open {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.pocket-container {
-  position: relative;
-  width: 50vw;
-  height: 25rem;
-  overflow: hidden;
-  transition: 250ms ease;
-  padding: 1rem;
 }
 
 .pocket-toggle {

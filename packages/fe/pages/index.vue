@@ -123,6 +123,7 @@ export default {
   position: relative;
   height: 100%;
   width: 100%;
+  overflow: scroll;
 }
 
 .test-drop-zone {
