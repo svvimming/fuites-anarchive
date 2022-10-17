@@ -5,11 +5,17 @@
 
 $fontAssetPath: '~assets/fonts';
 
-// ----------------------------------------------------------------- Inconsolata
+// -------------------------------------------------------------- Nanum Myeongjo
 @font-face {
-  font-family: 'Inconsolata';
-  src: url('#{$fontAssetPath}/inconsolata/Inconsolata-Variable.ttf') format('truetype');
-  font-weight: 200 900;
+  font-family: 'Nanum Myeongjo';
+  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Nanum Myeongjo';
+  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Bold.ttf') format('truetype');
+  font-weight: 700;
 }
 
 //////////////////////////////////////////////////////////////////////// General
@@ -29,7 +35,7 @@ body {
   margin: 0;
   height: auto;
   color: white;
-  font-family: $fontInconsolata;
+  font-family: $fontNanumMyeongjo;
   font-size: 16px;
   line-height: 1.2;
   letter-spacing: 0px;
