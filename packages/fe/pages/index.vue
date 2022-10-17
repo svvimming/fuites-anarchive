@@ -13,7 +13,7 @@
         <div
           slot-scope="{ mousedown, mouseup, startDrag, styles }"
           draggable
-          class="thingie"
+          :class="['thingie', { locked: !authenticated }]"
           :style="styles"
           @mousedown="initMousedown($event, mousedown, thingie)"
           @mouseup="initMouseup($event, mouseup, thingie)"
@@ -55,7 +55,8 @@ export default {
 
   computed: {
     ...mapGetters({
-      thingies: 'collections/thingies'
+      thingies: 'collections/thingies',
+      authenticated: 'general/authenticated'
     }),
     spazeThingies () {
       return this.thingies.filter(obj => obj.location === 'spaze')
@@ -63,6 +64,7 @@ export default {
   },
 
   async mounted () {
+    console.log(this.$throttle)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
@@ -73,20 +75,24 @@ export default {
       updateThingie: 'collections/updateThingie'
     }),
     initMousedown (evt, mousedown, thingie) {
-      console.log('initMousedown')
-      mousedown(evt)
-      this.socket.emit('update-thingie', {
-        _id: thingie._id,
-        dragging: true
-      })
+      if (this.authenticated) {
+        console.log('initMousedown')
+        mousedown(evt)
+        this.socket.emit('update-thingie', {
+          _id: thingie._id,
+          dragging: true
+        })
+      }
     },
     initMouseup (evt, mouseup, thingie) {
-      console.log('initMouseup')
-      mouseup(evt)
-      this.socket.emit('update-thingie', {
-        _id: thingie._id,
-        dragging: false
-      })
+      if (this.authenticated) {
+        console.log('initMouseup')
+        mouseup(evt)
+        this.socket.emit('update-thingie', {
+          _id: thingie._id,
+          dragging: false
+        })
+      }
     },
     initDrag (thingie) {
       console.log('initDrag')
@@ -96,14 +102,16 @@ export default {
       })
     },
     onDrop (evt) {
-      console.log('onDrop — spaze')
-      evt.preventDefault()
-      const thingieId = evt.dataTransfer.getData('_id')
-      this.socket.emit('update-thingie', {
-        _id: thingieId,
-        location: 'spaze',
-        dragging: false
-      })
+      if (this.authenticated) {
+        console.log('onDrop — spaze')
+        evt.preventDefault()
+        const thingieId = evt.dataTransfer.getData('_id')
+        this.socket.emit('update-thingie', {
+          _id: thingieId,
+          location: 'spaze',
+          dragging: false
+        })
+      }
     }
   }
 }
@@ -134,6 +142,9 @@ export default {
   }
   img {
     width: 100%;
+    pointer-events: none;
+  }
+  &.locked {
     pointer-events: none;
   }
 }
