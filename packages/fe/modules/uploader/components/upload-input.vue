@@ -46,6 +46,9 @@
 </template>
 
 <script>
+// ===================================================================== Imports
+import { mapGetters } from 'vuex'
+
 // ====================================================================== Export
 export default {
   name: 'UploadInput',
@@ -85,6 +88,9 @@ export default {
   },
 
   computed: {
+    ...mapGetters({
+      authenticated: 'general/authenticated'
+    }),
     filename () {
       return this.file.name
     },
@@ -135,31 +141,37 @@ export default {
       }
     },
     clickFileInput () {
-      this.clearFileInput()
-      this.$refs.fileInput.click()
+      if (this.authenticated) {
+        this.clearFileInput()
+        this.$refs.fileInput.click()
+      }
     },
     clearFileInput () {
-      this.status = 'idle'
-      this.file = false
-      this.progress = 0
-      this.place = 0
-      this.nextChunkPayload = false
-      this.$refs.fileInput.value = null
+      if (this.authenticated) {
+        this.status = 'idle'
+        this.file = false
+        this.progress = 0
+        this.place = 0
+        this.nextChunkPayload = false
+        this.$refs.fileInput.value = null
+      }
     },
     uploadFile () {
-      const file = this.file
-      const formMetadata = {}
-      for (const key in file) {
-        const value = file[key]
-        typeof value !== 'function' && (formMetadata[key] = value)
+      if (this.authenticated) {
+        const file = this.file
+        const formMetadata = {}
+        for (const key in file) {
+          const value = file[key]
+          typeof value !== 'function' && (formMetadata[key] = value)
+        }
+        this.socket.emit('module|file-upload-initialize|payload', {
+          socket_id: this.socket.id,
+          filename: this.filename,
+          filesize: this.filesize,
+          mimetype: this.mimetype,
+          form_metadata: formMetadata
+        })
       }
-      this.socket.emit('module|file-upload-initialize|payload', {
-        socket_id: this.socket.id,
-        filename: this.filename,
-        filesize: this.filesize,
-        mimetype: this.mimetype,
-        form_metadata: formMetadata
-      })
     },
     uploadNextChunk (data) {
       const file = this.file

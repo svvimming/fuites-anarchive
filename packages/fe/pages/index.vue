@@ -64,7 +64,6 @@ export default {
   },
 
   async mounted () {
-    console.log(this.$throttle)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
@@ -76,7 +75,7 @@ export default {
     }),
     initMousedown (evt, mousedown, thingie) {
       if (this.authenticated) {
-        console.log('initMousedown')
+        // console.log('initMousedown')
         mousedown(evt)
         this.socket.emit('update-thingie', {
           _id: thingie._id,
@@ -86,7 +85,7 @@ export default {
     },
     initMouseup (evt, mouseup, thingie) {
       if (this.authenticated) {
-        console.log('initMouseup')
+        // console.log('initMouseup')
         mouseup(evt)
         this.socket.emit('update-thingie', {
           _id: thingie._id,
@@ -95,7 +94,7 @@ export default {
       }
     },
     initDrag (thingie) {
-      console.log('initDrag')
+      // console.log('initDrag')
       this.socket.emit('update-thingie', {
         _id: thingie._id,
         at: thingie.at
@@ -103,7 +102,7 @@ export default {
     },
     onDrop (evt) {
       if (this.authenticated) {
-        console.log('onDrop — spaze')
+        // console.log('onDrop — spaze')
         evt.preventDefault()
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
