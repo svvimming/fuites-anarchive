@@ -119,7 +119,7 @@ export default {
 }
 
 .pocket-toggle {
-  position: absolute;
+  position: fixed;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -148,7 +148,7 @@ export default {
   flex-direction: row;
   justify-content: flex-end;
   align-items: center;
-  position: absolute;
+  position: fixed;
   bottom: 0;
   right: 0;
   width: 16rem;

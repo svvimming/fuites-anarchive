@@ -31,7 +31,7 @@ export default {
       updateThingie: 'collections/updateThingie'
     }),
     mousedown (evt) {
-      console.log('mousedown')
+      // console.log('mousedown')
       if (!evt.shiftKey) {
         evt.preventDefault()
         document.onmousemove = this.$throttle((e) => { this.drag(e) })
@@ -39,12 +39,18 @@ export default {
       }
     },
     drag (evt) {
-      console.log('drag')
+      // console.log('drag')
       evt.preventDefault()
       const parent = this.$parent.$el
       const rect = parent.getBoundingClientRect()
-      const x = evt.clientX - rect.left
-      const y = evt.clientY - rect.top
+      let x = evt.clientX - rect.left
+      let y = evt.clientY - rect.top
+      if (this.thingie.location === 'pocket') {
+        const thingie = this.$el
+        const thingieRect = thingie.getBoundingClientRect()
+        x = Math.max(0, Math.min(640 - thingieRect.width, x))
+        y = Math.max(0, Math.min(400 - thingieRect.height, y))
+      }
       this.$emit('drag', {
         _id: this.thingie._id,
         at: {
@@ -55,13 +61,13 @@ export default {
       })
     },
     mouseup (evt) {
-      console.log('mouseup')
+      // console.log('mouseup')
       evt.preventDefault()
       document.onmousemove = null
       document.onmouseup = null
     },
     startDrag (evt) {
-      console.log('startDrag')
+      // console.log('startDrag')
       evt.dataTransfer.dropEffect = 'move'
       evt.dataTransfer.effectAllowed = 'move'
       evt.dataTransfer.setData('_id', this.thingie._id)

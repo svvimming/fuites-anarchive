@@ -8,27 +8,17 @@
         @dragover.prevent
         @dragenter.prevent>
 
-        <!-- Irridescent background ******************************************** -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" class="turbulence-bg">
-          <filter id="filter">
-              <feTurbulence result="1" x="0" y="0%" width="100%" height="100%" baseFrequency="0.01"/>
-              <feMerge>
-                  <feMergeNode in="1"/>
-              </feMerge>
-          </filter>
-          <rect width="100%" height="100%" filter="url(#filter)"/>
-        </svg>
+        <Irridescent :freq="0.005" />
 
         <!-- Uploader ********************************************************** -->
-        <div class="help-me">
-          <div class="text">
+        <div class="uploader-wrapper">
+          <div class="help-text">
             Drag items to reposition<br>
             Hold shift while dragging to drag and drop
           </div>
           <SingleFileUploader />
         </div>
 
-        <!-- Thingies ********************************************************** -->
         <template v-for="thingie in pocketThingies">
 
           <Thingie
@@ -58,6 +48,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
+import Irridescent from '@/components/irridescent'
 import SingleFileUploader from '@/components/single-file-uploader'
 
 // ====================================================================== Export
@@ -66,6 +57,7 @@ export default {
 
   components: {
     Thingie,
+    Irridescent,
     SingleFileUploader
   },
 
@@ -162,6 +154,7 @@ export default {
   position: relative;
   overflow: hidden;
   border-radius: 4px;
+  z-index: 1;
 }
 
 .pocket {
@@ -169,6 +162,8 @@ export default {
   height: 100%;
   width: 40rem;
   height: 25rem;
+  padding: 1rem;
+  z-index: 1;
 }
 
 .turbulence-bg {
@@ -178,6 +173,7 @@ export default {
   width: 100%;
   height: 100%;
   z-index: -1;
+  opacity: 0.66;
 }
 
 .thingie {
@@ -192,14 +188,15 @@ export default {
   }
 }
 
-.help-me {
+.uploader-wrapper {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
   position: relative;
-  width: 100%;
+  width: 33%;
   padding: 1rem;
-  text-align: center;
+  margin-left: auto;
+  // text-align: center;
   color: rgba(black, 0.7);
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 1000;

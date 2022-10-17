@@ -124,6 +124,7 @@ export default {
   height: 100%;
   width: 100%;
   overflow: scroll;
+  z-index: 1;
 }
 
 .test-drop-zone {
