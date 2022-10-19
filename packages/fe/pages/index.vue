@@ -104,11 +104,17 @@ export default {
       if (this.authenticated) {
         // console.log('onDrop — spaze')
         evt.preventDefault()
+
+        const rect = evt.target.getBoundingClientRect()
+        const x = evt.clientX - rect.left
+        const y = evt.clientY - rect.top
+
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: 'spaze',
-          dragging: false
+          dragging: false,
+          at: { x, y, z: 1 }
         })
       }
     }

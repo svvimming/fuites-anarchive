@@ -11,7 +11,7 @@
 
     <button
       v-if="authenticated"
-      class="pocket-toggle"
+      :class="['pocket-toggle', { pocketIsOpen }]"
       @click="togglePocket">
       Pocket
     </button>
@@ -127,18 +127,27 @@ export default {
   padding: 0.5rem;
   bottom: 0;
   right: 0;
-  // width: 2rem;
   height: 2rem;
-  // border: 1px solid rgba(black, 0.7);
-  // background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 0.25rem;
+  border: 2px solid rgba(white, 0.0);
+  border-radius: 0.375rem;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' class='turbulence-bg'%3e%3cfilter id='filter'%3e%3cfeTurbulence result='1' x='0' y='0%25' width='100%25' height='100%25' baseFrequency='0.007' /%3e%3cfeMerge%3e%3cfeMergeNode in='1' /%3e%3c/feMerge%3e%3c/filter%3e%3crect width='100%25' height='100%25' opacity='0.5' filter='url(%23filter)' /%3e%3c/svg%3e");
   transition: 150ms ease-in-out;
   transform: translate(-2.5rem, -2rem);
-  color: rgba(tomato, 0.7);
+  color: rgba(tomato, 0.85);
+  font-weight: bold;
   z-index: 10000;
   &:hover {
-    color: rgba(tomato, 0.9);
-    // background-color: rgba(255, 255, 255, 1);
+    color: rgba(tomato, 1.0);
+    background-color: rgba(255, 255, 255, 1);
+    transform: translate(-2.5rem, -2rem) scale(1.075);
+  }
+  &.pocketIsOpen {
+    border: 2px solid white;
+    background-color: rgba(255, 255, 255, 0.3);
+    background-image: none;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
   }
 }
 

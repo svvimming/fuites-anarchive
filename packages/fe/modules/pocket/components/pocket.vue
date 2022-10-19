@@ -121,11 +121,17 @@ export default {
     onDrop (evt) {
       console.log('onDrop — pocket')
       evt.preventDefault()
+
+      const rect = evt.target.getBoundingClientRect()
+      const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
+      const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
+
       const thingieId = evt.dataTransfer.getData('_id')
       this.socket.emit('update-thingie', {
         _id: thingieId,
         location: 'pocket',
-        dragging: false
+        dragging: false,
+        at: { x, y, z: 1 }
       })
     }
   }
