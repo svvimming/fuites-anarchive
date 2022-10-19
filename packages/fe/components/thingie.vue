@@ -39,7 +39,7 @@ export default {
     }),
     mousedown (evt) {
       // console.log('mousedown')
-      if (!evt.shiftKey) {
+      if (!evt.shiftKey && !this.thingie.dragging) {
         evt.preventDefault()
         const thingie = this.$el
         const thingieRect = thingie.getBoundingClientRect()
