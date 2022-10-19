@@ -58,7 +58,6 @@ const mutations = {
   },
   UPDATE_THINGIE (state, payload) {
     state.thingies.splice(payload.index, 1, payload.thingie)
-    console.log(state.thingies)
   }
 }
 

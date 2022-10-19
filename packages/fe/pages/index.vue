@@ -64,6 +64,7 @@ export default {
   },
 
   async mounted () {
+    console.log(this.$store)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
@@ -130,15 +131,6 @@ export default {
   width: 100%;
   overflow: scroll;
   z-index: 1;
-}
-
-.test-drop-zone {
-  position: absolute;
-  width: 500px;
-  height: 520px;
-  bottom: 100px;
-  left: 50px;
-  background-color: rgba(0, 0, 255, 0.1);
 }
 
 .thingie {

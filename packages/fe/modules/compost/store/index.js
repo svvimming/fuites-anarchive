@@ -1,29 +1,29 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  compostIsOpen: false
+  compostPortalIsOpen: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
-  compostIsOpen: state => state.compostIsOpen
+  compostPortalIsOpen: state => state.compostPortalIsOpen
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
-  // //////////////////////////////////////////////////////////////// addThingie
-  setCompostState ({ commit }, incoming) {
-    commit('SET_COMPOST_STATE', incoming)
+  // ////////////////////////////////////////////////////////// setCompostIsOpen
+  setCompostPortalIsOpen ({ commit }, val) {
+    commit('SET_COMPOST_PORTAL_IS_OPEN', val)
   }
 }
 
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  SET_COMPOST_STATE (state, incoming) {
-    state.compostIsOpen = incoming
+  SET_COMPOST_PORTAL_IS_OPEN (state, val) {
+    state.compostPortalIsOpen = val
   }
 }
 
