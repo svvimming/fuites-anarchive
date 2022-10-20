@@ -142,7 +142,7 @@ export default {
 <style lang="scss" scoped>
 // ////////////////////////////////////////////////////////////////////// Pocket
 .pocket-wrapper {
-  z-index: 100;
+  z-index: -1;
   position: absolute;
   right: 1rem;
   bottom: 1rem;
@@ -154,6 +154,7 @@ export default {
   &.open {
     transform: scale(1);
     opacity: 1;
+    z-index: 100;
   }
 }
 

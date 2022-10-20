@@ -53,7 +53,7 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// Compost
 .compost-portal-wrapper {
-  z-index: 100;
+  z-index: -1;
   position: absolute;
   left: 1rem;
   bottom: 1rem;
@@ -65,6 +65,7 @@ export default {
   &.open {
     transform: scale(1);
     opacity: 1;
+    z-index: 100;
   }
 }
 
@@ -76,7 +77,7 @@ export default {
   border: 3px solid rgba(white, 0.2);
   z-index: 1;
   padding: 1rem;
-  height: 27rem;
+  height: 18rem;
   &:before {
     content: '';
     position: absolute;
@@ -97,12 +98,13 @@ export default {
   height: 100%;
   z-index: -1;
   opacity: 0.66;
+  transform: scale(2.5) rotate(25deg);
 }
 
 .compost-portal {
   position: relative;
-  height: 25rem;
-  width: 40rem;
+  height: 18rem;
+  width: 32rem;
   z-index: 1;
   display: flex;
   flex-direction: column;
