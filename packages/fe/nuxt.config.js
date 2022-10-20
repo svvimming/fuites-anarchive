@@ -57,6 +57,7 @@ export default {
     'nuxt-socket-io', // Doc: https://nuxt-socket-io.netlify.app/
     '~/modules/https',
     '~/modules/pocket',
+    '~/modules/compost',
     '~/modules/toaster'
   ],
   // /////////////////////////////////////////////////////////////////// Plugins

@@ -32,7 +32,7 @@
 <script>
 // ====================================================================== Export
 export default {
-  name: 'Irridescent',
+  name: 'Irridescence',
 
   props: {
     freq: {

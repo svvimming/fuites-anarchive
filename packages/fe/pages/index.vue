@@ -64,6 +64,7 @@ export default {
   },
 
   async mounted () {
+    console.log(this.$store)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
@@ -104,11 +105,17 @@ export default {
       if (this.authenticated) {
         // console.log('onDrop — spaze')
         evt.preventDefault()
+
+        const rect = evt.target.getBoundingClientRect()
+        const x = evt.clientX - rect.left
+        const y = evt.clientY - rect.top
+
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: 'spaze',
-          dragging: false
+          dragging: false,
+          at: { x, y, z: 1 }
         })
       }
     }
@@ -124,15 +131,6 @@ export default {
   width: 100%;
   overflow: scroll;
   z-index: 1;
-}
-
-.test-drop-zone {
-  position: absolute;
-  width: 500px;
-  height: 520px;
-  bottom: 100px;
-  left: 50px;
-  background-color: rgba(0, 0, 255, 0.1);
 }
 
 .thingie {

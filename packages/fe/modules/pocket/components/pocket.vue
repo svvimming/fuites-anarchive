@@ -2,13 +2,13 @@
   <div :class="['pocket-wrapper', { open: pocketIsOpen }]">
     <div class="pocket-container">
 
+      <Irridescence :freq="0.005" />
+
       <div
         class="pocket"
         @drop="onDrop($event)"
         @dragover.prevent
         @dragenter.prevent>
-
-        <Irridescent :freq="0.005" />
 
         <!-- Uploader ********************************************************** -->
         <div class="uploader-wrapper">
@@ -39,6 +39,7 @@
         </template>
 
       </div>
+
     </div>
   </div>
 </template>
@@ -48,7 +49,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
-import Irridescent from '@/components/irridescent'
+import Irridescence from '@/components/irridescence'
 import SingleFileUploader from '@/components/single-file-uploader'
 
 // ====================================================================== Export
@@ -57,7 +58,7 @@ export default {
 
   components: {
     Thingie,
-    Irridescent,
+    Irridescence,
     SingleFileUploader
   },
 
@@ -121,11 +122,17 @@ export default {
     onDrop (evt) {
       console.log('onDrop — pocket')
       evt.preventDefault()
+
+      const rect = evt.target.getBoundingClientRect()
+      const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
+      const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
+
       const thingieId = evt.dataTransfer.getData('_id')
       this.socket.emit('update-thingie', {
         _id: thingieId,
         location: 'pocket',
-        dragging: false
+        dragging: false,
+        at: { x, y, z: 1 }
       })
     }
   }
@@ -135,7 +142,7 @@ export default {
 <style lang="scss" scoped>
 // ////////////////////////////////////////////////////////////////////// Pocket
 .pocket-wrapper {
-  z-index: 100;
+  z-index: -1;
   position: absolute;
   right: 1rem;
   bottom: 1rem;
@@ -147,6 +154,7 @@ export default {
   &.open {
     transform: scale(1);
     opacity: 1;
+    z-index: 100;
   }
 }
 
@@ -155,18 +163,28 @@ export default {
   overflow: hidden;
   border-radius: 4px;
   z-index: 1;
+  padding: 1rem;
+  height: 27rem;
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(white, 0.85);
+    z-index: -2;
+  }
 }
 
 .pocket {
   position: relative;
-  height: 100%;
   width: 40rem;
   height: 25rem;
-  padding: 1rem;
   z-index: 1;
 }
 
-.turbulence-bg {
+:deep(.turbulence-bg) {
   position: absolute;
   top: 0;
   left: 0;
@@ -176,6 +194,14 @@ export default {
   opacity: 0.66;
 }
 
+.pocket-height-toggle {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: white;
+}
+
+// ///////////////////////////////////////////////////////////////////// Thingie
 .thingie {
   width: 160px;
   cursor: grab;
@@ -188,6 +214,7 @@ export default {
   }
 }
 
+// //////////////////////////////////////////////////////////////////// Uploader
 .uploader-wrapper {
   display: flex;
   flex-direction: column;
@@ -196,7 +223,6 @@ export default {
   width: 33%;
   padding: 1rem;
   margin-left: auto;
-  // text-align: center;
   color: rgba(black, 0.7);
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 1000;
@@ -207,4 +233,5 @@ export default {
   @include fontSize_Main;
   margin-bottom: 1rem;
 }
+
 </style>

@@ -47,13 +47,13 @@
       <Button
         v-if="!file && status !== 'upload-complete'"
         text="Upload a file"
-        class="select-file-button"
+        class="select-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
       <Button
         v-if="status === 'upload-finalized'"
         text="Upload another file"
-        class="upload-another-file-button"
+        class="upload-another-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
     </template>
@@ -61,13 +61,13 @@
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
       <Button
         text="Upload selected file"
-        class="upload-file-button"
+        class="upload-file-button uploader-button"
         type="A"
         loader="upload-file-button"
         @clicked="uploadFile" />
       <Button
         text="cancel"
-        class="cancel-button"
+        class="cancel-button uploader-button"
         type="B"
         format="mini"
         @clicked="clearFileInput" />
@@ -236,6 +236,15 @@ export default {
 }
 
 // ///////////////////////////////////////////////////////////////////// Buttons
+.uploader-button {
+  border: 1px solid rgba(black, 0.3);
+  border-radius: 0.375rem;
+  transition: 200ms ease;
+  &:hover {
+    border: 1px solid rgba(black, 0.5);
+    border-radius: 0.5rem;
+  }
+}
 .upload-file-button,
 .upload-another-file-button {
   margin-top: 1rem;

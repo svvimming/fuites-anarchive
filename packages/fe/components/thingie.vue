@@ -13,6 +13,13 @@ export default {
     }
   },
 
+  data () {
+    return {
+      handleX: false,
+      handleY: false
+    }
+  },
+
   computed: {
     position () {
       return this.thingie.at
@@ -32,8 +39,12 @@ export default {
     }),
     mousedown (evt) {
       // console.log('mousedown')
-      if (!evt.shiftKey) {
+      if (!evt.shiftKey && !this.thingie.dragging) {
         evt.preventDefault()
+        const thingie = this.$el
+        const thingieRect = thingie.getBoundingClientRect()
+        this.handleX = evt.clientX - thingieRect.left
+        this.handleY = evt.clientY - thingieRect.top
         document.onmousemove = this.$throttle((e) => { this.drag(e) })
         document.onmouseup = this.mouseup
       }
@@ -43,13 +54,13 @@ export default {
       evt.preventDefault()
       const parent = this.$parent.$el
       const rect = parent.getBoundingClientRect()
-      let x = evt.clientX - rect.left
-      let y = evt.clientY - rect.top
+      let x = Math.max(0, evt.clientX - rect.left - this.handleX)
+      let y = Math.max(0, evt.clientY - rect.top - this.handleY)
       if (this.thingie.location === 'pocket') {
         const thingie = this.$el
         const thingieRect = thingie.getBoundingClientRect()
-        x = Math.max(0, Math.min(640 - thingieRect.width, x))
-        y = Math.max(0, Math.min(400 - thingieRect.height, y))
+        x = Math.min(640 - thingieRect.width, x)
+        y = Math.min(400 - thingieRect.height, y)
       }
       this.$emit('drag', {
         _id: this.thingie._id,
@@ -63,6 +74,8 @@ export default {
     mouseup (evt) {
       // console.log('mouseup')
       evt.preventDefault()
+      this.handleX = false
+      this.handleY = false
       document.onmousemove = null
       document.onmouseup = null
     },
