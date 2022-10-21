@@ -25,7 +25,7 @@
       v-if="authenticated"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
-      Compost
+      trash
     </button>
 
     <!-- =========================================================== AUTH == -->
@@ -42,13 +42,15 @@
 
       <div
         v-else
-        class="input-wrapper">
-        <input
-          v-if="authPanelOpen"
-          v-model="token"
-          type="password"
-          autocomplete="off"
-          class="input" />
+        class="input-container">
+        <div class="input-wrapper">
+          <input
+            v-if="authPanelOpen"
+            v-model="token"
+            type="text"
+            autocomplete="off"
+            class="input" />
+        </div>
         <button
           v-if="authPanelOpen"
           class="button-submit-auth"
@@ -209,7 +211,7 @@ export default {
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 16rem;
+  width: 20rem;
   padding: 1rem;
   font-size: 0.8125rem;
   color: rgba(0, 0, 0, 0.9);
@@ -245,28 +247,36 @@ export default {
   }
 }
 
-.input-wrapper {
-  // display: none;
+.input-container {
+  display: flex;
   position: relative;
-  flex: 1;
+  flex-direction: row;
   margin-right: 0.25rem;
+  width: 100%;
   &:after {
     content: '';
     position: absolute;
-    width: calc(100% - 1rem);
+    width: 100%;
     height: 1px;
     left: 0;
     bottom: -2px;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.5);
     opacity: 0.7;
     transition: 200ms ease;
   }
   &:hover {
     &:after {
-      width: 100%;
+      width: calc(100% + 1rem);
       left: -0.5rem;
-      background-color: rgba(0, 0, 0, 0.9);
     }
   }
+}
+
+.input-wrapper {
+  flex-grow: 1;
+}
+
+.input {
+  width: 100%;
 }
 </style>

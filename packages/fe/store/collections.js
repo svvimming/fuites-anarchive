@@ -44,6 +44,24 @@ const actions = {
   updateThingie ({ commit, getters }, incoming) {
     const index = getters.thingies.findIndex(obj => obj._id === incoming._id)
     commit('UPDATE_THINGIE', { index, thingie: incoming })
+  },
+  // ///////////////////////////////////////////////////////// postDeleteThingie
+  async postDeleteThingie ({ dispatch }, payload) {
+    try {
+      const response = await this.$axiosAuth.post('/post-delete-thingie', {
+        thingie_id: payload.id
+      })
+      return response.data.payload
+    } catch (e) {
+      console.log('================== [Store Action: modify/postDeleteThingie]')
+      console.log(e)
+      return false
+    }
+  },
+  // ///////////////////////////////////////////////////////////// removeThingie
+  removeThingie ({ commit, getters }, thingieId) {
+    const index = getters.thingies.findIndex(obj => obj._id === thingieId)
+    commit('REMOVE_THINGIE', index)
   }
 }
 
@@ -58,6 +76,9 @@ const mutations = {
   },
   UPDATE_THINGIE (state, payload) {
     state.thingies.splice(payload.index, 1, payload.thingie)
+  },
+  REMOVE_THINGIE (state, index) {
+    state.thingies.splice(index, 1)
   }
 }
 

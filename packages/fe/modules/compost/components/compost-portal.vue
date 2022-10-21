@@ -11,7 +11,7 @@
         @dragenter.prevent>
 
         <div class="portal-text">
-          compost
+          drag a thingie here to delete
         </div>
 
       </div>
@@ -22,7 +22,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import Irridescence from '@/components/irridescence'
 
@@ -34,17 +34,40 @@ export default {
     Irridescence
   },
 
+  data () {
+    return {
+      pocket: false
+    }
+  },
+
   computed: {
     ...mapGetters({
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     })
   },
 
+  async mounted () {
+    await this.$connectWebsocket(this, () => {
+      this.socket.emit('join-room', 'thingies')
+      this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
+        this.removeThingie(thingieId)
+      })
+    })
+  },
+
   methods: {
+    ...mapActions({
+      postDeleteThingie: 'collections/postDeleteThingie',
+      removeThingie: 'collections/removeThingie'
+    }),
     onCompost (evt) {
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
-      console.log(thingieId)
+      this.deleteThingie (thingieId)
+    },
+    async deleteThingie (id) {
+      const deleted = await this.postDeleteThingie({ id })
+      console.log(deleted)
     }
   }
 }
@@ -77,7 +100,7 @@ export default {
   border: 3px solid rgba(white, 0.2);
   z-index: 1;
   padding: 1rem;
-  height: 18rem;
+  height: 16rem;
   &:before {
     content: '';
     position: absolute;
@@ -103,8 +126,8 @@ export default {
 
 .compost-portal {
   position: relative;
-  height: 18rem;
-  width: 32rem;
+  height: 14rem;
+  width: 20rem;
   z-index: 1;
   display: flex;
   flex-direction: column;
