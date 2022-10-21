@@ -22,7 +22,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import Irridescence from '@/components/irridescence'
 
@@ -34,17 +34,40 @@ export default {
     Irridescence
   },
 
+  data () {
+    return {
+      pocket: false
+    }
+  },
+
   computed: {
     ...mapGetters({
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     })
   },
 
+  async mounted () {
+    await this.$connectWebsocket(this, () => {
+      this.socket.emit('join-room', 'thingies')
+      this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
+        this.removeThingie(thingieId)
+      })
+    })
+  },
+
   methods: {
+    ...mapActions({
+      postDeleteThingie: 'collections/postDeleteThingie',
+      removeThingie: 'collections/removeThingie'
+    }),
     onCompost (evt) {
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
-      console.log(thingieId)
+      this.deleteThingie (thingieId)
+    },
+    async deleteThingie (id) {
+      const deleted = await this.postDeleteThingie({ id })
+      console.log(deleted)
     }
   }
 }
