@@ -11,7 +11,7 @@
         @dragenter.prevent>
 
         <div class="portal-text">
-          compost
+          drag a thingie here to delete
         </div>
 
       </div>
@@ -100,7 +100,7 @@ export default {
   border: 3px solid rgba(white, 0.2);
   z-index: 1;
   padding: 1rem;
-  height: 18rem;
+  height: 16rem;
   &:before {
     content: '';
     position: absolute;
@@ -126,8 +126,8 @@ export default {
 
 .compost-portal {
   position: relative;
-  height: 18rem;
-  width: 32rem;
+  height: 14rem;
+  width: 20rem;
   z-index: 1;
   display: flex;
   flex-direction: column;

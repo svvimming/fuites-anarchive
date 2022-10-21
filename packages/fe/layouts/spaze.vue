@@ -25,7 +25,7 @@
       v-if="authenticated"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
-      Compost
+      trash
     </button>
 
     <!-- =========================================================== AUTH == -->
