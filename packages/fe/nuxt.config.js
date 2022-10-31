@@ -87,5 +87,23 @@ export default {
   toaster: {
     display: 10,
     timeout: 5000
+  },
+  // /////////////////////////////////////////////////////// Build configuration
+  // ------------------------------------------------ Extend webpack config here
+  build: {
+    // -------------------------------------------------------------- Extensions
+    extend (config, ctx) {
+      config.module.rules.push(
+        {
+          test: /\.(frag|vert|glsl)$/,
+          use: [
+            {
+              loader: 'glsl-shader-loader',
+              options: {}
+            }
+          ]
+        }
+      )
+    }
   }
 }

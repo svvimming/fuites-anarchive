@@ -368,6 +368,12 @@ h6, .h6 {
   z-index: 100;
 }
 
+.super-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
 [class~="grid"],
 [class*="grid-"],
 [class*="grid_"] {
