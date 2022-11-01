@@ -48,13 +48,29 @@ const initWebglCanvas = (instance) => {
   }
   const buffers = initBuffers(gl)
   const texture = loadTexture(gl, instance)
-  let i = 0
+  let fps, fpsInterval, startTime, now, then, elapsed, i = 0;
+
+  function startAnimating(fps) {
+    fpsInterval = 1000 / fps
+    then = Date.now()
+    startTime = then
+    render()
+  }
+
   function render () {
+    requestAnimationFrame(render)
+    now = Date.now()
+    elapsed = now - then
     drawScene(instance, gl, programInfo, buffers, texture, i)
     i += 0.00667
-    requestAnimationFrame(render)
+    if (elapsed > fpsInterval) {
+      then = now - (elapsed % fpsInterval)
+      drawScene(instance, gl, programInfo, buffers, texture, i)
+      i += 0.00667
+    }
   }
-  requestAnimationFrame(render)
+
+  startAnimating(30)
 }
 
 // ////////////////////////////////////////////////////////// Initialize buffers
@@ -109,12 +125,12 @@ const loadTexture = (gl, instance) => {
   const border = 0;
   const srcFormat = gl.RGBA;
   const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+  const pixel = new Uint8Array([255, 255, 255, 255]);  // opaque white
   gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 width, height, border, srcFormat, srcType,
                 pixel);
   const image = instance.$refs.sampler;
-  {
+  const handleImageLoad = () => {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                   srcFormat, srcType, image);
@@ -126,6 +142,8 @@ const loadTexture = (gl, instance) => {
        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
   }
+  handleImageLoad()
+  image.onload = () => { handleImageLoad() }
   return texture;
 }
 
