@@ -47,6 +47,14 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 	filter: drop-shadow(0px 0px 0.5px rgba(0, 0, 0, 0.6));
 }
 
+@mixin linkHover($color) {
+	filter: drop-shadow(0px 0px 5px rgba($color, 0));
+	transition: 300ms ease;
+	&:hover {
+		filter: drop-shadow(0px 0px 0.5px rgba($color, 0.6));
+	}
+}
+
 @mixin focusBoxShadow {
   box-shadow: 0 0 0 5px rgba(0, 123, 255, 0.5);
 }
@@ -187,7 +195,7 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 }
 
 // ------------------------------------------------------------------ Animations
-@mixin appearanceAnimation {
+@mixin popInAnimation {
   animation-name: pop-in;
   animation-duration: 400ms;
 }
@@ -198,7 +206,7 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   100% {transform: scale(1.0)}
 }
 
-@mixin disappearanceAnimation {
+@mixin popOutAnimation {
   animation-name: pop-out;
   animation-duration: 0.4s;
 }

@@ -501,7 +501,7 @@ h6, .h6 {
   align-items: center;
   padding: 1rem;
   border-radius: 3rem;
-  @include appearanceAnimation;
+  @include popInAnimation;
   .icon {
     display: none;
   }

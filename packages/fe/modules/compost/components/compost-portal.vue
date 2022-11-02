@@ -2,18 +2,19 @@
   <div :class="['compost-portal-wrapper', { open: compostPortalIsOpen }]">
     <div class="compost-portal-container">
 
-      <Irridescence :freq="0.00025" />
+      <!-- <Irridescence :freq="0.00025" /> -->
+
+      <Shader
+        id="compost-portal-shader"
+        :image="wormhole"
+        :pulse="0.3"
+        :exposure="0.48" />
 
       <div
         class="compost-portal"
         @drop="onCompost($event)"
         @dragover.prevent
         @dragenter.prevent>
-
-        <div class="portal-text">
-          drag a thingie here to delete
-        </div>
-
       </div>
 
     </div>
@@ -24,19 +25,24 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Irridescence from '@/components/irridescence'
-
+// import Irridescence from '@/components/irridescence'
+import Shader from '@/components/shader'
 // ====================================================================== Export
 export default {
   name: 'CompostDropzone',
 
   components: {
-    Irridescence
+    // Irridescence
+    Shader
   },
 
   data () {
     return {
-      pocket: false
+      wormhole: {
+        src: '/portal/compost-portal.png',
+        width: 320 * 1.5,
+        height: 224 * 1.5
+      }
     }
   },
 
@@ -96,21 +102,9 @@ export default {
   position: relative;
   overflow: hidden;
   border-radius: 56% 44% 57% 43% / 50% 58% 42% 50%;
-  background-color: rgba(white, 0.3);
-  border: 3px solid rgba(white, 0.2);
   z-index: 1;
   padding: 1rem;
   height: 16rem;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(white, 0.85);
-    z-index: -2;
-  }
 }
 
 :deep(.turbulence-bg) {
@@ -127,16 +121,17 @@ export default {
 .compost-portal {
   position: relative;
   height: 14rem;
-  width: 20rem;
+  width: 22rem;
   z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.portal-text {
-  color: rgba(black, 0.7);
-  text-align: center;
+#compost-portal-shader {
+  position: absolute;
+  top: -2rem;
+  left: -2rem;
 }
 
 </style>

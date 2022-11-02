@@ -1,34 +1,47 @@
 <template>
   <div class="landing-site">
-
     <div class="inner-panel">
-      <div
-        v-for="link in links"
-        :key="link.text"
-        :class="['link', link.component === 'Bingo' ? 'fuites' : 'portal-link']">
 
-        <nuxt-link
-          :to="link.route">
+      <!-- ============================================================= NAV -->
 
-          <Bingo
-            v-if="link.component === 'Bingo'"
-            :text="link.text"
-            :font-size="24"
-            :custom="link.bingo" />
-
-          <div v-else>
-            {{ link.text }}
-          </div>
-
-        </nuxt-link>
-
-      </div>
-
-      <div v-if="isNotIndex">
+      <template v-if="!authenticated || !isNotIndex">
         <div
-          v-if="!authenticated"
-          :class="['auth-container', { active: authPanelOpen }]">
+          v-for="link in links"
+          :key="link.text"
+          :class="['link', link.component === 'Bingo' ? 'fuites' : 'portal-link']">
+          <nuxt-link
+            :to="link.route">
+            <Bingo
+              v-if="link.component === 'Bingo'"
+              :text="link.text"
+              :font-size="24"
+              :custom="link.bingo" />
+            <div v-else>
+              {{ link.text }}
+            </div>
+          </nuxt-link>
+        </div>
+      </template>
 
+      <!-- ============================================================ TIPS -->
+
+      <template v-if="authenticated && isNotIndex">
+        <div :class="['tips', { tipsOpen }]">
+          <ul>
+            <li
+              v-for="tip in tips"
+              :key="tip"
+              class="tip">
+              {{ tip }}
+            </li>
+          </ul>
+        </div>
+      </template>
+
+      <!-- ============================================================ AUTH -->
+
+      <template v-if="!authenticated && isNotIndex">
+        <div :class="['auth-container', { active: authPanelOpen }]">
           <button
             v-if="!authPanelOpen"
             class="link portal-link"
@@ -52,12 +65,10 @@
               submit
             </button>
           </div>
-
         </div>
-      </div>
+      </template>
 
     </div>
-
   </div>
 </template>
 
@@ -80,13 +91,24 @@ export default {
       type: Array,
       required: false,
       default: () => []
+    },
+    tips: {
+      type: Array,
+      required: false,
+      default: () => []
+    },
+    tipsOpen: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
 
   data () {
     return {
       authPanelOpen: false,
-      token: ''
+      token: '',
+      key: 0
     }
   },
 
@@ -116,7 +138,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// ///////////////////////////////////////////////////////////////////// General
+// ///////////////////////////////////////////////////////////////////////// nav
 .landing-site {
   position: absolute;
   top: 0;
@@ -149,6 +171,37 @@ export default {
 .portal-link {
   margin: 0.25rem 0;
   margin-left: 1.5rem;
+}
+
+// //////////////////////////////////////////////////////////////////////// tips
+.tips {
+  margin-left: 1rem;
+  padding: 0.5rem;
+  transition: 250ms ease;
+  transform: scale(0.8);
+  opacity: 0;
+  z-index: -1;
+  &.tipsOpen {
+    transform: scale(1);
+    opacity: 1;
+    z-index: 100;
+  }
+}
+
+.tip {
+  position: relative;
+  list-style-type: none;
+  &:before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 2px;
+    background-color: black;
+    border-radius: 50%;
+  }
 }
 
 // ////////////////////////////////////////////////////////////// authentication

@@ -6,11 +6,20 @@
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
 
-      <LandingSite :links="links" />
-
       <Nuxt />
 
     </section>
+
+    <!-- =================================================== LANDING SITE == -->
+
+    <LandingSite :links="links" :tips="tips" :tips-open="tipsOpen" />
+
+    <button
+      v-if="authenticated"
+      :class="['toggle', { tipsOpen }, 'tips-toggle', 'no-select']"
+      @click="toggleTips">
+      tips
+    </button>
 
     <!-- ========================================================= POCKET == -->
     <Pocket />
@@ -19,7 +28,7 @@
       v-if="authenticated"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
-      Pocket
+      pocket
     </button>
 
     <!-- ================================================= COMPOST PORTAL == -->
@@ -57,6 +66,12 @@ export default {
     Toaster
   },
 
+  data () {
+    return {
+      tipsOpen: false
+    }
+  },
+
   computed: {
     ...mapGetters({
       authenticated: 'general/authenticated',
@@ -65,6 +80,9 @@ export default {
     }),
     links () {
       return LandingSiteData.portal.links
+    },
+    tips () {
+      return LandingSiteData.portal.tips
     }
   },
 
@@ -73,6 +91,9 @@ export default {
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen'
     }),
+    toggleTips () {
+      this.tipsOpen = !this.tipsOpen
+    },
     togglePocket () {
       this.setPocketIsOpen(!this.pocketIsOpen)
     },
@@ -112,57 +133,30 @@ export default {
   align-items: center;
   padding: 0.5rem;
   height: 2rem;
-  border: 2px solid rgba(white, 0.0);
-  border-radius: 0.375rem;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' class='turbulence-bg'%3e%3cfilter id='filter'%3e%3cfeTurbulence result='1' x='0' y='0%25' width='100%25' height='100%25' baseFrequency='0.007' /%3e%3cfeMerge%3e%3cfeMergeNode in='1' /%3e%3c/feMerge%3e%3c/filter%3e%3crect width='100%25' height='100%25' opacity='0.5' filter='url(%23filter)' /%3e%3c/svg%3e");
-  transition: 150ms ease-in-out;
-  font-weight: bold;
   z-index: 10000;
-  &:hover {
-    background-color: rgba(255, 255, 255, 1);
-    transform: scale(1.075);
-  }
-  &.pocketIsOpen {
-    border: 2px solid white;
-    background-color: rgba(255, 255, 255, 0.3);
-    background-image: none;
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-  }
+}
+
+.tips-toggle {
+  top: 2rem;
+  left: 2.5rem;
+  color: #000000;
+  @include fontWeight_Bold;
+  @include linkHover(#000000);
 }
 
 .pocket-toggle {
   bottom: 2rem;
   right: 2.5rem;
-  color: rgba(tomato, 0.85);
-  &:hover {
-    color: rgba(tomato, 1.0);
-  }
-  &.pocketIsOpen {
-    border: 2px solid white;
-    background-color: rgba(255, 255, 255, 0.3);
-    background-image: none;
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-  }
+  color: #FA8072;
+  @include fontWeight_Bold;
+  @include linkHover(#FA8072);
 }
 
 .compost-portal-toggle {
   bottom: 2rem;
   left: 2.5rem;
-  color: rgba(SlateBlue, 0.85);
-  &:hover {
-    color: rgba(SlateBlue, 1.0);
-  }
-  &.compostPortalIsOpen {
-    border: 2px solid white;
-    background-color: rgba(255, 255, 255, 0.3);
-    background-image: none;
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-  }
+  color: #6A5ACD;
+  @include fontWeight_Bold;
+  @include linkHover(#6A5ACD);
 }
 </style>

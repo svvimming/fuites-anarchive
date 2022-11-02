@@ -128,10 +128,10 @@ export default {
 
 // ////////////////////////////////////////////////////////////////// Animations
 .appear {
-  @include appearanceAnimation;
+  @include popInAnimation;
 }
 .disappear {
-  @include disappearanceAnimation;
+  @include popOutAnimation;
 }
 
 </style>

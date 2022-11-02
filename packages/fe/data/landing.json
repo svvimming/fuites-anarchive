@@ -44,6 +44,12 @@
           "fsj": 6
         }
       }
+    ],
+    "tips": [
+      "to upload a thingie, open the pocket and click upload",
+      "to move a thingie, click and drag it",
+      "to move a thingie between spaces, hold shift while dragging to drag and drop",
+      "to get rid of a thingie, drag and drop it into the open trash"
     ]
   }
 }
