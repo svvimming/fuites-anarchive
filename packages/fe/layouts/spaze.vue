@@ -5,7 +5,11 @@
 
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
+
+      <LandingSite :links="links" />
+
       <Nuxt />
+
     </section>
 
     <!-- ========================================================= POCKET == -->
@@ -28,39 +32,6 @@
       trash
     </button>
 
-    <!-- =========================================================== AUTH == -->
-    <div
-      v-if="!authenticated"
-      :class="['auth-container', { active: authPanelOpen }]">
-
-      <button
-        v-if="!authPanelOpen"
-        class="button-open-auth"
-        @click="toggleAuthPanel(true)">
-        🔑
-      </button>
-
-      <div
-        v-else
-        class="input-container">
-        <div class="input-wrapper">
-          <input
-            v-if="authPanelOpen"
-            v-model="token"
-            type="text"
-            autocomplete="off"
-            class="input" />
-        </div>
-        <button
-          v-if="authPanelOpen"
-          class="button-submit-auth"
-          @click="authenticate(token)">
-          submit
-        </button>
-      </div>
-
-    </div>
-
   </div>
 </template>
 
@@ -68,25 +39,22 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
+import LandingSite from '@/components/landing-site'
 import Pocket from '@/modules/pocket/components/pocket'
 import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
+
+import LandingSiteData from '@/data/landing.json'
 
 // ====================================================================== Export
 export default {
   name: 'spaze',
 
   components: {
+    LandingSite,
     Pocket,
     CompostPortal,
     Toaster
-  },
-
-  data () {
-    return {
-      authPanelOpen: false,
-      token: ''
-    }
   },
 
   computed: {
@@ -94,12 +62,14 @@ export default {
       authenticated: 'general/authenticated',
       pocketIsOpen: 'pocket/pocketIsOpen',
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
-    })
+    }),
+    links () {
+      return LandingSiteData.portal.links
+    }
   },
 
   methods: {
     ...mapActions({
-      authenticate: 'general/authenticate',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen'
     }),
@@ -108,12 +78,6 @@ export default {
     },
     toggleCompostPortal () {
       this.setCompostPortalIsOpen(!this.compostPortalIsOpen)
-    },
-    toggleAuthPanel (status) {
-      this.authPanelOpen = status
-      if (!status) {
-        this.token = ''
-      }
     }
   }
 }
@@ -200,83 +164,5 @@ export default {
       background-color: rgba(255, 255, 255, 0.5);
     }
   }
-}
-
-// ////////////////////////////////////////////////////////////// authentication
-.auth-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 20rem;
-  padding: 1rem;
-  font-size: 0.8125rem;
-  color: rgba(0, 0, 0, 0.9);
-  z-index: 1000;
-  &.active {
-    .input-wrapper {
-      // display: block;
-    }
-    // background-color: rgba(255, 255, 255, 0.7);
-  }
-}
-
-.button-open-auth {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid rgba(black, 0.7);
-  color: rgba(black, 0.7);
-  border-radius: 0.25rem;
-  transition: 150ms ease-in-out;
-  &:hover {
-    color: rgba(black, 0.9);
-  }
-}
-
-.button-submit-auth {
-  color: rgba(black, 0.7);
-  &:hover {
-    color: rgba(black, 0.9);
-  }
-}
-
-.input-container {
-  display: flex;
-  position: relative;
-  flex-direction: row;
-  margin-right: 0.25rem;
-  width: 100%;
-  &:after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 1px;
-    left: 0;
-    bottom: -2px;
-    background-color: rgba(0, 0, 0, 0.5);
-    opacity: 0.7;
-    transition: 200ms ease;
-  }
-  &:hover {
-    &:after {
-      width: calc(100% + 1rem);
-      left: -0.5rem;
-    }
-  }
-}
-
-.input-wrapper {
-  flex-grow: 1;
-}
-
-.input {
-  width: 100%;
 }
 </style>

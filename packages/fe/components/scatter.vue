@@ -128,24 +128,10 @@ export default {
 
 // ////////////////////////////////////////////////////////////////// Animations
 .appear {
-  animation-name: pop-in;
-  animation-duration: 400ms;
+  @include appearanceAnimation;
 }
-
-@keyframes pop-in {
-  0% {transform: scale(0.0)}
-  66% {transform: scale(1.1)}
-  100% {transform: scale(1.0)}
-}
-
 .disappear {
-  animation-name: pop-out;
-  animation-duration: 0.4s;
+  @include disappearanceAnimation;
 }
 
-@keyframes pop-out {
-  0% {transform: scale(1.0)}
-  33% {transform: scale(1.1)}
-  100% {transform: scale(0.0)}
-}
 </style>

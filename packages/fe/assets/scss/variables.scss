@@ -43,6 +43,10 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   background-repeat: no-repeat;
 }
 
+@mixin linkShadow {
+	filter: drop-shadow(0px 0px 0.5px rgba(0, 0, 0, 0.6));
+}
+
 @mixin focusBoxShadow {
   box-shadow: 0 0 0 5px rgba(0, 123, 255, 0.5);
 }
@@ -182,7 +186,29 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   @supports not (-webkit-overflow-scrolling: touch) { @content; }
 }
 
-// ------------------------------------------------------------------- Animation
+// ------------------------------------------------------------------ Animations
+@mixin appearanceAnimation {
+  animation-name: pop-in;
+  animation-duration: 400ms;
+}
+
+@keyframes pop-in {
+  0% {transform: scale(0.0)}
+  66% {transform: scale(1.1)}
+  100% {transform: scale(1.0)}
+}
+
+@mixin disappearanceAnimation {
+  animation-name: pop-out;
+  animation-duration: 0.4s;
+}
+
+@keyframes pop-out {
+  0% {transform: scale(1.0)}
+  33% {transform: scale(1.1)}
+  100% {transform: scale(0.0)}
+}
+
 @mixin animation($animate...) {
   $max: length($animate);
   $animations: '';

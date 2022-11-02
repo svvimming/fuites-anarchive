@@ -1,0 +1,49 @@
+{
+  "index": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        }
+      },
+      {
+        "component": "div",
+        "text": "info",
+        "route": "/info"
+      },
+      {
+        "component": "div",
+        "text": "contact",
+        "route": "/contact"
+      },
+      {
+        "component": "div",
+        "text": "portal",
+        "route": "/portal"
+      }
+    ]
+  },
+  "portal": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        }
+      }
+    ]
+  }
+}

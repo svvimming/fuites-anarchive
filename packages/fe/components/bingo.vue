@@ -3,7 +3,7 @@
 
     <span
       v-for="(letter, i) in letters"
-      :class="['letter', getFontClass()]"
+      :class="['letter', 'no-select', getFontClass()]"
       :style="getLetterStyles(i)">
 
       {{ letter }}
@@ -29,15 +29,10 @@ export default {
       required: false,
       default: 16
     },
-    maxOffset: {
-      type: Number,
+    custom: {
+      type: Object,
       required: false,
-      default: 30
-    },
-    orientation: {
-      type: Number,
-      required: false,
-      default: 10
+      default: () => ({})
     }
   },
 
@@ -50,23 +45,35 @@ export default {
         'merriweather',
         'nanum',
         'source-code'
-      ]
+      ],
+      defaults: {
+        lsx: 50, // horizontal Letter spacing
+        lsy: 30, // vertical Letter spacing
+        jx: 40, // horizontal jitter
+        jy: 10, // vertical jitter
+        freq: 0.25, // sin wave frequency
+        fsj: 30, // font size jitter
+        deg: 10 // 3d rotation degrees
+      }
     }
   },
 
   computed: {
     letters () {
       return this.text.split('')
+    },
+    parameters () {
+      return Object.assign(this.defaults, this.custom)
     }
   },
 
   methods: {
     getLetterStyles (index) {
       return {
-        left: `${(50 * index + Math.random() * 40)}px`,
-        top: `${(30 * Math.sin(0.25 * index) + Math.random() * 10)}px`,
-        fontSize: `${this.fontSize + (Math.floor(this.maxOffset * Math.random()))}px`,
-        transform: `rotate3d(${Math.random()}, ${Math.random()}, ${Math.random()}, ${this.orientation}deg)`
+        left: `${(this.parameters.lsx * index + Math.random() * this.parameters.jx)}px`,
+        top: `${(this.parameters.lsy * Math.sin(this.parameters.freq * index) + Math.random() * this.parameters.jy)}px`,
+        fontSize: `${this.fontSize + (Math.floor(this.parameters.fsj * Math.random()))}px`,
+        transform: `rotate3d(${Math.random()}, ${Math.random()}, ${Math.random()}, ${this.parameters.deg}deg)`
       }
     },
     getFontClass () {

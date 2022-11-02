@@ -1,0 +1,149 @@
+<template>
+  <div
+    class="spz"
+    @drop="onDrop($event)"
+    @dragover.prevent
+    @dragenter.prevent>
+
+    <template v-for="thingie in spazeThingies">
+
+      <Thingie
+        :thingie="thingie"
+        @drag="initDrag">
+        <div
+          slot-scope="{ mousedown, mouseup, startDrag, styles }"
+          draggable
+          :class="['thingie', { locked: !authenticated }]"
+          :style="styles"
+          @mousedown="initMousedown($event, mousedown, thingie)"
+          @mouseup="initMouseup($event, mouseup, thingie)"
+          @dragstart="startDrag($event)">
+          <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
+        </div>
+      </Thingie>
+
+    </template>
+
+  </div>
+</template>
+
+<script>
+// ====================================================================== Import
+import { mapGetters, mapActions } from 'vuex'
+
+import Thingie from '@/components/thingie'
+
+// ====================================================================== Export
+export default {
+  name: 'Portal',
+
+  layout: 'spaze',
+
+  components: {
+    Thingie
+  },
+
+  async fetch ({ app, store }) {
+    await store.dispatch('collections/getThingies')
+  },
+
+  data () {
+    return {
+      socket: false
+    }
+  },
+
+  computed: {
+    ...mapGetters({
+      thingies: 'collections/thingies',
+      authenticated: 'general/authenticated'
+    }),
+    spazeThingies () {
+      return this.thingies.filter(obj => obj.location === 'spaze')
+    }
+  },
+
+  async mounted () {
+    await this.$connectWebsocket(this, () => {
+      this.socket.emit('join-room', 'thingies')
+    })
+  },
+
+  methods: {
+    ...mapActions({
+      updateThingie: 'collections/updateThingie'
+    }),
+    initMousedown (evt, mousedown, thingie) {
+      if (this.authenticated) {
+        // console.log('initMousedown')
+        mousedown(evt)
+        this.socket.emit('update-thingie', {
+          _id: thingie._id,
+          dragging: true
+        })
+      }
+    },
+    initMouseup (evt, mouseup, thingie) {
+      if (this.authenticated) {
+        // console.log('initMouseup')
+        mouseup(evt)
+        this.socket.emit('update-thingie', {
+          _id: thingie._id,
+          dragging: false
+        })
+      }
+    },
+    initDrag (thingie) {
+      // console.log('initDrag')
+      this.socket.emit('update-thingie', {
+        _id: thingie._id,
+        at: thingie.at
+      })
+    },
+    onDrop (evt) {
+      if (this.authenticated) {
+        // console.log('onDrop — spaze')
+        evt.preventDefault()
+
+        const rect = evt.target.getBoundingClientRect()
+        const x = evt.clientX - rect.left
+        const y = evt.clientY - rect.top
+
+        const thingieId = evt.dataTransfer.getData('_id')
+        this.socket.emit('update-thingie', {
+          _id: thingieId,
+          location: 'spaze',
+          dragging: false,
+          at: { x, y, z: 1 }
+        })
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
+.spz {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: scroll;
+  z-index: 1;
+}
+
+.thingie {
+  width: 160px;
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
+  img {
+    width: 100%;
+    pointer-events: none;
+  }
+  &.locked {
+    pointer-events: none;
+  }
+}
+</style>

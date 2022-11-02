@@ -1,123 +1,91 @@
 <template>
-  <div
-    class="spz"
-    @drop="onDrop($event)"
-    @dragover.prevent
-    @dragenter.prevent>
+  <div class="container">
 
-    <template v-for="thingie in spazeThingies">
+    <LandingSite :links="links" />
 
-      <Thingie
-        :thingie="thingie"
-        @drag="initDrag">
-        <div
-          slot-scope="{ mousedown, mouseup, startDrag, styles }"
-          draggable
-          :class="['thingie', { locked: !authenticated }]"
-          :style="styles"
-          @mousedown="initMousedown($event, mousedown, thingie)"
-          @mouseup="initMouseup($event, mouseup, thingie)"
-          @dragstart="startDrag($event)">
-          <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
-        </div>
-      </Thingie>
+    <Shader
+      id="irridescent-shader"
+      :image="irridescent"
+      :pulse="0.3"
+      :exposure="0.48" />
 
-    </template>
+    <Shader
+      id="dots-shader"
+      :image="dots"
+      :pulse="0.3" />
+
+    <Bingo
+      id="alongwalk"
+      text="a long walk to somewhere close?"
+      :font-size="25"
+      :custom="{ fsj: 35 }" />
+
+    <Bingo
+      id="absorbing-reflection"
+      text="an absorbing relfection"
+      :font-size="25"
+      :custom="{ fsj: 35 }" />
+
+    <Bingo
+      id="reflecting-absorption"
+      text="reflecting absorptions of the spills"
+      :font-size="30"
+      :custom="{ fsj: 35 }" />
+
+    <Scatter
+      id="yell-scatter"
+      image="/landing/yell.png"
+      :ip-width="40" />
+
+    <Scatter
+      id="slant-scatter"
+      image="/landing/slant.jpg"
+      :amount="9"
+      :ip-width="40" />
 
   </div>
 </template>
 
 <script>
 // ====================================================================== Import
-import { mapGetters, mapActions } from 'vuex'
+import LandingSite from '@/components/landing-site'
+import Shader from '@/components/shader'
+import Bingo from '@/components/bingo'
+import Scatter from '@/components/scatter'
 
-import Thingie from '@/components/thingie'
+import LandingSiteData from '@/data/landing.json'
 
 // ====================================================================== Export
 export default {
-  name: 'Index',
+  name: 'Landing',
 
-  layout: 'spaze',
+  layout: 'landing',
 
   components: {
-    Thingie
-  },
-
-  async fetch ({ app, store }) {
-    await store.dispatch('collections/getThingies')
+    LandingSite,
+    Shader,
+    Bingo,
+    Scatter
   },
 
   data () {
     return {
-      socket: false
+      irridescent: {
+        src: '/landing/irridescent.png',
+        width: 750,
+        height: 1500
+      },
+      dots: {
+        src: '/landing/dots.png',
+        width: 972,
+        height: 1600
+      }
     }
   },
 
   computed: {
-    ...mapGetters({
-      thingies: 'collections/thingies',
-      authenticated: 'general/authenticated'
-    }),
-    spazeThingies () {
-      return this.thingies.filter(obj => obj.location === 'spaze')
-    }
-  },
-
-  async mounted () {
-    console.log(this.$store)
-    await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'thingies')
-    })
-  },
-
-  methods: {
-    ...mapActions({
-      updateThingie: 'collections/updateThingie'
-    }),
-    initMousedown (evt, mousedown, thingie) {
-      if (this.authenticated) {
-        // console.log('initMousedown')
-        mousedown(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: true
-        })
-      }
-    },
-    initMouseup (evt, mouseup, thingie) {
-      if (this.authenticated) {
-        // console.log('initMouseup')
-        mouseup(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: false
-        })
-      }
-    },
-    initDrag (thingie) {
-      // console.log('initDrag')
-      this.socket.emit('update-thingie', {
-        _id: thingie._id,
-        at: thingie.at
-      })
-    },
-    onDrop (evt) {
-      if (this.authenticated) {
-        // console.log('onDrop — spaze')
-        evt.preventDefault()
-
-        const rect = evt.target.getBoundingClientRect()
-        const x = evt.clientX - rect.left
-        const y = evt.clientY - rect.top
-
-        const thingieId = evt.dataTransfer.getData('_id')
-        this.socket.emit('update-thingie', {
-          _id: thingieId,
-          location: 'spaze',
-          dragging: false,
-          at: { x, y, z: 1 }
-        })
-      }
+    links () {
+      return LandingSiteData.index.links
     }
   }
 }
@@ -125,26 +93,52 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.spz {
-  position: relative;
-  height: 100%;
+.container {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  overflow: scroll;
-  z-index: 1;
+  height: 100%;
+  overflow: auto;
 }
 
-.thingie {
-  width: 160px;
-  cursor: grab;
-  &:active {
-    cursor: grabbing;
-  }
-  img {
-    width: 100%;
-    pointer-events: none;
-  }
-  &.locked {
-    pointer-events: none;
-  }
+#irridescent-shader {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#dots-shader {
+  position: absolute;
+  left: 500px;
+  top: 1400px;
+}
+
+#alongwalk {
+  left: 400px;
+  top: 500px;
+  transform: rotate3d(0, 1, 0, 45deg);
+}
+
+#absorbing-reflection {
+  left: 270px;
+  top: 1300px;
+  transform: rotate3d(0.7, 1, 0.2, 45deg);
+}
+
+#reflecting-absorption {
+  left: 470px;
+  top: 2400px;
+  transform: rotate3d(-0.2, 1, -0.5, 45deg);
+}
+
+#yell-scatter {
+  left: 730px;
+  top: 440px;
+}
+
+#slant-scatter {
+  left: 800px;
+  top: 1500px;
 }
 </style>
