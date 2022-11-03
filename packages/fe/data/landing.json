@@ -20,13 +20,22 @@
       },
       {
         "component": "div",
-        "text": "contact",
-        "route": "/contact"
-      },
-      {
-        "component": "div",
         "text": "portal",
         "route": "/portal"
+      }
+    ],
+    "contact": [
+      {
+        "text": "contact@fuit.es",
+        "url": "mailto:contact@fuit.es"
+      },
+      {
+        "text": "instagram",
+        "url": "https://www.instagram.com/fuit_es/"
+      },
+      {
+        "text": "bandcamp",
+        "url": "https://fuites.bandcamp.com/music"
       }
     ]
   },

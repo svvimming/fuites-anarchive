@@ -1,10 +1,10 @@
 <template>
-  <div :class="['landing-site', { 'low-z': authenticated && isNotIndex && !tipsOpen }]">
+  <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }]">
     <div class="inner-panel">
 
       <!-- ============================================================= NAV -->
 
-      <template v-if="!authenticated || !isNotIndex">
+      <template v-if="!authenticated || !isNotLandingPage">
         <div
           v-for="link in links"
           :key="link.text"
@@ -25,7 +25,7 @@
 
       <!-- ============================================================ TIPS -->
 
-      <template v-if="authenticated && isNotIndex">
+      <template v-if="authenticated && isNotLandingPage">
         <div :class="['tips', { tipsOpen }]">
           <ul>
             <li
@@ -40,7 +40,7 @@
 
       <!-- ============================================================ AUTH -->
 
-      <template v-if="!authenticated && isNotIndex">
+      <template v-if="!authenticated && isNotLandingPage">
         <div :class="['auth-container', { active: authPanelOpen }]">
           <button
             v-if="!authPanelOpen"
@@ -116,8 +116,8 @@ export default {
     ...mapGetters({
       authenticated: 'general/authenticated'
     }),
-    isNotIndex () {
-      return this.$route.path !== '/'
+    isNotLandingPage () {
+      return this.$route.path !== '/' && this.$route.path !== '/info'
     }
   },
 

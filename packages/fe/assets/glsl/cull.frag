@@ -21,7 +21,7 @@ void main() {
   vec2 orientation = vec2(1.0, 0.0);
   vec4 cull = vec4(
     vec3(
-      texture2D(uSampler, lookup(uv, colorSeparation * orientation, amp2)).r * 1.1,
+      texture2D(uSampler, lookup(uv, colorSeparation * orientation, amp2)).r,
       texture2D(uSampler, lookup(uv, -colorSeparation * orientation, amp2)).g,
       texture2D(uSampler, lookup(uv, vec2(0.0), amp2)).b
     ),

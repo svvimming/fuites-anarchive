@@ -5,7 +5,7 @@ import CloneDeep from 'lodash/cloneDeep'
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  authenticated: true,
+  authenticated: false,
   clipboard: false,
   filterValue: '',
   loaders: []
