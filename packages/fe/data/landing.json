@@ -1,0 +1,64 @@
+{
+  "index": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        }
+      },
+      {
+        "component": "div",
+        "text": "info",
+        "route": "/info"
+      },
+      {
+        "component": "div",
+        "text": "portal",
+        "route": "/portal"
+      }
+    ],
+    "contact": [
+      {
+        "text": "contact@fuit.es",
+        "url": "mailto:contact@fuit.es"
+      },
+      {
+        "text": "instagram",
+        "url": "https://www.instagram.com/fuit_es/"
+      },
+      {
+        "text": "bandcamp",
+        "url": "https://fuites.bandcamp.com/music"
+      }
+    ]
+  },
+  "portal": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        }
+      }
+    ],
+    "tips": [
+      "to upload a thingie, open the pocket and click upload",
+      "to move a thingie, click and drag it",
+      "to move a thingie between spaces, hold shift while dragging to drag and drop",
+      "to get rid of a thingie, drag and drop it into the open trash"
+    ]
+  }
+}

@@ -2,7 +2,11 @@
   <div :class="['pocket-wrapper', { open: pocketIsOpen }]">
     <div class="pocket-container">
 
-      <Irridescence :freq="0.005" />
+      <Shader
+        id="pocket-shader"
+        :image="turbulence"
+        :pulse="0.3"
+        :exposure="0.3" />
 
       <div
         class="pocket"
@@ -12,10 +16,6 @@
 
         <!-- Uploader ********************************************************** -->
         <div class="uploader-wrapper">
-          <div class="help-text">
-            drag a thingie to move it<br>
-            hold shift while dragging to drag and drop
-          </div>
           <SingleFileUploader />
         </div>
 
@@ -49,7 +49,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
-import Irridescence from '@/components/irridescence'
+import Shader from '@/components/shader'
 import SingleFileUploader from '@/components/single-file-uploader'
 
 // ====================================================================== Export
@@ -58,13 +58,18 @@ export default {
 
   components: {
     Thingie,
-    Irridescence,
+    Shader,
     SingleFileUploader
   },
 
   data () {
     return {
-      socket: false
+      socket: false,
+      turbulence: {
+        src: '/portal/turbulence.png',
+        width: 800,
+        height: 500
+      }
     }
   },
 
@@ -161,35 +166,23 @@ export default {
 .pocket-container {
   position: relative;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 50%;
   z-index: 1;
-  padding: 1rem;
-  height: 27rem;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(white, 0.85);
-    z-index: -2;
-  }
+  width: 36rem;
+  height: 24rem;
 }
 
 .pocket {
   position: relative;
-  width: 40rem;
-  height: 25rem;
   z-index: 1;
+  width: 36rem;
+  height: 24rem;
 }
 
-:deep(.turbulence-bg) {
+#pocket-shader {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -3.5rem;
+  left: -6.5rem;
   z-index: -1;
   opacity: 0.66;
 }
@@ -201,37 +194,20 @@ export default {
   color: white;
 }
 
-// ///////////////////////////////////////////////////////////////////// Thingie
-.thingie {
-  width: 160px;
-  cursor: grab;
-  &:active {
-    cursor: grabbing;
-  }
-  img {
-    width: 100%;
-    pointer-events: none;
-  }
-}
-
 // //////////////////////////////////////////////////////////////////// Uploader
 .uploader-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  width: 33%;
+  position: absolute;
+  top: 1rem;
+  left: calc(50%);
+  transform: translateX(-50%);
   padding: 1rem;
   margin-left: auto;
-  color: rgba(black, 0.7);
-  background-color: rgba(255, 255, 255, 0.7);
-  z-index: 1000;
+  color: black;
+  z-index: 999;
 }
 
-.help-text {
-  @include fontFamily_Merriweather;
-  @include fontSize_Main;
-  margin-bottom: 1rem;
+.thingie {
+  z-index: 1000;
 }
 
 </style>

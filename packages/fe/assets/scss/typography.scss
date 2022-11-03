@@ -13,3 +13,8 @@
 
 @mixin fontSize_teeny { font-size: 0.6875rem; } // fontSize_teeny | 11pt
 @mixin fontSize_Main { font-size: 0.8125rem; } // fontSize_Main | 13pt
+
+@mixin fontWeight_Regular { font-weight: 400; }
+@mixin fontWeight_Medium { font-weight: 500; }
+@mixin fontWeight_Semibold { font-weight: 600; }
+@mixin fontWeight_Bold { font-weight: 700; }

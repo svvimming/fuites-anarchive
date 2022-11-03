@@ -97,7 +97,7 @@ body {
   padding: 0;
   margin: 0;
   height: auto;
-  color: white;
+  color: black;
   font-size: 16px;
   line-height: 1.2;
   letter-spacing: 0px;
@@ -368,6 +368,12 @@ h6, .h6 {
   z-index: 100;
 }
 
+.super-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
 [class~="grid"],
 [class*="grid-"],
 [class*="grid_"] {
@@ -404,6 +410,15 @@ h6, .h6 {
     transition: 250ms ease-in;
     transform: scale(1.05);
   }
+}
+
+.no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 ///////////////////////////////////////////////////////////////////// Components
@@ -484,24 +499,36 @@ h6, .h6 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 2px solid white;
-  background-color: black;
   padding: 1rem;
   border-radius: 3rem;
+  @include popInAnimation;
   .icon {
     display: none;
   }
   .message {
     font-weight: 500;
+    @include linkShadow;
   }
 }
 
 .thingie {
   position: absolute;
+  width: 80px;
+  cursor: grab;
   &.image,
   &.text,
   &.sound,
   &.video {
     position: absolute;
+  }
+  &:active {
+    cursor: grabbing;
+  }
+  img {
+    width: 100%;
+    pointer-events: none;
+  }
+  &.locked {
+    pointer-events: none;
   }
 }

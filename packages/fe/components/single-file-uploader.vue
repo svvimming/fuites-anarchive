@@ -237,13 +237,8 @@ export default {
 
 // ///////////////////////////////////////////////////////////////////// Buttons
 .uploader-button {
-  border: 1px solid rgba(black, 0.3);
-  border-radius: 0.375rem;
-  transition: 200ms ease;
-  &:hover {
-    border: 1px solid rgba(black, 0.5);
-    border-radius: 0.5rem;
-  }
+  @include linkHover(#000000);
+  padding: 0.5rem 1rem;
 }
 .upload-file-button,
 .upload-another-file-button {
@@ -255,6 +250,6 @@ export default {
 }
 
 :deep(.button) {
-  @include fontFamily_Arvo;
+  @include link;
 }
 </style>
