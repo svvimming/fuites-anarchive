@@ -2,8 +2,6 @@
   <div :class="['compost-portal-wrapper', { open: compostPortalIsOpen }]">
     <div class="compost-portal-container">
 
-      <!-- <Irridescence :freq="0.00025" /> -->
-
       <Shader
         id="compost-portal-shader"
         :image="wormhole"
@@ -67,6 +65,7 @@ export default {
       removeThingie: 'collections/removeThingie'
     }),
     onCompost (evt) {
+      console.log(evt)
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
       this.deleteThingie (thingieId)
@@ -107,17 +106,6 @@ export default {
   height: 16rem;
 }
 
-:deep(.turbulence-bg) {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  opacity: 0.66;
-  transform: scale(2.5) rotate(25deg);
-}
-
 .compost-portal {
   position: relative;
   height: 14rem;
@@ -132,6 +120,7 @@ export default {
   position: absolute;
   top: -2rem;
   left: -2rem;
+  z-index: -1;
 }
 
 </style>

@@ -43,6 +43,13 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   background-repeat: no-repeat;
 }
 
+@mixin link {
+	@include fontSize_Main;
+  @include fontWeight_Bold;
+  letter-spacing: 0.1em;
+  @include fontFamily_NanumMyeongjo;
+}
+
 @mixin linkShadow {
 	filter: drop-shadow(0px 0px 0.5px rgba(0, 0, 0, 0.6));
 }

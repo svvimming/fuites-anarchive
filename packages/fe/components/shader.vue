@@ -20,6 +20,8 @@ import Throttle from 'lodash/throttle'
 import vertexShaderSource from '@/assets/glsl/cull.vert'
 import fragmentShaderSource from '@/assets/glsl/cull.frag'
 
+import Irridescence from '@/components/irridescence'
+
 // /////////////////////////////////////////////////////////////////// Functions
 const initWebglCanvas = (instance) => {
   resizeCanvas(instance)
@@ -259,10 +261,10 @@ const loadShader = (gl, type, source) => {
 const resizeCanvas = (instance) => {
   if (instance.$refs.glCanvas && instance.$refs.sampler) {
     const canvas = instance.$refs.glCanvas
-    const image = instance.$refs.sampler
-    const rect = image.getBoundingClientRect()
-    canvas.width = rect.width
-    canvas.height = rect.height
+    // const image = instance.$refs.sampler
+    // const rect = image.getBoundingClientRect()
+    canvas.width = instance.image.width
+    canvas.height = instance.image.height
   }
 }
 
@@ -275,6 +277,10 @@ const updateMousePosition = (e, instance) => {
 // ////////////////////////////////////////////////////////////////////// Export
 export default {
   name: 'Shader',
+
+  components: {
+    Irridescence
+  },
 
   data () {
     return {
@@ -346,5 +352,15 @@ export default {
 
 .sampler-image {
   opacity: 0;
+}
+
+:deep(.turbulence-bg) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.66;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="landing-site">
+  <div :class="['landing-site', { 'low-z': authenticated && isNotIndex && !tipsOpen }]">
     <div class="inner-panel">
 
       <!-- ============================================================= NAV -->
@@ -144,6 +144,9 @@ export default {
   top: 0;
   left: 0;
   z-index: 1000;
+  &.low-z {
+    z-index: -1;
+  }
 }
 
 .inner-panel {

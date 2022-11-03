@@ -132,18 +132,4 @@ export default {
   z-index: 1;
 }
 
-.thingie {
-  width: 160px;
-  cursor: grab;
-  &:active {
-    cursor: grabbing;
-  }
-  img {
-    width: 100%;
-    pointer-events: none;
-  }
-  &.locked {
-    pointer-events: none;
-  }
-}
 </style>
