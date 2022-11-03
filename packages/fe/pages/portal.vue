@@ -69,9 +69,14 @@ export default {
     })
   },
 
+  beforeDestroy () {
+    this.clearThingies()
+  },
+
   methods: {
     ...mapActions({
-      updateThingie: 'collections/updateThingie'
+      updateThingie: 'collections/updateThingie',
+      clearThingies: 'collections/clearThingies'
     }),
     initMousedown (evt, mousedown, thingie) {
       if (this.authenticated) {

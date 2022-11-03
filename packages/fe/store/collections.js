@@ -62,6 +62,10 @@ const actions = {
   removeThingie ({ commit, getters }, thingieId) {
     const index = getters.thingies.findIndex(obj => obj._id === thingieId)
     commit('REMOVE_THINGIE', index)
+  },
+  // ///////////////////////////////////////////////////////////// clearThingies
+  clearThingies ({ commit, getters}) {
+    commit('CLEAR_THINGIES')
   }
 }
 
@@ -79,6 +83,9 @@ const mutations = {
   },
   REMOVE_THINGIE (state, index) {
     state.thingies.splice(index, 1)
+  },
+  CLEAR_THINGIES (state) {
+    state.thingies = []
   }
 }
 
