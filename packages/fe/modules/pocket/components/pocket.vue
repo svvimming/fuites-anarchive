@@ -66,7 +66,7 @@ export default {
     return {
       socket: false,
       turbulence: {
-        src: '/portal/turbulence2.png',
+        src: '/portal/turbulence.png',
         width: 800,
         height: 500
       }
