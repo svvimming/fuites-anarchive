@@ -9,7 +9,8 @@
 
       <Thingie
         :thingie="thingie"
-        @drag="initDrag">
+        @drag="initDrag"
+        @wheel.native="initWheel($event, thingie)">
         <div
           slot-scope="{ mousedown, mouseup, startDrag, wheel, styles }"
           draggable
@@ -17,8 +18,7 @@
           :style="styles"
           @mousedown="initMousedown($event, mousedown, thingie)"
           @mouseup="initMouseup($event, mouseup, thingie)"
-          @dragstart="startDrag($event)"
-          @wheel="initWheel($event, thingie)">
+          @dragstart="startDrag($event)">
           <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
         </div>
       </Thingie>
@@ -108,7 +108,6 @@ export default {
     },
     initWheel (evt, thingie) {
       evt.preventDefault();
-      console.log(evt)
       if (evt.ctrlKey) {
         if (evt.altKey) {
           const angle = !Number.isNaN(thingie.angle) ? thingie.angle : 0
@@ -120,9 +119,15 @@ export default {
         } else {
           const width = thingie.width ? thingie.width : 80
           const newWidth = Math.max(width - evt.deltaY, 1)
+          const delta = (width - newWidth) / 2
           this.socket.emit('update-thingie', {
             _id: thingie._id,
-            width: newWidth
+            width: newWidth,
+            at: {
+              x: thingie.at.x + delta,
+              y: thingie.at.y + delta,
+              z: thingie.at.z
+            }
           })
         }
       }

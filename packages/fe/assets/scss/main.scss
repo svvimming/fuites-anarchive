@@ -516,7 +516,7 @@ h6, .h6 {
   width: 80px;
   cursor: grab;
   transform-origin: center;
-  transition: width 100ms linear, transform 100ms linear;
+  transition: all 50ms linear;
   &.image,
   &.text,
   &.sound,
