@@ -36,6 +36,14 @@ const ThingieSchema = new Schema({
       type: Number,
       required: true
     }
+  },
+  width: {
+    type: Number,
+    required: true
+  },
+  angle: {
+    type: Number,
+    required: true
   }
 }, {
   timestamps: true,

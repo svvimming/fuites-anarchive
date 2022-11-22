@@ -24,11 +24,19 @@ export default {
     position () {
       return this.thingie.at
     },
+    scale () {
+      return this.thingie.width ? this.thingie.width : 80
+    },
+    rotate () {
+      return this.thingie.angle
+    },
     styles () {
       return {
         left: this.position.x + 'px',
         top: this.position.y + 'px',
-        zIndex: this.position.z + 'px'
+        zIndex: this.position.z + 'px',
+        width: this.scale + 'px',
+        transform: `rotate(${this.rotate}deg)`
       }
     }
   },
@@ -85,6 +93,16 @@ export default {
       evt.dataTransfer.effectAllowed = 'move'
       evt.dataTransfer.setData('_id', this.thingie._id)
     }
+    // wheel (evt) {
+    //   evt.preventDefault();
+    //   if (evt.ctrlKey && this.scale) {
+    //     const coef = this.scale - evt.deltaY * 0.01
+    //     this.$emit('wheel', {
+    //       _id: this.thingie._id,
+    //       scale: coef
+    //     })
+    //   }
+    // }
   },
 
   render () {

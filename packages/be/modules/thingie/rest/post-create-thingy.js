@@ -22,7 +22,9 @@ MC.app.post('/post-create-thingie', async (req, res) => {
         x: Math.random() * 300,
         y: Math.random() * 300,
         z: Math.random() * 300
-      }
+      },
+      width: 80,
+      angle: 0
     })
     await created.populate({
       path: 'file_ref',
