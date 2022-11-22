@@ -58,7 +58,10 @@
       "to upload a thingie, open the pocket and click upload",
       "to move a thingie, click and drag it",
       "to move a thingie between spaces, hold shift while dragging to drag and drop",
-      "to get rid of a thingie, drag and drop it into the open trash"
+      "to get rid of a thingie, drag and drop it into the open trash",
+      "br",
+      "to shrink or enlarge a thingie, hover over it with two finger and make a pinching gesture",
+      "to rotate a thingie, do the above while holding down the option key"
     ]
   }
 }
