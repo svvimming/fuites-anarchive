@@ -1,3 +1,18 @@
+<template>
+  <div
+    :thingie="thingie"
+    draggable
+    :class="['thingie', { locked: !authenticated }]"
+    :style="styles"
+    @mousedown="mousedown($event)"
+    @dragstart="startDrag($event)"
+    @wheel="wheel($event)">
+
+    <slot></slot>
+
+  </div>
+</template>
+
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
@@ -43,66 +58,89 @@ export default {
 
   methods: {
     ...mapActions({
-      updateThingie: 'collections/updateThingie'
+      updateThingie: 'collections/updateThingie',
+      authenticated: 'general/authenticated'
     }),
     mousedown (evt) {
-      // console.log('mousedown')
-      if (!evt.shiftKey && !this.thingie.dragging) {
-        evt.preventDefault()
-        const thingie = this.$el
-        const thingieRect = thingie.getBoundingClientRect()
-        this.handleX = evt.clientX - thingieRect.left
-        this.handleY = evt.clientY - thingieRect.top
-        document.onmousemove = this.$throttle((e) => { this.drag(e) })
-        document.onmouseup = this.mouseup
+      if (this.authenticated) {
+        if (!evt.shiftKey && !this.thingie.dragging) {
+          evt.preventDefault()
+          const thingie = this.$el
+          const thingieRect = thingie.getBoundingClientRect()
+          this.handleX = evt.clientX - thingieRect.left
+          this.handleY = evt.clientY - thingieRect.top
+          document.onmousemove = this.$throttle((e) => { this.drag(e) })
+          document.onmouseup = this.mouseup
+          this.$emit('initmousedown', { _id: this.thingie._id })
+        }
       }
     },
     drag (evt) {
-      // console.log('drag')
-      evt.preventDefault()
-      const parent = this.$parent.$el
-      const rect = parent.getBoundingClientRect()
-      let x = Math.max(0, evt.clientX - rect.left - this.handleX)
-      let y = Math.max(0, evt.clientY - rect.top - this.handleY)
-      if (this.thingie.location === 'pocket') {
-        const thingie = this.$el
-        const thingieRect = thingie.getBoundingClientRect()
-        x = Math.min(640 - thingieRect.width, x)
-        y = Math.min(400 - thingieRect.height, y)
-      }
-      this.$emit('drag', {
-        _id: this.thingie._id,
-        at: {
-          x: x,
-          y: y,
-          z: this.position.z
+      if (this.authenticated) {
+        evt.preventDefault()
+        const parent = this.$parent.$el
+        const rect = parent.getBoundingClientRect()
+        let x = Math.max(0, evt.clientX - rect.left - this.handleX)
+        let y = Math.max(0, evt.clientY - rect.top - this.handleY)
+        if (this.thingie.location === 'pocket') {
+          const thingie = this.$el
+          const thingieRect = thingie.getBoundingClientRect()
+          x = Math.min(640 - thingieRect.width, x)
+          y = Math.min(400 - thingieRect.height, y)
         }
-      })
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          at: {
+            x: x,
+            y: y,
+            z: this.position.z
+          }
+        })
+      }
     },
     mouseup (evt) {
-      // console.log('mouseup')
-      evt.preventDefault()
-      this.handleX = false
-      this.handleY = false
-      document.onmousemove = null
-      document.onmouseup = null
+      if (this.authenticated) {
+        evt.preventDefault()
+        this.handleX = false
+        this.handleY = false
+        document.onmousemove = null
+        document.onmouseup = null
+        this.$emit('initmouseup', { _id: this.thingie._id })
+      }
     },
     startDrag (evt) {
-      // console.log('startDrag')
-      evt.dataTransfer.dropEffect = 'move'
-      evt.dataTransfer.effectAllowed = 'move'
-      evt.dataTransfer.setData('_id', this.thingie._id)
+      if (this.authenticated) {
+        evt.dataTransfer.dropEffect = 'move'
+        evt.dataTransfer.effectAllowed = 'move'
+        evt.dataTransfer.setData('_id', this.thingie._id)
+      }
+    },
+    wheel (evt) {
+      evt.preventDefault();
+      if (evt.ctrlKey) {
+        if (evt.altKey) {
+          const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+          const newAngle = angle - evt.deltaY
+          this.$emit('initupdate', {
+            _id: this.thingie._id,
+            angle: newAngle
+          })
+        } else {
+          const width = this.thingie.width ? this.thingie.width : 80
+          const newWidth = Math.max(width - evt.deltaY, 1)
+          const delta = (width - newWidth) / 2
+          this.$emit('initupdate', {
+            _id: this.thingie._id,
+            width: newWidth,
+            at: {
+              x: this.thingie.at.x + delta,
+              y: this.thingie.at.y + delta,
+              z: this.thingie.at.z
+            }
+          })
+        }
+      }
     }
-    // wheel (evt) {
-    //   evt.preventDefault();
-    //   if (evt.ctrlKey && this.scale) {
-    //     const coef = this.scale - evt.deltaY * 0.01
-    //     this.$emit('wheel', {
-    //       _id: this.thingie._id,
-    //       scale: coef
-    //     })
-    //   }
-    // }
   },
 
   render () {
@@ -115,3 +153,30 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
+.thingie {
+  position: absolute;
+  width: 80px;
+  cursor: grab;
+  transform-origin: center;
+  transition: all 50ms linear;
+  &.image,
+  &.text,
+  &.sound,
+  &.video {
+    position: absolute;
+  }
+  &:active {
+    cursor: grabbing;
+  }
+  img {
+    width: 100%;
+    pointer-events: none;
+  }
+  &.locked {
+    pointer-events: none;
+  }
+}
+</style>

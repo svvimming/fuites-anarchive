@@ -3,24 +3,27 @@
     class="spz"
     @drop="onDrop($event)"
     @dragover.prevent
-    @dragenter.prevent>
+    @dragenter.prevent
+    @click.alt.self="openEditor($event)"
+    @click.self="closeEditor($event)">
+
+    <div
+      :class="['editor', { open: editor.open }]"
+      :style="{ left: editor.left + 'px', top: editor.top + 'px' }">
+      <form>
+        <textarea />
+        <input type="submit" />
+      </form>
+    </div>
 
     <template v-for="thingie in spazeThingies">
 
       <Thingie
         :thingie="thingie"
-        @drag="initDrag"
-        @wheel.native="initWheel($event, thingie)">
-        <div
-          slot-scope="{ mousedown, mouseup, startDrag, wheel, styles }"
-          draggable
-          :class="['thingie', { locked: !authenticated }]"
-          :style="styles"
-          @mousedown="initMousedown($event, mousedown, thingie)"
-          @mouseup="initMouseup($event, mouseup, thingie)"
-          @dragstart="startDrag($event)">
-          <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
-        </div>
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup">
+        <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
       </Thingie>
 
     </template>
@@ -50,7 +53,8 @@ export default {
 
   data () {
     return {
-      socket: false
+      socket: false,
+      editor: { open: false }
     }
   },
 
@@ -79,68 +83,27 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearThingies: 'collections/clearThingies'
     }),
-    initMousedown (evt, mousedown, thingie) {
-      if (this.authenticated) {
-        // console.log('initMousedown')
-        mousedown(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: true
-        })
-      }
-    },
-    initMouseup (evt, mouseup, thingie) {
-      if (this.authenticated) {
-        // console.log('initMouseup')
-        mouseup(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: false
-        })
-      }
-    },
-    initDrag (thingie) {
-      // console.log('initDrag')
+    initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        at: thingie.at
+        dragging: true
       })
     },
-    initWheel (evt, thingie) {
-      evt.preventDefault();
-      if (evt.ctrlKey) {
-        if (evt.altKey) {
-          const angle = !Number.isNaN(thingie.angle) ? thingie.angle : 0
-          const newAngle = angle - evt.deltaY
-          this.socket.emit('update-thingie', {
-            _id: thingie._id,
-            angle: newAngle
-          })
-        } else {
-          const width = thingie.width ? thingie.width : 80
-          const newWidth = Math.max(width - evt.deltaY, 1)
-          const delta = (width - newWidth) / 2
-          this.socket.emit('update-thingie', {
-            _id: thingie._id,
-            width: newWidth,
-            at: {
-              x: thingie.at.x + delta,
-              y: thingie.at.y + delta,
-              z: thingie.at.z
-            }
-          })
-        }
-      }
+    initMouseup (thingie) {
+      this.socket.emit('update-thingie', {
+        _id: thingie._id,
+        dragging: false
+      })
+    },
+    initUpdate (thingie) {
+      this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
       if (this.authenticated) {
-        // console.log('onDrop — spaze')
         evt.preventDefault()
-
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
         const y = evt.clientY - rect.top
-
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
@@ -148,6 +111,21 @@ export default {
           dragging: false,
           at: { x, y, z: 1 }
         })
+      }
+    },
+    openEditor (evt) {
+      this.editor = {
+        open: true,
+        left: evt.clientX,
+        top: evt.clientY
+      }
+    },
+    closeEditor (evt) {
+      console.log(evt)
+      if (this.editor.open && !evt.altKey) {
+        this.editor = {
+          open: false
+        }
       }
     }
   }
@@ -162,6 +140,15 @@ export default {
   width: 100%;
   overflow: scroll;
   z-index: 1;
+}
+
+.editor {
+  position: absolute;
+  border: 1px solid black;
+  visibility: hidden;
+  &.open {
+    visibility: visible;
+  }
 }
 
 </style>

@@ -23,17 +23,10 @@
 
           <Thingie
             :thingie="thingie"
-            @drag="initDrag">
-            <div
-              slot-scope="{ mousedown, mouseup, startDrag, styles }"
-              draggable
-              class="thingie"
-              :style="styles"
-              @mousedown="initMousedown($event, mousedown, thingie)"
-              @mouseup="initMouseup($event, mouseup, thingie)"
-              @dragstart="startDrag($event)">
-              <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
-            </div>
+            @initmousedown="initMousedown"
+            @initupdate="initUpdate"
+            @initmouseup="initMouseup">
+            <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
           </Thingie>
 
         </template>
@@ -101,44 +94,35 @@ export default {
       updateThingie: 'collections/updateThingie',
       addThingie: 'collections/addThingie'
     }),
-    initMousedown (evt, mousedown, thingie) {
-      console.log('initMousedown')
-      mousedown(evt)
+    initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
         dragging: true
       })
     },
-    initMouseup (evt, mouseup, thingie) {
-      console.log('initMouseup')
-      mouseup(evt)
+    initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
         dragging: false
       })
     },
-    initDrag (thingie) {
-      console.log('initDrag')
-      this.socket.emit('update-thingie', {
-        _id: thingie._id,
-        at: thingie.at
-      })
+    initUpdate (thingie) {
+      this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
-      console.log('onDrop — pocket')
-      evt.preventDefault()
-
-      const rect = evt.target.getBoundingClientRect()
-      const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
-      const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
-
-      const thingieId = evt.dataTransfer.getData('_id')
-      this.socket.emit('update-thingie', {
-        _id: thingieId,
-        location: 'pocket',
-        dragging: false,
-        at: { x, y, z: 1 }
-      })
+      if (this.authenticated) {
+        evt.preventDefault()
+        const rect = evt.target.getBoundingClientRect()
+        const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
+        const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
+        const thingieId = evt.dataTransfer.getData('_id')
+        this.socket.emit('update-thingie', {
+          _id: thingieId,
+          location: 'pocket',
+          dragging: false,
+          at: { x, y, z: 1 }
+        })
+      }
     }
   }
 }

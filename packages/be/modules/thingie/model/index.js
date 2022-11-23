@@ -44,6 +44,11 @@ const ThingieSchema = new Schema({
   angle: {
     type: Number,
     required: true
+  },
+  media: {
+    type: String,
+    required: true,
+    enum: ['image', 'text', 'sound', 'video']
   }
 }, {
   timestamps: true,

@@ -510,27 +510,3 @@ h6, .h6 {
     @include linkShadow;
   }
 }
-
-.thingie {
-  position: absolute;
-  width: 80px;
-  cursor: grab;
-  transform-origin: center;
-  transition: all 50ms linear;
-  &.image,
-  &.text,
-  &.sound,
-  &.video {
-    position: absolute;
-  }
-  &:active {
-    cursor: grabbing;
-  }
-  img {
-    width: 100%;
-    pointer-events: none;
-  }
-  &.locked {
-    pointer-events: none;
-  }
-}
