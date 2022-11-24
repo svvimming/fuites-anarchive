@@ -11,12 +11,12 @@ const ThingieSchema = new Schema({
   file_ref: {
     type: Schema.Types.ObjectId,
     ref: 'uploads',
-    required: true
+    required: false
   },
   location: {
     type: String,
     required: true,
-    enum: ['space', 'pocket', 'compost']
+    enum: ['spaze', 'pocket', 'compost']
   },
   dragging: {
     type: Boolean,
@@ -45,10 +45,18 @@ const ThingieSchema = new Schema({
     type: Number,
     required: true
   },
-  media: {
+  thingie_type: {
     type: String,
     required: true,
     enum: ['image', 'text', 'sound', 'video']
+  },
+  text: {
+    type: String,
+    required: false
+  },
+  creator_token: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true,

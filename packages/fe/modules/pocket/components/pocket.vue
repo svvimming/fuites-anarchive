@@ -26,7 +26,17 @@
             @initmousedown="initMousedown"
             @initupdate="initUpdate"
             @initmouseup="initMouseup">
-            <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
+
+            <template v-if="thingie.thingie_type === 'text'">
+              <div class="text-feel">
+                {{ thingie.text }}
+              </div>
+            </template>
+
+            <template v-else>
+              <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
+            </template>
+            
           </Thingie>
 
         </template>

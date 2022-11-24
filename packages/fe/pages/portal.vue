@@ -7,14 +7,10 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
-    <div
-      :class="['editor', { open: editor.open }]"
-      :style="{ left: editor.left + 'px', top: editor.top + 'px' }">
-      <form>
-        <textarea />
-        <input type="submit" />
-      </form>
-    </div>
+    <PropBoard
+      v-if="authenticated"
+      ref="propboard"
+      :location="editor" />
 
     <template v-for="thingie in spazeThingies">
 
@@ -23,7 +19,17 @@
         @initmousedown="initMousedown"
         @initupdate="initUpdate"
         @initmouseup="initMouseup">
-        <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
+
+        <template v-if="thingie.thingie_type === 'text'">
+          <div class="text-feel">
+            {{ thingie.text }}
+          </div>
+        </template>
+
+        <template v-else>
+          <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
+        </template>
+
       </Thingie>
 
     </template>
@@ -36,6 +42,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
+import PropBoard from '@/components/prop-board'
 
 // ====================================================================== Export
 export default {
@@ -44,7 +51,8 @@ export default {
   layout: 'spaze',
 
   components: {
-    Thingie
+    Thingie,
+    PropBoard
   },
 
   async fetch ({ app, store }) {
@@ -54,7 +62,10 @@ export default {
   data () {
     return {
       socket: false,
-      editor: { open: false }
+      editor: {
+        x: 0,
+        y: 0
+      }
     }
   },
 
@@ -114,17 +125,18 @@ export default {
       }
     },
     openEditor (evt) {
-      this.editor = {
-        open: true,
-        left: evt.clientX,
-        top: evt.clientY
+      if (this.authenticated) {
+        this.editor = {
+          x: evt.clientX,
+          y: evt.clientY
+        }
+        this.$refs.propboard.openEditor()
       }
     },
     closeEditor (evt) {
-      console.log(evt)
-      if (this.editor.open && !evt.altKey) {
-        this.editor = {
-          open: false
+      if (this.authenticated) {
+        if (!evt.altKey) {
+          this.$refs.propboard.closeEditor()
         }
       }
     }
@@ -141,14 +153,4 @@ export default {
   overflow: scroll;
   z-index: 1;
 }
-
-.editor {
-  position: absolute;
-  border: 1px solid black;
-  visibility: hidden;
-  &.open {
-    visibility: visible;
-  }
-}
-
 </style>

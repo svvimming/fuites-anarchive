@@ -28,10 +28,15 @@ const actions = {
     commit('ADD_THINGIE', thingie)
   },
   // ///////////////////////////////////////////////////////// postCreateThingie
-  async postCreateThingie ({ dispatch }, payload) {
+  async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
+      const token = rootGetters['pocket/pocket']
       const response = await this.$axiosAuth.post('/post-create-thingie', {
-        file_id: payload.uploadedFileId
+        file_id: payload.uploadedFileId,
+        location: payload.location,
+        creator_token: token,
+        thingie_type: payload.type,
+        text: payload.text
       })
       return response.data.payload
     } catch (e) {

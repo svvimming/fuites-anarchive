@@ -1,8 +1,7 @@
 <template>
   <div
-    :thingie="thingie"
     draggable
-    :class="['thingie', { locked: !authenticated }]"
+    :class="['thingie', `${type}-thingie`, { locked: !authenticated }]"
     :style="styles"
     @mousedown="mousedown($event)"
     @dragstart="startDrag($event)"
@@ -36,6 +35,12 @@ export default {
   },
 
   computed: {
+    ...mapGetters({
+      authenticated: 'general/authenticated'
+    }),
+    type () {
+      return this.thingie.thingie_type
+    },
     position () {
       return this.thingie.at
     },
@@ -52,14 +57,14 @@ export default {
         zIndex: this.position.z + 'px',
         width: this.scale + 'px',
         transform: `rotate(${this.rotate}deg)`
+        // '--relative-font-size': `${this.scale * 13 / 80}px`
       }
     }
   },
 
   methods: {
     ...mapActions({
-      updateThingie: 'collections/updateThingie',
-      authenticated: 'general/authenticated'
+      updateThingie: 'collections/updateThingie'
     }),
     mousedown (evt) {
       if (this.authenticated) {
@@ -113,31 +118,34 @@ export default {
         evt.dataTransfer.dropEffect = 'move'
         evt.dataTransfer.effectAllowed = 'move'
         evt.dataTransfer.setData('_id', this.thingie._id)
+        console.log('hit')
       }
     },
     wheel (evt) {
-      evt.preventDefault();
-      if (evt.ctrlKey) {
-        if (evt.altKey) {
-          const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-          const newAngle = angle - evt.deltaY
-          this.$emit('initupdate', {
-            _id: this.thingie._id,
-            angle: newAngle
-          })
-        } else {
-          const width = this.thingie.width ? this.thingie.width : 80
-          const newWidth = Math.max(width - evt.deltaY, 1)
-          const delta = (width - newWidth) / 2
-          this.$emit('initupdate', {
-            _id: this.thingie._id,
-            width: newWidth,
-            at: {
-              x: this.thingie.at.x + delta,
-              y: this.thingie.at.y + delta,
-              z: this.thingie.at.z
-            }
-          })
+      if (this.authenticated) {
+        evt.preventDefault();
+        if (evt.ctrlKey) {
+          if (evt.altKey) {
+            const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+            const newAngle = angle - evt.deltaY
+            this.$emit('initupdate', {
+              _id: this.thingie._id,
+              angle: newAngle
+            })
+          } else {
+            const width = this.thingie.width ? this.thingie.width : 80
+            const newWidth = Math.max(width - evt.deltaY, 1)
+            const delta = (width - newWidth) / 2
+            this.$emit('initupdate', {
+              _id: this.thingie._id,
+              width: newWidth,
+              at: {
+                x: this.thingie.at.x + delta,
+                y: this.thingie.at.y + delta,
+                z: this.thingie.at.z
+              }
+            })
+          }
         }
       }
     }
@@ -161,12 +169,11 @@ export default {
   width: 80px;
   cursor: grab;
   transform-origin: center;
-  transition: all 50ms linear;
-  &.image,
-  &.text,
-  &.sound,
-  &.video {
-    position: absolute;
+  // transition: all 100ms linear;
+  &.image-thingie,
+  &.text-thingie,
+  &.sound-thingie,
+  &.video-thingie {
   }
   &:active {
     cursor: grabbing;
@@ -177,6 +184,18 @@ export default {
   }
   &.locked {
     pointer-events: none;
+  }
+}
+
+.thingie.text-thingie {
+  // --relative-font-size: 13px;
+  ::v-deep .text-feel {
+    position: relative;
+    width: fit-content;
+    margin: auto;
+    z-index: 0;
+    pointer-events: none;
+    // font-size: var(--relative-font-size);
   }
 }
 </style>

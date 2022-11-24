@@ -5,7 +5,7 @@ import CloneDeep from 'lodash/cloneDeep'
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  authenticated: true,
+  authenticated: false,
   clipboard: false,
   filterValue: '',
   loaders: []
@@ -48,7 +48,7 @@ const actions = {
     }
   },
   // ////////////////////////////////////////////////////////////// authenticate
-  async authenticate ({ commit, getters }, token) {
+  async authenticate ({ commit, getters, dispatch }, token) {
     try {
       const response = await this.$axiosAuth.get('/authenticate', {
         params: { token }
@@ -59,6 +59,9 @@ const actions = {
         category: authenticated ? 'success' : 'error',
         message: response.data.message
       })
+      if (authenticated) {
+        dispatch('pocket/setPocketToken', token, { root: true })
+      }
       commit('SET_AUTHENTICATION_STATUS', authenticated)
     } catch (e) {
       console.log('====================== [Store Action: general/authenticate]')
