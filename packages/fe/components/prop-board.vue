@@ -2,7 +2,7 @@
   <div
     :class="['prop-board', { open }]"
     :style="editorStyles">
-    <form action="">
+    <form action="" class="text-form">
 
       <div class="text-area-wrapper">
         <textarea v-model="text" class="text-input" />
@@ -10,8 +10,9 @@
 
       <button
         type="submit"
+        class="add-button"
         @click.prevent="createTextThingie">
-        submit
+        add
       </button>
 
     </form>
@@ -92,10 +93,42 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .prop-board {
   position: absolute;
-  border: 1px solid black;
+  padding: 0.25rem;
+  width: 20rem;
+  height: 8rem;
+  @include focusBoxShadowSmall;
+  border-radius: 0.25rem;
+  background-color: #ffffff;
   visibility: hidden;
+  @include popOutAnimation;
+  z-index: 100000;
   &.open {
     visibility: visible;
+    @include popInAnimation;
   }
+}
+
+.text-form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.text-area-wrapper {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.text-input {
+  width: 100%;
+  height: 100%;
+}
+
+.add-button {
+  width: fit-content;
+  align-self: flex-end;
+  margin-right: 0.5rem;
+  @include linkHover(#000000);
 }
 </style>

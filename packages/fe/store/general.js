@@ -7,7 +7,7 @@ import LandingData from '@/data/landing.json'
 // -----------------------------------------------------------------------------
 const state = () => ({
   landing: {},
-  authenticated: true,
+  authenticated: false,
   clipboard: false,
   filterValue: '',
   loaders: []
