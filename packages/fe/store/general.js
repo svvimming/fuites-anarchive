@@ -1,11 +1,13 @@
 // ///////////////////////////////////////////////////////// Imports & Variables
 // -----------------------------------------------------------------------------
 import CloneDeep from 'lodash/cloneDeep'
+import LandingData from '@/data/landing.json'
 
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  authenticated: false,
+  landing: {},
+  authenticated: true,
   clipboard: false,
   filterValue: '',
   loaders: []
@@ -14,6 +16,7 @@ const state = () => ({
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
+  landing: state => state.landing,
   authenticated: state => state.authenticated,
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
@@ -23,6 +26,9 @@ const getters = {
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  async setLandingData ({ commit }) {
+    commit('SET_LANDING_DATA', { key: 'data', data: LandingData })
+  },
   // ////////////////////////////////////////////////////////////// setClipboard
   setClipboard ({ commit }, text) {
     this.$addTextToClipboard(text)
@@ -74,8 +80,8 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  SET_SITE_CONTENT (state, payload) {
-    state.siteContent[payload.key] = payload.data
+  SET_LANDING_DATA (state, payload) {
+    state.landing[payload.key] = payload.data
   },
   SET_STATIC_FILE (state, staticFiles) {
     state.staticFiles = staticFiles

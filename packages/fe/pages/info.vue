@@ -80,6 +80,10 @@ export default {
     Shader
   },
 
+  async fetch ({ app, store }) {
+    await store.dispatch('general/setLandingData')
+  },
+
   data () {
     return {
       mew: {

@@ -1,11 +1,38 @@
 <template>
   <div
     draggable
-    :class="['thingie', `${type}-thingie`, { locked: !authenticated }]"
+    :class="['thingie', `${type}-thingie`, { locked: !authenticated }, { editor }, fontfamily]"
     :style="styles"
+    tabindex="1"
     @mousedown="mousedown($event)"
     @dragstart="startDrag($event)"
-    @wheel="wheel($event)">
+    @wheel="wheel($event)"
+    @click.meta="thingieEditor($event)"
+    v-click-outside="closeEditor">
+
+    <div
+      v-if="type === 'text' && editor && authenticated"
+      class="thingie-editor">
+      <div class="font-size-control">
+        <button
+          class="editor-button"
+          @click="changeFontSize('up')">
+          ˄
+        </button>
+        <button
+          class="editor-button"
+          @click="changeFontSize('down')">
+          ˅
+        </button>
+      </div>
+      <div class="font-family-control">
+        <button
+          class="editor-button"
+          @click="changeFontFamily">
+          f
+        </button>
+      </div>
+    </div>
 
     <slot></slot>
 
@@ -30,14 +57,19 @@ export default {
   data () {
     return {
       handleX: false,
-      handleY: false
+      handleY: false,
+      editor: false
     }
   },
 
   computed: {
     ...mapGetters({
+      landing: 'general/landing',
       authenticated: 'general/authenticated'
     }),
+    fonts () {
+      return this.landing.data.font_families
+    },
     type () {
       return this.thingie.thingie_type
     },
@@ -50,15 +82,24 @@ export default {
     rotate () {
       return this.thingie.angle
     },
+    fontfamily () {
+      return this.thingie.fontfamily ? this.thingie.fontfamily : 'nanum'
+    },
+    fontsize () {
+      return this.thingie.fontsize ? this.thingie.fontsize : 13
+    },
     styles () {
-      return {
+      const styles = {
         left: this.position.x + 'px',
         top: this.position.y + 'px',
         zIndex: this.position.z + 'px',
         width: this.scale + 'px',
         transform: `rotate(${this.rotate}deg)`
-        // '--relative-font-size': `${this.scale * 13 / 80}px`
       }
+      if (this.type === 'text') {
+        styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
+      }
+      return styles
     }
   },
 
@@ -68,7 +109,7 @@ export default {
     }),
     mousedown (evt) {
       if (this.authenticated) {
-        if (!evt.shiftKey && !this.thingie.dragging) {
+        if (!evt.shiftKey && !evt.metaKey && !this.thingie.dragging) {
           evt.preventDefault()
           const thingie = this.$el
           const thingieRect = thingie.getBoundingClientRect()
@@ -118,7 +159,6 @@ export default {
         evt.dataTransfer.dropEffect = 'move'
         evt.dataTransfer.effectAllowed = 'move'
         evt.dataTransfer.setData('_id', this.thingie._id)
-        console.log('hit')
       }
     },
     wheel (evt) {
@@ -147,6 +187,41 @@ export default {
             })
           }
         }
+      }
+    },
+    thingieEditor (evt) {
+      if (this.authenticated) {
+        evt.preventDefault()
+        this.editor = !this.editor
+      }
+    },
+    changeFontSize (direction) {
+      const fs = this.fontsize
+      if (direction === 'up') {
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          fontsize: Math.min(500, fs + 1)
+        })
+      }
+      if (direction === 'down') {
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          fontsize: Math.max(1, fs - 1)
+        })
+      }
+    },
+    changeFontFamily () {
+      const current = this.fonts.indexOf(this.fontfamily)
+      const index = (current + 1) % this.fonts.length
+      const family = this.fonts[index]
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        fontfamily: family
+      })
+    },
+    closeEditor () {
+      if (this.editor) {
+        this.editor = false
       }
     }
   },
@@ -185,17 +260,53 @@ export default {
   &.locked {
     pointer-events: none;
   }
+  &.editor {
+    &:before {
+      content: '';
+      position: absolute;
+      top: -1rem;
+      left: -1rem;
+      width: calc(100% + 3rem);
+      height: calc(100% + 2rem);
+      @include focusBoxShadowSmall;
+      border-radius: 0.25rem;
+    }
+  }
 }
 
 .thingie.text-thingie {
-  // --relative-font-size: 13px;
+  --thingie-font-size: 13px;
   ::v-deep .text-feel {
     position: relative;
     width: fit-content;
     margin: auto;
     z-index: 0;
     pointer-events: none;
-    // font-size: var(--relative-font-size);
+    font-size: var(--thingie-font-size);
   }
 }
+
+.thingie-editor {
+  position: absolute;
+  top: 0;
+  right: -0.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: translateX(100%);
+}
+
+.font-size-control {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-button {
+  padding: 0.25rem;
+  @include link;
+  @include fontSize_Bigger;
+  @include linkHover(#000000);
+}
+
 </style>

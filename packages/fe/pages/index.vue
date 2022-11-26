@@ -68,6 +68,10 @@ export default {
     Scatter
   },
 
+  async fetch ({ app, store }) {
+    await store.dispatch('general/setLandingData')
+  },
+
   data () {
     return {
       irridescent: {

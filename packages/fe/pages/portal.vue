@@ -56,6 +56,7 @@ export default {
   },
 
   async fetch ({ app, store }) {
+    await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getThingies')
   },
 

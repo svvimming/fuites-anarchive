@@ -54,6 +54,14 @@ const ThingieSchema = new Schema({
     type: String,
     required: false
   },
+  fontsize: {
+    type: Number,
+    required: false
+  },
+  fontfamily: {
+    type: String,
+    required: false
+  },
   creator_token: {
     type: String,
     required: true

@@ -19,9 +19,9 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       file_ref: body.file_id,
       location: body.location,
       at: {
-        x: Math.random() * 300,
-        y: Math.random() * 300,
-        z: Math.random() * 300
+        x: body.at ? body.at.x : Math.random() * 300,
+        y: body.at ? body.at.y : Math.random() * 300,
+        z: 1
       },
       width: 80,
       angle: 0,

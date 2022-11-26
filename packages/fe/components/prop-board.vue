@@ -72,7 +72,12 @@ export default {
       const complete = await this.postCreateThingie({
         location: 'spaze',
         text: this.text,
-        type: 'text'
+        type: 'text',
+        at: {
+          x: this.location.x,
+          y: this.location.y,
+          z: 1
+        }
       })
       if (complete) {
         this.status = 'upload-finalized'

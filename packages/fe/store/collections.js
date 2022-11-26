@@ -31,13 +31,17 @@ const actions = {
   async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
       const token = rootGetters['pocket/pocket']
-      const response = await this.$axiosAuth.post('/post-create-thingie', {
+      const data = {
         file_id: payload.uploadedFileId,
         location: payload.location,
         creator_token: token,
         thingie_type: payload.type,
         text: payload.text
-      })
+      }
+      if (payload.at) {
+        data.at = payload.at
+      }
+      const response = await this.$axiosAuth.post('/post-create-thingie', data)
       return response.data.payload
     } catch (e) {
       console.log('================== [Store Action: modify/postCreateThingie]')

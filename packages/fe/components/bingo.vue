@@ -14,6 +14,9 @@
 </template>
 
 <script>
+// ====================================================================== Import
+import { mapGetters } from 'vuex'
+
 // ====================================================================== Export
 export default {
   name: 'Bingo',
@@ -38,14 +41,6 @@ export default {
 
   data () {
     return {
-      fonts: [
-        'anton',
-        'arvo',
-        'courier',
-        'merriweather',
-        'nanum',
-        'source-code'
-      ],
       defaults: {
         lsx: 50, // horizontal Letter spacing
         lsy: 30, // vertical Letter spacing
@@ -59,6 +54,12 @@ export default {
   },
 
   computed: {
+    ...mapGetters({
+      landing: 'general/landing'
+    }),
+    fonts () {
+      return this.landing.data.font_families
+    },
     letters () {
       return this.text.split('')
     },
