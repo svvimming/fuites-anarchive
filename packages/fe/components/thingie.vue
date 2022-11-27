@@ -7,7 +7,7 @@
     @mousedown="mousedown($event)"
     @dragstart="startDrag($event)"
     @wheel="wheel($event)"
-    @click.meta="thingieEditor($event)"
+    @click.alt.self="thingieEditor($event)"
     v-click-outside="closeEditor">
 
     <div
@@ -195,6 +195,11 @@ export default {
         this.editor = !this.editor
       }
     },
+    closeEditor () {
+      if (this.editor) {
+        this.editor = false
+      }
+    },
     changeFontSize (direction) {
       const fs = this.fontsize
       if (direction === 'up') {
@@ -218,11 +223,6 @@ export default {
         _id: this.thingie._id,
         fontfamily: family
       })
-    },
-    closeEditor () {
-      if (this.editor) {
-        this.editor = false
-      }
     }
   },
 

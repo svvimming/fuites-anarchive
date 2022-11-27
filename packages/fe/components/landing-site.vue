@@ -60,11 +60,11 @@
                 type="text"
                 autocomplete="off"
                 class="input"
-                @keyup.enter="authenticate(token)" />
+                @keyup.enter="submit(token)" />
             </div>
             <button
               class="link portal-link submit"
-              @click="authenticate(token)">
+              @click="submit(token)">
               submit
             </button>
           </div>
@@ -134,6 +134,10 @@ export default {
         this.token = ''
       }
       this.$refs.input.focus()
+    },
+    submit (token) {
+      const cleaned = token.replaceAll(' ', '-')
+      this.authenticate(cleaned)
     }
   }
 }
