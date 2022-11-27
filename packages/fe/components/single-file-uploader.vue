@@ -137,7 +137,9 @@ export default {
     },
     async finalizeUpload () {
       const complete = await this.postCreateThingie({
-        uploadedFileId: this.file.id
+        uploadedFileId: this.file.id,
+        location: 'pocket',
+        type: 'image'
       })
       if (complete) {
         this.status = 'upload-finalized'

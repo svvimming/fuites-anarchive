@@ -65,7 +65,6 @@ export default {
       removeThingie: 'collections/removeThingie'
     }),
     onCompost (evt) {
-      console.log(evt)
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
       this.deleteThingie (thingieId)

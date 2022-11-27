@@ -12,17 +12,22 @@ MC.app.post('/post-create-thingie', async (req, res) => {
   try {
     const body = req.body
     const upload = await MC.model.Upload.findById(body.file_id)
-    if (!upload) {
+    if (!upload && body.thingie_type !== 'text') {
       throw new Error('File could not be uploaded. Please try again.')
     }
     const created = await MC.model.Thingie.create({
       file_ref: body.file_id,
-      location: 'pocket',
+      location: body.location,
       at: {
-        x: Math.random() * 300,
-        y: Math.random() * 300,
-        z: Math.random() * 300
-      }
+        x: body.at ? body.at.x : Math.random() * 300,
+        y: body.at ? body.at.y : Math.random() * 300,
+        z: 1
+      },
+      width: 80,
+      angle: 0,
+      creator_token: body.creator_token,
+      thingie_type: body.thingie_type,
+      text: body.text
     })
     await created.populate({
       path: 'file_ref',

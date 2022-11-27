@@ -67,7 +67,7 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 }
 
 @mixin focusBoxShadowSmall {
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 3px 3px rgba(203, 192, 217, 0.5);
 }
 
 @mixin focusBoxShadowLink {

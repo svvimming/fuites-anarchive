@@ -3,23 +3,33 @@
     class="spz"
     @drop="onDrop($event)"
     @dragover.prevent
-    @dragenter.prevent>
+    @dragenter.prevent
+    @click.alt.self="openEditor($event)"
+    @click.self="closeEditor($event)">
+
+    <PropBoard
+      v-if="authenticated"
+      ref="propboard"
+      :location="editor" />
 
     <template v-for="thingie in spazeThingies">
 
       <Thingie
         :thingie="thingie"
-        @drag="initDrag">
-        <div
-          slot-scope="{ mousedown, mouseup, startDrag, styles }"
-          draggable
-          :class="['thingie', { locked: !authenticated }]"
-          :style="styles"
-          @mousedown="initMousedown($event, mousedown, thingie)"
-          @mouseup="initMouseup($event, mouseup, thingie)"
-          @dragstart="startDrag($event)">
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup">
+
+        <template v-if="thingie.thingie_type === 'text'">
+          <div class="text-feel">
+            {{ thingie.text }}
+          </div>
+        </template>
+
+        <template v-else>
           <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
-        </div>
+        </template>
+
       </Thingie>
 
     </template>
@@ -32,6 +42,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
+import PropBoard from '@/components/prop-board'
 
 // ====================================================================== Export
 export default {
@@ -40,16 +51,22 @@ export default {
   layout: 'spaze',
 
   components: {
-    Thingie
+    Thingie,
+    PropBoard
   },
 
   async fetch ({ app, store }) {
+    await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getThingies')
   },
 
   data () {
     return {
-      socket: false
+      socket: false,
+      editor: {
+        x: 0,
+        y: 0
+      }
     }
   },
 
@@ -78,42 +95,27 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearThingies: 'collections/clearThingies'
     }),
-    initMousedown (evt, mousedown, thingie) {
-      if (this.authenticated) {
-        // console.log('initMousedown')
-        mousedown(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: true
-        })
-      }
-    },
-    initMouseup (evt, mouseup, thingie) {
-      if (this.authenticated) {
-        // console.log('initMouseup')
-        mouseup(evt)
-        this.socket.emit('update-thingie', {
-          _id: thingie._id,
-          dragging: false
-        })
-      }
-    },
-    initDrag (thingie) {
-      // console.log('initDrag')
+    initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        at: thingie.at
+        dragging: true
       })
+    },
+    initMouseup (thingie) {
+      this.socket.emit('update-thingie', {
+        _id: thingie._id,
+        dragging: false
+      })
+    },
+    initUpdate (thingie) {
+      this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
       if (this.authenticated) {
-        // console.log('onDrop — spaze')
         evt.preventDefault()
-
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
         const y = evt.clientY - rect.top
-
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
@@ -121,6 +123,22 @@ export default {
           dragging: false,
           at: { x, y, z: 1 }
         })
+      }
+    },
+    openEditor (evt) {
+      if (this.authenticated) {
+        this.editor = {
+          x: evt.clientX,
+          y: evt.clientY
+        }
+        this.$refs.propboard.openEditor()
+      }
+    },
+    closeEditor (evt) {
+      if (this.authenticated) {
+        if (!evt.altKey) {
+          this.$refs.propboard.closeEditor()
+        }
       }
     }
   }
@@ -136,5 +154,4 @@ export default {
   overflow: scroll;
   z-index: 1;
 }
-
 </style>

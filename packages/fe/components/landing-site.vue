@@ -28,12 +28,15 @@
       <template v-if="authenticated && isNotLandingPage">
         <div :class="['tips', { tipsOpen }]">
           <ul>
-            <li
-              v-for="tip in tips"
-              :key="tip"
-              class="tip">
-              {{ tip }}
-            </li>
+            <template v-for="tip in tips">
+              <li
+                v-if="tip !== 'br'"
+                :key="tip"
+                class="tip">
+                {{ tip }}
+              </li>
+              <br v-else>
+            </template>
           </ul>
         </div>
       </template>
@@ -194,6 +197,7 @@ export default {
 .tip {
   position: relative;
   list-style-type: none;
+  @include fontSize_Main;
   &:before {
     content: '';
     position: absolute;

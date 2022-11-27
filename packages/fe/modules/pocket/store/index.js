@@ -16,9 +16,8 @@ const getters = {
 // -----------------------------------------------------------------------------
 const actions = {
   // ////////////////////////////////////////////////////// setPocketConsistency
-  setPocketConsistency ({ commit }) {
-    string = ''
-    commit('SET_POCKET_CONSISTENCY', string)
+  setPocketToken ({ commit }, token) {
+    commit('SET_POCKET_TOKEN', token)
   },
   // /////////////////////////////////////////////////////////// setPocketIsOpen
   setPocketIsOpen ({ commit }, val) {
@@ -29,7 +28,7 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  SET_POCKET_CONSISTENCY (state, incoming) {
+  SET_POCKET_TOKEN (state, incoming) {
     state.pocket = incoming
   },
   SET_POCKET_IS_OPEN (state, val) {

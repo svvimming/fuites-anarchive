@@ -1,10 +1,12 @@
 // ///////////////////////////////////////////////////////// Imports & Variables
 // -----------------------------------------------------------------------------
 import CloneDeep from 'lodash/cloneDeep'
+import LandingData from '@/data/landing.json'
 
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
+  landing: {},
   authenticated: false,
   clipboard: false,
   filterValue: '',
@@ -14,6 +16,7 @@ const state = () => ({
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
+  landing: state => state.landing,
   authenticated: state => state.authenticated,
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
@@ -23,6 +26,9 @@ const getters = {
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  async setLandingData ({ commit }) {
+    commit('SET_LANDING_DATA', { key: 'data', data: LandingData })
+  },
   // ////////////////////////////////////////////////////////////// setClipboard
   setClipboard ({ commit }, text) {
     this.$addTextToClipboard(text)
@@ -48,7 +54,7 @@ const actions = {
     }
   },
   // ////////////////////////////////////////////////////////////// authenticate
-  async authenticate ({ commit, getters }, token) {
+  async authenticate ({ commit, getters, dispatch }, token) {
     try {
       const response = await this.$axiosAuth.get('/authenticate', {
         params: { token }
@@ -59,6 +65,9 @@ const actions = {
         category: authenticated ? 'success' : 'error',
         message: response.data.message
       })
+      if (authenticated) {
+        dispatch('pocket/setPocketToken', token, { root: true })
+      }
       commit('SET_AUTHENTICATION_STATUS', authenticated)
     } catch (e) {
       console.log('====================== [Store Action: general/authenticate]')
@@ -71,8 +80,8 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  SET_SITE_CONTENT (state, payload) {
-    state.siteContent[payload.key] = payload.data
+  SET_LANDING_DATA (state, payload) {
+    state.landing[payload.key] = payload.data
   },
   SET_STATIC_FILE (state, staticFiles) {
     state.staticFiles = staticFiles

@@ -279,17 +279,24 @@ span.error {
 
 ////////////////////////////////////////////////////////////////////////// Fonts
 //------------------------------------------------------------------------------
-// Font Sizing
-// 10px = 0.625rem
-// 12px = 0.75rem
-// 14px = 0.875rem
-// 16px = 1rem (base)
-// 18px = 1.125rem
-// 19px = 1.1875rem
-// 20px = 1.25rem
-// 24px = 1.5rem
-// 30px = 1.875rem
-// 32px = 2rem
+.anton {
+  @include fontFamily_Anton;
+}
+.arvo {
+  @include fontFamily_Arvo;
+}
+.courier {
+  @include fontFamily_CourierPrime;
+}
+.merriweather {
+  @include fontFamily_Merriweather;
+}
+.nanum {
+  @include fontFamily_NanumMyeongjo;
+}
+.source-code {
+  @include fontFamily_SourceCodePro;
+}
 
 h1, .h1,
 h2, .h2,
@@ -508,27 +515,5 @@ h6, .h6 {
   .message {
     font-weight: 500;
     @include linkShadow;
-  }
-}
-
-.thingie {
-  position: absolute;
-  width: 80px;
-  cursor: grab;
-  &.image,
-  &.text,
-  &.sound,
-  &.video {
-    position: absolute;
-  }
-  &:active {
-    cursor: grabbing;
-  }
-  img {
-    width: 100%;
-    pointer-events: none;
-  }
-  &.locked {
-    pointer-events: none;
   }
 }
