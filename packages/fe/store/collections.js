@@ -100,7 +100,6 @@ const actions = {
 const mutations = {
   ADD_SPAZES (state, spazes) {
     state.spazes = state.spazes.concat(spazes)
-    console.log(state.spazes)
   },
   ADD_THINGIES (state, thingies) {
     state.thingies = state.thingies.concat(thingies)
