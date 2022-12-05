@@ -34,7 +34,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       select: 'filename file_ext'
     })
     MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
-    SendData(res, 200, 'Dataset created succesfully', created)
+    SendData(res, 200, 'Thingie successfully created', created)
   } catch (e) {
     console.log('================== [Endpoint: /post-create-thingie]')
     console.log(e)

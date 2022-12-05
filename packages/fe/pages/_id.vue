@@ -46,7 +46,7 @@ import PropBoard from '@/components/prop-board'
 
 // ====================================================================== Export
 export default {
-  name: 'Portal',
+  name: 'SpazeIsThePlaze',
 
   layout: 'spaze',
 
@@ -57,11 +57,14 @@ export default {
 
   async fetch ({ app, store }) {
     await store.dispatch('general/setLandingData')
+    await store.dispatch('collections/getSpazes')
     await store.dispatch('collections/getThingies')
   },
 
   data () {
+    const name = this.$route.params.id
     return {
+      spazeName: name,
       socket: false,
       editor: {
         x: 0,
@@ -72,11 +75,17 @@ export default {
 
   computed: {
     ...mapGetters({
+      spazes: 'collections/spazes',
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated'
     }),
+    spaze () {
+      const spaze = this.spazes.find(item => item.name === this.spazeName)
+      return spaze
+    },
     spazeThingies () {
-      return this.thingies.filter(obj => obj.location === 'spaze')
+      const name = this.spaze.name
+      return this.thingies.filter(obj => obj.location === name)
     }
   },
 
@@ -87,12 +96,14 @@ export default {
   },
 
   beforeDestroy () {
+    this.clearSpazes()
     this.clearThingies()
   },
 
   methods: {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
+      clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies'
     }),
     initMousedown (thingie) {
