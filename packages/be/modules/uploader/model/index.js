@@ -34,6 +34,10 @@ const UploadSchema = new Schema({
     type: Schema.Types.Mixed,
     required: false,
     default: null
+  },
+  palette: {
+    type: [[]],
+    required: false
   }
 }, {
   timestamps: true,

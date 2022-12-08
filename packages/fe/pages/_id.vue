@@ -133,7 +133,7 @@ export default {
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
-          location: 'spaze',
+          location: this.spazeName,
           dragging: false,
           at: { x, y, z: 1 }
         })
