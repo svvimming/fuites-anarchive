@@ -84,8 +84,11 @@ export default {
       return spaze
     },
     spazeThingies () {
-      const name = this.spaze.name
-      return this.thingies.filter(obj => obj.location === name)
+      if (this.spaze) {
+        const name = this.spaze.name
+        return this.thingies.filter(obj => obj.location === name)
+      }
+      return []
     }
   },
 
