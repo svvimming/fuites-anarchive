@@ -93,6 +93,7 @@ export default {
   },
 
   async mounted () {
+    console.log(this.spazeThingies)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })

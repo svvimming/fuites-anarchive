@@ -118,6 +118,7 @@ const mutations = {
   },
   CLEAR_THINGIES (state) {
     state.thingies = []
+    console.log(state.thingies)
   }
 }
 

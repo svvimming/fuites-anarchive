@@ -28,13 +28,12 @@ MC.socket.listeners.push({
       file.end()
       if (data.place > data.goal) {
         await Fs.move(`${TMP_UPLOADS_DIR}/${fileId}`, `${UPLOADS_DIR}/${fileId}.${fileExt}`)
-        const palette = await ColorThief.getPalette(`${UPLOADS_DIR}/${fileId}.${fileExt}`, 5)
+        const palette = await ColorThief.getPalette(`${UPLOADS_DIR}/${fileId}.${fileExt}`, 3)
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
         upload.palette = palette
         await upload.save()
         // File upload complete
-        console.log(upload)
         return socket.emit('module|file-upload-complete|payload')
       }
       // Emit db entry _id, chunksize and an incremented chunk place of 0

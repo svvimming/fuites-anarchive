@@ -65,6 +65,14 @@ const ThingieSchema = new Schema({
   creator_token: {
     type: String,
     required: true
+  },
+  consistencies: {
+    type: [String],
+    required: false
+  },
+  colors: {
+    type: [String],
+    required: false
   }
 }, {
   timestamps: true,
