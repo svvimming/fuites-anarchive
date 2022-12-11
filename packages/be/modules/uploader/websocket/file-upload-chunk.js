@@ -4,6 +4,7 @@ console.log('⚡️ [websocket] module|file-upload-chunk|payload')
 // -----------------------------------------------------------------------------
 const Path = require('path')
 const Fs = require('fs-extra')
+const ColorThief = require('colorthief')
 
 const { GetSocket } = require('@Module_Utilities')
 
@@ -27,8 +28,10 @@ MC.socket.listeners.push({
       file.end()
       if (data.place > data.goal) {
         await Fs.move(`${TMP_UPLOADS_DIR}/${fileId}`, `${UPLOADS_DIR}/${fileId}.${fileExt}`)
+        const palette = await ColorThief.getPalette(`${UPLOADS_DIR}/${fileId}.${fileExt}`, 3)
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
+        upload.palette = palette
         await upload.save()
         // File upload complete
         return socket.emit('module|file-upload-complete|payload')

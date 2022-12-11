@@ -36,7 +36,7 @@
             <template v-else>
               <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
             </template>
-            
+
           </Thingie>
 
         </template>

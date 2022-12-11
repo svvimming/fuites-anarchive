@@ -10,6 +10,7 @@
     <PropBoard
       v-if="authenticated"
       ref="propboard"
+      :spz="spazeName"
       :location="editor" />
 
     <template v-for="thingie in spazeThingies">
@@ -93,6 +94,7 @@ export default {
   },
 
   async mounted () {
+    console.log(this.spazeThingies)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
@@ -133,7 +135,7 @@ export default {
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
-          location: 'spaze',
+          location: this.spazeName,
           dragging: false,
           at: { x, y, z: 1 }
         })

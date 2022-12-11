@@ -65,7 +65,9 @@ const actions = {
   // ///////////////////////////////////////////////////////////// updateThingie
   updateThingie ({ commit, getters }, incoming) {
     const index = getters.thingies.findIndex(obj => obj._id === incoming._id)
-    commit('UPDATE_THINGIE', { index, thingie: incoming })
+    if (index >= 0) {
+      commit('UPDATE_THINGIE', { index, thingie: incoming })
+    }
   },
   // ///////////////////////////////////////////////////////// postDeleteThingie
   async postDeleteThingie ({ dispatch }, payload) {
