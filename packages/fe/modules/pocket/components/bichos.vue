@@ -49,14 +49,14 @@ export default {
 
   methods: {
     mousedown (e) {
-      document.onmousemove = this.$throttle((e) => { this.mousedrag(e) }, 1)
+      document.onmousemove = this.$throttle((e) => { this.mousedrag(e) }, 50)
       document.onmouseup = this.mouseup
     },
     mousedrag (e) {
       const canvas = this.$refs.canvas
       const rect = canvas.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
+      const x = Math.max(0, Math.min(200, e.clientX - rect.left))
+      const y = Math.max(0, Math.min(200, e.clientY - rect.top))
       this.coords.push(x, y)
       drawBichoPath(this, false)
     },

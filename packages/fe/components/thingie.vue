@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="thingieRef"
     draggable
     :class="['thingie', `${type}-thingie`, { locked: !authenticated }, { editor }, fontfamily]"
     :style="styles"
@@ -34,7 +35,23 @@
       </div>
     </div>
 
-    <slot></slot>
+    <svg
+      v-if="clipPathData"
+      class="clip-path-svg"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 200 200">
+    	<defs>
+    		<clipPath ref="clipPath" :id="clipPathId" clipPathUnits="objectBoundingBox">
+    			<path :d="clipPathData" stroke-linejoin="arcs" />
+    		</clipPath>
+    	</defs>
+    </svg>
+
+    <div
+      :class="['slot-wrapper', { 'no-clip-path': !clipPathData }]"
+      :style="{ 'clip-path': `url(#${clipPathId})` }">
+      <slot></slot>
+    </div>
 
   </div>
 </template>
@@ -58,7 +75,8 @@ export default {
     return {
       handleX: false,
       handleY: false,
-      editor: false
+      editor: false,
+      clipPathId: ''
     }
   },
 
@@ -76,8 +94,14 @@ export default {
     position () {
       return this.thingie.at
     },
-    scale () {
+    width () {
       return this.thingie.width ? this.thingie.width : 80
+    },
+    height () {
+      if (this.thingie.file_ref && this.thingie.file_ref.aspect) {
+        return this.width / this.thingie.file_ref.aspect
+      }
+      return this.width
     },
     rotate () {
       return this.thingie.angle
@@ -88,21 +112,34 @@ export default {
     fontsize () {
       return this.thingie.fontsize ? this.thingie.fontsize : 13
     },
+    consistencies () {
+      return this.thingie.consistencies
+    },
     styles () {
       const styles = {
         left: this.position.x + 'px',
         top: this.position.y + 'px',
         zIndex: this.position.z + 'px',
-        width: this.scale + 'px',
+        width: this.width + 'px',
+        height: this.height + 'px',
         transform: `rotate(${this.rotate}deg)`
       }
       if (this.type === 'text') {
         styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
       }
-      if (this.thingie.path_data) {
-        styles['clip-path'] = `path(${this.thingie.path_data})`
-      }
       return styles
+    },
+    clipPathData () {
+      if (this.thingie.path_data) {
+        return this.thingie.path_data
+      }
+      return ''
+    }
+  },
+
+  mounted () {
+    if (this.clipPathData) {
+      this.clipPathId = `clippath-${this.consistencies.join('-').replaceAll(' ', '-')}-${this.thingie.createdAt}`
     }
   },
 
@@ -227,15 +264,6 @@ export default {
         fontfamily: family
       })
     }
-  },
-
-  render () {
-    return this.$scopedSlots.default({
-      mousedown: this.mousedown,
-      mouseup: this.mouseup,
-      startDrag: this.startDrag,
-      styles: this.styles
-    })
   }
 }
 </script>
@@ -258,6 +286,9 @@ export default {
   }
   img {
     width: 100%;
+  }
+  img,
+  svg {
     pointer-events: none;
   }
   &.locked {
@@ -310,6 +341,22 @@ export default {
   @include link;
   @include fontSize_Bigger;
   @include linkHover(#000000);
+}
+
+.clip-path-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.slot-wrapper {
+  display: block;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  &.no-clip-path {
+    clip-path: none !important;
+  }
 }
 
 </style>

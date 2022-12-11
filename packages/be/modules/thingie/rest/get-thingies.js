@@ -12,7 +12,7 @@ MC.app.get('/get-thingies', async (req, res) => {
   try {
     const thingies = await MC.model.Thingie.find({}).populate({
       path: 'file_ref',
-      select: 'filename file_ext'
+      select: 'filename file_ext aspect'
     })
     SendData(res, 200, 'Dataset retrieved successfully', thingies)
   } catch (e) {

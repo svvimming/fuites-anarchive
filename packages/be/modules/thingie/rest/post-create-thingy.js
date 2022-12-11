@@ -40,7 +40,7 @@ const getThingieClipPath = (pathData) => {
     const coords = []
     const len = pathData.length
     for (let i = 0; i < len - 1; i += 2) {
-      const string = i ? `${pathData[i]} ${pathData[i + 1]}` : `M${pathData[i]} ${pathData[i + 1]}`
+      const string = i ? `${pathData[i] / 200} ${pathData[i + 1] / 200}` : `M${pathData[i] / 200} ${pathData[i + 1] / 200}`
       coords.push(string)
     }
     return coords.join(' ') + 'Z'
@@ -76,7 +76,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     })
     await created.populate({
       path: 'file_ref',
-      select: 'filename file_ext'
+      select: 'filename file_ext aspect'
     })
     MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)
