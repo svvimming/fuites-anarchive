@@ -10,6 +10,7 @@
     <PropBoard
       v-if="authenticated"
       ref="propboard"
+      :spz="spazeName"
       :location="editor" />
 
     <template v-for="thingie in spazeThingies">
