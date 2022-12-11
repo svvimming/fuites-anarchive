@@ -99,6 +99,9 @@ export default {
       if (this.type === 'text') {
         styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
       }
+      if (this.thingie.path_data) {
+        styles['clip-path'] = `path(${this.thingie.path_data})`
+      }
       return styles
     }
   },

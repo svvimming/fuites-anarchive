@@ -53,7 +53,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
 import Shader from '@/components/shader'
-import SingleFileUploader from '@/components/single-file-uploader'
+import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
 // ====================================================================== Export
 export default {

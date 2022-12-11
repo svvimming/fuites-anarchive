@@ -59,18 +59,20 @@
     </template>
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
-      <Button
-        text="Upload selected file"
-        class="upload-file-button uploader-button"
-        type="A"
-        loader="upload-file-button"
-        @clicked="uploadFile" />
+
+      <div class="upload-file-button uploader-button">
+        Draw a shape to upload selected file
+      </div>
+
+      <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
+
       <Button
         text="cancel"
         class="cancel-button uploader-button"
         type="B"
         format="mini"
         @clicked="clearFileInput" />
+
     </template>
 
   </UploadInput>
@@ -87,6 +89,7 @@ import Button from '@/components/button'
 import Tag from '@/components/tag'
 import Spinner from '@/components/spinners/material-circle'
 import IconCheckmark from '@/components/icons/checkmark'
+import Bichos from '@/modules/pocket/components/bichos'
 
 // ====================================================================== Export
 export default {
@@ -97,13 +100,15 @@ export default {
     Button,
     Tag,
     Spinner,
-    IconCheckmark
+    IconCheckmark,
+    Bichos
   },
 
   data () {
     return {
       status: false,
-      file: false
+      file: false,
+      pathData: []
     }
   },
 
@@ -139,11 +144,16 @@ export default {
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: 'pocket',
-        type: 'image'
+        type: 'image',
+        pathData: this.pathData
       })
       if (complete) {
         this.status = 'upload-finalized'
       }
+    },
+    initUpload (coords, uploadFile) {
+      this.pathData = coords
+      uploadFile()
     }
   }
 }

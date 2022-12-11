@@ -35,6 +35,19 @@ const getThingieConsistencies = async (thingie, upload) => {
   }
 }
 
+const getThingieClipPath = (pathData) => {
+  if (pathData && Array.isArray(pathData)) {
+    const coords = []
+    const len = pathData.length
+    for (let i = 0; i < len - 1; i += 2) {
+      const string = i ? `${pathData[i]} ${pathData[i + 1]}` : `M${pathData[i]} ${pathData[i + 1]}`
+      coords.push(string)
+    }
+    return coords.join(' ') + 'Z'
+  }
+  return ''
+}
+
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.app.post('/post-create-thingie', async (req, res) => {
@@ -58,7 +71,8 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       thingie_type: body.thingie_type,
       text: body.text,
       consistencies: [],
-      colors: []
+      colors: [],
+      path_data: getThingieClipPath(body.pathData)
     })
     await created.populate({
       path: 'file_ref',
