@@ -28,6 +28,11 @@ export default {
   name: 'PropBoard',
 
   props: {
+    spz: {
+      type: String,
+      required: false,
+      default: ''
+    },
     location: {
       type: Object,
       required: true,
@@ -52,6 +57,9 @@ export default {
         left: this.location.x + 'px',
         top: this.location.y + 'px'
       }
+    },
+    spazeName () {
+      return this.spz ? this.spz : this.$route.params.id
     }
   },
 
@@ -71,7 +79,7 @@ export default {
     },
     async createTextThingie () {
       const complete = await this.postCreateThingie({
-        location: 'spaze',
+        location: this.spazeName,
         text: this.text,
         type: 'text',
         at: {

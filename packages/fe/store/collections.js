@@ -1,18 +1,31 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
+  spazes: [],
   thingies: []
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
+  spazes: state => state.spazes,
   thingies: state => state.thingies
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  // ///////////////////////////////////////////////////////////////// getSpazes
+  async getSpazes ({ commit, getters }) {
+    try {
+      const response = await this.$axiosAuth.get('/get-spazes')
+      commit('ADD_SPAZES', response.data.payload)
+    } catch (e) {
+      console.log('================== [Store Action: spaze/getSpazes]')
+      console.log(e)
+      return false
+    }
+  },
   // /////////////////////////////////////////////////////////////// getThingies
   async getThingies ({ commit, getters }) {
     try {
@@ -52,7 +65,9 @@ const actions = {
   // ///////////////////////////////////////////////////////////// updateThingie
   updateThingie ({ commit, getters }, incoming) {
     const index = getters.thingies.findIndex(obj => obj._id === incoming._id)
-    commit('UPDATE_THINGIE', { index, thingie: incoming })
+    if (index >= 0) {
+      commit('UPDATE_THINGIE', { index, thingie: incoming })
+    }
   },
   // ///////////////////////////////////////////////////////// postDeleteThingie
   async postDeleteThingie ({ dispatch }, payload) {
@@ -72,6 +87,10 @@ const actions = {
     const index = getters.thingies.findIndex(obj => obj._id === thingieId)
     commit('REMOVE_THINGIE', index)
   },
+  // /////////////////////////////////////////////////////////////// clearSpazes
+  clearSpazes ({ commit, getters}) {
+    commit('CLEAR_SPAZES')
+  },
   // ///////////////////////////////////////////////////////////// clearThingies
   clearThingies ({ commit, getters}) {
     commit('CLEAR_THINGIES')
@@ -81,6 +100,9 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
+  ADD_SPAZES (state, spazes) {
+    state.spazes = state.spazes.concat(spazes)
+  },
   ADD_THINGIES (state, thingies) {
     state.thingies = state.thingies.concat(thingies)
   },
@@ -92,6 +114,9 @@ const mutations = {
   },
   REMOVE_THINGIE (state, index) {
     state.thingies.splice(index, 1)
+  },
+  CLEAR_SPAZES (state) {
+    state.spazes = []
   },
   CLEAR_THINGIES (state) {
     state.thingies = []

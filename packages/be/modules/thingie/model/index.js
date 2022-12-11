@@ -15,8 +15,7 @@ const ThingieSchema = new Schema({
   },
   location: {
     type: String,
-    required: true,
-    enum: ['spaze', 'pocket', 'compost']
+    required: true
   },
   dragging: {
     type: Boolean,
@@ -65,6 +64,14 @@ const ThingieSchema = new Schema({
   creator_token: {
     type: String,
     required: true
+  },
+  consistencies: {
+    type: [String],
+    required: false
+  },
+  colors: {
+    type: [String],
+    required: false
   }
 }, {
   timestamps: true,

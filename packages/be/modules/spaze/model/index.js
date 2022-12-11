@@ -1,4 +1,4 @@
-console.log('💿 [model] uploads')
+console.log('💿 [model] spaze')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,37 +7,17 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const UploadSchema = new Schema({
-  filename: {
+const SpazeSchema = new Schema({
+  name: {
     type: String,
     required: true
   },
-  mimetype: {
+  connections: {
+    type: [String]
+  },
+  creator_token: {
     type: String,
     required: true
-  },
-  filesize: {
-    type: Number,
-    required: true
-  },
-  file_ext: {
-    type: String,
-    required: true
-  },
-  upload_status: { // 0 = in progress, 1 = complete, 2 = error
-    type: Number,
-    required: true,
-    enum: [0, 1, 2],
-    default: 0
-  },
-  form_metadata: {
-    type: Schema.Types.Mixed,
-    required: false,
-    default: null
-  },
-  palette: {
-    type: [[]],
-    required: false
   }
 }, {
   timestamps: true,
@@ -46,4 +26,4 @@ const UploadSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('uploads', UploadSchema)
+module.exports = Mongoose.model('spazes', SpazeSchema)
