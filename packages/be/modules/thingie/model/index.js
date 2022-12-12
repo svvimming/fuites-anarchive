@@ -72,6 +72,15 @@ const ThingieSchema = new Schema({
   colors: {
     type: [String],
     required: false
+  },
+  clip: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  path_data: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true,

@@ -49,6 +49,19 @@
 // ===================================================================== Imports
 import { mapGetters } from 'vuex'
 
+// =================================================================== Functions
+const getImageAspectRatio = (instance) => {
+  const reader = new FileReader()
+  reader.readAsDataURL(instance.file)
+  reader.onload = (e) => {
+    const image = new Image()
+    image.src = e.target.result
+    image.onload = () => {
+      instance.imageAspectRatio = image.width / image.height
+    }
+  }
+}
+
 // ====================================================================== Export
 export default {
   name: 'UploadInput',
@@ -83,7 +96,8 @@ export default {
       socket: false,
       progress: 0,
       place: 0,
-      nextChunkPayload: false
+      nextChunkPayload: false,
+      imageAspectRatio: 1
     }
   },
 
@@ -135,6 +149,7 @@ export default {
       if (file) {
         this.file = file
         this.$emit('fileSelected')
+        getImageAspectRatio(this)
         if (!this.promptToUpload) {
           this.uploadFile()
         }
@@ -150,6 +165,7 @@ export default {
       if (this.authenticated) {
         this.status = 'idle'
         this.file = false
+        this.imageAspectRatio = 1
         this.progress = 0
         this.place = 0
         this.nextChunkPayload = false
@@ -169,6 +185,7 @@ export default {
           filename: this.filename,
           filesize: this.filesize,
           mimetype: this.mimetype,
+          aspect: this.imageAspectRatio,
           form_metadata: formMetadata
         })
       }

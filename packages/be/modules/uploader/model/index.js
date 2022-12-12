@@ -24,6 +24,10 @@ const UploadSchema = new Schema({
     type: String,
     required: true
   },
+  aspect: {
+    type: Number,
+    required: true
+  },
   upload_status: { // 0 = in progress, 1 = complete, 2 = error
     type: Number,
     required: true,

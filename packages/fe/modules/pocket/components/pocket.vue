@@ -53,7 +53,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingie'
 import Shader from '@/components/shader'
-import SingleFileUploader from '@/components/single-file-uploader'
+import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
 // ====================================================================== Export
 export default {
@@ -139,6 +139,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$pocketWidth: 42rem;
+$pocketHeight: 30rem;
 // ////////////////////////////////////////////////////////////////////// Pocket
 .pocket-wrapper {
   z-index: -1;
@@ -162,23 +164,28 @@ export default {
   overflow: hidden;
   border-radius: 50%;
   z-index: 1;
-  width: 36rem;
-  height: 24rem;
+  width: $pocketWidth;
+  height: $pocketHeight;
 }
 
 .pocket {
   position: relative;
   z-index: 1;
-  width: 36rem;
-  height: 24rem;
+  width: $pocketWidth;
+  height: $pocketHeight;
 }
 
 #pocket-shader {
   position: absolute;
-  top: -3.5rem;
-  left: -6.5rem;
   z-index: -1;
   opacity: 0.66;
+  width: $pocketWidth;
+  height: $pocketHeight;
+  :deep(.glCanvas) {
+    width: calc($pocketWidth + 10rem);
+    height: calc($pocketHeight + 10rem);
+    transform: translate(-5rem, -5rem);
+  }
 }
 
 .pocket-height-toggle {
@@ -191,13 +198,13 @@ export default {
 // //////////////////////////////////////////////////////////////////// Uploader
 .uploader-wrapper {
   position: absolute;
-  top: 1rem;
-  left: calc(50%);
+  top: 3rem;
+  left: 50%;
   transform: translateX(-50%);
   padding: 1rem;
   margin-left: auto;
   color: black;
-  z-index: 999;
+  z-index: 10000;
 }
 
 .thingie {

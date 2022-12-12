@@ -54,6 +54,9 @@ const actions = {
       if (payload.at) {
         data.at = payload.at
       }
+      if (payload.pathData) {
+        data.pathData = payload.pathData
+      }
       const response = await this.$axiosAuth.post('/post-create-thingie', data)
       return response.data.payload
     } catch (e) {

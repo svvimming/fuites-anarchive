@@ -59,18 +59,20 @@
     </template>
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
-      <Button
-        text="Upload selected file"
-        class="upload-file-button uploader-button"
-        type="A"
-        loader="upload-file-button"
-        @clicked="uploadFile" />
+
+      <div class="upload-prompt">
+        Draw a shape to upload selected file
+      </div>
+
+      <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
+
       <Button
         text="cancel"
         class="cancel-button uploader-button"
         type="B"
         format="mini"
         @clicked="clearFileInput" />
+
     </template>
 
   </UploadInput>
@@ -87,6 +89,7 @@ import Button from '@/components/button'
 import Tag from '@/components/tag'
 import Spinner from '@/components/spinners/material-circle'
 import IconCheckmark from '@/components/icons/checkmark'
+import Bichos from '@/modules/pocket/components/bichos'
 
 // ====================================================================== Export
 export default {
@@ -97,13 +100,15 @@ export default {
     Button,
     Tag,
     Spinner,
-    IconCheckmark
+    IconCheckmark,
+    Bichos
   },
 
   data () {
     return {
       status: false,
-      file: false
+      file: false,
+      pathData: []
     }
   },
 
@@ -139,11 +144,16 @@ export default {
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: 'pocket',
-        type: 'image'
+        type: 'image',
+        pathData: this.pathData
       })
       if (complete) {
         this.status = 'upload-finalized'
       }
+    },
+    initUpload (coords, uploadFile) {
+      this.pathData = coords
+      uploadFile()
     }
   }
 }
@@ -168,14 +178,21 @@ export default {
 :deep(.metadata) {
   border: 1px solid rgba(black, 0.5);
   border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  max-width: toRem(220);
 }
 
 :deep(.filename) {
-  padding: 0.25rem 0;
+  padding: 0 0.5rem;
+  margin: 0.25rem 0;
   line-height: 1.2;
   @include fontFamily_Cousine;
   @include fontSize_teeny;
   text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 :deep(.filesize),
@@ -183,6 +200,10 @@ export default {
   @include fontFamily_Cousine;
   @include fontSize_teeny;
   text-align: center;
+  line-height: 1.2;
+  .text {
+    line-height: 1;
+  }
 }
 
 :deep(.filesize) {
@@ -235,16 +256,20 @@ export default {
 
 :deep(.icon-checkmark) {
   width: 1.75rem;
+  path {
+    stroke: $lavender;
+  }
 }
 
 // ///////////////////////////////////////////////////////////////////// Buttons
 .uploader-button {
   @include linkHover(#000000);
   padding: 0.5rem 1rem;
+  text-align: center;
 }
 .upload-file-button,
 .upload-another-file-button {
-  margin-top: 1rem;
+  margin: 0.375rem 0;
 }
 
 .cancel-button {
@@ -253,5 +278,12 @@ export default {
 
 :deep(.button) {
   @include link;
+}
+
+.upload-prompt {
+  padding: 0.5rem 1rem;
+  text-align: center;
+  margin: 0.375rem 0;
+  white-space: nowrap;
 }
 </style>

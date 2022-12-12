@@ -3,37 +3,10 @@ console.log('💡 [endpoint] /post-create-thingie')
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 const { SendData } = require('@Module_Utilities')
-const axios = require('axios')
 
 const MC = require('@Root/config')
 
-// /////////////////////////////////////////////////////////////////// Functions
-const getThingieConsistencies = async (thingie, upload) => {
-  let consistencies = []
-  const hexes = []
-  if (thingie.thingie_type === 'image') {
-    try {
-      for (let i = 0; i < upload.palette.length; i++) {
-        const rgb = upload.palette[i]
-        const color = await axios.get(`https://www.thecolorapi.com/id?rgb=${rgb[0]},${rgb[1]},${rgb[2]}`)
-        const colorWithoutSpaces = color.data.name.value.replaceAll(' ', '').toLowerCase().substring(0, 9)
-        const anagrams = await axios.get(`http://anagramica.com/best/:${colorWithoutSpaces}`)
-        consistencies.push(color.data.name.value.toLowerCase())
-        consistencies = consistencies.concat(anagrams.data.best)
-        hexes.push(color.data.hex.value)
-      }
-      consistencies = [...new Set(consistencies)]
-      const updated = await MC.model.Thingie.findOneAndUpdate(
-        { _id: thingie._id },
-        { colors: hexes, consistencies },
-        { new: true }
-      )
-      console.log(updated)
-    } catch (e) {
-      console.log(e)
-    }
-  }
-}
+const { GetThingieConsistencies, GetThingieClipPath } = require('@Module_Utilities')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -44,12 +17,13 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     if (!upload && body.thingie_type !== 'text') {
       throw new Error('File could not be uploaded. Please try again.')
     }
+    const pathData = await GetThingieClipPath(body.pathData, 'raw')
     const created = await MC.model.Thingie.create({
       file_ref: body.file_id,
       location: body.location,
       at: {
-        x: body.at ? body.at.x : Math.random() * 300,
-        y: body.at ? body.at.y : Math.random() * 300,
+        x: body.at ? body.at.x : 60 + Math.random() * 500,
+        y: body.at ? body.at.y : 200 + Math.random() * 200,
         z: 1
       },
       width: 80,
@@ -58,15 +32,16 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       thingie_type: body.thingie_type,
       text: body.text,
       consistencies: [],
-      colors: []
+      colors: [],
+      path_data: pathData
     })
     await created.populate({
       path: 'file_ref',
-      select: 'filename file_ext'
+      select: 'filename file_ext aspect'
     })
     MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)
-    getThingieConsistencies(created, upload)
+    GetThingieConsistencies(created, upload)
   } catch (e) {
     console.log('================== [Endpoint: /post-create-thingie]')
     console.log(e)
