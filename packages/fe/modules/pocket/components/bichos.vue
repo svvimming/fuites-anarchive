@@ -22,6 +22,7 @@ const drawBichoPath = (instance, closePath) => {
   const ctx = instance.$refs.canvas.getContext('2d')
   const coords = instance.coords
   const len = instance.coords.length
+  ctx.strokeStyle = instance.strokeColor
   ctx.beginPath()
   ctx.moveTo(coords[0], coords[1])
   for (let i = 2; i < len - 1; i += 2) {
@@ -36,6 +37,14 @@ const drawBichoPath = (instance, closePath) => {
 // ====================================================================== Export
 export default {
   name: 'Bichos',
+
+  props: {
+    strokeColor: {
+      type: String,
+      required: false,
+      default: '#6c6575'
+    }
+  },
 
   data () {
     return {
@@ -55,9 +64,9 @@ export default {
     mousedrag (e) {
       const canvas = this.$refs.canvas
       const rect = canvas.getBoundingClientRect()
-      const x = Math.max(0, Math.min(200, e.clientX - rect.left))
-      const y = Math.max(0, Math.min(200, e.clientY - rect.top))
-      this.coords.push(x, y)
+      const x = Math.max(10, Math.min(210, e.clientX - rect.left))
+      const y = Math.max(10, Math.min(210, e.clientY - rect.top))
+      this.coords.push(x - 10, y - 10)
       drawBichoPath(this, false)
     },
     mouseup (e) {
@@ -76,6 +85,9 @@ export default {
   position: relative;
 }
 .bicho-canvas {
-  border: 1px solid black;
+  background-color: rgba(255, 255, 255, 0.5);
+  @include focusBoxShadowSmall;
+  border-radius: 0.25rem;
+  padding: 0.625rem;
 }
 </style>

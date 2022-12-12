@@ -60,7 +60,7 @@
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
-      <div class="upload-file-button uploader-button">
+      <div class="upload-prompt">
         Draw a shape to upload selected file
       </div>
 
@@ -178,14 +178,21 @@ export default {
 :deep(.metadata) {
   border: 1px solid rgba(black, 0.5);
   border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  max-width: toRem(220);
 }
 
 :deep(.filename) {
-  padding: 0.25rem 0;
+  padding: 0 0.5rem;
+  margin: 0.25rem 0;
   line-height: 1.2;
   @include fontFamily_Cousine;
   @include fontSize_teeny;
   text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 :deep(.filesize),
@@ -193,6 +200,10 @@ export default {
   @include fontFamily_Cousine;
   @include fontSize_teeny;
   text-align: center;
+  line-height: 1.2;
+  .text {
+    line-height: 1;
+  }
 }
 
 :deep(.filesize) {
@@ -245,16 +256,20 @@ export default {
 
 :deep(.icon-checkmark) {
   width: 1.75rem;
+  path {
+    stroke: $lavender;
+  }
 }
 
 // ///////////////////////////////////////////////////////////////////// Buttons
 .uploader-button {
   @include linkHover(#000000);
   padding: 0.5rem 1rem;
+  text-align: center;
 }
 .upload-file-button,
 .upload-another-file-button {
-  margin-top: 1rem;
+  margin: 0.375rem 0;
 }
 
 .cancel-button {
@@ -263,5 +278,12 @@ export default {
 
 :deep(.button) {
   @include link;
+}
+
+.upload-prompt {
+  padding: 0.5rem 1rem;
+  text-align: center;
+  margin: 0.375rem 0;
+  white-space: nowrap;
 }
 </style>

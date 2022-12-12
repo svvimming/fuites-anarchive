@@ -36,7 +36,7 @@
     </div>
 
     <svg
-      v-if="clipPathData"
+      v-if="clipPath && clipPathData"
       class="clip-path-svg"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 200 200">
@@ -48,7 +48,7 @@
     </svg>
 
     <div
-      :class="['slot-wrapper', { 'no-clip-path': !clipPathData }]"
+      :class="['slot-wrapper', { 'no-clip-path': !clipPathData || !clipPath }]"
       :style="{ 'clip-path': `url(#${clipPathId})` }">
       <slot></slot>
     </div>
@@ -128,6 +128,9 @@ export default {
         styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
       }
       return styles
+    },
+    clipPath () {
+      return this.thingie.clip
     },
     clipPathData () {
       if (this.thingie.path_data) {
