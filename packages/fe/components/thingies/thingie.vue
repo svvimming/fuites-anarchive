@@ -11,29 +11,13 @@
     @click.alt.self="thingieEditor($event)"
     v-click-outside="closeEditor">
 
-    <div
-      v-if="type === 'text' && editor && authenticated"
-      class="thingie-editor">
-      <div class="font-size-control">
-        <button
-          class="editor-button"
-          @click="changeFontSize('up')">
-          ˄
-        </button>
-        <button
-          class="editor-button"
-          @click="changeFontSize('down')">
-          ˅
-        </button>
-      </div>
-      <div class="font-family-control">
-        <button
-          class="editor-button"
-          @click="changeFontFamily">
-          f
-        </button>
-      </div>
-    </div>
+    <Editor
+      v-if="authenticated"
+      :open="editor"
+      @change-font-size="changeFontSize"
+      @change-font-family="changeFontFamily"
+      @rotate-thingie="rotateThingie"
+      @change-zindex="changeZindex" />
 
     <svg
       v-if="clipPath && clipPathData"
@@ -60,9 +44,15 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
+import Editor from '@/components/thingies/editor'
+
 // ====================================================================== Export
 export default {
   name: 'Thingie',
+
+  components: {
+    Editor
+  },
 
   props: {
     thingie: {
@@ -207,29 +197,18 @@ export default {
     wheel (evt) {
       if (this.authenticated) {
         evt.preventDefault();
-        if (evt.ctrlKey) {
-          if (evt.altKey) {
-            const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-            const newAngle = angle - evt.deltaY
-            this.$emit('initupdate', {
-              _id: this.thingie._id,
-              angle: newAngle
-            })
-          } else {
-            const width = this.thingie.width ? this.thingie.width : 80
-            const newWidth = Math.max(width - evt.deltaY, 1)
-            const delta = (width - newWidth) / 2
-            this.$emit('initupdate', {
-              _id: this.thingie._id,
-              width: newWidth,
-              at: {
-                x: this.thingie.at.x + delta,
-                y: this.thingie.at.y + delta,
-                z: this.thingie.at.z
-              }
-            })
+        const width = this.thingie.width ? this.thingie.width : 80
+        const newWidth = Math.max(width - evt.deltaY, 1)
+        const delta = (width - newWidth) / 2
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          width: newWidth,
+          at: {
+            x: this.thingie.at.x + delta,
+            y: this.thingie.at.y + delta,
+            z: this.thingie.at.z
           }
-        }
+        })
       }
     },
     thingieEditor (evt) {
@@ -266,6 +245,18 @@ export default {
         _id: this.thingie._id,
         fontfamily: family
       })
+    },
+    rotateThingie (direction) {
+      const delta = direction === 'cw' ? -1 : 1
+      const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+      const newAngle = angle - delta
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        angle: newAngle
+      })
+    },
+    changeZindex (direction) {
+      console.log(direction)
     }
   }
 }
@@ -297,18 +288,6 @@ export default {
   &.locked {
     pointer-events: none;
   }
-  &.editor {
-    &:before {
-      content: '';
-      position: absolute;
-      top: -1rem;
-      left: -1rem;
-      width: calc(100% + 3rem);
-      height: calc(100% + 2rem);
-      @include focusBoxShadowSmall;
-      border-radius: 0.25rem;
-    }
-  }
 }
 
 .thingie.text-thingie {
@@ -321,29 +300,6 @@ export default {
     pointer-events: none;
     font-size: var(--thingie-font-size);
   }
-}
-
-.thingie-editor {
-  position: absolute;
-  top: 0;
-  right: -0.5rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transform: translateX(100%);
-}
-
-.font-size-control {
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-button {
-  padding: 0.25rem;
-  @include link;
-  @include fontSize_Bigger;
-  @include linkHover(#000000);
 }
 
 .clip-path-svg {

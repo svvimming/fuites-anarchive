@@ -42,7 +42,7 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Thingie from '@/components/thingie'
+import Thingie from '@/components/thingies/thingie'
 import PropBoard from '@/components/prop-board'
 
 // ====================================================================== Export

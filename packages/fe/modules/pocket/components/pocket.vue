@@ -51,7 +51,7 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Thingie from '@/components/thingie'
+import Thingie from '@/components/thingies/thingie'
 import Shader from '@/components/shader'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
