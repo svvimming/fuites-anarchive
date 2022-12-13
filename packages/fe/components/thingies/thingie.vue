@@ -73,7 +73,8 @@ export default {
   computed: {
     ...mapGetters({
       landing: 'general/landing',
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      zindices: 'collections/zindices'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -109,7 +110,7 @@ export default {
       const styles = {
         left: this.position.x + 'px',
         top: this.position.y + 'px',
-        zIndex: this.position.z + 'px',
+        'z-index': this.position.z,
         width: this.width + 'px',
         height: this.height + 'px',
         transform: `rotate(${this.rotate}deg)`
@@ -256,7 +257,20 @@ export default {
       })
     },
     changeZindex (direction) {
-      console.log(direction)
+      if (direction === 'front') {
+        const max = this.zindices[this.thingie.location].max
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          at: { x: this.position.x, y: this.position.y, z: max + 1 }
+        })
+      }
+      if (direction === 'back') {
+        const min = this.zindices[this.thingie.location].min
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          at: { x: this.position.x, y: this.position.y, z: min - 1 }
+        })
+      }
     }
   }
 }

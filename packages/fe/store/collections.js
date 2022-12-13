@@ -9,7 +9,19 @@ const state = () => ({
 // -----------------------------------------------------------------------------
 const getters = {
   spazes: state => state.spazes,
-  thingies: state => state.thingies
+  thingies: state => state.thingies,
+  zindices: (state) => {
+    const spazeNames = [...new Set(state.thingies.map(thingie => thingie.location))]
+    const spzZindexData = {}
+    spazeNames.forEach((name) => {
+      const indices = state.thingies.filter(thingie => thingie.location === name).map(thingie => thingie.at.z)
+      spzZindexData[name] = {
+        max: Math.max(...indices),
+        min: Math.min(...indices)
+      }
+    })
+    return spzZindexData
+  }
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions

@@ -79,7 +79,6 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  // transform: translateX(100%);
   &.open {
     top: -1rem;
     left: -1rem;
