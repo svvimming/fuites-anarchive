@@ -42,15 +42,15 @@ export default {
   watch: {
     open (val) {
       if (val) {
-        document.onkeyup = (e) => { this.handleKeyup(e) }
+        document.onkeydown = (e) => { this.handleKeydown(e) }
       } else {
-        document.onkeyup = null
+        document.onkeydown = null
       }
     }
   },
 
   methods: {
-    handleKeyup (e) {
+    handleKeydown (e) {
       e.preventDefault()
       if (e.keyCode === 38 || e.key === 'ArrowUp') {
         this.$emit('change-zindex', 'front')
@@ -58,8 +58,14 @@ export default {
         this.$emit('change-zindex', 'back')
       } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
         this.$emit('rotate-thingie', 'ccw')
+        this.$pressKeyAndHold(document, 500, () => {
+          this.$emit('rotate-thingie', 'ccw')
+        })
       } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
         this.$emit('rotate-thingie', 'cw')
+        this.$pressKeyAndHold(document, 500, () => {
+          this.$emit('rotate-thingie', 'cw')
+        })
       }
     }
   }

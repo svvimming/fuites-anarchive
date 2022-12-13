@@ -343,6 +343,29 @@ const Delay = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+// //////////////////////////////////////////////////////////////// PressAndHold
+// el = dom element
+// hold = wait this many milliseconds before beginning retrigger
+// action = event to retrigger
+const PressKeyAndHold = (el, hold, action) => {
+  const holdCount = Math.floor((60 / 1000) * hold)
+  let count = 0
+  const timer = () => {
+    if (count < holdCount) {
+      timerID = requestAnimationFrame(timer)
+      count++
+    } else {
+      action()
+    }
+  }
+  let timerID = requestAnimationFrame(timer)
+  if (el) {
+    el.onkeyup = () => { cancelAnimationFrame(timerID) }
+  } else {
+    document.onkeyup = () => { cancelAnimationFrame(timerID) }
+  }
+}
+
 // //////////////////////////////////////////////////////// AwaitServerReconnect
 const AwaitServerReconnect = (config, app) => async () => {
   if (config.serverFlag !== 'production') { console.log('⚡️ ping') }
@@ -400,6 +423,7 @@ export default ({ $config, app }, inject) => {
   inject('getCookie', GetCookie)
   inject('parseFilename', ParseFilename)
   inject('delay', Delay)
+  inject('pressKeyAndHold', PressKeyAndHold)
   inject('awaitServerReconnect', AwaitServerReconnect($config, app))
   inject('connectWebsocket', ConnectWebsocket($config, app))
 }
