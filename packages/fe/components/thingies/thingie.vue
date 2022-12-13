@@ -14,6 +14,7 @@
     <Editor
       v-if="authenticated"
       :open="editor"
+      :type="type"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
       @rotate-thingie="rotateThingie"
@@ -116,6 +117,7 @@ export default {
         transform: `rotate(${this.rotate}deg)`
       }
       if (this.type === 'text') {
+        styles.height = 'unset'
         styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
       }
       return styles
@@ -327,6 +329,7 @@ export default {
   pointer-events: none;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   &.no-clip-path {
     clip-path: none !important;
   }

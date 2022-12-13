@@ -1,16 +1,16 @@
 <template>
   <div :class="['thingie-editor', { open }]">
     <div
-      v-if="open"
-      class="editor-contents">
+      v-if="open && type === 'text'"
+      class="editor-toolbar">
       <div class="font-size-control">
         <button
-          class="editor-button"
+          class="editor-button arrow"
           @click="$emit('change-font-size', 'up')">
           ˄
         </button>
         <button
-          class="editor-button"
+          class="editor-button arrow"
           @click="$emit('change-font-size', 'down')">
           ˅
         </button>
@@ -36,6 +36,13 @@ export default {
       type: Boolean,
       required: true,
       default: false
+    },
+    type: {
+      type: String,
+      required: true,
+      validator (val) {
+        return ['text', 'image', 'sound', 'video'].includes(val)
+      }
     }
   },
 
@@ -94,10 +101,31 @@ export default {
   flex-direction: column;
 }
 
+.font-family-control {
+  .editor-button {
+    @include fontSize_Main;
+  }
+}
+
 .editor-button {
   padding: 0.25rem;
+  color: $salt;
   @include link;
   @include fontSize_Bigger;
-  @include linkHover(#000000);
+  @include linkHover($salt);
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  height: 100%;
+  position: absolute;
+  left: calc(100% + 0.75rem);
+}
+
+.arrow {
+  line-height: 0.5;
 }
 </style>
