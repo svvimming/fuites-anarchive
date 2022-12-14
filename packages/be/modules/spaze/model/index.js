@@ -15,9 +15,19 @@ const SpazeSchema = new Schema({
   connections: {
     type: [String]
   },
-  creator_token: {
+  session_token: {
     type: String,
     required: true
+  },
+  creator_thingie: {
+    type: Schema.Types.ObjectId,
+    ref: 'thingies',
+    required: false
+  },
+  metastable: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 }, {
   timestamps: true,

@@ -64,14 +64,14 @@ export default {
       } else if (e.keyCode === 40 || e.key === 'ArrowDown') {
         this.$emit('change-zindex', 'back')
       } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
-        this.$emit('rotate-thingie', 'ccw')
+        this.$emit('rotate-thingie', 1)
         this.$pressKeyAndHold(document, 500, () => {
-          this.$emit('rotate-thingie', 'ccw')
+          this.$emit('rotate-thingie', 2)
         })
       } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
-        this.$emit('rotate-thingie', 'cw')
+        this.$emit('rotate-thingie', -1)
         this.$pressKeyAndHold(document, 500, () => {
-          this.$emit('rotate-thingie', 'cw')
+          this.$emit('rotate-thingie', -2)
         })
       }
     }

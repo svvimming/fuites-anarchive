@@ -1,3 +1,23 @@
+// /////////////////////////////////////////////////////////////////// Functions
+const getNewSpazeName = (array) => {
+  const consistencies = array.join(' ').split(' ')
+  let index = Math.floor(Math.random() * consistencies.length)
+  let name = consistencies[index]
+  consistencies.splice(index, 1)
+  if (consistencies.length >= 3 && Math.random() <= 0.5) {
+    index = Math.floor(Math.random() * consistencies.length)
+    const secondWord = consistencies[index]
+    name = `${name}-${secondWord}`
+    consistencies.splice(index, 1)
+  }
+  if (consistencies.length >= 11 && Math.random() <= 0.5) {
+    index = Math.floor(Math.random() * consistencies.length)
+    const thirdWord = consistencies[index]
+    name = `${name}-${thirdWord}`
+  }
+  return name
+}
+
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
@@ -33,7 +53,37 @@ const actions = {
       const response = await this.$axiosAuth.get('/get-spazes')
       commit('ADD_SPAZES', response.data.payload)
     } catch (e) {
-      console.log('================== [Store Action: spaze/getSpazes]')
+      console.log('===================== [Store Action: collections/getSpazes]')
+      console.log(e)
+      return false
+    }
+  },
+  // ////////////////////////////////////////////////////////////////// addSpaze
+  addSpaze ({ commit }, spaze) {
+    commit('ADD_SPAZE', spaze)
+  },
+  // /////////////////////////////////////////////////////////// postCreateSpaze
+  async postCreateSpaze ({ dispatch, getters, rootGetters }, payload) {
+    try {
+      const incomingThingieId = payload.incomingThingieId
+      const thingie = getters.thingies.find(obj => obj._id === incomingThingieId)
+      const existingSpazes = getters.spazes.map(spaze => spaze.name)
+      const spazeName = getNewSpazeName(thingie.consistencies)
+      if (spazeName && !existingSpazes.includes(spazeName)) {
+        const token = rootGetters['pocket/pocket']
+        const data = {
+          spaze_name: spazeName,
+          connections: payload.connections,
+          session_token: token,
+          creator_thingie: incomingThingieId
+        }
+        const response = await this.$axiosAuth.post('/post-create-spaze', data)
+        return response.data.payload
+      }
+      console.log('could not name new spaze')
+      return false
+    } catch (e) {
+      console.log('=============== [Store Action: collections/postCreateSpaze]')
       console.log(e)
       return false
     }
@@ -72,7 +122,7 @@ const actions = {
       const response = await this.$axiosAuth.post('/post-create-thingie', data)
       return response.data.payload
     } catch (e) {
-      console.log('================== [Store Action: modify/postCreateThingie]')
+      console.log('============= [Store Action: collections/postCreateThingie]')
       console.log(e)
       return false
     }
@@ -92,7 +142,7 @@ const actions = {
       })
       return response.data.payload
     } catch (e) {
-      console.log('================== [Store Action: modify/postDeleteThingie]')
+      console.log('============= [Store Action: collections/postDeleteThingie]')
       console.log(e)
       return false
     }
@@ -116,10 +166,13 @@ const actions = {
 // -----------------------------------------------------------------------------
 const mutations = {
   ADD_SPAZES (state, spazes) {
-    state.spazes = state.spazes.concat(spazes)
+    state.spazes = spazes
+  },
+  ADD_SPAZE (state, spaze) {
+    state.spazes.push(spaze)
   },
   ADD_THINGIES (state, thingies) {
-    state.thingies = state.thingies.concat(thingies)
+    state.thingies = thingies
   },
   ADD_THINGIE (state, thingie) {
     state.thingies.push(thingie)

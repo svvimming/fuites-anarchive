@@ -95,20 +95,20 @@ export default {
 
   async mounted () {
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'thingies')
+      this.socket.emit('join-room', 'spazes')
+      this.socket.on('module|post-create-spaze|payload', (spaze) => {
+        this.addSpaze(spaze)
+      })
     })
-  },
-
-  beforeDestroy () {
-    this.clearSpazes()
-    this.clearThingies()
   },
 
   methods: {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
-      clearThingies: 'collections/clearThingies'
+      clearThingies: 'collections/clearThingies',
+      postCreateSpaze: 'collections/postCreateSpaze',
+      addSpaze: 'collections/addSpaze'
     }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
@@ -138,6 +138,9 @@ export default {
           dragging: false,
           at: { x, y, z: 1 }
         })
+        if (this.spaze.metastable) {
+          this.createNewSpazeFromThingie(thingieId)
+        }
       }
     },
     openEditor (evt) {
@@ -153,6 +156,20 @@ export default {
       if (this.authenticated) {
         if (!evt.altKey) {
           this.$refs.propboard.closeEditor()
+        }
+      }
+    },
+    async createNewSpazeFromThingie (thingieId) {
+      const complete = await this.postCreateSpaze({
+        incomingThingieId: thingieId,
+        connections: [this.spazeName]
+      })
+      if (complete) {
+        const newSpaze = this.spazes.find(item => item.name === complete.name)
+        if (newSpaze) {
+          this.$nextTick(() => {
+            this.$router.push({ path: `/${newSpaze.name}` })
+          })
         }
       }
     }

@@ -249,8 +249,7 @@ export default {
         fontfamily: family
       })
     },
-    rotateThingie (direction) {
-      const delta = direction === 'cw' ? -1 : 1
+    rotateThingie (delta) {
       const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
       const newAngle = angle - delta
       this.$emit('initupdate', {
