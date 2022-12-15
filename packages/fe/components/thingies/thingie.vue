@@ -15,6 +15,8 @@
       v-if="authenticated"
       :open="editor"
       :type="type"
+      :edit-color="false"
+      :highlight-color="highlight"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
       @rotate-thingie="rotateThingie"
@@ -107,6 +109,9 @@ export default {
     consistencies () {
       return this.thingie.consistencies
     },
+    highlight () {
+      return this.thingie.colors.length ? this.thingie.colors[0] : ''
+    },
     styles () {
       const styles = {
         left: this.position.x + 'px',
@@ -118,7 +123,8 @@ export default {
       }
       if (this.type === 'text') {
         styles.height = 'unset'
-        styles['--thingie-font-size'] = `${this.thingie.fontsize}px`
+        styles['--thingie-font-size'] = `${this.thingie.fontsize}px`,
+        styles.color = this.thingie.colors[0]
       }
       return styles
     },

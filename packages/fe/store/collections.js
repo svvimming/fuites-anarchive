@@ -105,20 +105,19 @@ const actions = {
   // ///////////////////////////////////////////////////////// postCreateThingie
   async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
+      const props = ['text', 'fontsize', 'fontfamily', 'colors', 'at', 'pathData']
       const token = rootGetters['pocket/pocket']
       const data = {
         file_id: payload.uploadedFileId,
         location: payload.location,
         creator_token: token,
-        thingie_type: payload.type,
-        text: payload.text
+        thingie_type: payload.type
       }
-      if (payload.at) {
-        data.at = payload.at
-      }
-      if (payload.pathData) {
-        data.pathData = payload.pathData
-      }
+      props.forEach((prop) => {
+        if (payload.hasOwnProperty(prop)) {
+          data[prop] = payload[prop]
+        }
+      })
       const response = await this.$axiosAuth.post('/post-create-thingie', data)
       return response.data.payload
     } catch (e) {

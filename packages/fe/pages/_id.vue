@@ -138,7 +138,7 @@ export default {
           dragging: false,
           at: { x, y, z: 1 }
         })
-        if (this.spaze.metastable) {
+        if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
         }
       }

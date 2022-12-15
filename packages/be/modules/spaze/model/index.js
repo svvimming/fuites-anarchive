@@ -24,10 +24,11 @@ const SpazeSchema = new Schema({
     ref: 'thingies',
     required: false
   },
-  metastable: {
-    type: Boolean,
+  state: {
+    type: String,
     required: false,
-    default: false
+    default: 'clumping',
+    enum: ['clumping', 'metastable', 'leaking']
   }
 }, {
   timestamps: true,
