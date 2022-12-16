@@ -105,7 +105,7 @@ const actions = {
   // ///////////////////////////////////////////////////////// postCreateThingie
   async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
-      const props = ['text', 'fontsize', 'fontfamily', 'colors', 'at', 'pathData']
+      const props = ['text', 'fontsize', 'fontfamily', 'colors', 'at', 'pathData', 'width']
       const token = rootGetters['pocket/pocket']
       const data = {
         file_id: payload.uploadedFileId,

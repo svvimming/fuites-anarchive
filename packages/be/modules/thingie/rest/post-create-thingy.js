@@ -26,7 +26,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
         y: body.at ? body.at.y : 200 + Math.random() * 200,
         z: 1
       },
-      width: 80,
+      width: body.width ? body.width : 80,
       angle: 0,
       clip: true,
       creator_token: body.creator_token,

@@ -13,27 +13,13 @@
       :spz="spazeName"
       :location="editor" />
 
-    <template v-for="thingie in spazeThingies">
-
-      <Thingie
-        :thingie="thingie"
-        @initmousedown="initMousedown"
-        @initupdate="initUpdate"
-        @initmouseup="initMouseup">
-
-        <template v-if="thingie.thingie_type === 'text'">
-          <div class="text-feel">
-            {{ thingie.text }}
-          </div>
-        </template>
-
-        <template v-else>
-          <img :src="`${$config.backendUrl}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`" />
-        </template>
-
-      </Thingie>
-
-    </template>
+    <Thingie
+      v-for="thingie in spazeThingies"
+      :key="thingie._id"
+      :thingie="thingie"
+      @initmousedown="initMousedown"
+      @initupdate="initUpdate"
+      @initmouseup="initMouseup" />
 
   </div>
 </template>
