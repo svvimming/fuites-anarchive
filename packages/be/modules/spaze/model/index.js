@@ -15,9 +15,20 @@ const SpazeSchema = new Schema({
   connections: {
     type: [String]
   },
-  creator_token: {
+  session_token: {
     type: String,
     required: true
+  },
+  creator_thingie: {
+    type: Schema.Types.ObjectId,
+    ref: 'thingies',
+    required: false
+  },
+  state: {
+    type: String,
+    required: false,
+    default: 'clumping',
+    enum: ['clumping', 'metastable', 'leaking']
   }
 }, {
   timestamps: true,

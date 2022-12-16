@@ -14,7 +14,7 @@
         @dragover.prevent
         @dragenter.prevent>
 
-        <!-- Uploader ********************************************************** -->
+        <!-- Uploader ****************************************************** -->
         <div class="uploader-wrapper">
           <SingleFileUploader />
         </div>
