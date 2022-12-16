@@ -5,26 +5,24 @@
     :style="editorStyles"
     @click.self="closeColorEditor"
     @mousemove.capture="handleMouseMove($event)">
+
     <div
       v-if="open && type === 'text'"
       class="editor-toolbar">
 
       <div class="font-size-control">
-
         <button
           type="button"
           class="editor-button arrow"
           @click="$emit('change-font-size', 'up')">
           ˄
         </button>
-
         <button
           type="button"
           class="editor-button arrow"
           @click="$emit('change-font-size', 'down')">
           ˅
         </button>
-
       </div>
 
       <div class="font-family-control">
@@ -48,6 +46,7 @@
       </div>
 
     </div>
+
   </div>
 </template>
 
@@ -183,6 +182,7 @@ export default {
     }
     &.colorpicker {
       z-index: 2;
+      cursor: pointer;
       .color-control {
         .editor-button {
           color: var(--color-control);
