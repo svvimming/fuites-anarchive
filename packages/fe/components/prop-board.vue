@@ -4,16 +4,20 @@
     :class="['prop-board', { open }]"
     :style="editorStyles">
 
-    <Editor
-      :open="true"
-      type="text"
+    <TextThingie
+      :text="''"
+      :fontsize="13"
+      :editor="true"
+      :propboard="true"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
       @change-color="changeColor" />
 
     <form action="" class="text-form">
 
-      <div class="text-area-wrapper">
+      <div
+        ref="textArea"
+        class="text-area-wrapper">
         <textarea
           v-model="text"
           :class="['text-input', fontfamily]"
@@ -36,14 +40,14 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Editor from '@/components/thingies/editor'
+import TextThingie from '@/components/thingies/text-thingie'
 
 // ====================================================================== Export
 export default {
   name: 'PropBoard',
 
   components: {
-    Editor
+    TextThingie
   },
 
   props: {
@@ -70,6 +74,7 @@ export default {
       fontsize: 13,
       fontfamily: 'nanum',
       color: '#000000',
+      highlight: '#BDBBD7',
       key: 0
     }
   },
@@ -85,7 +90,8 @@ export default {
       return {
         left: this.location.x + 'px',
         top: this.location.y + 'px',
-        '--thingie-color': this.color
+        '--thingie-color': this.color,
+        '--propboard-highlight-color': this.highlight
       }
     },
     spazeName () {
@@ -126,10 +132,14 @@ export default {
       const index = (current + 1) % this.fonts.length
       this.fontfamily = this.fonts[index]
     },
-    changeColor (color) {
+    changeColor (color, changeHighlight) {
       this.color = color
+      if (changeHighlight) {
+        this.highlight = this.color
+      }
     },
     async createTextThingie () {
+      const width = this.$refs.textArea ? this.$refs.textArea.clientWidth : 80
       const complete = await this.postCreateThingie({
         location: this.spazeName,
         type: 'text',
@@ -137,6 +147,7 @@ export default {
         fontsize: this.fontsize,
         fontfamily: this.fontfamily,
         colors: [this.color],
+        width,
         at: {
           x: this.location.x,
           y: this.location.y,
@@ -149,6 +160,7 @@ export default {
         this.key++
         this.text = ''
         this.color = '#000000'
+        this.highlight = '#BDBBD7'
       }
     }
   }
@@ -158,28 +170,29 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .prop-board {
+  --propboard-highlight-color: $lavender;
   --thingie-color: #cbc0d9;
   position: absolute;
   padding: 0.25rem;
   width: 20rem;
-  height: 8rem;
-  @include focusBoxShadowSmall;
+  min-height: 8rem;
+  // @include focusBoxShadowSmall;
   border-radius: 0.25rem;
   background-color: #ffffff;
   visibility: hidden;
   @include popOutAnimation;
   z-index: 100000;
-  // &:before {
-  //   content: '';
-  //   position: absolute;
-  //   top: 0;
-  //   left: 0;
-  //   width: 100%;
-  //   height: 100%;
-  //   opacity: 0.5;
-  //   box-shadow: 0 0 3px 3px var(--thingie-color);
-  //   border-radius: 0.25rem;
-  // }
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    box-shadow: 0 0 3px 3px var(--propboard-highlight-color);
+    border-radius: 0.25rem;
+  }
   &.open {
     visibility: visible;
     @include popInAnimation;
@@ -193,6 +206,7 @@ export default {
   position: relative;
   z-index: 1;
   height: 100%;
+  min-height: 7.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -216,13 +230,14 @@ export default {
   @include linkHover(#000000);
 }
 
-:deep(.thingie-editor.open) {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-  box-shadow: none;
-  z-index: 1;
+:deep(.text-thingie) {
+  .thingie-editor {
+    &.editor {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
 }
 </style>

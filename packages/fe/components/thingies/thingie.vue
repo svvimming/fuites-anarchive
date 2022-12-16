@@ -2,7 +2,7 @@
   <div
     ref="thingieRef"
     draggable
-    :class="['thingie', `${type}-thingie`, { locked: !authenticated }, { editor }, fontfamily]"
+    :class="['thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
     @mousedown="mousedown($event)"
@@ -11,34 +11,23 @@
     @click.alt.self="thingieEditor($event)"
     v-click-outside="closeEditor">
 
-    <Editor
-      v-if="authenticated"
-      :open="editor"
-      :type="type"
-      :edit-color="false"
-      :highlight-color="highlight"
+    <TextThingie
+      v-if="type === 'text'"
+      :text="thingie.text"
+      :editor="editing"
+      :fontsize="fontsize"
+      :fontcolor="highlight"
+      :class="fontfamily"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
-      @rotate-thingie="rotateThingie"
-      @change-zindex="changeZindex" />
+      @change-color="changeTextColor" />
 
-    <svg
-      v-if="clipPath && clipPathData"
-      class="clip-path-svg"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 200 200">
-    	<defs>
-    		<clipPath ref="clipPath" :id="clipPathId" clipPathUnits="objectBoundingBox">
-    			<path :d="clipPathData" stroke-linejoin="arcs" />
-    		</clipPath>
-    	</defs>
-    </svg>
-
-    <div
-      :class="['slot-wrapper', { 'no-clip-path': !clipPathData || !clipPath }]"
-      :style="{ 'clip-path': `url(#${clipPathId})` }">
-      <slot></slot>
-    </div>
+    <ImageThingie
+      v-if="type === 'image'"
+      :image="thingie.file_ref._id"
+      :filetype="thingie.file_ref.file_ext"
+      :clip="thingie.clip"
+      :clip-path="thingie.path_data" />
 
   </div>
 </template>
@@ -47,14 +36,16 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Editor from '@/components/thingies/editor'
+import TextThingie from '@/components/thingies/text-thingie'
+import ImageThingie from '@/components/thingies/image-thingie'
 
 // ====================================================================== Export
 export default {
   name: 'Thingie',
 
   components: {
-    Editor
+    TextThingie,
+    ImageThingie
   },
 
   props: {
@@ -68,8 +59,7 @@ export default {
     return {
       handleX: false,
       handleY: false,
-      editor: false,
-      clipPathId: ''
+      editing: false
     }
   },
 
@@ -106,9 +96,6 @@ export default {
     fontsize () {
       return this.thingie.fontsize ? this.thingie.fontsize : 13
     },
-    consistencies () {
-      return this.thingie.consistencies
-    },
     highlight () {
       return this.thingie.colors.length ? this.thingie.colors[0] : ''
     },
@@ -118,13 +105,9 @@ export default {
         top: this.position.y + 'px',
         'z-index': this.position.z,
         width: this.width + 'px',
-        height: this.height + 'px',
-        transform: `rotate(${this.rotate}deg)`
-      }
-      if (this.type === 'text') {
-        styles.height = 'unset'
-        styles['--thingie-font-size'] = `${this.thingie.fontsize}px`,
-        styles.color = this.thingie.colors[0]
+        height: this.type !== 'text' ? `${this.height}px` : 'unset',
+        transform: `rotate(${this.rotate}deg)`,
+        '--highlight-color': this.thingie.colors[0]
       }
       return styles
     },
@@ -139,9 +122,13 @@ export default {
     }
   },
 
-  mounted () {
-    if (this.clipPathData) {
-      this.clipPathId = `clippath-${this.consistencies.join('-').replaceAll(' ', '-')}-${this.thingie.createdAt}`
+  watch: {
+    editing (val) {
+      if (val) {
+        document.onkeydown = (e) => { this.handleKeydown(e) }
+      } else {
+        document.onkeydown = null
+      }
     }
   },
 
@@ -223,12 +210,12 @@ export default {
     thingieEditor (evt) {
       if (this.authenticated) {
         evt.preventDefault()
-        this.editor = !this.editor
+        this.editing = !this.editing
       }
     },
     closeEditor () {
-      if (this.editor) {
-        this.editor = false
+      if (this.editing) {
+        this.editing = false
       }
     },
     changeFontSize (direction) {
@@ -255,6 +242,15 @@ export default {
         fontfamily: family
       })
     },
+    changeTextColor (incoming) {
+      const colors = this.thingie.colors
+      let newColors = [incoming].concat(colors)
+      if (newColors.length > 10) { newColors = newColors.slice(0, 10) }
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        colors: newColors
+      })
+    },
     rotateThingie (delta) {
       const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
       const newAngle = angle - delta
@@ -278,6 +274,24 @@ export default {
           at: { x: this.position.x, y: this.position.y, z: min - 1 }
         })
       }
+    },
+    handleKeydown (e) {
+      e.preventDefault()
+      if (e.keyCode === 38 || e.key === 'ArrowUp') {
+        this.changeZindex('front')
+      } else if (e.keyCode === 40 || e.key === 'ArrowDown') {
+        this.changeZindex('back')
+      } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
+        this.rotateThingie(1)
+        this.$pressKeyAndHold(document, 500, () => {
+          this.rotateThingie(2)
+        })
+      } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
+        this.rotateThingie(-1)
+        this.$pressKeyAndHold(document, 500, () => {
+          this.rotateThingie(-2)
+        })
+      }
     }
   }
 }
@@ -286,16 +300,11 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .thingie {
+  --highlight-color: #cbc0d9;
   position: absolute;
   width: 80px;
   cursor: grab;
   transform-origin: center;
-  // transition: all 100ms linear;
-  &.image-thingie,
-  &.text-thingie,
-  &.sound-thingie,
-  &.video-thingie {
-  }
   &:active {
     cursor: grabbing;
   }
@@ -309,35 +318,18 @@ export default {
   &.locked {
     pointer-events: none;
   }
-}
-
-.thingie.text-thingie {
-  --thingie-font-size: 13px;
-  ::v-deep .text-feel {
-    position: relative;
-    width: fit-content;
-    margin: auto;
-    z-index: 0;
-    pointer-events: none;
-    font-size: var(--thingie-font-size);
+  &.editing {
+    &:before {
+      content: '';
+      position: absolute;
+      top: -1rem;
+      left: -1rem;
+      width: calc(100% + 2rem);
+      height: calc(100% + 2rem);
+      opacity: 0.5;
+      border-radius: 0.25rem;
+      box-shadow: 0 0 3px 3px var(--highlight-color);
+    }
   }
 }
-
-.clip-path-svg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.slot-wrapper {
-  display: block;
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  &.no-clip-path {
-    clip-path: none !important;
-  }
-}
-
 </style>
