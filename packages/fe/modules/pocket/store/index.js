@@ -1,7 +1,10 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  pocket: '',
+  pocket: {
+    token: '',
+    thingies: []
+  },
   pocketIsOpen: false
 })
 
@@ -15,9 +18,21 @@ const getters = {
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
-  // ////////////////////////////////////////////////////// setPocketConsistency
-  setPocketToken ({ commit }, token) {
-    commit('SET_POCKET_TOKEN', token)
+  // ///////////////////////////////////////////////////////////////// getPocket
+  async getPocket ({ commit }, token) {
+    try {
+      const response = await this.$axiosAuth.get(`/get-pocket?token=${token}`)
+      const pocket = response.data.payload
+      if (pocket) {
+        commit('SET_POCKET', pocket)
+      } else {
+        throw 'pocket does not exist!'
+      }
+    } catch (e) {
+      console.log('===================== [Store Action: collections/getPocket]')
+      console.log(e)
+      return false
+    }
   },
   // /////////////////////////////////////////////////////////// setPocketIsOpen
   setPocketIsOpen ({ commit }, val) {
@@ -28,7 +43,7 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  SET_POCKET_TOKEN (state, incoming) {
+  SET_POCKET (state, incoming) {
     state.pocket = incoming
   },
   SET_POCKET_IS_OPEN (state, val) {

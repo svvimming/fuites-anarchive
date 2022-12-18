@@ -70,11 +70,11 @@ const actions = {
       const existingSpazes = getters.spazes.map(spaze => spaze.name)
       const spazeName = getNewSpazeName(thingie.consistencies)
       if (spazeName && !existingSpazes.includes(spazeName)) {
-        const token = rootGetters['pocket/pocket']
+        const pocket = rootGetters['pocket/pocket']
         const data = {
           spaze_name: spazeName,
           connections: payload.connections,
-          session_token: token,
+          session_token: pocket.token,
           creator_thingie: incomingThingieId
         }
         const response = await this.$axiosAuth.post('/post-create-spaze', data)
@@ -106,11 +106,11 @@ const actions = {
   async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
       const props = ['text', 'fontsize', 'fontfamily', 'colors', 'at', 'pathData', 'width']
-      const token = rootGetters['pocket/pocket']
+      const pocket = rootGetters['pocket/pocket']
       const data = {
         file_id: payload.uploadedFileId,
         location: payload.location,
-        creator_token: token,
+        creator_token: pocket.token,
         thingie_type: payload.type
       }
       props.forEach((prop) => {
