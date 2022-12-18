@@ -60,6 +60,12 @@ export default {
     }
   },
 
+  head () {
+    return {
+      title: `${this.spazeName.replaceAll('-', ' ')} - f u i t e s`
+    }
+  },
+
   computed: {
     ...mapGetters({
       spazes: 'collections/spazes',
