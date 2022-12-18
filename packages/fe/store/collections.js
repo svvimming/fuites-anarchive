@@ -15,7 +15,10 @@ const getNewSpazeName = (array) => {
     const thirdWord = consistencies[index]
     name = `${name}-${thirdWord}`
   }
-  return name
+  if (!['pocket'].includes(name)) {
+    return name
+  }
+  return false
 }
 
 // /////////////////////////////////////////////////////////////////////// State
@@ -119,7 +122,12 @@ const actions = {
         }
       })
       const response = await this.$axiosAuth.post('/post-create-thingie', data)
-      return response.data.payload
+      const thingie = response.data.payload
+      if (thingie.location === 'pocket') { // add thingie id to this client-pocket's thingie list
+        const update = { thingie, action: 'add' }
+        dispatch('pocket/postUpdatePocket', update, { root: true })
+      }
+      return thingie
     } catch (e) {
       console.log('============= [Store Action: collections/postCreateThingie]')
       console.log(e)
@@ -127,9 +135,19 @@ const actions = {
     }
   },
   // ///////////////////////////////////////////////////////////// updateThingie
-  updateThingie ({ commit, getters }, incoming) {
+  updateThingie ({ commit, state, getters, dispatch }, incoming) {
     const index = getters.thingies.findIndex(obj => obj._id === incoming._id)
     if (index >= 0) {
+      const thingie = state.thingies[index]
+      if (thingie.location !== incoming.location) {
+        if (thingie.location !== 'pocket' && incoming.location === 'pocket') {
+          const update = { thingie: incoming, action: 'add' }
+          dispatch('pocket/postUpdatePocket', update, { root: true })
+        } else if (thingie.location === 'pocket' && incoming.location !== 'pocket') {
+          const update = { thingie: incoming, action: 'remove' }
+          dispatch('pocket/postUpdatePocket', update, { root: true })
+        }
+      }
       commit('UPDATE_THINGIE', { index, thingie: incoming })
     }
   },
@@ -147,8 +165,12 @@ const actions = {
     }
   },
   // ///////////////////////////////////////////////////////////// removeThingie
-  removeThingie ({ commit, getters }, thingieId) {
+  removeThingie ({ commit, getters, dispatch }, thingieId) {
     const index = getters.thingies.findIndex(obj => obj._id === thingieId)
+    const thingieToRemove = getters.thingies[index]
+    if (thingieToRemove.location === 'pocket') {
+      dispatch('pocket/postUpdatePocket', { thingie: thingieToRemove, action: 'remove' }, { root: true })
+    }
     commit('REMOVE_THINGIE', index)
   },
   // /////////////////////////////////////////////////////////////// clearSpazes

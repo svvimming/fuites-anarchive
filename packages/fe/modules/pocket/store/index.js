@@ -34,6 +34,37 @@ const actions = {
       return false
     }
   },
+  // ////////////////////////////////////////////////////////// postUpdatePocket
+  async postUpdatePocket ({ commit, getters }, incoming) {
+    try {
+      if (getters.pocket.token === incoming.thingie.last_update_token) {
+        let thingies
+        if (incoming.action === 'add') {
+          if (!getters.pocket.thingies.includes(incoming.thingie._id)) {
+            thingies = [incoming.thingie._id].concat(getters.pocket.thingies)
+          } else {
+            throw 'this thingie is already in the pocket!'
+          }
+        } else if (incoming.action === 'remove') {
+          if (getters.pocket.thingies.includes(incoming.thingie._id)) {
+            thingies = getters.pocket.thingies.filter(id => id !== incoming.thingie._id)
+          } else {
+            throw 'tried to remove a thingie not in the pocket!'
+          }
+        } else {
+          throw 'missing pocket update action type'
+        }
+        const data = { token: getters.pocket.token, thingies }
+        const response = await this.$axiosAuth.post('/post-update-pocket', data)
+        const pocket = response.data.payload
+        commit('SET_POCKET', pocket)
+      }
+    } catch (e) {
+      console.log('=================== [Store Action: pocket/postUpdatePocket]')
+      console.log(e)
+      return false
+    }
+  },
   // /////////////////////////////////////////////////////////// setPocketIsOpen
   setPocketIsOpen ({ commit }, val) {
     commit('SET_POCKET_IS_OPEN', val)

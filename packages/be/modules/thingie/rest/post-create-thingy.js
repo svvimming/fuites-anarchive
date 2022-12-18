@@ -30,6 +30,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       angle: 0,
       clip: true,
       creator_token: body.creator_token,
+      last_update_token: body.last_update_token ? body.last_update_token : body.creator_token,
       thingie_type: body.thingie_type,
       text: body.text,
       fontsize: body.fontsize ? body.fontsize : 13,
@@ -42,7 +43,6 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       path: 'file_ref',
       select: 'filename file_ext aspect'
     })
-    console.log(created)
     MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)
     GetThingieConsistencies(created, upload)
