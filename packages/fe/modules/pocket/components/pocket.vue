@@ -66,10 +66,11 @@ export default {
     ...mapGetters({
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      pocket: 'pocket/pocket',
       pocketIsOpen: 'pocket/pocketIsOpen'
     }),
     pocketThingies () {
-      return this.thingies.filter(obj => obj.location === 'pocket')
+      return this.thingies.filter(obj => obj.location === 'pocket' && this.pocket.thingies.includes(obj._id))
     }
   },
 
@@ -93,16 +94,19 @@ export default {
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: true
+        dragging: true,
+        last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: false
+        dragging: false,
+        last_update_token: this.pocket.token
       })
     },
     initUpdate (thingie) {
+      thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
@@ -115,6 +119,7 @@ export default {
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: 'pocket',
+          last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 }
         })

@@ -66,7 +66,7 @@ const actions = {
         message: response.data.message
       })
       if (authenticated) {
-        dispatch('pocket/setPocketToken', token, { root: true })
+        dispatch('pocket/getPocket', token, { root: true })
       }
       commit('SET_AUTHENTICATION_STATUS', authenticated)
     } catch (e) {
