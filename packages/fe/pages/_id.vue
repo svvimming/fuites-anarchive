@@ -70,7 +70,8 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      pocket: 'pocket/pocket'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -105,16 +106,19 @@ export default {
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: true
+        dragging: true,
+        last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: false
+        dragging: false,
+        last_update_token: this.pocket.token
       })
     },
     initUpdate (thingie) {
+      thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
@@ -127,6 +131,7 @@ export default {
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: this.spazeName,
+          last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 }
         })
