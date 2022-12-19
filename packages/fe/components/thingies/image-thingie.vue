@@ -2,6 +2,7 @@
   <div class="image-thingie">
 
     <button
+      v-if="clipPath"
       type="button"
       :class="['clip-toggle-button', { editor }]"
       @click="$emit('toggle-clip-path', !clip)">
@@ -71,7 +72,7 @@ export default {
   },
 
   mounted () {
-    if (this.clip) {
+    if (this.clipPath) {
       this.pathId = `clippath-${Math.random()}-${Math.random()}`
     }
   }
