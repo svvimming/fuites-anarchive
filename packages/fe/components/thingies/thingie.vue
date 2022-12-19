@@ -27,7 +27,9 @@
       :image="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
       :clip="thingie.clip"
-      :clip-path="thingie.path_data" />
+      :clip-path="thingie.path_data"
+      :editor="editing"
+      @toggle-clip-path="toggleImageClip" />
 
   </div>
 </template>
@@ -275,6 +277,12 @@ export default {
         })
       }
     },
+    toggleImageClip (val) {
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        clip: val
+      })
+    },
     handleKeydown (e) {
       e.preventDefault()
       if (e.keyCode === 38 || e.key === 'ArrowUp') {
@@ -329,6 +337,11 @@ export default {
       opacity: 0.5;
       border-radius: 0.25rem;
       box-shadow: 0 0 3px 3px var(--highlight-color);
+    }
+  }
+  :deep(.image-thingie) {
+    .clip-toggle-button {
+      color: var(--highlight-color);
     }
   }
 }
