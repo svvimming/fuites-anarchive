@@ -91,6 +91,9 @@ export default {
       this.socket.on('module|post-create-spaze|payload', (spaze) => {
         this.addSpaze(spaze)
       })
+      this.socket.on('module|post-update-spaze|payload', (spaze) => {
+        this.updateSpaze(spaze)
+      })
     })
   },
 
@@ -100,7 +103,9 @@ export default {
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
       postCreateSpaze: 'collections/postCreateSpaze',
-      addSpaze: 'collections/addSpaze'
+      postUpdateSpaze: 'collections/postUpdateSpaze',
+      addSpaze: 'collections/addSpaze',
+      updateSpaze: 'collections/updateSpaze'
     }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
@@ -159,9 +164,16 @@ export default {
       if (complete) {
         const newSpaze = this.spazes.find(item => item.name === complete.name)
         if (newSpaze) {
-          this.$nextTick(() => {
-            this.$router.push({ path: `/${newSpaze.name}` })
+          const updated = await this.postUpdateSpaze({
+            name: this.spaze.name,
+            connections: [newSpaze.name].concat(this.spaze.connections),
+            state: 'leaking'
           })
+          if (updated) {
+            this.$nextTick(() => {
+              this.$router.push({ path: `/${newSpaze.name}` })
+            })
+          }
         }
       }
     }

@@ -50,6 +50,7 @@
     "moment-timezone": "^0.5.37",
     "mongoose": "^6.6.5",
     "mongoose-slug-updater": "^3.2.3",
+    "node-cron": "^3.0.2",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2"
   }
