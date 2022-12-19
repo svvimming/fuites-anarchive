@@ -1,6 +1,6 @@
 /**
  *
- * ⏱️️ [Cron | every 5 minutes] GOA
+ * ⏱️️ [Cron | every minute] GOA
  *
  */
 console.log('⏱️️  [cron] GOA')
@@ -9,7 +9,7 @@ console.log('⏱️️  [cron] GOA')
 // -----------------------------------------------------------------------------
 const NodeCron = require('node-cron')
 
-const MC = require('../config')
+const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // -----------------------------------------------------------------------------
@@ -29,9 +29,9 @@ const GodessOfAnarchy = async () => {
           totalBytes += thingie.file_ref.filesize
         }
       })
-      console.log(`${spaze.name} - ${spaze.state} - total bytes: ${totalBytes}`)
       if (totalBytes > 2000000 && spaze.state === 'clumping') {
         const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'metastable'}, { new: true })
+        MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       }
     }
   } catch (e) {

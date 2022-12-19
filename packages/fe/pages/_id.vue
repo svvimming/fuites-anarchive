@@ -88,11 +88,13 @@ export default {
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
+      this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|post-create-spaze|payload', (spaze) => {
         this.addSpaze(spaze)
       })
-      this.socket.on('module|post-update-spaze|payload', (spaze) => {
-        this.updateSpaze(spaze)
+      const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
+      socketEvents.forEach((message) => {
+        this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
       })
     })
   },

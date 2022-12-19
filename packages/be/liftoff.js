@@ -51,8 +51,8 @@ try {
 
 // /////////////////////////////////////////////////////////////// Run functions
 // -----------------------------------------------------------------------------
-const initGOA = async () => {
+const initializeCronJobs = async () => {
   require(`${MC.packageRoot}/crons/goa`)
 }
 
-initGOA()
+initializeCronJobs()
