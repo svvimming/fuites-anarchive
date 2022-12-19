@@ -30,7 +30,10 @@ const GodessOfAnarchy = async () => {
         }
       })
       if (totalBytes > 2000000 && spaze.state === 'clumping') {
-        const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'metastable'}, { new: true })
+        const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'metastable' }, { new: true })
+        MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
+      } else if (totalBytes <= 1000000 && spaze.state === 'leaking') {
+        const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       }
     }
