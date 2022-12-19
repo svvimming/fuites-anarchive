@@ -15,7 +15,7 @@ const SpazeSchema = new Schema({
   connections: {
     type: [String]
   },
-  session_token: {
+  initiator_token: {
     type: String,
     required: true
   },

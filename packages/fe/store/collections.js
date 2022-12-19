@@ -91,6 +91,24 @@ const actions = {
       return false
     }
   },
+  // /////////////////////////////////////////////////////////// postUpdateSpaze
+  async postUpdateSpaze ({ getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.post('/post-update-spaze', payload)
+      return response.data.payload
+    } catch (e) {
+      console.log('=============== [Store Action: collections/postUpdateSpaze]')
+      console.log(e)
+      return false
+    }
+  },
+  // /////////////////////////////////////////////////////////////// updateSpaze
+  updateSpaze ({ commit, getters }, incoming) {
+    const index = getters.spazes.findIndex(obj => obj._id === incoming._id)
+    if (index >= 0) {
+      commit('UPDATE_SPAZE', { index, spaze: incoming })
+    }
+  },
   // /////////////////////////////////////////////////////////////// getThingies
   async getThingies ({ commit, getters }) {
     try {
@@ -192,6 +210,12 @@ const mutations = {
   ADD_SPAZE (state, spaze) {
     state.spazes.push(spaze)
   },
+  UPDATE_SPAZE (state, payload) {
+    state.spazes.splice(payload.index, 1, payload.spaze)
+  },
+  CLEAR_SPAZES (state) {
+    state.spazes = []
+  },
   ADD_THINGIES (state, thingies) {
     state.thingies = thingies
   },
@@ -203,9 +227,6 @@ const mutations = {
   },
   REMOVE_THINGIE (state, index) {
     state.thingies.splice(index, 1)
-  },
-  CLEAR_SPAZES (state) {
-    state.spazes = []
   },
   CLEAR_THINGIES (state) {
     state.thingies = []
