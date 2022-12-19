@@ -28,7 +28,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       },
       width: body.width ? body.width : 80,
       angle: 0,
-      clip: true,
+      clip: false,
       creator_token: body.creator_token,
       last_update_token: body.last_update_token ? body.last_update_token : body.creator_token,
       thingie_type: body.thingie_type,

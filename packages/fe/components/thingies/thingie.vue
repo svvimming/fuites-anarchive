@@ -31,6 +31,10 @@
       :editor="editing"
       @toggle-clip-path="toggleImageClip" />
 
+    <SoundThingie
+      v-if="type === 'sound'"
+      :path="thingie.path_data" />
+
   </div>
 </template>
 
@@ -40,6 +44,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
+import SoundThingie from '@/components/thingies/sound-thingie'
 
 // ====================================================================== Export
 export default {
@@ -47,7 +52,8 @@ export default {
 
   components: {
     TextThingie,
-    ImageThingie
+    ImageThingie,
+    SoundThingie
   },
 
   props: {
