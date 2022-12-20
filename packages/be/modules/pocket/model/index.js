@@ -1,4 +1,4 @@
-console.log('💿 [model] spaze')
+console.log('💿 [model] pocket')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,35 +7,15 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const SpazeSchema = new Schema({
-  name: {
+const PocketSchema = new Schema({
+  token: {
     type: String,
     required: true
   },
-  portal_refs: {
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'portals',
-        required: false
-      }
-    ],
-    required: false
-  },
-  initiator_token: {
-    type: String,
-    required: true
-  },
-  creator_thingie: {
-    type: Schema.Types.ObjectId,
-    ref: 'thingies',
-    required: false
-  },
-  state: {
-    type: String,
-    required: false,
-    default: 'clumping',
-    enum: ['clumping', 'metastable', 'leaking']
+  thingies: {
+    type: [String],
+    required: true,
+    default: []
   }
 }, {
   timestamps: true,
@@ -44,4 +24,4 @@ const SpazeSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('spazes', SpazeSchema)
+module.exports = Mongoose.model('pockets', PocketSchema)

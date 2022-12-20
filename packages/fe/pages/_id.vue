@@ -70,7 +70,8 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      pocket: 'pocket/pocket'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -88,8 +89,13 @@ export default {
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
+      this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|post-create-spaze|payload', (spaze) => {
         this.addSpaze(spaze)
+      })
+      const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
+      socketEvents.forEach((message) => {
+        this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
       })
     })
   },
@@ -100,21 +106,26 @@ export default {
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
       postCreateSpaze: 'collections/postCreateSpaze',
-      addSpaze: 'collections/addSpaze'
+      postUpdateSpaze: 'collections/postUpdateSpaze',
+      addSpaze: 'collections/addSpaze',
+      updateSpaze: 'collections/updateSpaze'
     }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: true
+        dragging: true,
+        last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: false
+        dragging: false,
+        last_update_token: this.pocket.token
       })
     },
     initUpdate (thingie) {
+      thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
@@ -127,6 +138,7 @@ export default {
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: this.spazeName,
+          last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 }
         })
@@ -159,9 +171,16 @@ export default {
       if (complete) {
         const newSpaze = this.spazes.find(item => item.name === complete.name)
         if (newSpaze) {
-          this.$nextTick(() => {
-            this.$router.push({ path: `/${newSpaze.name}` })
+          const updated = await this.postUpdateSpaze({
+            name: this.spaze.name,
+            connections: [newSpaze.name].concat(this.spaze.connections),
+            state: 'leaking'
           })
+          if (updated) {
+            this.$nextTick(() => {
+              this.$router.push({ path: `/${newSpaze.name}` })
+            })
+          }
         }
       }
     }

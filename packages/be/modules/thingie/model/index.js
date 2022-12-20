@@ -70,6 +70,10 @@ const ThingieSchema = new Schema({
     type: String,
     required: true
   },
+  last_update_token: {
+    type: String,
+    required: true
+  },
   consistencies: {
     type: [String],
     required: false

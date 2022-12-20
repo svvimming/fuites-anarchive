@@ -14,7 +14,7 @@ MC.app.post('/post-create-spaze', async (req, res) => {
     const created = await MC.model.Spaze.create({
       name: body.spaze_name,
       connections: body.connections,
-      session_token: body.session_token,
+      initiator_token: body.session_token,
       creator_thingie: body.creator_thingie
     })
     const updated = await MC.model.Thingie
