@@ -140,7 +140,8 @@ export default {
           location: this.spazeName,
           last_update_token: this.pocket.token,
           dragging: false,
-          at: { x, y, z: 1 }
+          at: { x, y, z: 1 },
+          new_spaze_location: true
         })
         if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
