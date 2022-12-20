@@ -1,4 +1,4 @@
-console.log('💿 [model] spaze')
+console.log('💿 [model] portal')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,35 +7,37 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const SpazeSchema = new Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  portal_refs: {
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'portals',
-        required: false
-      }
-    ],
-    required: false
-  },
-  session_token: {
-    type: String,
-    required: true
-  },
-  creator_thingie: {
+const PortalSchema = new Schema({
+  file_ref: {
     type: Schema.Types.ObjectId,
     ref: 'thingies',
     required: false
   },
-  state: {
+  edge: {
     type: String,
-    required: false,
-    default: 'clumping',
-    enum: ['clumping', 'metastable', 'leaking']
+    required: true
+  },
+  vertices: {
+    type: [
+      {
+        name: {
+          type: String,
+          required: true
+        },
+        at: {
+          x: {
+            type: Number,
+            required: true
+          },
+          y: {
+            type: Number,
+            required: true
+          }
+        }
+      }
+    ],
+    required: true,
+    validate: [(val) => { return val.length === 2 }, 'portal must have two vertices']
   }
 }, {
   timestamps: true,
@@ -44,4 +46,4 @@ const SpazeSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('spazes', SpazeSchema)
+module.exports = Mongoose.model('portals', PortalSchema)

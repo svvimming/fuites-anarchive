@@ -17,6 +17,11 @@ const ThingieSchema = new Schema({
     type: String,
     required: true
   },
+  past_locations: {
+    type: [String],
+    required: false,
+    validate: [(val) => { return val.length < 5 }, 'recorded locations should not exceed 4']
+  },
   dragging: {
     type: Boolean,
     required: true,
