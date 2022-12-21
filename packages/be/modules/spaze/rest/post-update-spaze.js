@@ -18,7 +18,9 @@ MC.app.post('/post-update-spaze', async (req, res) => {
         spazeUpdates[prop] = body[prop]
       }
     })
-    const updated = await MC.model.Spaze.findOneAndUpdate({ name: body.name }, spazeUpdates, { new: true })
+    const updated = await MC.model.Spaze
+      .findOneAndUpdate({ name: body.name }, spazeUpdates, { new: true })
+      .populate({ path: 'portal_refs' })
     MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
     SendData(res, 200, 'Spaze succesfully updated', updated)
   } catch (e) {

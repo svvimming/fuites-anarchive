@@ -5,10 +5,28 @@ console.log('💿 [model] portal')
 const Mongoose = require('mongoose')
 const Schema = Mongoose.Schema
 
-// ////////////////////////////////////////////////////////////////////// Schema
-// -----------------------------------------------------------------------------
+// ///////////////////////////////////////////////////////////////////// Schemas
+// ---------------------------------------------------------------------- Vertex
+const VertexSchema = new Schema({
+  location: {
+    type: String,
+    required: true
+  },
+  at: {
+    x: {
+      type: Number,
+      required: false
+    },
+    y: {
+      type: Number,
+      required: false
+    }
+  }
+})
+
+// ---------------------------------------------------------------------- Portal
 const PortalSchema = new Schema({
-  file_ref: {
+  thingie_ref: {
     type: Schema.Types.ObjectId,
     ref: 'thingies',
     required: false
@@ -18,26 +36,12 @@ const PortalSchema = new Schema({
     required: true
   },
   vertices: {
-    type: [
-      {
-        name: {
-          type: String,
-          required: true
-        },
-        at: {
-          x: {
-            type: Number,
-            required: true
-          },
-          y: {
-            type: Number,
-            required: true
-          }
-        }
-      }
-    ],
-    required: true,
-    validate: [(val) => { return val.length === 2 }, 'portal must have two vertices']
+    a: {
+      type: VertexSchema
+    },
+    b: {
+      type: VertexSchema
+    }
   }
 }, {
   timestamps: true,

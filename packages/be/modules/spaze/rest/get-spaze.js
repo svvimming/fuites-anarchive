@@ -10,7 +10,7 @@ const MC = require('@Root/config')
 // -----------------------------------------------------------------------------
 MC.app.get('/get-spazes', async (req, res) => {
   try {
-    const spazes = await MC.model.Spaze.find({})
+    const spazes = await MC.model.Spaze.find({}).populate({ path: 'portal_refs' })
     SendData(res, 200, 'Dataset retrieved successfully', spazes)
   } catch (e) {
     console.log('=================================== [Endpoint: /get-spazes]')

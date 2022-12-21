@@ -16,7 +16,7 @@ MC.app.post('/post-create-spaze', async (req, res) => {
       connections: body.connections,
       initiator_token: body.session_token,
       creator_thingie: body.creator_thingie
-    })
+    }).populate({ path: 'portal_refs' })
     const updated = await MC.model.Thingie
       .findOneAndUpdate({ _id: created.creator_thingie }, { location: created.name }, { new: true })
       .populate({

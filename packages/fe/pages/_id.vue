@@ -21,6 +21,11 @@
       @initupdate="initUpdate"
       @initmouseup="initMouseup" />
 
+    <Portal
+      v-for="portal in portals"
+      :key="portal.name"
+      :to="portal" />
+
   </div>
 </template>
 
@@ -28,8 +33,9 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Thingie from '@/components/thingies/thingie'
 import PropBoard from '@/components/prop-board'
+import Thingie from '@/components/thingies/thingie'
+import Portal from '@/components/portal'
 
 // ====================================================================== Export
 export default {
@@ -38,8 +44,9 @@ export default {
   layout: 'spaze',
 
   components: {
+    PropBoard,
     Thingie,
-    PropBoard
+    Portal
   },
 
   async fetch ({ app, store }) {
@@ -83,10 +90,33 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    portals () {
+      const portals = []
+      const connections = this.spaze.portal_refs
+      connections.forEach((connection) => {
+        const vertices = connection.vertices
+        if (vertices.a.location === this.spazeName) {
+          portals.push({
+            name: connection.edge,
+            slug: vertices.b.location,
+            at: vertices.a.at
+          })
+        }
+        if (vertices.b.location === this.spazeName) {
+          portals.push({
+            name: connection.edge,
+            slug: vertices.a.location,
+            at: vertices.b.at
+          })
+        }
+      })
+      return portals
     }
   },
 
   async mounted () {
+    console.log(this.portals)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
       this.socket.emit('join-room', 'cron|goa')
