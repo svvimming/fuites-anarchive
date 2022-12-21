@@ -22,8 +22,8 @@
       @initmouseup="initMouseup" />
 
     <Portal
-      v-for="portal in portals"
-      :key="portal.name"
+      v-for="(portal, i) in portals"
+      :key="`${portal.name}_${i}`"
       :to="portal" />
 
   </div>
@@ -78,6 +78,7 @@ export default {
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      showPortals: 'general/portalView',
       pocket: 'pocket/pocket'
     }),
     spaze () {
@@ -93,32 +94,33 @@ export default {
     },
     portals () {
       const portals = []
-      const connections = this.spaze.portal_refs
-      connections.forEach((connection) => {
-        const vertices = connection.vertices
-        if (vertices.a.location === this.spazeName) {
-          portals.push({
-            name: connection.edge,
-            slug: vertices.b.location,
-            at: vertices.a.at,
-            colors: connection.thingie_ref.colors
-          })
-        }
-        if (vertices.b.location === this.spazeName) {
-          portals.push({
-            name: connection.edge,
-            slug: vertices.a.location,
-            at: vertices.b.at,
-            colors: connection.thingie_ref.colors
-          })
-        }
-      })
+      if (this.showPortals) {
+        const connections = this.spaze.portal_refs
+        connections.forEach((connection) => {
+          const vertices = connection.vertices
+          if (vertices.a.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.b.location,
+              at: vertices.a.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+          if (vertices.b.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.a.location,
+              at: vertices.b.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+        })
+      }
       return portals
     }
   },
 
   async mounted () {
-    console.log(this.portals)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
       this.socket.emit('join-room', 'cron|goa')
