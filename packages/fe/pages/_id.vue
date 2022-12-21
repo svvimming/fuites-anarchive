@@ -100,14 +100,16 @@ export default {
           portals.push({
             name: connection.edge,
             slug: vertices.b.location,
-            at: vertices.a.at
+            at: vertices.a.at,
+            colors: connection.thingie_ref.colors
           })
         }
         if (vertices.b.location === this.spazeName) {
           portals.push({
             name: connection.edge,
             slug: vertices.a.location,
-            at: vertices.b.at
+            at: vertices.b.at,
+            colors: connection.thingie_ref.colors
           })
         }
       })
@@ -171,7 +173,7 @@ export default {
           last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 },
-          new_spaze_location: true
+          record_new_location: true
         })
         if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
@@ -197,21 +199,20 @@ export default {
     async createNewSpazeFromThingie (thingieId) {
       const complete = await this.postCreateSpaze({
         incomingThingieId: thingieId,
-        connections: [this.spazeName]
+        overflow_spaze: this.spazeName
       })
       if (complete) {
-        const newSpaze = this.spazes.find(item => item.name === complete.name)
-        if (newSpaze) {
-          const updated = await this.postUpdateSpaze({
-            name: this.spaze.name,
-            connections: [newSpaze.name].concat(this.spaze.connections),
-            state: 'leaking'
+        const created = this.spazes.find(item => item.name === complete.name)
+        if (created) {
+          this.socket.emit('update-thingie', {
+            _id: created.creator_thingie,
+            location: created.name,
+            last_update_token: created.initiator_token,
+            record_new_location: true
           })
-          if (updated) {
-            this.$nextTick(() => {
-              this.$router.push({ path: `/${newSpaze.name}` })
-            })
-          }
+          this.$nextTick(() => {
+            this.$router.push({ path: `/${created.name}` })
+          })
         }
       }
     }

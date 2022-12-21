@@ -31,6 +31,10 @@ const SpazeSchema = new Schema({
     ref: 'thingies',
     required: false
   },
+  overflow_spaze: {
+    type: String,
+    required: false
+  },
   state: {
     type: String,
     required: false,

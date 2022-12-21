@@ -14,6 +14,16 @@ const MC = require('../../config')
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- createNewPortal
 const createNewPortal = async (thingieId, portalName, vertices) => {
+  for (let i = 0; i < vertices.length; i++) {
+    const vertex = vertices[i]
+    if (!vertex.hasOwnProperty('at')) {
+      const thingie = await MC.model.Thingie.findById(thingieId)
+      vertex.at = {
+        x: thingie.at.x + (Math.floor(Math.random() * thingie.width)),
+        y: thingie.at.y + (Math.floor(Math.random() * 20))
+      }
+    }
+  }
   const created = await MC.model.Portal.create({
     thingie_ref: thingieId,
     edge: portalName,
@@ -25,7 +35,10 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
         { name: vertices[i].location },
         { $push: { portal_refs: created._id } },
         { new: true }
-      ).populate({ path: 'portal_refs' })
+      ).populate({
+        path: 'portal_refs',
+        populate: { path: 'thingie_ref', select: 'colors' }
+      })
       MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
     }
   }
@@ -40,10 +53,14 @@ const closePortal = async (incoming) => {
       { name: vertices[i].location },
       { $pull: { portal_refs: portal._id } },
       { new: true }
-    ).populate({ path: 'portal_refs' })
+    ).populate({
+      path: 'portal_refs',
+      populate: { path: 'thingie_ref', select: 'colors' }
+    })
     MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
   }
   const closed = await MC.model.Portal.deleteOne({ id: portal._id })
+  console.log(closed)
 }
 
 // -------------------------------------------------------------------- Tunneler
@@ -55,7 +72,7 @@ const Tunneler = async () => {
       const locations = [...thingie.last_locations].reverse()
       const portals = await MC.model.Portal
         .find({ thingie_ref: thingie._id })
-        .sort({ createdAt: 'desc'})
+        .sort({ createdAt: 'desc' })
       if (locations.length > 1) {
         for (let j = 0; j < locations.length - 1; j++) {
           const vA = locations[j]
@@ -82,5 +99,5 @@ const Tunneler = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-Tunneler()
+
 NodeCron.schedule('* * * * *', () => { Tunneler() })

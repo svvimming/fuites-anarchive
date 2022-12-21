@@ -122,7 +122,7 @@ export default {
           last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 },
-          new_spaze_location: true
+          record_new_location: true
         })
       }
     }
