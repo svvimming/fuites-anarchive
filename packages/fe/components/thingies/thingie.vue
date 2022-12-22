@@ -33,7 +33,8 @@
 
     <SoundThingie
       v-if="type === 'sound'"
-      :path="thingie.path_data" />
+      :path="thingie.path_data"
+      :colors="thingie.colors" />
 
   </div>
 </template>

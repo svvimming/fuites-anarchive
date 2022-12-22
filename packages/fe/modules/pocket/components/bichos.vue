@@ -73,7 +73,8 @@ export default {
       document.onmousemove = null
       document.onmouseup = null
       drawBichoPath(this, true)
-      this.$emit('path-complete', this.coords)
+      const pathData = this.coords.map(num => Math.round(num)).join(' ')
+      this.$emit('path-complete', pathData)
     }
   }
 }

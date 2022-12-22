@@ -6,7 +6,7 @@ const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
-const { GetThingieConsistencies, GetThingieClipPath } = require('@Module_Utilities')
+const { GetThingieConsistencies } = require('@Module_Utilities')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -17,7 +17,6 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     if (!upload && body.thingie_type !== 'text') {
       throw new Error('File could not be uploaded. Please try again.')
     }
-    const pathData = await GetThingieClipPath(body.pathData, 'bezier')
     const created = await MC.model.Thingie.create({
       file_ref: body.file_id,
       location: body.location,
@@ -37,7 +36,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       fontfamily: body.fontfamily ? body.fontfamily : '',
       consistencies: [],
       colors: body.colors ? body.colors : [],
-      path_data: pathData
+      path_data: body.pathData
     })
     await created.populate({
       path: 'file_ref',
