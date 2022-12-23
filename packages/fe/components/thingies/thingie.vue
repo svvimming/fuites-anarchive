@@ -36,7 +36,8 @@
       :audio="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
       :path="thingie.path_data"
-      :colors="thingie.colors" />
+      :colors="thingie.colors"
+      :position="position" />
 
   </div>
 </template>

@@ -5,7 +5,8 @@
 
     <audio
       ref="audioElement"
-      :src="`${$config.backendUrl}/${audio}.${filetype}`">
+      :loop="true"
+      src="/a-s-fridge.mp3">
     </audio>
 
     <svg
@@ -25,6 +26,22 @@
 </template>
 
 <script>
+// ====================================================================== Import
+import { mapGetters, mapActions } from 'vuex'
+
+import Throttle from 'lodash/throttle'
+// :src="`${$config.backendUrl}/${audio}.${filetype}`"
+
+// =================================================================== Functions
+const calculateMouseDistance = (e, instance) => {
+  const pos = instance.position
+  const deltaX = pos.x - e.clientX
+  const deltaY = pos.y - e.clientY
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+  const gain = Math.exp(-0.005 * distance)
+  instance.gainNode.gain.value = gain
+}
+
 // ====================================================================== Export
 export default {
   name: 'SoundThingie',
@@ -49,17 +66,29 @@ export default {
       type: Array,
       required: false,
       default: () => []
+    },
+    position: {
+      type: Object,
+      required: true,
+      default: () => ({
+        x: 0, y: 0
+      })
     }
   },
 
   data () {
     return {
+      mousemove: false,
       source: false,
-      player: false
+      player: false,
+      gainNode: false
     }
   },
 
   computed: {
+    ...mapGetters({
+      audioContext: 'mixer/audioContext'
+    }),
     points () {
       const path = this.path.split(' ')
       const len = path.length
@@ -80,20 +109,30 @@ export default {
     }
   },
 
-  mounted () {
-    this.$nextTick(() => {
-      if (this.$refs.audioElement) {
-        // this.audioContext = new AudioContext()
-        // this.player = this.$refs.audioElement
-        // this.source = this.audioContext.createMediaElementSource(this.player)
-        // this.source.connect(this.audioContext.destination)
-        //
-        // if (this.audioContext.state === 'suspended') {
-        //   this.audioContext.resume()
-        // }
-        // this.player.play()
+  watch: {
+    audioContext (val) {
+      if (val) {
+        this.initSoundThingie()
       }
-    })
+    }
+  },
+
+  methods: {
+    initSoundThingie () {
+      if (this.$refs.audioElement) {
+        this.player = this.$refs.audioElement
+        // this.player.crossOrigin = 'anonymous'
+        this.source = this.audioContext.createMediaElementSource(this.player)
+        this.gainNode = this.audioContext.createGain()
+        this.source.connect(this.gainNode).connect(this.audioContext.destination)
+        this.addSoundThingieListeners()
+        this.player.play()
+      }
+    },
+    addSoundThingieListeners () {
+      this.mousemove = Throttle((e) => { calculateMouseDistance(e, this) }, 100)
+      window.addEventListener('mousemove', (e) => { this.mousemove(e) })
+    }
   }
 }
 </script>
@@ -102,6 +141,7 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .sound-thingie {
   --path-stroke-color: #6c6575;
+  --shadow-radius: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -109,6 +149,7 @@ export default {
     pointer-events: none;
     width: 100%;
     height: 100%;
+    // filter: drop-shadow(0 0 var(--shadow-radius) var(--path-stroke-color));
     path {
       stroke: var(--path-stroke-color);
     }

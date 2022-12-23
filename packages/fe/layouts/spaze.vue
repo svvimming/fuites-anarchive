@@ -84,6 +84,7 @@ export default {
       authenticated: 'general/authenticated',
       pocketIsOpen: 'pocket/pocketIsOpen',
       audioContext: 'mixer/audioContext',
+      playState: 'mixer/playState',
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     }),
     links () {
@@ -93,15 +94,9 @@ export default {
       return LandingSiteData.portal.tips
     },
     audioContextState () {
-      if (this.audioContext) {
-        return this.audioContext.state
-      }
+      if (this.audioContext) { return this.playState }
       return false
     }
-  },
-
-  mounted () {
-    console.log(this.$store)
   },
 
   methods: {
@@ -109,7 +104,7 @@ export default {
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
-      setAudioContext: 'mixer/setAudioContext'
+      setAudioContextPlayState: 'mixer/setAudioContextPlayState'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -124,8 +119,7 @@ export default {
       if (!this.audioContext) {
         this.createAudioContext()
       } else {
-        const value = this.audioContextState === 'running' ? 'supended' : 'running'
-        this.setAudioContext(value)
+        this.setAudioContextPlayState(this.audioContextState)
       }
     }
   }
@@ -194,5 +188,18 @@ export default {
   color: #000000;
   @include fontWeight_Bold;
   @include linkHover(#000000);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: 50%;
+    border-top: 1px solid #000000;
+  }
+  &.audio-active {
+    &:before {
+      display: none;
+    }
+  }
 }
 </style>

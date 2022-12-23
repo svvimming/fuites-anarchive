@@ -1,13 +1,15 @@
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  audioContext: false
+  audioContext: false,
+  playState: ''
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
-  audioContext: state => state.audioContext
+  audioContext: state => state.audioContext,
+  playState: state => state.playState
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -19,8 +21,8 @@ const actions = {
     commit('CREATE_AUDIO_CONTEXT', audioContext)
   },
   // /////////////////////////////////////////////////////////// setAudioContext
-  setAudioContext ({ commit }, value) {
-    commit('SET_AUDIO_CONTEXT', value)
+  setAudioContextPlayState ({ commit }, value) {
+    commit('SET_AUDIO_CONTEXT_PLAY_STATE', value)
   }
 }
 
@@ -29,17 +31,26 @@ const actions = {
 const mutations = {
   CREATE_AUDIO_CONTEXT (state, value) {
     state.audioContext = value
-    console.log(state.audioContext)
+    state.playState = state.audioContext.state
   },
-  SET_AUDIO_CONTEXT (state, value) {
+  SET_AUDIO_CONTEXT_PLAY_STATE (state, value) {
     if (state.audioContext) {
       if (value === 'suspended') {
-        state.audioContext.suspend()
-      }
-      if (value === 'running') {
         state.audioContext.resume()
+        state.playState = 'running'
+      } else if (value === 'running') {
+        state.audioContext.suspend()
+        state.playState = 'suspended'
       }
     }
-    console.log(state.audioContext)
   }
+}
+
+// ////////////////////////////////////////////////////////////////////// Export
+// -----------------------------------------------------------------------------
+export default {
+  state,
+  getters,
+  actions,
+  mutations
 }
