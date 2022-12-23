@@ -126,9 +126,10 @@ export default {
     initSoundThingie () {
       if (this.$refs.audioElement) {
         this.player = this.$refs.audioElement
-        // this.player.crossOrigin = 'anonymous'
+        this.player.crossOrigin = 'anonymous'
         this.source = this.audioContext.createMediaElementSource(this.player)
         this.gainNode = this.audioContext.createGain()
+        this.gainNode.gain.value = 0
         this.source.connect(this.gainNode).connect(this.audioContext.destination)
         this.addSoundThingieListeners()
         this.player.play()
