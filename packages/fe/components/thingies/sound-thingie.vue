@@ -3,6 +3,11 @@
     class="sound-thingie"
     :style="styles">
 
+    <audio
+      ref="audioElement"
+      :src="`${$config.backendUrl}/${audio}.${filetype}`">
+    </audio>
+
     <svg
       v-if="path"
       class="svg"
@@ -25,6 +30,16 @@ export default {
   name: 'SoundThingie',
 
   props: {
+    audio: {
+      type: String,
+      required: true,
+      default: ''
+    },
+    filetype: {
+      type: String,
+      required: true,
+      default: ''
+    },
     path: {
       type: String,
       required: true,
@@ -34,6 +49,13 @@ export default {
       type: Array,
       required: false,
       default: () => []
+    }
+  },
+
+  data () {
+    return {
+      source: false,
+      player: false
     }
   },
 
@@ -56,6 +78,22 @@ export default {
         '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575'
       }
     }
+  },
+
+  mounted () {
+    this.$nextTick(() => {
+      if (this.$refs.audioElement) {
+        // this.audioContext = new AudioContext()
+        // this.player = this.$refs.audioElement
+        // this.source = this.audioContext.createMediaElementSource(this.player)
+        // this.source.connect(this.audioContext.destination)
+        //
+        // if (this.audioContext.state === 'suspended') {
+        //   this.audioContext.resume()
+        // }
+        // this.player.play()
+      }
+    })
   }
 }
 </script>

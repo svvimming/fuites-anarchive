@@ -86,7 +86,8 @@ export default {
     '~/modules/https',
     '~/modules/pocket',
     '~/modules/compost',
-    '~/modules/toaster'
+    '~/modules/toaster',
+    '~/modules/mixer'
   ],
   // /////////////////////////////////////////////////////////////////// Plugins
   // ---------------------------------------------------------------------------

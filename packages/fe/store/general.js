@@ -20,12 +20,14 @@ const getters = {
   authenticated: state => state.authenticated,
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
-  loaders: state => state.loaders
+  loaders: state => state.loaders,
+  audioContext: state => state.audioContext
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  // //////////////////////////////////////////////////////////// setLandingData
   async setLandingData ({ commit }) {
     commit('SET_LANDING_DATA', { key: 'data', data: LandingData })
   },

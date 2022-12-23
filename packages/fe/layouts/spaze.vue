@@ -41,6 +41,13 @@
       trash
     </button>
 
+    <!-- ========================================================== AUDIO == -->
+    <button
+      :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
+      @click="toggleAudioContext">
+      audio
+    </button>
+
   </div>
 </template>
 
@@ -76,6 +83,7 @@ export default {
     ...mapGetters({
       authenticated: 'general/authenticated',
       pocketIsOpen: 'pocket/pocketIsOpen',
+      audioContext: 'mixer/audioContext',
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     }),
     links () {
@@ -83,13 +91,25 @@ export default {
     },
     tips () {
       return LandingSiteData.portal.tips
+    },
+    audioContextState () {
+      if (this.audioContext) {
+        return this.audioContext.state
+      }
+      return false
     }
+  },
+
+  mounted () {
+    console.log(this.$store)
   },
 
   methods: {
     ...mapActions({
       setPocketIsOpen: 'pocket/setPocketIsOpen',
-      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen'
+      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
+      createAudioContext: 'mixer/createAudioContext',
+      setAudioContext: 'mixer/setAudioContext'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -99,6 +119,14 @@ export default {
     },
     toggleCompostPortal () {
       this.setCompostPortalIsOpen(!this.compostPortalIsOpen)
+    },
+    toggleAudioContext () {
+      if (!this.audioContext) {
+        this.createAudioContext()
+      } else {
+        const value = this.audioContextState === 'running' ? 'supended' : 'running'
+        this.setAudioContext(value)
+      }
     }
   }
 }
@@ -158,5 +186,13 @@ export default {
   color: #6A5ACD;
   @include fontWeight_Bold;
   @include linkHover(#6A5ACD);
+}
+
+.audio-toggle {
+  top: 2rem;
+  right: 2.5rem;
+  color: #000000;
+  @include fontWeight_Bold;
+  @include linkHover(#000000);
 }
 </style>
