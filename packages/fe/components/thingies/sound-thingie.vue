@@ -117,6 +117,11 @@ export default {
     }
   },
 
+  beforeDestroy () {
+    if (this.player) { this.player.pause() }
+    if (this.mousemove) { window.removeEventListener('mousemove', this.mousemove) }
+  },
+
   methods: {
     initSoundThingie () {
       if (this.$refs.audioElement) {
