@@ -13,6 +13,7 @@ const MC = require('@Root/config')
 MC.socket.listeners.push({
   name: 'update-thingie',
   async handler (thingie) {
+    thingie.$inc = { update_count: 1 }
     const updated = await MC.model.Thingie
       .findOneAndUpdate({ _id: thingie._id }, thingie, { new: true })
       .populate({

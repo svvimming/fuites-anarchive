@@ -85,6 +85,16 @@ const ThingieSchema = new Schema({
   path_data: {
     type: String,
     required: false
+  },
+  update_count: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  preacceleration: {
+    type: Number,
+    required: false,
+    default: 0
   }
 }, {
   timestamps: true,

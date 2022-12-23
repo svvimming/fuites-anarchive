@@ -13,6 +13,59 @@ const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // -----------------------------------------------------------------------------
+const ThingiePreaccelerator = async () => {
+  try {
+    const spazes = await MC.model.Spaze.find({})
+    for (let i = 0; i < spazes.length; i++) {
+      const spaze = spazes[i]
+      const thingies = await MC.model.Thingie.find({ location: spaze.name })
+      if (thingies.length) {
+        const points = thingies.map((thingie) => {
+          return {
+            x: thingie.at.x,
+            y: thingie.at.y,
+            m: thingie.width
+          }
+        })
+        const massPositionsX = points.reduce((collector, point) => collector + point.x * point.m, 0)
+        const massPositionsY = points.reduce((collector, point) => collector + point.y * point.m, 0)
+        const massSum = points.reduce((collector, point) => collector + point.m, 0)
+        const centerOfMassX = massPositionsX / massSum
+        const centerOfMassY = massPositionsY / massSum
+        const spazeCenterOfMass = [centerOfMassX, centerOfMassY]
+        const thingieData = thingies.map((thingie) => {
+          const position = [thingie.at.x + thingie.width / 2, thingie.at.y]
+          const deltaX = position[0] - spazeCenterOfMass[0]
+          const deltaY = position[1] - spazeCenterOfMass[1]
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+          return {
+            thingie_id: thingie._id,
+            movement: thingie.update_count ? thingie.update_count : 0,
+            weight: thingie.width,
+            distance
+          }
+        })
+        const minMovement = Math.min(...thingieData.map(data => data.movement))
+        const preaccelerations = thingieData.map((data) => {
+          const preacceleration = (data.movement - minMovement) * data.distance / data.weight
+          return {
+            updateOne: {
+              filter: { _id: data.thingie_id },
+              update: { preacceleration }
+            }
+          }
+        })
+        await MC.model.Thingie.bulkWrite(preaccelerations)
+      }
+    }
+  } catch (e) {
+    console.log('========= [Function: GodessOfAnarchy - ThingiePreaccelerator]')
+    console.log(e)
+  }
+}
+
+// ///////////////////////////////////////////////////////////////////////// GOA
+// -----------------------------------------------------------------------------
 const GodessOfAnarchy = async () => {
   try {
     const spazes = await MC.model.Spaze.find({})
@@ -37,6 +90,7 @@ const GodessOfAnarchy = async () => {
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       }
     }
+    ThingiePreaccelerator()
   } catch (e) {
     console.log('================================= [Function: GodessOfAnarchy]')
     console.log(e)
@@ -45,5 +99,5 @@ const GodessOfAnarchy = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
+GodessOfAnarchy()
 NodeCron.schedule('* * * * *', () => { GodessOfAnarchy() })
