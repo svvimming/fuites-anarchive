@@ -21,6 +21,11 @@
       @initupdate="initUpdate"
       @initmouseup="initMouseup" />
 
+    <Portal
+      v-for="(portal, i) in portals"
+      :key="`${portal.name}_${i}`"
+      :to="portal" />
+
   </div>
 </template>
 
@@ -28,8 +33,9 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Thingie from '@/components/thingies/thingie'
 import PropBoard from '@/components/prop-board'
+import Thingie from '@/components/thingies/thingie'
+import Portal from '@/components/portal'
 
 // ====================================================================== Export
 export default {
@@ -38,8 +44,9 @@ export default {
   layout: 'spaze',
 
   components: {
+    PropBoard,
     Thingie,
-    PropBoard
+    Portal
   },
 
   async fetch ({ app, store }) {
@@ -71,6 +78,7 @@ export default {
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      showPortals: 'general/portalView',
       pocket: 'pocket/pocket'
     }),
     spaze () {
@@ -83,6 +91,32 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    portals () {
+      const portals = []
+      if (this.showPortals) {
+        const connections = this.spaze.portal_refs
+        connections.forEach((connection) => {
+          const vertices = connection.vertices
+          if (vertices.a.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.b.location,
+              at: vertices.a.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+          if (vertices.b.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.a.location,
+              at: vertices.b.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+        })
+      }
+      return portals
     }
   },
 
@@ -140,7 +174,8 @@ export default {
           location: this.spazeName,
           last_update_token: this.pocket.token,
           dragging: false,
-          at: { x, y, z: 1 }
+          at: { x, y, z: 1 },
+          record_new_location: true
         })
         if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
@@ -166,21 +201,20 @@ export default {
     async createNewSpazeFromThingie (thingieId) {
       const complete = await this.postCreateSpaze({
         incomingThingieId: thingieId,
-        connections: [this.spazeName]
+        overflow_spaze: this.spazeName
       })
       if (complete) {
-        const newSpaze = this.spazes.find(item => item.name === complete.name)
-        if (newSpaze) {
-          const updated = await this.postUpdateSpaze({
-            name: this.spaze.name,
-            connections: [newSpaze.name].concat(this.spaze.connections),
-            state: 'leaking'
+        const created = this.spazes.find(item => item.name === complete.name)
+        if (created) {
+          this.socket.emit('update-thingie', {
+            _id: created.creator_thingie,
+            location: created.name,
+            last_update_token: created.initiator_token,
+            record_new_location: true
           })
-          if (updated) {
-            this.$nextTick(() => {
-              this.$router.push({ path: `/${newSpaze.name}` })
-            })
-          }
+          this.$nextTick(() => {
+            this.$router.push({ path: `/${created.name}` })
+          })
         }
       }
     }
