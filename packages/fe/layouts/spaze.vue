@@ -13,10 +13,16 @@
     <!-- ==================================================== PORTAL VIEW == -->
 
     <button
-      v-if="authenticated"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
       @click="togglePortals">
       portals
+    </button>
+
+    <!-- ========================================================== AUDIO == -->
+    <button
+      :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
+      @click="toggleAudioContext">
+      audio
     </button>
 
     <!-- =================================================== LANDING SITE == -->
@@ -48,13 +54,6 @@
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
       trash
-    </button>
-
-    <!-- ========================================================== AUDIO == -->
-    <button
-      :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
-      @click="toggleAudioContext">
-      audio
     </button>
 
   </div>
@@ -202,21 +201,34 @@ export default {
   color: #60a184;
   @include fontWeight_Bold;
   @include linkHover(#60a184);
-}
-
-.audio-toggle {
-  top: 2rem;
-  right: 2.5rem;
-  color: #000000;
-  @include fontWeight_Bold;
-  @include linkHover(#000000);
   &:before {
     content: '';
     position: absolute;
     width: calc(100% - 1rem);
     left: 0.5rem;
-    top: 50%;
-    border-top: 1px solid #000000;
+    top: calc(50% + 1px);
+    border-top: 1px solid #60a184;
+  }
+  &.portalView {
+    &:before {
+      display: none;
+    }
+  }
+}
+
+.audio-toggle {
+  top: 4rem;
+  right: 2.5rem;
+  color: #9e6c86;
+  @include fontWeight_Bold;
+  @include linkHover(#9e6c86);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #9e6c86;
   }
   &.audio-active {
     &:before {
