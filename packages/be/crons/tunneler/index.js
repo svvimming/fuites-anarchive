@@ -44,7 +44,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
   }
 }
 
-// ------------------------------------------------------------- createNewPortal
+// ----------------------------------------------------------------- closePortal
 const closePortal = async (incoming) => {
   const portal = await MC.model.Portal.findById(incoming._id)
   const vertices = [portal.vertices.a, portal.vertices.b]
@@ -63,9 +63,25 @@ const closePortal = async (incoming) => {
   console.log(closed)
 }
 
+// ---------------------------------------------------- checkPortalThingiesExist
+const checkPortalThingiesExist = async () => {
+  const allPortals = await MC.model.Portal.find({})
+  const portalsMissingThingies = []
+  for (let i = 0; i < allPortals.length; i++) {
+    const hasThingieRef = await MC.model.Thingie.exists({ _id: allPortals[i].thingie_ref })
+    if (!hasThingieRef) {
+      portalsMissingThingies.push(allPortals[i]._id)
+    }
+  }
+  for (let j = 0; j < portalsMissingThingies.length; j++) {
+    await closePortal(portalsMissingThingies[j])
+  }
+}
+
 // -------------------------------------------------------------------- Tunneler
 const Tunneler = async () => {
   try {
+    await checkPortalThingiesExist()
     const thingies = await MC.model.Thingie.find({})
     for (let i = 0; i < thingies.length; i++) {
       const thingie = thingies[i]
@@ -99,5 +115,5 @@ const Tunneler = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
+Tunneler()
 NodeCron.schedule('* * * * *', () => { Tunneler() })
