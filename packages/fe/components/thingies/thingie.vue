@@ -36,8 +36,11 @@
       :audio="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
       :path="thingie.path_data"
+      :editor="editing"
       :colors="thingie.colors"
-      :position="position" />
+      :position="position"
+      :stroke-width="strokeWidth"
+      @change-stroke-width="changePathStrokeWidth" />
 
   </div>
 </template>
@@ -131,6 +134,9 @@ export default {
         return this.thingie.path_data
       }
       return ''
+    },
+    strokeWidth () {
+      return typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
     }
   },
 
@@ -291,6 +297,14 @@ export default {
       this.$emit('initupdate', {
         _id: this.thingie._id,
         clip: val
+      })
+    },
+    changePathStrokeWidth (val) {
+      const stroke = typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
+      const increment = val === 'up' ? 1 : -1
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        stroke_width: stroke + increment
       })
     },
     handleKeydown (e) {

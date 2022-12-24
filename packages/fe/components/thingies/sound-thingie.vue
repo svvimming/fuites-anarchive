@@ -3,6 +3,21 @@
     class="sound-thingie"
     :style="styles">
 
+    <div :class="['toolbar', { editor }]">
+      <button
+        type="button"
+        class="editor-button"
+        @click="$emit('change-stroke-width', 'up')">
+        ˄
+      </button>
+      <button
+        type="button"
+        class="editor-button"
+        @click="$emit('change-stroke-width', 'down')">
+        ˅
+      </button>
+    </div>
+
     <audio
       ref="audioElement"
       :loop="true"
@@ -63,6 +78,11 @@ export default {
       required: true,
       default: ''
     },
+    editor: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
     colors: {
       type: Array,
       required: false,
@@ -74,6 +94,11 @@ export default {
       default: () => ({
         x: 0, y: 0
       })
+    },
+    strokeWidth: {
+      type: Number,
+      required: false,
+      default: 3
     }
   },
 
@@ -104,10 +129,15 @@ export default {
       const svgPath = this.$simplifySvgPath(this.points)
       return svgPath
     },
+    limitStrokeWidth () {
+      if (this.strokeWidth < 1) { return -1 / (this.strokeWidth - 1) }
+      return this.strokeWidth
+    },
     styles () {
       return {
         '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575',
-        '--path-opacity': `${0.5 + this.gain}`
+        '--path-opacity': `${0.5 + this.gain}`,
+        '--path-stroke-width': this.limitStrokeWidth
       }
     }
   },
@@ -151,6 +181,7 @@ export default {
 .sound-thingie {
   --path-stroke-color: #6c6575;
   --path-opacity: 0;
+  --path-stroke-width: 3;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -161,8 +192,34 @@ export default {
     height: 100%;
     path {
       stroke: var(--path-stroke-color);
+      stroke-width: var(--path-stroke-width);
     }
   }
+  .editor-button {
+    color: var(--path-stroke-color);
+  }
+}
+
+.toolbar {
+  display: none;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 1.25rem;
+  height: 100%;
+  position: absolute;
+  pointer-events: auto;
+  left: calc(100% + 1.75rem);
+  top: 0;
+  &.editor {
+    display: flex;
+  }
+}
+
+.editor-button {
+  pointer-events: auto;
+  padding: 0.25rem;
+  line-height: 1;
+  text-align: center;
 }
 
 </style>
