@@ -77,11 +77,15 @@ export default {
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
+      this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|update-thingie|payload', (thingie) => {
         this.updateThingie(thingie)
       })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
         this.addThingie(thingie)
+      })
+      this.socket.on('module|goa-migrate-thingie|payload', (migrated) => {
+        this.initUpdate(migrated)
       })
     })
   },
@@ -106,7 +110,9 @@ export default {
       })
     },
     initUpdate (thingie) {
-      thingie.last_update_token = this.pocket.token
+      if (!thingie.last_update_token) {
+        thingie.last_update_token = this.pocket.token
+      }
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {

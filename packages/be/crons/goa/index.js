@@ -1,6 +1,13 @@
 /**
  *
- * ⏱️️ [Cron | every 5 minutes] GOA scans through the spazes database and accesses/changes spaze states
+ * ⏱️️ [Cron | every 5 minutes]
+ * GOA scans through the spazes database and
+ * accesses/changes spaze states as well as
+ * thingie propensities to leave a leaking space.
+ *
+ * ⏱️️ [Cron | every hour]
+ * GOA migrator moves thingies from leaking spaces to
+ * new spazes determined
  *
  */
 console.log('⏱️️  [cron] GOA')
@@ -12,21 +19,58 @@ const NodeCron = require('node-cron')
 const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
-// -----------------------------------------------------------------------------
-const ThingieMigrator = async () => {
-  const leaking = await MC.model.Spaze.find({ state: 'leaking' })
-  if (leaking.length) {
-    for (let i = 0; i < leaking.length; i++) {
-      const spaze = leaking[i]
-      const thingies = await MC.model.Thingie.find({ location: spaze.name }).sort({ preacceleration: 'desc' })
-      if (thingies.length) {
-        const teleport = thingies[0]
-        console.log(teleport)
+// ------------------------------------------------------------- ThingieMigrator
+const GOAThingieMigrator = async () => {
+  try {
+    const date = new Date()
+    console.log(`GOA - migrator: ${date}`)
+    const leaking = await MC.model.Spaze
+      .find({ state: 'leaking' })
+      .populate({
+        path: 'portal_refs',
+        populate: { path: 'thingie_ref' }
+      })
+    if (leaking.length) {
+      const migrations = []
+      for (let i = 0; i < leaking.length; i++) {
+        const spaze = leaking[i]
+        const thingies = await MC.model.Thingie.find({ location: spaze.name }).sort({ preacceleration: 'desc' })
+        if (thingies.length) {
+          const overflow = await MC.model.Spaze.findOne({ overflow_spaze: spaze.name })
+          let newSpazeLocation = ''
+          if (overflow) {
+            newSpazeLocation = overflow.name
+          } else if (spaze.portal_refs.length) {
+            const portal = spaze.portal_refs[0]
+            const connection = portal.edge.split('_').find(name => name !== spaze.name)
+            if (connection) {
+              newSpazeLocation = connection
+            }
+          }
+          if (newSpazeLocation) {
+            migrations.push({
+              _id: thingies[0]._id,
+              location: newSpazeLocation,
+              last_update_token: 'godess-of-anarchy',
+              record_new_location: true
+            })
+          }
+        }
+      }
+      if (migrations.length) {
+        console.log(migrations)
+        for (let j = 0; j < migrations.length; j++) {
+          MC.socket.io.to('cron|goa').emit('module|goa-migrate-thingie|payload', migrations[j])
+        }
       }
     }
+  } catch (e) {
+    console.log('=============== [Function: GodessOfAnarchy - ThingieMigrator]')
+    console.log(e)
   }
 }
 
+// ------------------------------------------------------- ThingiePreaccelerator
 const ThingiePreaccelerator = async () => {
   try {
     const spazes = await MC.model.Spaze.find({})
@@ -72,7 +116,6 @@ const ThingiePreaccelerator = async () => {
         await MC.model.Thingie.bulkWrite(preaccelerations)
       }
     }
-    ThingieMigrator()
   } catch (e) {
     console.log('========= [Function: GodessOfAnarchy - ThingiePreaccelerator]')
     console.log(e)
@@ -126,5 +169,6 @@ const GodessOfAnarchy = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-GodessOfAnarchy()
+
 NodeCron.schedule('*/5 * * * *', () => { GodessOfAnarchy() })
+NodeCron.schedule('0 */1 * * *', () => { GOAThingieMigrator() })

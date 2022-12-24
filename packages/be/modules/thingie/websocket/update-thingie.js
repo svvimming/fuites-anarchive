@@ -19,7 +19,7 @@ const thingieWithLocationHistory = async (incoming) => {
   }
   const latest = !locations.length ? [newVertex] : newVertex.location === locations[0].location || newVertex.location === 'pocket' ? [] : [newVertex]
   incoming.last_locations = latest.concat(locations).slice(0, 5)
-  incoming.update_count = incoming.update_count + 1
+  // incoming.update_count = incoming.update_count + 1
   Object.entries(incoming).forEach(([key, value]) => { thingie[key] = value })
   const updated = await thingie.save()
   await updated.populate({
