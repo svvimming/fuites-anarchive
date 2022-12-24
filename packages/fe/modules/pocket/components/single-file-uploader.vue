@@ -1,7 +1,7 @@
 <template>
   <UploadInput
     :prompt-to-upload="true"
-    accepted-mimetypes="image/jpeg,image/png"
+    accepted-mimetypes="image/jpeg,image/png,audio/wav,audio/mpeg"
     class="single-file-uploader"
     @statusChanged="statusChanged"
     @fileChanged="fileChanged">
@@ -141,10 +141,11 @@ export default {
       this.file = file
     },
     async finalizeUpload () {
+      const thingietype = ['audio/mpeg', 'audio/wav'].includes(this.file.type) ? 'sound' : 'image'
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: 'pocket',
-        type: 'image',
+        type: thingietype,
         pathData: this.pathData
       })
       if (complete) {

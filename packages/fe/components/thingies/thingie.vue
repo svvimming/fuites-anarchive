@@ -31,6 +31,17 @@
       :editor="editing"
       @toggle-clip-path="toggleImageClip" />
 
+    <SoundThingie
+      v-if="type === 'sound'"
+      :audio="thingie.file_ref._id"
+      :filetype="thingie.file_ref.file_ext"
+      :path="thingie.path_data"
+      :editor="editing"
+      :colors="thingie.colors"
+      :position="position"
+      :stroke-width="strokeWidth"
+      @change-stroke-width="changePathStrokeWidth" />
+
   </div>
 </template>
 
@@ -40,6 +51,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
+import SoundThingie from '@/components/thingies/sound-thingie'
 
 // ====================================================================== Export
 export default {
@@ -47,7 +59,8 @@ export default {
 
   components: {
     TextThingie,
-    ImageThingie
+    ImageThingie,
+    SoundThingie
   },
 
   props: {
@@ -121,6 +134,9 @@ export default {
         return this.thingie.path_data
       }
       return ''
+    },
+    strokeWidth () {
+      return typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
     }
   },
 
@@ -281,6 +297,14 @@ export default {
       this.$emit('initupdate', {
         _id: this.thingie._id,
         clip: val
+      })
+    },
+    changePathStrokeWidth (val) {
+      const stroke = typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
+      const increment = val === 'up' ? 1 : -1
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        stroke_width: stroke + increment
       })
     },
     handleKeydown (e) {

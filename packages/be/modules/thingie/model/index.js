@@ -109,6 +109,11 @@ const ThingieSchema = new Schema({
   path_data: {
     type: String,
     required: false
+  },
+  stroke_width: {
+    type: Number,
+    required: false,
+    default: 3
   }
 }, {
   timestamps: true,

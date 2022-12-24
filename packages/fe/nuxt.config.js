@@ -86,7 +86,8 @@ export default {
     '~/modules/https',
     '~/modules/pocket',
     '~/modules/compost',
-    '~/modules/toaster'
+    '~/modules/toaster',
+    '~/modules/mixer'
   ],
   // /////////////////////////////////////////////////////////////////// Plugins
   // ---------------------------------------------------------------------------
@@ -94,7 +95,8 @@ export default {
     '~/plugins/axios-auth',
     '~/plugins/helpers',
     '~/plugins/directives',
-    '~/plugins/scroll-to'
+    '~/plugins/scroll-to',
+    '~/plugins/simplify-svg-path'
   ],
   // /////////////////////////////////////////////////// [Module] Nuxt Socket.io
   // ---------------------------------- Doc: https://nuxt-socket-io.netlify.app/

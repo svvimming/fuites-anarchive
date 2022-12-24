@@ -50,6 +50,13 @@
       trash
     </button>
 
+    <!-- ========================================================== AUDIO == -->
+    <button
+      :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
+      @click="toggleAudioContext">
+      audio
+    </button>
+
   </div>
 </template>
 
@@ -86,6 +93,8 @@ export default {
       authenticated: 'general/authenticated',
       portalView: 'general/portalView',
       pocketIsOpen: 'pocket/pocketIsOpen',
+      audioContext: 'mixer/audioContext',
+      playState: 'mixer/playState',
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     }),
     links () {
@@ -93,6 +102,10 @@ export default {
     },
     tips () {
       return LandingSiteData.portal.tips
+    },
+    audioContextState () {
+      if (this.audioContext) { return this.playState }
+      return false
     }
   },
 
@@ -100,7 +113,9 @@ export default {
     ...mapActions({
       setPortalView: 'general/setPortalView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
-      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen'
+      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
+      createAudioContext: 'mixer/createAudioContext',
+      setAudioContextPlayState: 'mixer/setAudioContextPlayState'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -113,6 +128,13 @@ export default {
     },
     togglePortals () {
       this.setPortalView(!this.portalView)
+    },
+    toggleAudioContext () {
+      if (!this.audioContext) {
+        this.createAudioContext()
+      } else {
+        this.setAudioContextPlayState(this.audioContextState)
+      }
     }
   }
 }
@@ -181,4 +203,26 @@ export default {
   @include fontWeight_Bold;
   @include linkHover(#60a184);
 }
+
+.audio-toggle {
+  top: 2rem;
+  right: 2.5rem;
+  color: #000000;
+  @include fontWeight_Bold;
+  @include linkHover(#000000);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: 50%;
+    border-top: 1px solid #000000;
+  }
+  &.audio-active {
+    &:before {
+      display: none;
+    }
+  }
+}
+
 </style>
