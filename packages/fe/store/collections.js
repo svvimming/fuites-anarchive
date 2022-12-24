@@ -76,7 +76,7 @@ const actions = {
         const pocket = rootGetters['pocket/pocket']
         const data = {
           spaze_name: spazeName,
-          connections: payload.connections,
+          overflow_spaze: payload.overflow_spaze,
           session_token: pocket.token,
           creator_thingie: incomingThingieId
         }

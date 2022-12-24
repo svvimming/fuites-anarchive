@@ -10,6 +10,15 @@
 
     </section>
 
+    <!-- ==================================================== PORTAL VIEW == -->
+
+    <button
+      v-if="authenticated"
+      :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
+      @click="togglePortals">
+      portals
+    </button>
+
     <!-- =================================================== LANDING SITE == -->
 
     <LandingSite :links="links" :tips="tips" :tips-open="tipsOpen" />
@@ -31,7 +40,7 @@
       pocket
     </button>
 
-    <!-- ================================================= COMPOST PORTAL == -->
+    <!-- ======================================================== COMPOST == -->
     <CompostPortal />
 
     <button
@@ -82,6 +91,7 @@ export default {
   computed: {
     ...mapGetters({
       authenticated: 'general/authenticated',
+      portalView: 'general/portalView',
       pocketIsOpen: 'pocket/pocketIsOpen',
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
@@ -101,6 +111,7 @@ export default {
 
   methods: {
     ...mapActions({
+      setPortalView: 'general/setPortalView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
@@ -114,6 +125,9 @@ export default {
     },
     toggleCompostPortal () {
       this.setCompostPortalIsOpen(!this.compostPortalIsOpen)
+    },
+    togglePortals () {
+      this.setPortalView(!this.portalView)
     },
     toggleAudioContext () {
       if (!this.audioContext) {
@@ -182,6 +196,14 @@ export default {
   @include linkHover(#6A5ACD);
 }
 
+.portals-toggle {
+  top: 2rem;
+  right: 2.5rem;
+  color: #60a184;
+  @include fontWeight_Bold;
+  @include linkHover(#60a184);
+}
+
 .audio-toggle {
   top: 2rem;
   right: 2.5rem;
@@ -202,4 +224,5 @@ export default {
     }
   }
 }
+
 </style>
