@@ -121,7 +121,8 @@ export default {
           location: 'pocket',
           last_update_token: this.pocket.token,
           dragging: false,
-          at: { x, y, z: 1 }
+          at: { x, y, z: 1 },
+          record_new_location: true
         })
       }
     }

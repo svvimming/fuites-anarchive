@@ -53,6 +53,7 @@ try {
 // -----------------------------------------------------------------------------
 const initializeCronJobs = async () => {
   require(`${MC.packageRoot}/crons/goa`)
+  require(`${MC.packageRoot}/crons/tunneler`)
 }
 
 initializeCronJobs()

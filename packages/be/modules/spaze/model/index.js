@@ -12,8 +12,15 @@ const SpazeSchema = new Schema({
     type: String,
     required: true
   },
-  connections: {
-    type: [String]
+  portal_refs: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'portals',
+        required: false
+      }
+    ],
+    required: false
   },
   initiator_token: {
     type: String,
@@ -22,6 +29,10 @@ const SpazeSchema = new Schema({
   creator_thingie: {
     type: Schema.Types.ObjectId,
     ref: 'thingies',
+    required: false
+  },
+  overflow_spaze: {
+    type: String,
     required: false
   },
   state: {

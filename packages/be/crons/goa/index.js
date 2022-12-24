@@ -1,6 +1,6 @@
 /**
  *
- * ⏱️️ [Cron | every minute] GOA
+ * ⏱️️ [Cron | every 5 minutes] GOA scans through the spazes database and accesses/changes spaze states
  *
  */
 console.log('⏱️️  [cron] GOA')
@@ -83,6 +83,8 @@ const ThingiePreaccelerator = async () => {
 // -----------------------------------------------------------------------------
 const GodessOfAnarchy = async () => {
   try {
+    const date = new Date()
+    console.log(`GOA: ${date}`)
     const spazes = await MC.model.Spaze.find({})
     const thingies = await MC.model.Thingie.find({}).populate({
       path: 'file_ref',
@@ -98,10 +100,20 @@ const GodessOfAnarchy = async () => {
         }
       })
       if (totalBytes > 2000000 && spaze.state === 'clumping') {
-        const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'metastable' }, { new: true })
+        const updated = await MC.model.Spaze
+          .findOneAndUpdate({ _id: spaze._id }, { state: 'metastable' }, { new: true })
+          .populate({
+            path: 'portal_refs',
+            populate: { path: 'thingie_ref', select: 'colors' }
+          })
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       } else if (totalBytes <= 1000000 && spaze.state === 'leaking') {
-        const updated = await MC.model.Spaze.findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
+        const updated = await MC.model.Spaze
+          .findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
+          .populate({
+            path: 'portal_refs',
+            populate: { path: 'thingie_ref', select: 'colors' }
+          })
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       }
     }
@@ -115,4 +127,4 @@ const GodessOfAnarchy = async () => {
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
 GodessOfAnarchy()
-NodeCron.schedule('* * * * *', () => { GodessOfAnarchy() })
+NodeCron.schedule('*/5 * * * *', () => { GodessOfAnarchy() })

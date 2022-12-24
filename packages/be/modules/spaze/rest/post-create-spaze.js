@@ -13,17 +13,13 @@ MC.app.post('/post-create-spaze', async (req, res) => {
     const body = req.body
     const created = await MC.model.Spaze.create({
       name: body.spaze_name,
-      connections: body.connections,
+      overflow_spaze: body.overflow_spaze ? body.overflow_spaze : '',
       initiator_token: body.session_token,
       creator_thingie: body.creator_thingie
     })
-    const updated = await MC.model.Thingie
-      .findOneAndUpdate({ _id: created.creator_thingie }, { location: created.name }, { new: true })
-      .populate({
-        path: 'file_ref',
-        select: 'filename file_ext aspect'
-      })
-    MC.socket.io.to('thingies').emit('module|update-thingie|payload', updated)
+    if (created.overflow_spaze) {
+      await MC.model.Spaze.findOneAndUpdate({ name: created.overflow_spaze }, { state: 'leaking' }, { new: true })
+    }
     MC.socket.io.to('spazes').emit('module|post-create-spaze|payload', created)
     SendData(res, 200, 'Spaze succesfully created', created)
   } catch (e) {
