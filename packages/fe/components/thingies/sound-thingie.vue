@@ -40,6 +40,7 @@ const calculateMouseDistance = (e, instance) => {
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
   const gain = Math.exp(-0.005 * distance)
   instance.gainNode.gain.value = gain
+  instance.gain = gain
 }
 
 // ====================================================================== Export
@@ -81,7 +82,8 @@ export default {
       mousemove: false,
       source: false,
       player: false,
-      gainNode: false
+      gainNode: false,
+      gain: 0
     }
   },
 
@@ -104,7 +106,8 @@ export default {
     },
     styles () {
       return {
-        '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575'
+        '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575',
+        '--path-opacity': `${0.5 + this.gain}`
       }
     }
   },
@@ -147,15 +150,15 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .sound-thingie {
   --path-stroke-color: #6c6575;
-  --shadow-radius: 0;
+  --path-opacity: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
+  opacity: var(--path-opacity);
   .svg {
     pointer-events: none;
     width: 100%;
     height: 100%;
-    // filter: drop-shadow(0 0 var(--shadow-radius) var(--path-stroke-color));
     path {
       stroke: var(--path-stroke-color);
     }
