@@ -114,7 +114,8 @@ export default {
 
   computed: {
     ...mapGetters({
-      audioContext: 'mixer/audioContext'
+      audioContext: 'mixer/audioContext',
+      playState: 'mixer/playState'
     }),
     points () {
       const path = this.path.split(' ')
@@ -133,10 +134,13 @@ export default {
       if (this.strokeWidth < 1) { return -1 / (this.strokeWidth - 1) }
       return this.strokeWidth
     },
+    opacity () {
+      return this.playState === 'running' ? 0.5 + this.gain : 0.5
+    },
     styles () {
       return {
         '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575',
-        '--path-opacity': `${0.5 + this.gain}`,
+        '--path-opacity': `${this.opacity}`,
         '--path-stroke-width': this.limitStrokeWidth
       }
     }
