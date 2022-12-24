@@ -13,6 +13,20 @@ const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // -----------------------------------------------------------------------------
+const ThingieMigrator = async () => {
+  const leaking = await MC.model.Spaze.find({ state: 'leaking' })
+  if (leaking.length) {
+    for (let i = 0; i < leaking.length; i++) {
+      const spaze = leaking[i]
+      const thingies = await MC.model.Thingie.find({ location: spaze.name }).sort({ preacceleration: 'desc' })
+      if (thingies.length) {
+        const teleport = thingies[0]
+        console.log(teleport)
+      }
+    }
+  }
+}
+
 const ThingiePreaccelerator = async () => {
   try {
     const spazes = await MC.model.Spaze.find({})
@@ -58,6 +72,7 @@ const ThingiePreaccelerator = async () => {
         await MC.model.Thingie.bulkWrite(preaccelerations)
       }
     }
+    ThingieMigrator()
   } catch (e) {
     console.log('========= [Function: GodessOfAnarchy - ThingiePreaccelerator]')
     console.log(e)
