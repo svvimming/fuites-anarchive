@@ -40,6 +40,18 @@ const SpazeSchema = new Schema({
     required: false,
     default: 'clumping',
     enum: ['clumping', 'metastable', 'leaking']
+  },
+  bounds: {
+    x: {
+      type: Number,
+      required: false,
+      default: 2732
+    },
+    y: {
+      type: Number,
+      required: false,
+      default: 2000
+    }
   }
 }, {
   timestamps: true,

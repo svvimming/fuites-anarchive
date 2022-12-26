@@ -147,15 +147,11 @@ export default {
   height: 100vh;
 }
 
-.spaze-container,
-.pocket-wrapper {
-  position: absolute;
-}
-
 .spaze-container {
+  position: absolute;
   z-index: 1;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   top: 0;
   left: 0;
 }
