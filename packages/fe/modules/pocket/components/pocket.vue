@@ -136,7 +136,7 @@ $pocketHeight: 30rem;
 // ////////////////////////////////////////////////////////////////////// Pocket
 .pocket-wrapper {
   z-index: -1;
-  position: absolute;
+  position: fixed;
   right: 1rem;
   bottom: 1rem;
   width: auto;

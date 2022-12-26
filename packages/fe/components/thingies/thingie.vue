@@ -67,6 +67,14 @@ export default {
     thingie: {
       type: Object,
       required: true
+    },
+    bounds: {
+      type: Object,
+      required: true,
+      default: () => ({
+        x: 0,
+        y: 0
+      })
     }
   },
 
@@ -173,8 +181,8 @@ export default {
         evt.preventDefault()
         const parent = this.$parent.$el
         const rect = parent.getBoundingClientRect()
-        let x = Math.max(0, evt.clientX - rect.left - this.handleX)
-        let y = Math.max(0, evt.clientY - rect.top - this.handleY)
+        let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.clientX - rect.left - this.handleX))
+        let y = Math.max(0, Math.min(this.bounds.y - this.height, evt.clientY - rect.top - this.handleY))
         if (this.thingie.location === 'pocket') {
           const thingie = this.$el
           const thingieRect = thingie.getBoundingClientRect()

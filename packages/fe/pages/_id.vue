@@ -1,6 +1,8 @@
 <template>
   <div
+    ref="spz"
     class="spz"
+    :style="spazeStyles"
     @drop="onDrop($event)"
     @dragover.prevent
     @dragenter.prevent
@@ -17,6 +19,7 @@
       v-for="thingie in spazeThingies"
       :key="thingie._id"
       :thingie="thingie"
+      :bounds="spazeBounds"
       @initmousedown="initMousedown"
       @initupdate="initUpdate"
       @initmouseup="initMouseup" />
@@ -36,6 +39,18 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import Portal from '@/components/portal'
+// =================================================================== Functions
+const initSpazeScrollPosition = (instance) => {
+  if (instance.$refs.spz) {
+    const bounds = instance.spazeBounds
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    const x = Math.round((bounds.x - vw) / 2)
+    const y = Math.round((bounds.y - vh) / 2)
+    window.scrollTo(x, y)
+    instance.offset = { x, y }
+  }
+}
 
 // ====================================================================== Export
 export default {
@@ -60,6 +75,10 @@ export default {
     return {
       spazeName: name,
       socket: false,
+      offset: {
+        x: 0,
+        y: 0
+      },
       editor: {
         x: 0,
         y: 0
@@ -117,6 +136,15 @@ export default {
         })
       }
       return portals
+    },
+    spazeBounds () {
+      return this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
+    },
+    spazeStyles () {
+      return {
+        '--spaze-var-field-width': `${this.spazeBounds.x}px`,
+        '--spaze-var-field-height': `${this.spazeBounds.y}px`,
+      }
     }
   },
 
@@ -132,6 +160,7 @@ export default {
         this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
       })
     })
+    this.$nextTick(() => { initSpazeScrollPosition(this) })
   },
 
   methods: {
@@ -225,10 +254,12 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .spz {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  overflow: scroll;
+  --spaze-var-field-width: 2732px;
+  --spaze-var-field-height: 2000px;
+  position: absolute;
+  width: var(--spaze-var-field-width);
+  height: var(--spaze-var-field-height);
+  overflow: hidden;
   z-index: 1;
 }
 </style>
