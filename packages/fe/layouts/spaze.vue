@@ -13,10 +13,16 @@
     <!-- ==================================================== PORTAL VIEW == -->
 
     <button
-      v-if="authenticated"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
       @click="togglePortals">
       portals
+    </button>
+
+    <!-- ========================================================== AUDIO == -->
+    <button
+      :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
+      @click="toggleAudioContext">
+      audio
     </button>
 
     <!-- =================================================== LANDING SITE == -->
@@ -86,6 +92,8 @@ export default {
       authenticated: 'general/authenticated',
       portalView: 'general/portalView',
       pocketIsOpen: 'pocket/pocketIsOpen',
+      audioContext: 'mixer/audioContext',
+      playState: 'mixer/playState',
       compostPortalIsOpen: 'compost/compostPortalIsOpen'
     }),
     links () {
@@ -93,6 +101,10 @@ export default {
     },
     tips () {
       return LandingSiteData.portal.tips
+    },
+    audioContextState () {
+      if (this.audioContext) { return this.playState }
+      return false
     }
   },
 
@@ -100,7 +112,9 @@ export default {
     ...mapActions({
       setPortalView: 'general/setPortalView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
-      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen'
+      setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
+      createAudioContext: 'mixer/createAudioContext',
+      setAudioContextPlayState: 'mixer/setAudioContextPlayState'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -113,6 +127,13 @@ export default {
     },
     togglePortals () {
       this.setPortalView(!this.portalView)
+    },
+    toggleAudioContext () {
+      if (!this.audioContext) {
+        this.createAudioContext()
+      } else {
+        this.setAudioContextPlayState(this.audioContextState)
+      }
     }
   }
 }
@@ -126,15 +147,11 @@ export default {
   height: 100vh;
 }
 
-.spaze-container,
-.pocket-wrapper {
-  position: absolute;
-}
-
 .spaze-container {
+  position: absolute;
   z-index: 1;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   top: 0;
   left: 0;
 }
@@ -180,5 +197,40 @@ export default {
   color: #60a184;
   @include fontWeight_Bold;
   @include linkHover(#60a184);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #60a184;
+  }
+  &.portalView {
+    &:before {
+      display: none;
+    }
+  }
 }
+
+.audio-toggle {
+  top: 4rem;
+  right: 2.5rem;
+  color: #9e6c86;
+  @include fontWeight_Bold;
+  @include linkHover(#9e6c86);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #9e6c86;
+  }
+  &.audio-active {
+    &:before {
+      display: none;
+    }
+  }
+}
+
 </style>

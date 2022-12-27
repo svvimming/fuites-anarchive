@@ -5,7 +5,7 @@
     :style="portalStyles">
 
     <div class="portal-thingie"></div>
-    
+
   </nuxt-link>
 </template>
 
@@ -71,6 +71,7 @@ export default {
   --portal-gradient-stop: #ffffff;
   --portal-hover-ring: #ffffff;
   position: absolute;
+  z-index: 10000;
   .portal-thingie {
     &:before {
       background-color: var(--portal-gradient-start);

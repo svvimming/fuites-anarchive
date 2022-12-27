@@ -110,6 +110,11 @@ const ThingieSchema = new Schema({
     type: String,
     required: false
   },
+  stroke_width: {
+    type: Number,
+    required: false,
+    default: 3
+  },
   update_count: {
     type: Number,
     required: false,

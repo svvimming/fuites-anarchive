@@ -194,6 +194,25 @@ const GetThingieConsistencies = async (thingie, upload) => {
       )
       console.log(updated)
     } catch (e) {
+      console.log('Error getting image thingie consistencies')
+      console.log(e)
+    }
+  }
+  if (thingie.thingie_type === 'sound') {
+    try {
+      const recentThingies = await MC.model.Thingie.find({ last_update_token: thingie.creator_token, thingie_type: ['image', 'text'] })
+      if (recentThingies.length) {
+        const recent = recentThingies[0]
+        const color = recent.colors[0]
+        const updated = await MC.model.Thingie.findOneAndUpdate(
+          { _id: thingie._id },
+          { colors: [color] },
+          { new: true }
+        )
+        console.log(updated)
+      }
+    } catch (e) {
+      console.log('Error getting sound thingie consistencies')
       console.log(e)
     }
   }

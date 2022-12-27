@@ -28,6 +28,7 @@ const getters = {
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  // //////////////////////////////////////////////////////////// setLandingData
   async setLandingData ({ commit }) {
     commit('SET_LANDING_DATA', { key: 'data', data: LandingData })
   },
