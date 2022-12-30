@@ -162,6 +162,9 @@ export default {
       }
     },
     initUpload (coords, uploadFile) {
+      console.log('SingleFileUploader: initUpload')
+      console.log(coords)
+      console.log(uploadFile)
       this.pathData = coords
       uploadFile()
     }
