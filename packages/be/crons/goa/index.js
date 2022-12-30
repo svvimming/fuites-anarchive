@@ -7,7 +7,7 @@
  *
  * ⏱️️ [Cron | every hour]
  * GOA migrator moves thingies from leaking spaces to
- * new spazes determined
+ * new spazes based on their preacceleration
  *
  */
 console.log('⏱️️  [cron] GOA')
