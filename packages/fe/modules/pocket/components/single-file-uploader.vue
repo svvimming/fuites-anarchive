@@ -61,7 +61,7 @@
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
       <div class="upload-prompt">
-        Draw a shape to upload selected file
+        {{ uploadPrompt }}
       </div>
 
       <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
@@ -109,6 +109,15 @@ export default {
       status: false,
       file: false,
       pathData: []
+    }
+  },
+
+  computed: {
+    uploadPrompt () {
+      if (this.file) {
+        return this.file.size > 5000000 ? ":-O woaahh that's a big file !" : 'Draw a shape to upload selected file'
+      }
+      return ''
     }
   },
 

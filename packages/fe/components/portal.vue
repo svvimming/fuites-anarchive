@@ -56,8 +56,8 @@ export default {
         left: this.position.x + 'px',
         top: this.position.y + 'px',
         '--portal-gradient-start': this.colors[0],
-        '--portal-gradient-stop': this.colors[1],
-        '--portal-hover-ring': this.colors[2]
+        '--portal-gradient-stop': `${this.colors[1]}80`,
+        '--portal-hover-ring': `${this.colors[2]}80`
       }
     }
   }
@@ -74,12 +74,12 @@ export default {
   z-index: 10000;
   .portal-thingie {
     &:before {
-      background-color: var(--portal-gradient-start);
+      background-color: var(--portal-hover-ring);
       filter: drop-shadow(0 0 0.125rem var(--portal-hover-ring)) drop-shadow(0 0 0.25rem var(--portal-hover-ring));
       opacity: 0;
     }
     &:after {
-      background: radial-gradient(circle, var(--portal-gradient-start) 20%, var(--portal-gradient-stop) 55%, rgba(255, 255, 255, 0) 66%);
+      background: radial-gradient(circle, var(--portal-gradient-start) 10%, var(--portal-gradient-stop) 30%, rgba(255, 255, 255, 0) 66%);
     }
   }
   &:hover {

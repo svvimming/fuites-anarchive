@@ -142,7 +142,8 @@ const GodessOfAnarchy = async () => {
           totalBytes += thingie.file_ref.filesize
         }
       })
-      if (totalBytes > 2000000 && spaze.state === 'clumping') {
+      const saturated = totalBytes > 50000000 || spazeThingies.length > 50
+      if (saturated && spaze.state === 'clumping') { // change spaze state to metastable
         const updated = await MC.model.Spaze
           .findOneAndUpdate({ _id: spaze._id }, { state: 'metastable' }, { new: true })
           .populate({
@@ -150,7 +151,7 @@ const GodessOfAnarchy = async () => {
             populate: { path: 'thingie_ref', select: 'colors' }
           })
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
-      } else if (totalBytes <= 1000000 && spaze.state === 'leaking') {
+      } else if (totalBytes <= 16666667 && spazeThingies.length <= 50 && spaze.state === 'leaking') { // change spaze state to clumping
         const updated = await MC.model.Spaze
           .findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
           .populate({
