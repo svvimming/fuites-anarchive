@@ -20,7 +20,7 @@
         viewBox="0 0 200 200">
         <defs>
           <clipPath :id="pathId" clipPathUnits="objectBoundingBox">
-            <path :d="clipPath" stroke-linejoin="arcs" />
+            <path :d="svgPath" stroke-linejoin="arcs" />
           </clipPath>
         </defs>
       </svg>
@@ -68,6 +68,28 @@ export default {
   data () {
     return {
       pathId: ''
+    }
+  },
+
+  computed: {
+    points () {
+      if (!this.clipPath.startsWith('M')) {
+        const path = this.clipPath.split(' ').map(num => parseInt(num) / 200)
+        const len = path.length
+        const points = []
+        for (let i = 0; i < len - 1; i += 2) {
+          points.push([path[i], path[i + 1]])
+        }
+        return points
+      }
+      return false
+    },
+    svgPath () {
+      if (Array.isArray(this.points)) {
+        const svgPath = this.$simplifySvgPath(this.points, { tolerance: 0.001 })
+        return svgPath + ' Z'
+      }
+      return this.clipPath
     }
   },
 

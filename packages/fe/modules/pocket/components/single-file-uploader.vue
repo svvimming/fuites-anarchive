@@ -1,7 +1,7 @@
 <template>
   <UploadInput
     :prompt-to-upload="true"
-    accepted-mimetypes="image/jpeg,image/png"
+    accepted-mimetypes="image/jpeg,image/png,audio/wav,audio/mpeg"
     class="single-file-uploader"
     @statusChanged="statusChanged"
     @fileChanged="fileChanged">
@@ -61,7 +61,7 @@
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
       <div class="upload-prompt">
-        Draw a shape to upload selected file
+        {{ uploadPrompt }}
       </div>
 
       <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
@@ -112,6 +112,15 @@ export default {
     }
   },
 
+  computed: {
+    uploadPrompt () {
+      if (this.file) {
+        return this.file.size > 5000000 ? ":-O woaahh that's a big file !" : 'Draw a shape to upload selected file'
+      }
+      return ''
+    }
+  },
+
   watch: {
     status (status) {
       if (status === 'uploading') {
@@ -141,10 +150,11 @@ export default {
       this.file = file
     },
     async finalizeUpload () {
+      const thingietype = ['audio/mpeg', 'audio/wav'].includes(this.file.type) ? 'sound' : 'image'
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: 'pocket',
-        type: 'image',
+        type: thingietype,
         pathData: this.pathData
       })
       if (complete) {

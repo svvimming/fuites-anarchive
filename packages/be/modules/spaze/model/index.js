@@ -12,10 +12,17 @@ const SpazeSchema = new Schema({
     type: String,
     required: true
   },
-  connections: {
-    type: [String]
+  portal_refs: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'portals',
+        required: false
+      }
+    ],
+    required: false
   },
-  session_token: {
+  initiator_token: {
     type: String,
     required: true
   },
@@ -24,11 +31,27 @@ const SpazeSchema = new Schema({
     ref: 'thingies',
     required: false
   },
+  overflow_spaze: {
+    type: String,
+    required: false
+  },
   state: {
     type: String,
     required: false,
     default: 'clumping',
     enum: ['clumping', 'metastable', 'leaking']
+  },
+  bounds: {
+    x: {
+      type: Number,
+      required: false,
+      default: 2732
+    },
+    y: {
+      type: Number,
+      required: false,
+      default: 2000
+    }
   }
 }, {
   timestamps: true,

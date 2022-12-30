@@ -1,6 +1,8 @@
 <template>
   <div
+    ref="spz"
     class="spz"
+    :style="spazeStyles"
     @drop="onDrop($event)"
     @dragover.prevent
     @dragenter.prevent
@@ -17,9 +19,15 @@
       v-for="thingie in spazeThingies"
       :key="thingie._id"
       :thingie="thingie"
+      :bounds="spazeBounds"
       @initmousedown="initMousedown"
       @initupdate="initUpdate"
       @initmouseup="initMouseup" />
+
+    <Portal
+      v-for="(portal, i) in portals"
+      :key="`${portal.name}_${i}`"
+      :to="portal" />
 
   </div>
 </template>
@@ -28,8 +36,21 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-import Thingie from '@/components/thingies/thingie'
 import PropBoard from '@/components/prop-board'
+import Thingie from '@/components/thingies/thingie'
+import Portal from '@/components/portal'
+// =================================================================== Functions
+const initSpazeScrollPosition = (instance) => {
+  if (instance.$refs.spz) {
+    const bounds = instance.spazeBounds
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    const x = Math.round((bounds.x - vw) / 2)
+    const y = Math.round((bounds.y - vh) / 2)
+    window.scrollTo(x, y)
+    instance.offset = { x, y }
+  }
+}
 
 // ====================================================================== Export
 export default {
@@ -38,8 +59,9 @@ export default {
   layout: 'spaze',
 
   components: {
+    PropBoard,
     Thingie,
-    PropBoard
+    Portal
   },
 
   async fetch ({ app, store }) {
@@ -53,6 +75,10 @@ export default {
     return {
       spazeName: name,
       socket: false,
+      offset: {
+        x: 0,
+        y: 0
+      },
       editor: {
         x: 0,
         y: 0
@@ -70,7 +96,9 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      showPortals: 'general/portalView',
+      pocket: 'pocket/pocket'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -82,16 +110,57 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    portals () {
+      const portals = []
+      if (this.spaze && this.showPortals) {
+        const connections = this.spaze.portal_refs
+        connections.forEach((connection) => {
+          const vertices = connection.vertices
+          if (vertices.a.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.b.location,
+              at: vertices.a.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+          if (vertices.b.location === this.spazeName) {
+            portals.push({
+              name: connection.edge,
+              slug: vertices.a.location,
+              at: vertices.b.at,
+              colors: connection.thingie_ref.colors
+            })
+          }
+        })
+      }
+      return portals
+    },
+    spazeBounds () {
+      return this.spaze && this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
+    },
+    spazeStyles () {
+      return {
+        '--spaze-var-field-width': `${this.spazeBounds.x}px`,
+        '--spaze-var-field-height': `${this.spazeBounds.y}px`,
+      }
     }
   },
 
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
+      this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|post-create-spaze|payload', (spaze) => {
         this.addSpaze(spaze)
       })
+      const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
+      socketEvents.forEach((message) => {
+        this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
+      })
     })
+    this.$nextTick(() => { initSpazeScrollPosition(this) })
   },
 
   methods: {
@@ -100,25 +169,30 @@ export default {
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
       postCreateSpaze: 'collections/postCreateSpaze',
-      addSpaze: 'collections/addSpaze'
+      postUpdateSpaze: 'collections/postUpdateSpaze',
+      addSpaze: 'collections/addSpaze',
+      updateSpaze: 'collections/updateSpaze'
     }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: true
+        dragging: true,
+        last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: false
+        dragging: false,
+        last_update_token: this.pocket.token
       })
     },
     initUpdate (thingie) {
+      thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         evt.preventDefault()
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
@@ -127,8 +201,10 @@ export default {
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: this.spazeName,
+          last_update_token: this.pocket.token,
           dragging: false,
-          at: { x, y, z: 1 }
+          at: { x, y, z: 1 },
+          record_new_location: true
         })
         if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
@@ -138,8 +214,8 @@ export default {
     openEditor (evt) {
       if (this.authenticated) {
         this.editor = {
-          x: evt.clientX,
-          y: evt.clientY
+          x: evt.clientX + window.scrollX,
+          y: evt.clientY + window.scrollY
         }
         this.$refs.propboard.openEditor()
       }
@@ -154,13 +230,19 @@ export default {
     async createNewSpazeFromThingie (thingieId) {
       const complete = await this.postCreateSpaze({
         incomingThingieId: thingieId,
-        connections: [this.spazeName]
+        overflow_spaze: this.spazeName
       })
       if (complete) {
-        const newSpaze = this.spazes.find(item => item.name === complete.name)
-        if (newSpaze) {
+        const created = this.spazes.find(item => item.name === complete.name)
+        if (created) {
+          this.socket.emit('update-thingie', {
+            _id: created.creator_thingie,
+            location: created.name,
+            last_update_token: created.initiator_token,
+            record_new_location: true
+          })
           this.$nextTick(() => {
-            this.$router.push({ path: `/${newSpaze.name}` })
+            this.$router.push({ path: `/${created.name}` })
           })
         }
       }
@@ -172,10 +254,12 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .spz {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  overflow: scroll;
+  --spaze-var-field-width: 2732px;
+  --spaze-var-field-height: 2000px;
+  position: absolute;
+  width: var(--spaze-var-field-width);
+  height: var(--spaze-var-field-height);
+  overflow: hidden;
   z-index: 1;
 }
 </style>

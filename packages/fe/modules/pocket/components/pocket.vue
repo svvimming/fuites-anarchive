@@ -23,6 +23,7 @@
           v-for="thingie in pocketThingies"
           :key="thingie._id"
           :thingie="thingie"
+          :bounds="{ x: 640, y: 400 }"
           @initmousedown="initMousedown"
           @initupdate="initUpdate"
           @initmouseup="initMouseup" />
@@ -66,21 +67,26 @@ export default {
     ...mapGetters({
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      pocket: 'pocket/pocket',
       pocketIsOpen: 'pocket/pocketIsOpen'
     }),
     pocketThingies () {
-      return this.thingies.filter(obj => obj.location === 'pocket')
+      return this.thingies.filter(obj => obj.location === 'pocket' && this.pocket.thingies.includes(obj._id))
     }
   },
 
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
+      this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|update-thingie|payload', (thingie) => {
         this.updateThingie(thingie)
       })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
         this.addThingie(thingie)
+      })
+      this.socket.on('module|goa-migrate-thingie|payload', (migrated) => {
+        this.initUpdate(migrated)
       })
     })
   },
@@ -93,16 +99,21 @@ export default {
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: true
+        dragging: true,
+        last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
-        dragging: false
+        dragging: false,
+        last_update_token: this.pocket.token
       })
     },
     initUpdate (thingie) {
+      if (!thingie.last_update_token) {
+        thingie.last_update_token = this.pocket.token
+      }
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
@@ -115,8 +126,10 @@ export default {
         this.socket.emit('update-thingie', {
           _id: thingieId,
           location: 'pocket',
+          last_update_token: this.pocket.token,
           dragging: false,
-          at: { x, y, z: 1 }
+          at: { x, y, z: 1 },
+          record_new_location: true
         })
       }
     }
@@ -130,7 +143,7 @@ $pocketHeight: 30rem;
 // ////////////////////////////////////////////////////////////////////// Pocket
 .pocket-wrapper {
   z-index: -1;
-  position: absolute;
+  position: fixed;
   right: 1rem;
   bottom: 1rem;
   width: auto;

@@ -10,7 +10,8 @@ const state = () => ({
   authenticated: false,
   clipboard: false,
   filterValue: '',
-  loaders: []
+  loaders: [],
+  portalView: true
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -20,12 +21,14 @@ const getters = {
   authenticated: state => state.authenticated,
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
-  loaders: state => state.loaders
+  loaders: state => state.loaders,
+  portalView: state => state.portalView
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
+  // //////////////////////////////////////////////////////////// setLandingData
   async setLandingData ({ commit }) {
     commit('SET_LANDING_DATA', { key: 'data', data: LandingData })
   },
@@ -37,6 +40,10 @@ const actions = {
   // //////////////////////////////////////////////////////////// setFilterValue
   setFilterValue ({ commit }, value) {
     commit('SET_FILTER_VALUE', value)
+  },
+  // ///////////////////////////////////////////////////////////// setPortalView
+  setPortalView ({ commit }, value) {
+    commit('SET_PORTAL_VIEW', value)
   },
   // ///////////////////////////////////////////////////////////////// addLoader
   addLoader ({ commit, getters }, action) {
@@ -66,7 +73,7 @@ const actions = {
         message: response.data.message
       })
       if (authenticated) {
-        dispatch('pocket/setPocketToken', token, { root: true })
+        dispatch('pocket/getPocket', token, { root: true })
       }
       commit('SET_AUTHENTICATION_STATUS', authenticated)
     } catch (e) {
@@ -91,6 +98,9 @@ const mutations = {
   },
   SET_FILTER_VALUE (state, value) {
     state.filterValue = value
+  },
+  SET_PORTAL_VIEW (state, value) {
+    state.portalView = value
   },
   ADD_LOADER (state, action) {
     state.loaders.push(action)

@@ -81,7 +81,7 @@ export default {
 // ///////////////////////////////////////////////////////////////////// Compost
 .compost-portal-wrapper {
   z-index: -1;
-  position: absolute;
+  position: fixed;
   left: 1rem;
   bottom: 1rem;
   width: auto;

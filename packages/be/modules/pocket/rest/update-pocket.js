@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /get-spaze')
+console.log('💡 [endpoint] /post-update-pocket')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -8,17 +8,17 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.get('/get-spazes', async (req, res) => {
+MC.app.post('/post-update-pocket', async (req, res) => {
   try {
-    const spazes = await MC.model.Spaze
-      .find({})
-      .populate({
-        path: 'portal_refs',
-        populate: { path: 'thingie_ref', select: 'colors' }
-      })
-    SendData(res, 200, 'Dataset retrieved successfully', spazes)
+    const body = req.body
+    const pocket = await MC.model.Pocket.findOneAndUpdate(
+      { token: body.token },
+      { thingies: req.body.thingies },
+      { new: true }
+    )
+    SendData(res, 200, 'Dataset updated successfully', pocket)
   } catch (e) {
-    console.log('=================================== [Endpoint: /get-spazes]')
+    console.log('============================= [Endpoint: /post-update-pocket]')
     console.log(e)
     SendData(res, 500, 'Something went wrong. Please try again.')
   }

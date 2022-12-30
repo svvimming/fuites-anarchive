@@ -15,7 +15,10 @@ const getNewSpazeName = (array) => {
     const thirdWord = consistencies[index]
     name = `${name}-${thirdWord}`
   }
-  return name
+  if (!['pocket'].includes(name)) {
+    return name
+  }
+  return false
 }
 
 // /////////////////////////////////////////////////////////////////////// State
@@ -70,11 +73,11 @@ const actions = {
       const existingSpazes = getters.spazes.map(spaze => spaze.name)
       const spazeName = getNewSpazeName(thingie.consistencies)
       if (spazeName && !existingSpazes.includes(spazeName)) {
-        const token = rootGetters['pocket/pocket']
+        const pocket = rootGetters['pocket/pocket']
         const data = {
           spaze_name: spazeName,
-          connections: payload.connections,
-          session_token: token,
+          overflow_spaze: payload.overflow_spaze,
+          session_token: pocket.token,
           creator_thingie: incomingThingieId
         }
         const response = await this.$axiosAuth.post('/post-create-spaze', data)
@@ -86,6 +89,24 @@ const actions = {
       console.log('=============== [Store Action: collections/postCreateSpaze]')
       console.log(e)
       return false
+    }
+  },
+  // /////////////////////////////////////////////////////////// postUpdateSpaze
+  async postUpdateSpaze ({ getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.post('/post-update-spaze', payload)
+      return response.data.payload
+    } catch (e) {
+      console.log('=============== [Store Action: collections/postUpdateSpaze]')
+      console.log(e)
+      return false
+    }
+  },
+  // /////////////////////////////////////////////////////////////// updateSpaze
+  updateSpaze ({ commit, getters }, incoming) {
+    const index = getters.spazes.findIndex(obj => obj._id === incoming._id)
+    if (index >= 0) {
+      commit('UPDATE_SPAZE', { index, spaze: incoming })
     }
   },
   // /////////////////////////////////////////////////////////////// getThingies
@@ -106,11 +127,11 @@ const actions = {
   async postCreateThingie ({ dispatch, rootGetters }, payload) {
     try {
       const props = ['text', 'fontsize', 'fontfamily', 'colors', 'at', 'pathData', 'width']
-      const token = rootGetters['pocket/pocket']
+      const pocket = rootGetters['pocket/pocket']
       const data = {
         file_id: payload.uploadedFileId,
         location: payload.location,
-        creator_token: token,
+        creator_token: pocket.token,
         thingie_type: payload.type
       }
       props.forEach((prop) => {
@@ -119,7 +140,12 @@ const actions = {
         }
       })
       const response = await this.$axiosAuth.post('/post-create-thingie', data)
-      return response.data.payload
+      const thingie = response.data.payload
+      if (thingie.location === 'pocket') { // add thingie id to this client-pocket's thingie list
+        const update = { thingie, action: 'add' }
+        dispatch('pocket/postUpdatePocket', update, { root: true })
+      }
+      return thingie
     } catch (e) {
       console.log('============= [Store Action: collections/postCreateThingie]')
       console.log(e)
@@ -127,9 +153,19 @@ const actions = {
     }
   },
   // ///////////////////////////////////////////////////////////// updateThingie
-  updateThingie ({ commit, getters }, incoming) {
+  updateThingie ({ commit, state, getters, dispatch }, incoming) {
     const index = getters.thingies.findIndex(obj => obj._id === incoming._id)
     if (index >= 0) {
+      const thingie = state.thingies[index]
+      if (thingie.location !== incoming.location) {
+        if (thingie.location !== 'pocket' && incoming.location === 'pocket') {
+          const update = { thingie: incoming, action: 'add' }
+          dispatch('pocket/postUpdatePocket', update, { root: true })
+        } else if (thingie.location === 'pocket' && incoming.location !== 'pocket') {
+          const update = { thingie: incoming, action: 'remove' }
+          dispatch('pocket/postUpdatePocket', update, { root: true })
+        }
+      }
       commit('UPDATE_THINGIE', { index, thingie: incoming })
     }
   },
@@ -147,8 +183,12 @@ const actions = {
     }
   },
   // ///////////////////////////////////////////////////////////// removeThingie
-  removeThingie ({ commit, getters }, thingieId) {
+  removeThingie ({ commit, getters, dispatch }, thingieId) {
     const index = getters.thingies.findIndex(obj => obj._id === thingieId)
+    const thingieToRemove = getters.thingies[index]
+    if (thingieToRemove.location === 'pocket') {
+      dispatch('pocket/postUpdatePocket', { thingie: thingieToRemove, action: 'remove' }, { root: true })
+    }
     commit('REMOVE_THINGIE', index)
   },
   // /////////////////////////////////////////////////////////////// clearSpazes
@@ -170,6 +210,12 @@ const mutations = {
   ADD_SPAZE (state, spaze) {
     state.spazes.push(spaze)
   },
+  UPDATE_SPAZE (state, payload) {
+    state.spazes.splice(payload.index, 1, payload.spaze)
+  },
+  CLEAR_SPAZES (state) {
+    state.spazes = []
+  },
   ADD_THINGIES (state, thingies) {
     state.thingies = thingies
   },
@@ -181,9 +227,6 @@ const mutations = {
   },
   REMOVE_THINGIE (state, index) {
     state.thingies.splice(index, 1)
-  },
-  CLEAR_SPAZES (state) {
-    state.spazes = []
   },
   CLEAR_THINGIES (state) {
     state.thingies = []
