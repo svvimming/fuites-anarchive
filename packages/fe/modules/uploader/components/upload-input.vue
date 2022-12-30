@@ -182,6 +182,7 @@ export default {
       }
     },
     uploadFile () {
+      console.log('uploadInput: uploadFile')
       if (this.authenticated) {
         const file = this.file
         const formMetadata = {}
