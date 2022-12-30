@@ -40,6 +40,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
         populate: { path: 'thingie_ref', select: 'colors' }
       })
       MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+      console.log(`New portal opened: ${updated._id}`)
     }
   }
 }
@@ -60,7 +61,7 @@ const closePortal = async (incoming) => {
     MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
   }
   const closed = await MC.model.Portal.deleteOne({ id: portal._id })
-  console.log(closed)
+  console.log(`Portal closed: ${closed}`)
 }
 
 // ---------------------------------------------------- checkPortalThingiesExist

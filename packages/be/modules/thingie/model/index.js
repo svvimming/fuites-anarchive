@@ -114,6 +114,16 @@ const ThingieSchema = new Schema({
     type: Number,
     required: false,
     default: 3
+  },
+  update_count: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  preacceleration: {
+    type: Number,
+    required: false,
+    default: 0
   }
 }, {
   timestamps: true,
