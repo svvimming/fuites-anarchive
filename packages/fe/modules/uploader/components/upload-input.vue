@@ -49,15 +49,20 @@
 // ===================================================================== Imports
 import { mapGetters } from 'vuex'
 
+import ColorThief from 'colorthief'
+
 // =================================================================== Functions
-const getImageAspectRatio = (instance) => {
+const getImageData = (instance) => {
   const reader = new FileReader()
   reader.readAsDataURL(instance.file)
   reader.onload = (e) => {
     const image = new Image()
+    const colorThief = new ColorThief()
     image.src = e.target.result
-    image.onload = () => {
+    image.onload = async () => {
       instance.imageAspectRatio = image.width / image.height
+      const palette = await colorThief.getPalette(image, 3)
+      instance.imageColorPalette = palette
     }
   }
 }
@@ -97,7 +102,8 @@ export default {
       progress: 0,
       place: 0,
       nextChunkPayload: false,
-      imageAspectRatio: 1
+      imageAspectRatio: 1,
+      imageColorPalette: []
     }
   },
 
@@ -149,7 +155,9 @@ export default {
       if (file) {
         this.file = file
         this.$emit('fileSelected')
-        getImageAspectRatio(this)
+        if (['image/jpeg', 'image/png'].includes(this.file.type)) {
+          getImageData(this)
+        }
         if (!this.promptToUpload) {
           this.uploadFile()
         }
@@ -166,6 +174,7 @@ export default {
         this.status = 'idle'
         this.file = false
         this.imageAspectRatio = 1
+        this.imageColorPalette = []
         this.progress = 0
         this.place = 0
         this.nextChunkPayload = false
@@ -186,6 +195,7 @@ export default {
           filesize: this.filesize,
           mimetype: this.mimetype,
           aspect: this.imageAspectRatio,
+          palette: this.imageColorPalette,
           form_metadata: formMetadata
         })
       }

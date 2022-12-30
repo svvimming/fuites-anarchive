@@ -16,6 +16,7 @@
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/style-resources": "^1.2.1",
+    "colorthief": "^2.3.2",
     "filesize": "^8.0.7",
     "glsl-shader-loader": "^0.1.6",
     "nuxt": "^2.15.8",
