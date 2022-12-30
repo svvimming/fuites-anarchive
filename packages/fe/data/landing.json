@@ -55,16 +55,16 @@
       }
     ],
     "tips": [
-      "to upload a thingie, open the pocket and click upload",
+      "to upload a thingie, open the pocket and click upload (png, jpeg, mp3 & wav files accepted)",
       "to move a thingie, click and drag it",
       "to move a thingie between spaces, hold shift while dragging to drag and drop",
       "to get rid of a thingie, drag and drop it into the open trash",
-      "br",
-      "to shrink or enlarge a thingie, hover over it with two finger and make a pinching gesture",
-      "to rotate a thingie, do the above while holding down the option key",
-      "br",
       "to add a text thingie, hold option and click anywhere on the white space",
-      "to change font size and family, hold option and click on the text"
+      "br",
+      "to resize a thingie, make a pinching gesture while hovering the mouse over it",
+      "to edit a thingie, click on it while holding option",
+      "in edit mode, a thingie can be rotated with ← and →, and brought forward or sent backward with ↑ and ↓",
+      "other options will appear to the right depending on the type of thingie"
     ]
   },
   "font_families": [
