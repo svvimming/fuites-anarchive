@@ -113,7 +113,7 @@ export default {
     },
     portals () {
       const portals = []
-      if (this.showPortals) {
+      if (this.spaze && this.showPortals) {
         const connections = this.spaze.portal_refs
         connections.forEach((connection) => {
           const vertices = connection.vertices
@@ -138,7 +138,7 @@ export default {
       return portals
     },
     spazeBounds () {
-      return this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
+      return this.spaze && this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
     },
     spazeStyles () {
       return {
@@ -192,7 +192,7 @@ export default {
       this.socket.emit('update-thingie', thingie)
     },
     onDrop (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         evt.preventDefault()
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
@@ -214,8 +214,8 @@ export default {
     openEditor (evt) {
       if (this.authenticated) {
         this.editor = {
-          x: evt.clientX,
-          y: evt.clientY
+          x: evt.clientX + window.scrollX,
+          y: evt.clientY + window.scrollY
         }
         this.$refs.propboard.openEditor()
       }

@@ -23,6 +23,7 @@
           v-for="thingie in pocketThingies"
           :key="thingie._id"
           :thingie="thingie"
+          :bounds="{ x: 640, y: 400 }"
           @initmousedown="initMousedown"
           @initupdate="initUpdate"
           @initmouseup="initMouseup" />
