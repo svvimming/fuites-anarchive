@@ -39,6 +39,7 @@
       :editor="editing"
       :colors="thingie.colors"
       :position="position"
+      :width="width"
       :stroke-width="strokeWidth"
       @change-stroke-width="changePathStrokeWidth" />
 
