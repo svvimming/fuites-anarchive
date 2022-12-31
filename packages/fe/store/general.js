@@ -11,7 +11,8 @@ const state = () => ({
   clipboard: false,
   filterValue: '',
   loaders: [],
-  portalView: true
+  portalView: true,
+  modal: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -22,7 +23,8 @@ const getters = {
   clipboard: state => state.clipboard,
   filterValue: state => state.filterValue,
   loaders: state => state.loaders,
-  portalView: state => state.portalView
+  portalView: state => state.portalView,
+  modal: state => state.modal
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -44,6 +46,10 @@ const actions = {
   // ///////////////////////////////////////////////////////////// setPortalView
   setPortalView ({ commit }, value) {
     commit('SET_PORTAL_VIEW', value)
+  },
+  // ////////////////////////////////////////////////////////////////// setModal
+  setModal ({ commit }, value) {
+    commit('SET_MODAL', value)
   },
   // ///////////////////////////////////////////////////////////////// addLoader
   addLoader ({ commit, getters }, action) {
@@ -101,6 +107,10 @@ const mutations = {
   },
   SET_PORTAL_VIEW (state, value) {
     state.portalView = value
+  },
+  SET_MODAL (state, value) {
+    state.modal = value
+    console.log(state.modal)
   },
   ADD_LOADER (state, action) {
     state.loaders.push(action)

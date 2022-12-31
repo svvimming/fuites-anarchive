@@ -1,7 +1,7 @@
 <template>
   <div
     ref="spz"
-    class="spz"
+    :class="['spz', {'non-existent': !spazeExists }]"
     :style="spazeStyles"
     @drop="onDrop($event)"
     @dragover.prevent
@@ -9,8 +9,27 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <div
+      v-if="!spazeExists"
+      class="center-stage">
+      <template v-for="n in 2">
+        <Bingo
+          :text="proposition.error_message"
+          :font-size="24"
+          :custom="proposition.bingo"
+          class="error-message" />
+      </template>
+      <Button tag="button" @clicked="openNewSpazeModal">
+        <Bingo
+          :text="proposition.prompt"
+          :font-size="24"
+          :custom="proposition.bingo"
+          class="new-spaze" />
+      </Button>
+    </div>
+
     <PropBoard
-      v-if="authenticated"
+      v-if="authenticated && spazeExists"
       ref="propboard"
       :spz="spazeName"
       :location="editor" />
@@ -39,6 +58,9 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import Portal from '@/components/portal'
+import Bingo from '@/components/bingo'
+import Button from '@/components/button'
+
 // =================================================================== Functions
 const initSpazeScrollPosition = (instance) => {
   if (instance.$refs.spz) {
@@ -61,7 +83,9 @@ export default {
   components: {
     PropBoard,
     Thingie,
-    Portal
+    Portal,
+    Bingo,
+    Button
   },
 
   async fetch ({ app, store }) {
@@ -74,6 +98,7 @@ export default {
     const name = this.$route.params.id
     return {
       spazeName: name,
+      spazeExists: true,
       socket: false,
       offset: {
         x: 0,
@@ -98,6 +123,7 @@ export default {
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
+      landing: 'general/landing',
       pocket: 'pocket/pocket'
     }),
     spaze () {
@@ -145,6 +171,9 @@ export default {
         '--spaze-var-field-width': `${this.spazeBounds.x}px`,
         '--spaze-var-field-height': `${this.spazeBounds.y}px`,
       }
+    },
+    proposition () {
+      return this.landing.data.portal.new_spaze
     }
   },
 
@@ -160,7 +189,11 @@ export default {
         this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
       })
     })
-    this.$nextTick(() => { initSpazeScrollPosition(this) })
+    if (!this.spaze) {
+      this.spazeExists = false
+    } else {
+      this.$nextTick(() => { initSpazeScrollPosition(this) })
+    }
   },
 
   methods: {
@@ -171,8 +204,12 @@ export default {
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',
-      updateSpaze: 'collections/updateSpaze'
+      updateSpaze: 'collections/updateSpaze',
+      setModal: 'general/setModal'
     }),
+    openNewSpazeModal () {
+      this.setModal(true)
+    },
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
@@ -212,7 +249,7 @@ export default {
       }
     },
     openEditor (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         this.editor = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
@@ -221,7 +258,7 @@ export default {
       }
     },
     closeEditor (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         if (!evt.altKey) {
           this.$refs.propboard.closeEditor()
         }
@@ -261,5 +298,21 @@ export default {
   height: var(--spaze-var-field-height);
   overflow: hidden;
   z-index: 1;
+  &.non-existent {
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+}
+
+.center-stage {
+  position: absolute;
+  top: calc(50% - 4.5rem);
+  left: calc(50% - 17rem);
+  .new-spaze {
+    transform: translate(4rem, 4rem);
+    &:hover {
+      @include linkShadow;
+    }
+  }
 }
 </style>

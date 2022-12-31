@@ -46,7 +46,7 @@
     <template #file-upload-button="{ clickFileInput }">
       <Button
         v-if="!file && status !== 'upload-complete'"
-        text="Upload a file"
+        :text="initializeUploadPrompt"
         class="select-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
@@ -61,7 +61,7 @@
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
       <div class="upload-prompt">
-        {{ uploadPrompt }}
+        {{ finalizeUploadPrompt }}
       </div>
 
       <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
@@ -104,6 +104,29 @@ export default {
     Bichos
   },
 
+  props: {
+    uploadOnDrawBicho: {
+      type: Boolean,
+      required: false,
+      default: true
+    },
+    initPrompt: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    finalPrompt: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    uploadToSpaze: {
+      type: String,
+      required: false,
+      default: ''
+    }
+  },
+
   data () {
     return {
       status: false,
@@ -113,11 +136,21 @@ export default {
   },
 
   computed: {
-    uploadPrompt () {
+    initializeUploadPrompt () {
+      return this.initPrompt ? this.initPrompt : 'Upload a file'
+    },
+    finalizeUploadPrompt () {
       if (this.file) {
-        return this.file.size > 5000000 ? ":-O woaahh that's a big file !" : 'Draw a shape to upload selected file'
+        return this.file.size > 5000000 ?
+          ":-O woaahh that's a big file !" :
+          this.finalPrompt ?
+            this.finalPrompt :
+            'Draw a shape to upload selected file'
       }
       return ''
+    },
+    destination () {
+      return this.uploadToSpaze ? this.uploadToSpaze : 'pocket'
     }
   },
 
@@ -153,7 +186,7 @@ export default {
       const thingietype = ['audio/mpeg', 'audio/wav'].includes(this.file.type) ? 'sound' : 'image'
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
-        location: 'pocket',
+        location: this.destination,
         type: thingietype,
         pathData: this.pathData
       })
@@ -163,7 +196,11 @@ export default {
     },
     initUpload (coords, uploadFile) {
       this.pathData = coords
-      uploadFile()
+      if (this.uploadOnDrawBicho) {
+        uploadFile()
+      } else {
+        this.$emit('draw-bicho-complete')
+      }
     }
   }
 }

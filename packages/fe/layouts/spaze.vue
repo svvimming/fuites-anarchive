@@ -3,6 +3,8 @@
 
     <Toaster />
 
+    <PopSpz />
+
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
 
@@ -67,7 +69,7 @@ import LandingSite from '@/components/landing-site'
 import Pocket from '@/modules/pocket/components/pocket'
 import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
-
+import PopSpz from '@/components/pop-spz'
 import LandingSiteData from '@/data/landing.json'
 
 // ====================================================================== Export
@@ -78,7 +80,8 @@ export default {
     LandingSite,
     Pocket,
     CompostPortal,
-    Toaster
+    Toaster,
+    PopSpz
   },
 
   data () {
