@@ -217,7 +217,7 @@ export default {
       }
     },
     wheel (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.editing) {
         evt.preventDefault();
         const width = this.thingie.width ? this.thingie.width : 80
         const newWidth = Math.max(width - evt.deltaY, 1)

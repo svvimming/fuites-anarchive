@@ -14,8 +14,6 @@ MC.socket.listeners.push({
   name: 'module|file-upload-initialize|payload',
   async handler (data) {
     try {
-      console.log('file-upload-initialize')
-      console.log(data)
       const socket = GetSocket(data.socket_id)
       const mimetype = data.mimetype
       const filesize = data.filesize
