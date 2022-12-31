@@ -61,10 +61,11 @@
       "to get rid of a thingie, drag and drop it into the open trash",
       "to add a text thingie, hold option and click anywhere on the white space",
       "br",
-      "to resize a thingie, make a pinching gesture while hovering the mouse over it",
       "to edit a thingie, click on it while holding option",
-      "in edit mode, a thingie can be rotated with ← and →, and brought forward or sent backward with ↑ and ↓",
-      "other options will appear to the right depending on the type of thingie"
+      "in edit mode, a thingie can be rotated with ← and →, brought forward or sent backward with ↑ and ↓,\n or resized by making a pinch gesture while hovering over it",
+      "while editing, other options will appear to the right depending on the type of thingie",
+      "br",
+      "when audio is on, sound thingies can be heard by hovering over them with the mouse"
     ]
   },
   "font_families": [

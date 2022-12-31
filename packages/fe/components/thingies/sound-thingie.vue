@@ -49,8 +49,9 @@ import Throttle from 'lodash/throttle'
 // =================================================================== Functions
 const calculateMouseDistance = (e, instance) => {
   const pos = instance.position
-  const deltaX = pos.x - e.clientX
-  const deltaY = pos.y - e.clientY
+  const hw = instance.width / 2
+  const deltaX = pos.x + hw - e.clientX - window.scrollX
+  const deltaY = pos.y + hw - e.clientY - window.scrollY
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
   const gain = Math.exp(-0.005 * distance)
   instance.gainNode.gain.value = gain
@@ -94,6 +95,11 @@ export default {
         x: 0, y: 0
       })
     },
+    width: {
+      type: Number,
+      required: true,
+      default: 80
+    },
     strokeWidth: {
       type: Number,
       required: false,
@@ -134,7 +140,7 @@ export default {
       return this.strokeWidth
     },
     opacity () {
-      return this.playState === 'running' ? 0.5 + this.gain : 0.5
+      return this.playState === 'running' ? 0.4 + (this.gain * 0.6) : 0.4
     },
     styles () {
       return {
