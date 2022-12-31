@@ -63,6 +63,7 @@ const getImageData = (instance) => {
       instance.imageAspectRatio = image.width / image.height
       const palette = await colorThief.getPalette(image, 3)
       instance.imageColorPalette = palette
+      console.log(instance.imageColorPalette)
     }
   }
 }
