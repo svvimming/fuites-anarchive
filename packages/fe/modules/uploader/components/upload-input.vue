@@ -63,7 +63,6 @@ const getImageData = (instance) => {
       instance.imageAspectRatio = image.width / image.height
       const palette = await colorThief.getPalette(image, 3)
       instance.imageColorPalette = palette
-      console.log(instance.imageColorPalette)
     }
   }
 }
@@ -183,7 +182,6 @@ export default {
       }
     },
     uploadFile () {
-      console.log('uploadInput: uploadFile')
       if (this.authenticated) {
         const file = this.file
         const formMetadata = {}

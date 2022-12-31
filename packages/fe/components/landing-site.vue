@@ -201,13 +201,13 @@ export default {
 .tip {
   position: relative;
   list-style-type: none;
+  max-width: 37.5rem;
   @include fontSize_Main;
   &:before {
     content: '';
     position: absolute;
     left: -1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 0.6875rem;
     width: 2px;
     height: 2px;
     background-color: black;
