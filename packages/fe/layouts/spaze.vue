@@ -3,7 +3,9 @@
 
     <Toaster />
 
-    <PopSpz @spaze-created="handleRefresh" />
+    <PopSpz
+      v-if="notCompostPage"
+      @spaze-created="handleRefresh" />
 
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
@@ -15,6 +17,7 @@
     <!-- ==================================================== PORTAL VIEW == -->
 
     <button
+      v-if="notCompostPage"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
       @click="togglePortals">
       portals
@@ -49,14 +52,21 @@
     </button>
 
     <!-- ======================================================== COMPOST == -->
-    <CompostPortal />
+    <CompostPortal v-if="notCompostPage" />
 
     <button
-      v-if="authenticated"
+      v-if="authenticated && notCompostPage"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
-      trash
+      compost
     </button>
+
+    <nuxt-link
+      v-if="authenticated && !notCompostPage"
+      :to="`/${prevRoute}`"
+      class="toggle compost-portal-toggle">
+      back
+    </nuxt-link>
 
   </div>
 </template>
@@ -86,6 +96,7 @@ export default {
 
   data () {
     return {
+      prevRoute: '',
       tipsOpen: false,
       key: 0
     }
@@ -109,6 +120,19 @@ export default {
     audioContextState () {
       if (this.audioContext) { return this.playState }
       return false
+    },
+    notCompostPage () {
+      return this.$route.name !== 'compost'
+    }
+  },
+
+  watch: {
+    '$route' (to, from) {
+      if (from.params.id) {
+        this.prevRoute = from.params.id
+      } else {
+        this.prevRoute = from.name
+      }
     }
   },
 
