@@ -188,10 +188,16 @@ export default {
         uploadedFileId: this.file.id,
         location: this.destination,
         type: thingietype,
-        pathData: this.pathData
+        pathData: this.pathData,
+        at: this.uploadToSpaze ? {
+          x: 683 + Math.random() * 1200,
+          y: 500 + Math.random() * 700,
+          z: 1
+        } : false
       })
       if (complete) {
         this.status = 'upload-finalized'
+        this.$emit('upload-finalized')
       }
     },
     initUpload (coords, uploadFile) {

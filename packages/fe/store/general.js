@@ -110,7 +110,6 @@ const mutations = {
   },
   SET_MODAL (state, value) {
     state.modal = value
-    console.log(state.modal)
   },
   ADD_LOADER (state, action) {
     state.loaders.push(action)

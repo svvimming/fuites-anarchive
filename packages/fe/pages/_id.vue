@@ -124,7 +124,8 @@ export default {
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
-      pocket: 'pocket/pocket'
+      pocket: 'pocket/pocket',
+      modal: 'general/modal'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -266,7 +267,7 @@ export default {
     },
     async createNewSpazeFromThingie (thingieId) {
       const complete = await this.postCreateSpaze({
-        incomingThingieId: thingieId,
+        creator_thingie: thingieId,
         overflow_spaze: this.spazeName
       })
       if (complete) {

@@ -7,12 +7,6 @@
 
     <section id="modal-section">
 
-      <div class="toolbar">
-        <button class="close-button" @click="closeModal">
-          Close
-        </button>
-      </div>
-
       <div
         v-if="!authenticated"
         class="auth-wrapper">
@@ -22,21 +16,24 @@
       <div
         v-if="authenticated && newSpazeName"
         class="form-wrapper">
+
         <form
+          :key="key"
           class="form"
-          @submit.prevent="submitSpazeData">
+          @submit.prevent="createNewSpazeFrom404">
 
           <div
-            v-for="(item, index) in textInputs"
+            v-for="(item, index) in inputs"
+            :key="item.input"
             class="input-field merriweather">
             <label
               :for="item.input"
               class="label">
-              {{ `${item.label}:` }}
+              {{ item.label }}
             </label>
             <div class="input-wrapper">
               <input
-                v-model="inputs[index]"
+                v-model="inputs[index].value"
                 type="text"
                 class="input"
                 :name="item.input"
@@ -49,11 +46,13 @@
         <div
           class="uploader-wrapper">
           <SingleFileUploader
+            ref="uploader"
             :upload-on-draw-bicho="false"
             :upload-to-spaze="newSpazeName"
             init-prompt="Upload a file to the new spaze"
             final-prompt="Draw a shape to create the new spaze"
-            @draw-bicho-complete="submitSpazeData" />
+            @draw-bicho-complete="createNewSpazeFrom404"
+            @upload-finalized="successfullyCreated" />
         </div>
 
       </div>
@@ -66,6 +65,7 @@
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
+import CloneDeep from 'lodash/cloneDeep'
 
 import Auth from '@/components/auth'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
@@ -80,7 +80,15 @@ export default {
 
   data () {
     return {
-      inputs: []
+      key: 0,
+      inputs: [
+        {
+          input: 'name',
+          label: 'new spaze name:',
+          disabled: true,
+          value: ''
+        }
+      ]
     }
   },
 
@@ -88,41 +96,71 @@ export default {
     ...mapGetters({
       authenticated: 'general/authenticated',
       modal: 'general/modal',
-      landing: 'general/landing'
+      landing: 'general/landing',
+      traces: 'rezonator/resonances'
     }),
     popSpzData () {
       return this.landing.data.portal.new_spaze
     },
-    textInputs () {
-      const traces = [
-        {
-          input: 'name',
-          label: 'new spaze name',
-          disabled: true
-        }
-      ]
-      return traces.concat(this.popSpzData.form.traces)
-    },
     newSpazeName () {
-      return this.inputs[0]
+      return this.inputs[0].value
+    }
+  },
+
+  watch: {
+    traces (val) {
+      const traces = CloneDeep(val)
+      const inputs = []
+      for (let i = 0; i < 3; i++) {
+        if (traces.length > 2 - i) {
+          const index = Math.floor(Math.random() * traces.length)
+          const trace = traces[index]
+          inputs.push({
+            input: trace,
+            label: `something '${trace}'-like:`,
+            value: ''
+          })
+          traces.splice(index, 1)
+        }
+      }
+      this.inputs = this.inputs.concat(inputs)
+      this.key++
     }
   },
 
   mounted () {
-    this.inputs[0] = this.$route.params.id
+    this.inputs[0].value = this.$route.params.id
+    this.getTraces()
   },
 
   methods: {
     ...mapActions({
-      setModal: 'general/setModal'
+      setModal: 'general/setModal',
+      getTraces: 'rezonator/getTraces',
+      postCreateSpaze: 'collections/postCreateSpaze'
     }),
     closeModal () {
       if (this.modal) {
         this.setModal(false)
       }
     },
-    submitSpazeData () {
-      console.log(this.inputs)
+    async createNewSpazeFrom404 () {
+      const consistencies = this.inputs.filter(item => item.input !== 'name').map(item => item.value)
+      const complete = await this.postCreateSpaze({
+        spaze_name: this.inputs[0].value,
+        consistencies
+      })
+      if (complete) {
+        if (this.$refs.uploader.$children[0]) {
+          const uploadInput = this.$refs.uploader.$children[0]
+          uploadInput.uploadFile()
+        }
+      }
+    },
+    successfullyCreated () {
+      this.$nuxt.refresh()
+      this.$emit('spaze-created')
+      this.closeModal()
     }
   }
 }
@@ -150,7 +188,7 @@ export default {
     left: inherit;
     width: inherit;
     height: inherit;
-    background: rgba(0, 0, 0, 0.5);
+    // background: rgba(0, 0, 0, 0.5);
     opacity: 0;
     z-index: 5;
     transition: 250ms ease-out;
@@ -165,8 +203,8 @@ export default {
     }
     #modal-section {
       transition: 250ms 100ms ease-in;
-      transform: translateY(0);
       opacity: 1;
+      @include popInAnimation;
     }
   }
 }
@@ -188,7 +226,6 @@ export default {
   position: relative;
   width: 50rem;
   opacity: 0;
-  transform: translateY(2rem);
   z-index: 10;
   transition: 250ms ease-out;
   background-color: white;
@@ -210,6 +247,7 @@ export default {
 .input-field {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0.25rem 0;
   .label,
   .input {

@@ -3,12 +3,12 @@
 
     <Toaster />
 
-    <PopSpz />
+    <PopSpz @spaze-created="handleRefresh" />
 
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
 
-      <Nuxt />
+      <Nuxt :key="`spz-init-${key}`" />
 
     </section>
 
@@ -86,7 +86,8 @@ export default {
 
   data () {
     return {
-      tipsOpen: false
+      tipsOpen: false,
+      key: 0
     }
   },
 
@@ -137,6 +138,9 @@ export default {
       } else {
         this.setAudioContextPlayState(this.audioContextState)
       }
+    },
+    handleRefresh () {
+      this.key++
     }
   }
 }

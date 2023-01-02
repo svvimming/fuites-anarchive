@@ -39,8 +39,10 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }
       })
-      MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
-      console.log(`New portal opened: ${updated._id}`)
+      if (updated) {
+        MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+        console.log(`New portal opened: ${updated._id}`)
+      }
     }
   }
 }
@@ -116,5 +118,5 @@ const Tunneler = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-Tunneler()
+
 NodeCron.schedule('* * * * *', () => { Tunneler() })

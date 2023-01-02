@@ -78,10 +78,6 @@
       "form": {
         "traces": [
           {
-            "input": "breakfast",
-            "label": "breakfast"
-          },
-          {
             "input": "weather",
             "label": "weather"
           }
