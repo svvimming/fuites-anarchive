@@ -25,7 +25,7 @@ MC.app.post('/post-create-spaze', async (req, res) => {
     if (compostThingies.length) {
       const thingieToMove = compostThingies[Math.floor(Math.random() * compostThingies.length)]
       await MC.model.Thingie.findOneAndUpdate({ _id: thingieToMove._id }, {
-        location: body.spaze_name,
+        location: created.name,
         at: {
           x: 683 + Math.random() * 1266,
           y: 500 + Math.random() * 800,

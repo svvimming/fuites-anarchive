@@ -6,6 +6,12 @@
     @dragover.prevent
     @dragenter.prevent>
 
+    <Shader
+      id="compost-shader"
+      :image="irridescent"
+      :pulse="0.3"
+      :exposure="0.48" />
+
     <Thingie
       v-for="thingie in compostThingies"
       :key="thingie._id"
@@ -23,7 +29,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
-
+import Shader from '@/components/shader'
 // ====================================================================== Export
 export default {
   name: 'Compost',
@@ -31,7 +37,8 @@ export default {
   layout: 'spaze',
 
   components: {
-    Thingie
+    Thingie,
+    Shader
   },
 
   async fetch ({ app, store }) {
@@ -48,7 +55,12 @@ export default {
 
   data () {
     return {
-      socket: false
+      socket: false,
+      irridescent: {
+        src: '/portal/compost3.png',
+        width: 2004,
+        height: 1240
+      }
     }
   },
 
@@ -125,9 +137,18 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .compost {
   position: absolute;
+  left: calc(50vw - 683px);
   width: 1366px;
   height: 1000px;
-  overflow: hidden;
   z-index: 1;
+}
+
+#compost-shader {
+  position: absolute;
+  top: -7.5rem;
+  left: -18rem;
+  width: calc(100% + 15rem);
+  height: calc(100% + 15rem);
+  opacity: 0.5;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="super-container viewport">
+  <div :class="['super-container', 'viewport', { 'page-compost': !notCompostPage }]">
 
     <Toaster />
 
@@ -176,6 +176,9 @@ export default {
   position: relative;
   width: 100vw;
   height: 100vh;
+  &.page-compost {
+    overflow: hidden;
+  }
 }
 
 .spaze-container {
