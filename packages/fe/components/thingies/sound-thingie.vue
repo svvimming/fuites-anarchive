@@ -35,7 +35,7 @@
     <audio
       ref="audioElement"
       :loop="true"
-      src="/nooj.wav">
+      :src="`${$config.backendUrl}/${audio}.${filetype}`">
     </audio>
 
     <svg
@@ -59,7 +59,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Throttle from 'lodash/throttle'
-// `${$config.backendUrl}/${audio}.${filetype}`
+
 // =================================================================== Functions
 const calculateMouseDistance = (e, instance) => {
   const pos = instance.position
