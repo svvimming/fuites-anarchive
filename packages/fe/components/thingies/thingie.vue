@@ -35,13 +35,15 @@
       v-if="type === 'sound'"
       :audio="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
+      :last-gain="gain"
       :path="thingie.path_data"
       :editor="editing"
       :colors="thingie.colors"
       :position="position"
       :width="width"
       :stroke-width="strokeWidth"
-      @change-stroke-width="changePathStrokeWidth" />
+      @change-stroke-width="changePathStrokeWidth"
+      @change-sound-level="changeSoundLevel" />
 
   </div>
 </template>
@@ -146,6 +148,9 @@ export default {
     },
     strokeWidth () {
       return typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
+    },
+    gain () {
+      return this.thingie.gain ? this.thingie.gain : 1
     }
   },
 
@@ -315,6 +320,9 @@ export default {
         _id: this.thingie._id,
         stroke_width: stroke + increment
       })
+    },
+    changeSoundLevel (val) {
+      this.$emit('initupdate', { _id: this.thingie._id, gain: val })
     },
     handleKeydown (e) {
       e.preventDefault()
