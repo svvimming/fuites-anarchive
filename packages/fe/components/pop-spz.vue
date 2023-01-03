@@ -1,9 +1,7 @@
 <template>
   <div
     id="modal"
-    :class="{ active: modal }"
-    @click.self="closeModal"
-    @keyup.esc="closeModal">
+    :class="{ active: modal }">
 
     <section id="modal-section">
 

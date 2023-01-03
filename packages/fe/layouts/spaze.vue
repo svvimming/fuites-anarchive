@@ -45,7 +45,7 @@
     <Pocket />
 
     <button
-      v-if="authenticated"
+      v-if="authenticated && !modal"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
       pocket
@@ -55,7 +55,7 @@
     <CompostPortal v-if="notCompostPage" />
 
     <button
-      v-if="authenticated && notCompostPage"
+      v-if="authenticated && notCompostPage && !modal"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
       compost
@@ -109,7 +109,8 @@ export default {
       pocketIsOpen: 'pocket/pocketIsOpen',
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
-      compostPortalIsOpen: 'compost/compostPortalIsOpen'
+      compostPortalIsOpen: 'compost/compostPortalIsOpen',
+      modal: 'general/modal'
     }),
     links () {
       return LandingSiteData.portal.links

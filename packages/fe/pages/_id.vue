@@ -9,25 +9,6 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
-    <div
-      v-if="!spazeExists"
-      class="center-stage">
-      <template v-for="n in 2">
-        <Bingo
-          :text="proposition.error_message"
-          :font-size="24"
-          :custom="proposition.bingo"
-          class="error-message" />
-      </template>
-      <Button tag="button" @clicked="openNewSpazeModal">
-        <Bingo
-          :text="proposition.prompt"
-          :font-size="24"
-          :custom="proposition.bingo"
-          class="new-spaze" />
-      </Button>
-    </div>
-
     <PropBoard
       v-if="authenticated && spazeExists"
       ref="propboard"
@@ -178,6 +159,14 @@ export default {
     }
   },
 
+  watch: {
+    authenticated (val) {
+      if (val && !this.spazeExists) {
+        this.openNewSpazeModal()
+      }
+    }
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
@@ -305,15 +294,4 @@ export default {
   }
 }
 
-.center-stage {
-  position: absolute;
-  top: calc(50% - 4.5rem);
-  left: calc(50% - 17rem);
-  .new-spaze {
-    transform: translate(4rem, 4rem);
-    &:hover {
-      @include linkShadow;
-    }
-  }
-}
 </style>
