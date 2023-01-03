@@ -55,6 +55,12 @@ const initSpazeScrollPosition = (instance) => {
   }
 }
 
+const handleUndoCommand = (e, instance) => {
+  if ((e.key === 'z' || e.keyCode === 90) && e.metaKey) {
+    instance.initUpdate(instance.lastUpdate)
+  }
+}
+
 // ====================================================================== Export
 export default {
   name: 'SpazeIsThePlaze',
@@ -88,7 +94,10 @@ export default {
       editor: {
         x: 0,
         y: 0
-      }
+      },
+      keydown: false,
+      lastUpdate: false,
+      updateInterval: false
     }
   },
 
@@ -183,7 +192,13 @@ export default {
       this.spazeExists = false
     } else {
       this.$nextTick(() => { initSpazeScrollPosition(this) })
+      this.keydown = (e) => { handleUndoCommand(e, this) }
+      window.addEventListener('keydown', this.keydown)
     }
+  },
+
+  beforeDestroy () {
+    if (this.keydown) { window.removeEventListener('keydown', this.keydown )}
   },
 
   methods: {
@@ -217,6 +232,7 @@ export default {
     initUpdate (thingie) {
       thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
+      this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
       if (this.authenticated && this.spaze) {
@@ -272,6 +288,15 @@ export default {
             this.$router.push({ path: `/${created.name}` })
           })
         }
+      }
+    },
+    saveLastUpdate (thingie) {
+      if (!this.updateInterval) {
+        this.lastUpdate = thingie
+        this.updateInterval = true
+        setTimeout(() => {
+          this.updateInterval = false
+        }, 1500)
       }
     }
   }

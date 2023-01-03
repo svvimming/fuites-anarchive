@@ -63,27 +63,10 @@
       "br",
       "to edit a thingie, click on it while holding option",
       "in edit mode, a thingie can be rotated with ← and →, brought forward or sent backward with ↑ and ↓,\n or resized by making a pinch gesture while hovering over it",
-      "while editing, other options will appear to the right depending on the type of thingie"
-    ],
-    "new_spaze": {
-      "error_message": "this spaze doesn't exist yet",
-      "prompt": "create it?",
-      "bingo": {
-        "lsx": 20,
-        "lsy": 20,
-        "jx": 4,
-        "jy": 4,
-        "fsj": 6
-      },
-      "form": {
-        "traces": [
-          {
-            "input": "weather",
-            "label": "weather"
-          }
-        ]
-      }
-    }
+      "while editing, other options will appear to the right depending on the type of thingie",
+      "br",
+      "when audio is on, sound thingies can be heard by hovering over them with the mouse"
+    ]
   },
   "font_families": [
     "nanum",

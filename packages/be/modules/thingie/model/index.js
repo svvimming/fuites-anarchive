@@ -68,6 +68,11 @@ const ThingieSchema = new Schema({
     type: Number,
     required: true
   },
+  gain: {
+    type: Number,
+    required: false,
+    default: 1
+  },
   thingie_type: {
     type: String,
     required: true,

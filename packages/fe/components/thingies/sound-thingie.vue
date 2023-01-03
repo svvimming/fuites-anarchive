@@ -16,6 +16,20 @@
         @click="$emit('change-stroke-width', 'down')">
         ˅
       </button>
+      <button
+        v-if="audioContext"
+        type="button"
+        class="editor-button"
+        @click="changeGain('up')">
+        🔊
+      </button>
+      <button
+        v-if="audioContext"
+        type="button"
+        class="editor-button"
+        @click="changeGain('down')">
+        🔉
+      </button>
     </div>
 
     <audio
@@ -49,12 +63,13 @@ import Throttle from 'lodash/throttle'
 // =================================================================== Functions
 const calculateMouseDistance = (e, instance) => {
   const pos = instance.position
-  const deltaX = pos.x - e.clientX
-  const deltaY = pos.y - e.clientY
+  const hw = instance.width / 2
+  const deltaX = pos.x + hw - e.clientX - window.scrollX
+  const deltaY = pos.y + hw - e.clientY - window.scrollY
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-  const gain = Math.exp(-0.005 * distance)
-  instance.gainNode.gain.value = gain
-  instance.gain = gain
+  const amp = Math.exp(-0.005 * distance)
+  instance.gainNode.gain.value = amp * instance.gain
+  instance.amplitude = amp
 }
 
 // ====================================================================== Export
@@ -71,6 +86,11 @@ export default {
       type: String,
       required: true,
       default: ''
+    },
+    lastGain: {
+      type: Number,
+      required: false,
+      default: 1
     },
     path: {
       type: String,
@@ -94,6 +114,11 @@ export default {
         x: 0, y: 0
       })
     },
+    width: {
+      type: Number,
+      required: true,
+      default: 80
+    },
     strokeWidth: {
       type: Number,
       required: false,
@@ -107,7 +132,8 @@ export default {
       source: false,
       player: false,
       gainNode: false,
-      gain: 0
+      amplitude: 0,
+      gain: 1
     }
   },
 
@@ -134,7 +160,7 @@ export default {
       return this.strokeWidth
     },
     opacity () {
-      return this.playState === 'running' ? 0.5 + this.gain : 0.5
+      return this.playState === 'running' ? 0.4 + (this.amplitude * 0.6) : 0.4
     },
     styles () {
       return {
@@ -150,6 +176,10 @@ export default {
       if (val) {
         this.initSoundThingie()
       }
+    },
+    gain () {
+      this.gainNode.gain.value = this.amplitude * this.gain
+      this.$emit('change-sound-level', this.gain)
     }
   },
 
@@ -166,6 +196,7 @@ export default {
         this.source = this.audioContext.createMediaElementSource(this.player)
         this.gainNode = this.audioContext.createGain()
         this.gainNode.gain.value = 0
+        this.gain = this.lastGain
         this.source.connect(this.gainNode).connect(this.audioContext.destination)
         this.addSoundThingieListeners()
         this.player.play()
@@ -174,6 +205,14 @@ export default {
     addSoundThingieListeners () {
       this.mousemove = Throttle((e) => { calculateMouseDistance(e, this) }, 100)
       window.addEventListener('mousemove', (e) => { this.mousemove(e) })
+    },
+    changeGain (val) {
+      if (val === 'up') {
+        this.gain = Math.min(this.gain + 0.1, 3.0)
+      }
+      if (val === 'down') {
+        this.gain = Math.max(this.gain - 0.1, 0.1)
+      }
     }
   }
 }
@@ -188,11 +227,12 @@ export default {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: var(--path-opacity);
   .svg {
     pointer-events: none;
+    overflow: visible;
     width: 100%;
     height: 100%;
+    opacity: var(--path-opacity);
     path {
       stroke: var(--path-stroke-color);
       stroke-width: var(--path-stroke-width);
