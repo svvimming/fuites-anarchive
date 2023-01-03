@@ -55,6 +55,7 @@ const initializeCronJobs = async () => {
   require(`${MC.packageRoot}/crons/goa`)
   require(`${MC.packageRoot}/crons/tunneler`)
   require(`${MC.packageRoot}/crons/rezonator`)
+  require(`${MC.packageRoot}/crons/scavenger`)
 }
 
 initializeCronJobs()

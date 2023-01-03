@@ -6,11 +6,11 @@
     @dragover.prevent
     @dragenter.prevent>
 
-    <Shader
+    <!-- <Shader
       id="compost-shader"
       :image="irridescent"
       :pulse="0.3"
-      :exposure="0.48" />
+      :exposure="0.48" /> -->
 
     <Thingie
       v-for="thingie in compostThingies"

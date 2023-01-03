@@ -10,7 +10,6 @@
 
       <div
         class="compost-portal"
-        @click="handleClick($event)"
         @drop="onCompost($event)"
         @dragover.prevent
         @dragenter.prevent>
@@ -82,14 +81,14 @@ export default {
         },
         record_new_location: true
       })
-    },
+    }
     // async deleteThingie (id) {
     //   const deleted = await this.postDeleteThingie({ id })
     //   console.log(deleted)
     // },
-    handleClick (e) {
-      this.$router.push({ name: 'compost' })
-    }
+    // handleClick (e) {
+    //   this.$router.push({ name: 'compost' })
+    // }
   }
 }
 </script>
@@ -123,7 +122,7 @@ export default {
 }
 
 .compost-portal {
-  cursor: pointer;
+  // cursor: pointer;
   position: relative;
   height: 14rem;
   width: 22rem;

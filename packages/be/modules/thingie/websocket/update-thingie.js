@@ -36,6 +36,9 @@ MC.socket.listeners.push({
     let updated
     if (incoming.record_new_location) {
       delete incoming.record_new_location
+      if (incoming.location === 'compost') {
+        incoming.compostedAt = Date.now()
+      }
       updated = await thingieWithLocationHistory(incoming)
     } else {
       incoming.$inc = { update_count: 1 }

@@ -61,12 +61,12 @@
       compost
     </button>
 
-    <nuxt-link
+    <!-- <nuxt-link
       v-if="authenticated && !notCompostPage"
       :to="`/${prevRoute}`"
       class="toggle compost-portal-toggle">
       back
-    </nuxt-link>
+    </nuxt-link> -->
 
   </div>
 </template>
