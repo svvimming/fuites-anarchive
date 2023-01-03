@@ -35,7 +35,6 @@
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
-import Throttle from 'lodash/throttle'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
@@ -173,6 +172,10 @@ export default {
     this.$nextTick(() => { initSpazeScrollPosition(this) })
     this.keydown = (e) => { handleUndoCommand(e, this) }
     window.addEventListener('keydown', this.keydown)
+  },
+
+  beforeDestroy () {
+    if (this.keydown) { window.removeEventListener('keydown', this.keydown )}
   },
 
   methods: {
