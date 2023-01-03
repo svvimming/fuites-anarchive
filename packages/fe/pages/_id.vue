@@ -162,9 +162,6 @@ export default {
         '--spaze-var-field-width': `${this.spazeBounds.x}px`,
         '--spaze-var-field-height': `${this.spazeBounds.y}px`,
       }
-    },
-    proposition () {
-      return this.landing.data.portal.new_spaze
     }
   },
 

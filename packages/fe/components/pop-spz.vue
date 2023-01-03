@@ -97,9 +97,6 @@ export default {
       landing: 'general/landing',
       traces: 'rezonator/resonances'
     }),
-    popSpzData () {
-      return this.landing.data.portal.new_spaze
-    },
     newSpazeName () {
       return this.inputs[0].value
     }
