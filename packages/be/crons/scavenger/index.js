@@ -57,6 +57,7 @@ const deleteThingie = async (thingieId) => {
 // ------------------------------------------------------------------- Scavenger
 const Scavenger = async () => {
   const now = Date.now()
+  console.log(`Scavenger: ${now}`)
   const twoWeeks = 1000 * 60 * 60 * 24 * 14 // two weeks in milliseconds
   const twoWeeksAgo = new Date(now - twoWeeks)
   const compostThingies = await MC.model.Thingie.find({

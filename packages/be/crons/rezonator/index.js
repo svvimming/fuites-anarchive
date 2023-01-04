@@ -35,6 +35,8 @@ const countDuplicates = (array) => {
 // ------------------------------------------------------------------- Rezonator
 const Rezonator = async () => {
   try {
+    const now = Date.now()
+    console.log(`Rezonator: ${now}`)
     const pockets = await MC.model.Pocket
       .find({})
       .select('token')
@@ -48,9 +50,9 @@ const Rezonator = async () => {
       .find({})
       .select('file_ref consistencies location text')
       .populate({
-      path: 'file_ref',
-      select: 'filename'
-    })
+        path: 'file_ref',
+        select: 'filename'
+      })
     const pocketTraces = pockets.map((item) => {
       return item.token.split('-')
     }).flat()
