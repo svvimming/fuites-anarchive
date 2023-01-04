@@ -23,19 +23,18 @@
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
 
-// import Irridescence from '@/components/irridescence'
 import Shader from '@/components/shader'
 // ====================================================================== Export
 export default {
   name: 'CompostDropzone',
 
   components: {
-    // Irridescence
     Shader
   },
 
   data () {
     return {
+      socket: false,
       wormhole: {
         src: '/portal/compost-portal.png',
         width: 320 * 1.5,
@@ -46,7 +45,9 @@ export default {
 
   computed: {
     ...mapGetters({
-      compostPortalIsOpen: 'compost/compostPortalIsOpen'
+      compostPortalIsOpen: 'compost/compostPortalIsOpen',
+      thingies: 'collections/thingies',
+      pocket: 'pocket/pocket'
     })
   },
 
@@ -67,12 +68,27 @@ export default {
     onCompost (evt) {
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
-      this.deleteThingie (thingieId)
-    },
-    async deleteThingie (id) {
-      const deleted = await this.postDeleteThingie({ id })
-      console.log(deleted)
+      const thingie = this.thingies.find(obj => obj._id === thingieId)
+      this.socket.emit('update-thingie', {
+        _id: thingieId,
+        location: 'compost',
+        last_update_token: this.pocket.token,
+        dragging: false,
+        at: {
+          x: thingie.at.x - window.scrollX,
+          y: thingie.at.y - window.scrollY,
+          z: 1
+        },
+        record_new_location: true
+      })
     }
+    // async deleteThingie (id) {
+    //   const deleted = await this.postDeleteThingie({ id })
+    //   console.log(deleted)
+    // },
+    // handleClick (e) {
+    //   this.$router.push({ name: 'compost' })
+    // }
   }
 }
 </script>
@@ -106,6 +122,7 @@ export default {
 }
 
 .compost-portal {
+  // cursor: pointer;
   position: relative;
   height: 14rem;
   width: 22rem;

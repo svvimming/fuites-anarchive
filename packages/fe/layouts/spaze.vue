@@ -1,18 +1,23 @@
 <template>
-  <div class="super-container viewport">
+  <div :class="['super-container', 'viewport', { 'page-compost': !notCompostPage }]">
 
     <Toaster />
+
+    <PopSpz
+      v-if="notCompostPage"
+      @spaze-created="handleRefresh" />
 
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
 
-      <Nuxt />
+      <Nuxt :key="`spz-init-${key}`" />
 
     </section>
 
     <!-- ==================================================== PORTAL VIEW == -->
 
     <button
+      v-if="notCompostPage"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
       @click="togglePortals">
       portals
@@ -40,21 +45,28 @@
     <Pocket />
 
     <button
-      v-if="authenticated"
+      v-if="authenticated && !modal"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
       pocket
     </button>
 
     <!-- ======================================================== COMPOST == -->
-    <CompostPortal />
+    <CompostPortal v-if="notCompostPage" />
 
     <button
-      v-if="authenticated"
+      v-if="authenticated && notCompostPage && !modal"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
-      trash
+      compost
     </button>
+
+    <!-- <nuxt-link
+      v-if="authenticated && !notCompostPage"
+      :to="`/${prevRoute}`"
+      class="toggle compost-portal-toggle">
+      back
+    </nuxt-link> -->
 
   </div>
 </template>
@@ -67,7 +79,7 @@ import LandingSite from '@/components/landing-site'
 import Pocket from '@/modules/pocket/components/pocket'
 import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
-
+import PopSpz from '@/components/pop-spz'
 import LandingSiteData from '@/data/landing.json'
 
 // ====================================================================== Export
@@ -78,12 +90,15 @@ export default {
     LandingSite,
     Pocket,
     CompostPortal,
-    Toaster
+    Toaster,
+    PopSpz
   },
 
   data () {
     return {
-      tipsOpen: false
+      prevRoute: '',
+      tipsOpen: false,
+      key: 0
     }
   },
 
@@ -94,7 +109,8 @@ export default {
       pocketIsOpen: 'pocket/pocketIsOpen',
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
-      compostPortalIsOpen: 'compost/compostPortalIsOpen'
+      compostPortalIsOpen: 'compost/compostPortalIsOpen',
+      modal: 'general/modal'
     }),
     links () {
       return LandingSiteData.portal.links
@@ -105,6 +121,19 @@ export default {
     audioContextState () {
       if (this.audioContext) { return this.playState }
       return false
+    },
+    notCompostPage () {
+      return this.$route.name !== 'compost'
+    }
+  },
+
+  watch: {
+    '$route' (to, from) {
+      if (from.params.id) {
+        this.prevRoute = from.params.id
+      } else {
+        this.prevRoute = from.name
+      }
     }
   },
 
@@ -134,6 +163,9 @@ export default {
       } else {
         this.setAudioContextPlayState(this.audioContextState)
       }
+    },
+    handleRefresh () {
+      this.key++
     }
   }
 }
@@ -145,6 +177,9 @@ export default {
   position: relative;
   width: 100vw;
   height: 100vh;
+  &.page-compost {
+    overflow: hidden;
+  }
 }
 
 .spaze-container {

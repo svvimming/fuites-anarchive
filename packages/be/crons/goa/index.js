@@ -126,8 +126,6 @@ const ThingiePreaccelerator = async () => {
 // -----------------------------------------------------------------------------
 const GodessOfAnarchy = async () => {
   try {
-    const date = new Date()
-    console.log(`GOA: ${date}`)
     const spazes = await MC.model.Spaze.find({})
     const thingies = await MC.model.Thingie.find({}).populate({
       path: 'file_ref',

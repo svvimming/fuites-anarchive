@@ -52,6 +52,11 @@ const SpazeSchema = new Schema({
       required: false,
       default: 2000
     }
+  },
+  consistencies: {
+    type: [String],
+    required: false,
+    default: []
   }
 }, {
   timestamps: true,

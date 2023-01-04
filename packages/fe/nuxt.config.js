@@ -87,7 +87,8 @@ export default {
     '~/modules/pocket',
     '~/modules/compost',
     '~/modules/toaster',
-    '~/modules/mixer'
+    '~/modules/mixer',
+    '~/modules/rezonator'
   ],
   // /////////////////////////////////////////////////////////////////// Plugins
   // ---------------------------------------------------------------------------
