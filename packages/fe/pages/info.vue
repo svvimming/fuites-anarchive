@@ -115,6 +115,7 @@ export default {
 }
 
 :deep(.landing-site) {
+  position: absolute;
   left: calc(50% - #{math.div($containerWidth, 2)});
 }
 

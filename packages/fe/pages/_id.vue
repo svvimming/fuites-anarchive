@@ -1,7 +1,7 @@
 <template>
   <div
     ref="spz"
-    class="spz"
+    :class="['spz', {'non-existent': !spazeExists }]"
     :style="spazeStyles"
     @drop="onDrop($event)"
     @dragover.prevent
@@ -10,7 +10,7 @@
     @click.self="closeEditor($event)">
 
     <PropBoard
-      v-if="authenticated"
+      v-if="authenticated && spazeExists"
       ref="propboard"
       :spz="spazeName"
       :location="editor" />
@@ -39,6 +39,9 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import Portal from '@/components/portal'
+import Bingo from '@/components/bingo'
+import Button from '@/components/button'
+
 // =================================================================== Functions
 const initSpazeScrollPosition = (instance) => {
   if (instance.$refs.spz) {
@@ -52,6 +55,12 @@ const initSpazeScrollPosition = (instance) => {
   }
 }
 
+const handleUndoCommand = (e, instance) => {
+  if ((e.key === 'z' || e.keyCode === 90) && e.metaKey) {
+    instance.initUpdate(instance.lastUpdate)
+  }
+}
+
 // ====================================================================== Export
 export default {
   name: 'SpazeIsThePlaze',
@@ -61,7 +70,9 @@ export default {
   components: {
     PropBoard,
     Thingie,
-    Portal
+    Portal,
+    Bingo,
+    Button
   },
 
   async fetch ({ app, store }) {
@@ -74,6 +85,7 @@ export default {
     const name = this.$route.params.id
     return {
       spazeName: name,
+      spazeExists: true,
       socket: false,
       offset: {
         x: 0,
@@ -82,7 +94,10 @@ export default {
       editor: {
         x: 0,
         y: 0
-      }
+      },
+      keydown: false,
+      lastUpdate: false,
+      updateInterval: false
     }
   },
 
@@ -98,7 +113,9 @@ export default {
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
-      pocket: 'pocket/pocket'
+      landing: 'general/landing',
+      pocket: 'pocket/pocket',
+      modal: 'general/modal'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -148,6 +165,14 @@ export default {
     }
   },
 
+  watch: {
+    authenticated (val) {
+      if (val && !this.spazeExists) {
+        this.openNewSpazeModal()
+      }
+    }
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
@@ -160,7 +185,17 @@ export default {
         this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
       })
     })
-    this.$nextTick(() => { initSpazeScrollPosition(this) })
+    if (!this.spaze) {
+      this.spazeExists = false
+    } else {
+      this.$nextTick(() => { initSpazeScrollPosition(this) })
+      this.keydown = (e) => { handleUndoCommand(e, this) }
+      window.addEventListener('keydown', this.keydown)
+    }
+  },
+
+  beforeDestroy () {
+    if (this.keydown) { window.removeEventListener('keydown', this.keydown )}
   },
 
   methods: {
@@ -171,8 +206,12 @@ export default {
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',
-      updateSpaze: 'collections/updateSpaze'
+      updateSpaze: 'collections/updateSpaze',
+      setModal: 'general/setModal'
     }),
+    openNewSpazeModal () {
+      this.setModal(true)
+    },
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,
@@ -190,6 +229,7 @@ export default {
     initUpdate (thingie) {
       thingie.last_update_token = this.pocket.token
       this.socket.emit('update-thingie', thingie)
+      this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
       if (this.authenticated && this.spaze) {
@@ -212,7 +252,7 @@ export default {
       }
     },
     openEditor (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         this.editor = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
@@ -221,7 +261,7 @@ export default {
       }
     },
     closeEditor (evt) {
-      if (this.authenticated) {
+      if (this.authenticated && this.spaze) {
         if (!evt.altKey) {
           this.$refs.propboard.closeEditor()
         }
@@ -229,7 +269,7 @@ export default {
     },
     async createNewSpazeFromThingie (thingieId) {
       const complete = await this.postCreateSpaze({
-        incomingThingieId: thingieId,
+        creator_thingie: thingieId,
         overflow_spaze: this.spazeName
       })
       if (complete) {
@@ -246,6 +286,15 @@ export default {
           })
         }
       }
+    },
+    saveLastUpdate (thingie) {
+      if (!this.updateInterval) {
+        this.lastUpdate = thingie
+        this.updateInterval = true
+        setTimeout(() => {
+          this.updateInterval = false
+        }, 1500)
+      }
     }
   }
 }
@@ -261,5 +310,10 @@ export default {
   height: var(--spaze-var-field-height);
   overflow: hidden;
   z-index: 1;
+  &.non-existent {
+    width: 100vw !important;
+    height: 100vh !important;
+  }
 }
+
 </style>

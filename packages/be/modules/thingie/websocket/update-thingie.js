@@ -14,12 +14,11 @@ const thingieWithLocationHistory = async (incoming) => {
   const thingie = await MC.model.Thingie.findOne({ _id: incoming._id })
   const locations = thingie.last_locations ? thingie.last_locations : []
   const newVertex = {
-    location: incoming.location === 'pocket' ? thingie.location : incoming.location,
+    location: incoming.location === 'pocket' || incoming.location === 'compost' ? thingie.location : incoming.location,
     at: { x: thingie.at.x, y: thingie.at.y }
   }
-  const latest = !locations.length ? [newVertex] : newVertex.location === locations[0].location || newVertex.location === 'pocket' ? [] : [newVertex]
-  incoming.last_locations = latest.concat(locations).slice(0, 5)
-  // incoming.update_count = incoming.update_count + 1
+  const latest = !locations.length ? [newVertex] : newVertex.location === locations[0].location || newVertex.location === 'pocket' || incoming.location === 'compost' ? [] : [newVertex]
+  incoming.last_locations = latest.concat(locations).slice(0, 5).filter(item => item.location !== 'pocket' && item.location !== 'compost')
   Object.entries(incoming).forEach(([key, value]) => { thingie[key] = value })
   const updated = await thingie.save()
   await updated.populate({
@@ -37,6 +36,9 @@ MC.socket.listeners.push({
     let updated
     if (incoming.record_new_location) {
       delete incoming.record_new_location
+      if (incoming.location === 'compost') {
+        incoming.compostedAt = Date.now()
+      }
       updated = await thingieWithLocationHistory(incoming)
     } else {
       incoming.$inc = { update_count: 1 }

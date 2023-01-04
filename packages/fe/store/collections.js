@@ -68,18 +68,21 @@ const actions = {
   // /////////////////////////////////////////////////////////// postCreateSpaze
   async postCreateSpaze ({ dispatch, getters, rootGetters }, payload) {
     try {
-      const incomingThingieId = payload.incomingThingieId
-      const thingie = getters.thingies.find(obj => obj._id === incomingThingieId)
+      const thingie = getters.thingies.find(obj => obj._id === payload.creator_thingie)
       const existingSpazes = getters.spazes.map(spaze => spaze.name)
-      const spazeName = getNewSpazeName(thingie.consistencies)
+      const spazeName = payload.spaze_name ? payload.spaze_name : getNewSpazeName(thingie.consistencies)
       if (spazeName && !existingSpazes.includes(spazeName)) {
         const pocket = rootGetters['pocket/pocket']
+        const props = ['overflow_spaze', 'creator_thingie']
         const data = {
           spaze_name: spazeName,
-          overflow_spaze: payload.overflow_spaze,
-          session_token: pocket.token,
-          creator_thingie: incomingThingieId
+          session_token: pocket.token
         }
+        props.forEach((prop) => {
+          if (payload.hasOwnProperty(prop)) {
+            data[prop] = payload[prop]
+          }
+        })
         const response = await this.$axiosAuth.post('/post-create-spaze', data)
         return response.data.payload
       }
