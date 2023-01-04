@@ -202,8 +202,8 @@ const GetThingieConsistencies = async (thingie, upload) => {
     try {
       const recentThingies = await MC.model.Thingie.find({ last_update_token: thingie.creator_token, thingie_type: ['image', 'text'] })
       if (recentThingies.length) {
-        const recent = recentThingies[0]
-        const color = recent.colors[0]
+        const recent = recentThingies[Math.floor(Math.random() * recentThingies.length)]
+        const color = recent.colors[Math.floor(Math.random() * recent.colors.length)]
         const updated = await MC.model.Thingie.findOneAndUpdate(
           { _id: thingie._id },
           { colors: [color] },
