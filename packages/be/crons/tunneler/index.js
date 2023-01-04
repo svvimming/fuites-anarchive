@@ -98,7 +98,8 @@ const Tunneler = async () => {
           const vB = locations[j + 1]
           const portalName = `${vA.location}_${vB.location}`
           const portalExists = portals.some(portal => portal.edge === portalName)
-          if (!portalExists) {
+          const notPocketOrCompost = vA.location !== 'pocket' && vB.location !== 'pocket' && vA.location !== 'compost' && vB.location !== 'compost'
+          if (!portalExists && notPocketOrCompost) {
             createNewPortal(thingie._id, portalName, [vA, vB])
           }
         }
