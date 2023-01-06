@@ -1,6 +1,6 @@
 /**
  *
- * ⏱️️ [Cron | every hour]
+ * ⏱️️ [Cron | every day]
  * Kleptobot moves thingies from leaking spaces to
  * new spazes based on their preacceleration
  *
@@ -46,11 +46,15 @@ require('@Module_Thingie')
 require('@Module_Spaze')
 require('@Module_Portal')
 
-// const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
+const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
 
 // ////////////////////////////////////////////////////////////////// Initialize
 MC.app = Express()
-// const socket = GenerateWebsocketClient()
+
+const socket = GenerateWebsocketClient()
+
+// ===================================================================== connect
+socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- thingieMigrator
@@ -90,9 +94,8 @@ const thingieMigrator = async () => {
         }
       }
       if (migrations.length) {
-        console.log(migrations)
         for (let j = 0; j < migrations.length; j++) {
-          MC.socket.io.to('cron|goa').emit('module|kleptobot-migrate-thingie|payload', migrations[j])
+          socket.emit('cron|migrate-thingie|initialize', migrations[j])
         }
       }
     }
@@ -108,7 +111,8 @@ MC.app.on('mongoose-connected', async () => {
   console.log('🤖️ Kleptobot started')
   try {
     await thingieMigrator()
-    console.log('🤖️ Kleptobot thingies stolen')
+    socket.disconnect()
+    console.log('🤖️ Kleptobot finished')
     process.exit(0)
   } catch (e) {
     console.log('=========================================== [Cron: Kleptobot]')
