@@ -84,7 +84,7 @@ export default {
     },
     compostBounds () {
       return this.compost && this.compost.bounds ? this.compost.bounds : { x: 2732, y: 2000 }
-    },
+    }
   },
 
   async mounted () {

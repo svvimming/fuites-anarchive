@@ -52,7 +52,7 @@
     </button>
 
     <!-- ======================================================== COMPOST == -->
-    <CompostPortal v-if="notCompostPage" />
+    <CompostPortal />
 
     <button
       v-if="authenticated && notCompostPage && !modal"
@@ -133,6 +133,11 @@ export default {
         this.prevRoute = from.params.id
       } else {
         this.prevRoute = from.name
+      }
+    },
+    notCompostPage (val) {
+      if (!val && this.compostPortalIsOpen) {
+        this.toggleCompostPortal()
       }
     }
   },

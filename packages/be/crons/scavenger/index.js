@@ -8,67 +8,112 @@ console.log('🪱️ [cron] Scavenger')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
+const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
+const Express = require('express')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
 
 const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
 
+// ///////////////////////////////////////////////////////////////////// Aliases
+ModuleAlias.addAliases({
+  '@Root': MC.packageRoot,
+  '@Static': `${MC.packageRoot}/static`,
+  '@Public': `${MC.packageRoot}/public`,
+  '@Cache': `${MC.packageRoot}/cache`,
+  '@Modules': `${MC.packageRoot}/modules`
+})
+
+try {
+  const modulesRoot = `${MC.packageRoot}/modules`
+  const items = Fs.readdirSync(modulesRoot)
+  items.forEach((name) => {
+    const path = `${modulesRoot}/${name}`
+    if (Fs.statSync(path).isDirectory()) {
+      const moduleName = (name[0].toUpperCase() + name.substring(1)).replace(/-./g, x => x[1].toUpperCase())
+      ModuleAlias.addAlias(`@Module_${moduleName}`, path)
+    }
+  })
+} catch (e) {
+  console.log(e)
+}
+
+// ///////////////////////////////////////////////////////////////////// Modules
+require('@Module_Database')
+require('@Module_Thingie')
+require('@Module_Uploader')
+
+const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
+
+// ////////////////////////////////////////////////////////////////// Initialize
+// -----------------------------------------------------------------------------
+MC.app = Express()
+
+const socket = GenerateWebsocketClient()
+
+// ===================================================================== connect
+socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
+
 // /////////////////////////////////////////////////////////////////// Functions
 // --------------------------------------------------------------- deleteThingie
 const deleteThingie = async (thingieId) => {
   try {
-    const thingie = await MC.model.Thingie.findById(thingieId)
+    const thingie = await MC.model.Thingie
+      .findById(thingieId)
+      .populate({
+        path: 'file_ref',
+        select: '_id file_ext'
+      })
     if (!thingie) {
       throw new Error('File does not exist!')
     }
-    if (thingie.thingie_type !== 'text') {
-      const fileId = thingie.file_ref
-      const upload = await MC.model.Upload.findById(fileId)
-      const fileExt = upload.file_ext
-      if (!upload) {
-        throw new Error('File does not exist!')
-      }
-      const deletedUpload = await MC.model.Upload.deleteOne(upload)
-      const deletedThingie = await MC.model.Thingie.deleteOne(thingie)
-      console.log(deletedUpload)
-      console.log(deletedThingie)
-      Fs.unlink(`${UPLOADS_DIR}/${fileId}.${fileExt}`, (err) => {
+    if (thingie.file_ref) {
+      const upload = thingie.file_ref
+      await MC.model.Upload.deleteOne({ _id: upload._id })
+      Fs.unlink(`${UPLOADS_DIR}/${upload._id}.${upload.file_ext}`, (err) => {
         if (err) {
           console.log(err)
         } else {
-          console.log(`deleted ${fileId}.${fileExt}`)
+          console.log(`deleted ${upload._id}.${upload.file_ext}`)
         }
       })
-    } else {
-      const deletedTextThingie = await MC.model.Thingie.deleteOne(thingie)
-      console.log(deletedTextThingie)
     }
-    console.log(`deleted file ${thingieId}`)
-    MC.socket.io.to('thingies').emit('module|post-delete-thingie|payload', thingieId)
+    const deleted = await MC.model.Thingie.deleteOne({ _id: thingie._id })
+    if (deleted) {
+      socket.emit('cron|digest-compost-thingie|initialize', thingie._id)
+      console.log(`deleted thingie ${thingie._id}`)
+    }
   } catch (e) {
-    console.log('================================ [Scavenger: /delete-thingie]')
+    console.log('================================== [Scavenger: deleteThingie]')
     console.log(e)
   }
 }
 
 // ------------------------------------------------------- digestCompostThingies
 const digestCompostThingies = async () => {
-  const now = Date.now()
-  const twoWeeks = 1000 * 60 * 60 * 24 * 14 // two weeks in milliseconds
-  const twoWeeksAgo = new Date(now - twoWeeks)
-  const compostThingies = await MC.model.Thingie.find({
-    location: 'compost',
-    $or: [
-      { compostedAt: { $lt: twoWeeksAgo } },
-      { updatedAt: { $lt: twoWeeksAgo } }
-    ]
-  })
-  const len = compostThingies.length
-  for (let i = 0; i < len; i++) {
-    const thingie = compostThingies[i]
-    deleteThingie(thingie._id)
+  try {
+    const now = Date.now()
+    const twoWeeks = 1000 * 60 * 60 * 24 * 14 // two weeks in milliseconds
+    const twoWeeksAgo = new Date(now - twoWeeks)
+    const compostThingies = await MC.model.Thingie.find({
+      location: 'compost',
+      $or: [
+        { compostedAt: { $lt: twoWeeksAgo } },
+        { updatedAt: { $lt: twoWeeksAgo } }
+      ]
+    })
+    const len = compostThingies.length
+    for (let i = 0; i < len; i++) {
+      const thingie = compostThingies[i]
+      console.log(thingie)
+      await deleteThingie(thingie._id)
+    }
+  } catch (e) {
+    console.log('========================== [Scavenger: digestCompostThingies]')
+    console.log(e)
   }
 }
 
@@ -79,6 +124,7 @@ MC.app.on('mongoose-connected', async () => {
   try {
     await digestCompostThingies()
     console.log('🪱 Scavenger updates completed')
+    socket.disconnect()
     process.exit(0)
   } catch (e) {
     console.log('=========================================== [Cron: Scavenger]')

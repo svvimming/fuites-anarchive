@@ -9,7 +9,48 @@ console.log('🤖️ [cron] Kleptobot')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
+const ModuleAlias = require('module-alias')
+const Path = require('path')
+const Fs = require('fs-extra')
+const Express = require('express')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
+
 const MC = require('../../config')
+
+// ///////////////////////////////////////////////////////////////////// Aliases
+ModuleAlias.addAliases({
+  '@Root': MC.packageRoot,
+  '@Static': `${MC.packageRoot}/static`,
+  '@Public': `${MC.packageRoot}/public`,
+  '@Cache': `${MC.packageRoot}/cache`,
+  '@Modules': `${MC.packageRoot}/modules`
+})
+
+try {
+  const modulesRoot = `${MC.packageRoot}/modules`
+  const items = Fs.readdirSync(modulesRoot)
+  items.forEach((name) => {
+    const path = `${modulesRoot}/${name}`
+    if (Fs.statSync(path).isDirectory()) {
+      const moduleName = (name[0].toUpperCase() + name.substring(1)).replace(/-./g, x => x[1].toUpperCase())
+      ModuleAlias.addAlias(`@Module_${moduleName}`, path)
+    }
+  })
+} catch (e) {
+  console.log(e)
+}
+
+// ///////////////////////////////////////////////////////////////////// Modules
+require('@Module_Database')
+require('@Module_Thingie')
+require('@Module_Spaze')
+require('@Module_Portal')
+
+// const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
+
+// ////////////////////////////////////////////////////////////////// Initialize
+MC.app = Express()
+// const socket = GenerateWebsocketClient()
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- thingieMigrator

@@ -7,7 +7,53 @@ console.log('🚇 [cron] Tunneler')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
+const ModuleAlias = require('module-alias')
+const Path = require('path')
+const Fs = require('fs-extra')
+const Express = require('express')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
+
 const MC = require('../../config')
+
+// ///////////////////////////////////////////////////////////////////// Aliases
+ModuleAlias.addAliases({
+  '@Root': MC.packageRoot,
+  '@Static': `${MC.packageRoot}/static`,
+  '@Public': `${MC.packageRoot}/public`,
+  '@Cache': `${MC.packageRoot}/cache`,
+  '@Modules': `${MC.packageRoot}/modules`
+})
+
+try {
+  const modulesRoot = `${MC.packageRoot}/modules`
+  const items = Fs.readdirSync(modulesRoot)
+  items.forEach((name) => {
+    const path = `${modulesRoot}/${name}`
+    if (Fs.statSync(path).isDirectory()) {
+      const moduleName = (name[0].toUpperCase() + name.substring(1)).replace(/-./g, x => x[1].toUpperCase())
+      ModuleAlias.addAlias(`@Module_${moduleName}`, path)
+    }
+  })
+} catch (e) {
+  console.log(e)
+}
+
+// ///////////////////////////////////////////////////////////////////// Modules
+require('@Module_Database')
+require('@Module_Thingie')
+require('@Module_Spaze')
+require('@Module_Portal')
+
+const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
+
+// ////////////////////////////////////////////////////////////////// Initialize
+// -----------------------------------------------------------------------------
+MC.app = Express()
+
+const socket = GenerateWebsocketClient()
+
+// ===================================================================== connect
+socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- createNewPortal
@@ -29,6 +75,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
       vertices: { a: vertices[0], b: vertices[1] }
     })
     if (created) {
+      console.log(`New portal opened between ${created.edge.replace('_', ' and ')}.`)
       for (let i = 0; i < vertices.length; i++) {
         const updated = await MC.model.Spaze.findOneAndUpdate(
           { name: vertices[i].location },
@@ -39,8 +86,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
           populate: { path: 'thingie_ref', select: 'colors' }
         })
         if (updated) {
-          MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
-          console.log(`New portal opened: ${updated._id}`)
+          socket.emit('cron|spaze-portals-changed|initialize', updated)
         }
       }
     }
@@ -64,7 +110,7 @@ const closePortal = async (incoming) => {
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }
       })
-      MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+      socket.emit('cron|spaze-portals-changed|initialize', updated)
     }
     const closed = await MC.model.Portal.deleteOne({ id: portal._id })
     console.log(`Portal closed: ${closed}`)
@@ -137,6 +183,7 @@ MC.app.on('mongoose-connected', async () => {
   try {
     await updatePortalsBetweenSpazes()
     console.log('🚇 Tunneler updates completed')
+    socket.disconnect()
     process.exit(0)
   } catch (e) {
     console.log('===================================== [Cron: GodessOfAnarchy]')
