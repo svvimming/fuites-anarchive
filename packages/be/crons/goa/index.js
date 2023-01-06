@@ -5,73 +5,16 @@
  * accesses/changes spaze states as well as
  * thingie propensities to leave a leaking space.
  *
- * ⏱️️ [Cron | every hour]
- * GOA migrator moves thingies from leaking spaces to
- * new spazes based on their preacceleration
- *
  */
-console.log('⏱️️  [cron] GOA')
+console.log('🔱 [cron] GOA')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
-const NodeCron = require('node-cron')
-
 const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
-// ------------------------------------------------------------- ThingieMigrator
-const GOAThingieMigrator = async () => {
-  try {
-    const date = new Date()
-    console.log(`GOA - migrator: ${date}`)
-    const leaking = await MC.model.Spaze
-      .find({ state: 'leaking' })
-      .populate({
-        path: 'portal_refs',
-        populate: { path: 'thingie_ref' }
-      })
-    if (leaking.length) {
-      const migrations = []
-      for (let i = 0; i < leaking.length; i++) {
-        const spaze = leaking[i]
-        const thingies = await MC.model.Thingie.find({ location: spaze.name }).sort({ preacceleration: 'desc' })
-        if (thingies.length) {
-          const overflow = await MC.model.Spaze.findOne({ overflow_spaze: spaze.name })
-          let newSpazeLocation = ''
-          if (overflow) {
-            newSpazeLocation = overflow.name
-          } else if (spaze.portal_refs.length) {
-            const portal = spaze.portal_refs[0]
-            const connection = portal.edge.split('_').find(name => name !== spaze.name)
-            if (connection) {
-              newSpazeLocation = connection
-            }
-          }
-          if (newSpazeLocation) {
-            migrations.push({
-              _id: thingies[0]._id,
-              location: newSpazeLocation,
-              last_update_token: 'godess-of-anarchy',
-              record_new_location: true
-            })
-          }
-        }
-      }
-      if (migrations.length) {
-        console.log(migrations)
-        for (let j = 0; j < migrations.length; j++) {
-          MC.socket.io.to('cron|goa').emit('module|goa-migrate-thingie|payload', migrations[j])
-        }
-      }
-    }
-  } catch (e) {
-    console.log('=============== [Function: GodessOfAnarchy - ThingieMigrator]')
-    console.log(e)
-  }
-}
-
 // ------------------------------------------------------- ThingiePreaccelerator
-const ThingiePreaccelerator = async () => {
+const thingiePreaccelerator = async () => {
   try {
     const spazes = await MC.model.Spaze.find({})
     for (let i = 0; i < spazes.length; i++) {
@@ -117,14 +60,14 @@ const ThingiePreaccelerator = async () => {
       }
     }
   } catch (e) {
-    console.log('========= [Function: GodessOfAnarchy - ThingiePreaccelerator]')
+    console.log('========= [Function: GodessOfAnarchy - thingiePreaccelerator]')
     console.log(e)
   }
 }
 
 // ///////////////////////////////////////////////////////////////////////// GOA
 // -----------------------------------------------------------------------------
-const GodessOfAnarchy = async () => {
+const spazePreaccelerator = async () => {
   try {
     const spazes = await MC.model.Spaze.find({})
     const thingies = await MC.model.Thingie.find({}).populate({
@@ -159,15 +102,24 @@ const GodessOfAnarchy = async () => {
         MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
       }
     }
-    ThingiePreaccelerator()
   } catch (e) {
-    console.log('================================= [Function: GodessOfAnarchy]')
+    console.log('============================= [Function: spazePreaccelerator]')
     console.log(e)
   }
 }
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
-NodeCron.schedule('*/5 * * * *', () => { GodessOfAnarchy() })
-NodeCron.schedule('0 */1 * * *', () => { GOAThingieMigrator() })
+MC.app.on('mongoose-connected', async () => {
+  console.log('🔱 Godess Of Anarchy started')
+  try {
+    await spazePreaccelerator()
+    await thingiePreaccelerator()
+    console.log('🔱 GOA updates completed')
+    process.exit(0)
+  } catch (e) {
+    console.log('===================================== [Cron: GodessOfAnarchy]')
+    console.log(e)
+    process.exit(0)
+  }
+})
