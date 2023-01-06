@@ -139,7 +139,7 @@ export default {
               name: connection.edge,
               slug: vertices.b.location,
               at: vertices.a.at,
-              colors: connection.thingie_ref.colors
+              colors: connection.thingie_ref ? connection.thingie_ref.colors : []
             })
           }
           if (vertices.b.location === this.spazeName) {
@@ -147,7 +147,7 @@ export default {
               name: connection.edge,
               slug: vertices.a.location,
               at: vertices.b.at,
-              colors: connection.thingie_ref.colors
+              colors: connection.thingie_ref ? connection.thingie_ref.colors : []
             })
           }
         })
@@ -182,7 +182,9 @@ export default {
       })
       const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
       socketEvents.forEach((message) => {
-        this.socket.on(message, (spaze) => { this.updateSpaze(spaze) })
+        this.socket.on(message, (spaze) => {
+          this.updateSpaze(spaze)
+        })
       })
     })
     if (!this.spaze) {

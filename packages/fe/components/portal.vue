@@ -72,6 +72,8 @@ export default {
   --portal-hover-ring: #ffffff;
   position: absolute;
   z-index: 10000;
+  user-select: none;
+  -webkit-user-drag: none;
   .portal-thingie {
     &:before {
       background-color: var(--portal-hover-ring);

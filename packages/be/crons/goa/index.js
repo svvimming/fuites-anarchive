@@ -10,7 +10,54 @@ console.log('🔱 [cron] GOA')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
+const ModuleAlias = require('module-alias')
+const Path = require('path')
+const Fs = require('fs-extra')
+const Express = require('express')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
+
 const MC = require('../../config')
+
+// ///////////////////////////////////////////////////////////////////// Aliases
+ModuleAlias.addAliases({
+  '@Root': MC.packageRoot,
+  '@Static': `${MC.packageRoot}/static`,
+  '@Public': `${MC.packageRoot}/public`,
+  '@Cache': `${MC.packageRoot}/cache`,
+  '@Modules': `${MC.packageRoot}/modules`
+})
+
+try {
+  const modulesRoot = `${MC.packageRoot}/modules`
+  const items = Fs.readdirSync(modulesRoot)
+  items.forEach((name) => {
+    const path = `${modulesRoot}/${name}`
+    if (Fs.statSync(path).isDirectory()) {
+      const moduleName = (name[0].toUpperCase() + name.substring(1)).replace(/-./g, x => x[1].toUpperCase())
+      ModuleAlias.addAlias(`@Module_${moduleName}`, path)
+    }
+  })
+} catch (e) {
+  console.log(e)
+}
+
+// ///////////////////////////////////////////////////////////////////// Modules
+require('@Module_Database')
+require('@Module_Thingie')
+require('@Module_Spaze')
+require('@Module_Uploader')
+require('@Module_Portal')
+
+const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
+
+// ////////////////////////////////////////////////////////////////// Initialize
+// -----------------------------------------------------------------------------
+MC.app = Express()
+
+const socket = GenerateWebsocketClient()
+
+// ===================================================================== connect
+socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------- ThingiePreaccelerator
@@ -91,7 +138,7 @@ const spazePreaccelerator = async () => {
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
+        socket.emit('cron|spaze-state-update|initialize', updated)
       } else if (totalBytes <= 16666667 && spazeThingies.length <= 40 && spaze.state === 'leaking') { // change spaze state to clumping
         const updated = await MC.model.Spaze
           .findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
@@ -99,7 +146,7 @@ const spazePreaccelerator = async () => {
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
+        socket.emit('cron|spaze-state-update|initialize', updated)
       }
     }
   } catch (e) {
@@ -115,6 +162,7 @@ MC.app.on('mongoose-connected', async () => {
   try {
     await spazePreaccelerator()
     await thingiePreaccelerator()
+    socket.disconnect()
     console.log('🔱 GOA updates completed')
     process.exit(0)
   } catch (e) {
