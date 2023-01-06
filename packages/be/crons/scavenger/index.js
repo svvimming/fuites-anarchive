@@ -4,13 +4,12 @@
  * digests thingies in the compost
  *
  */
-console.log('⏱️️  [cron] Scavenger')
+console.log('🪱️ [cron] Scavenger')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
 const Path = require('path')
 const Fs = require('fs-extra')
-const NodeCron = require('node-cron')
 
 const MC = require('../../config')
 
@@ -54,10 +53,9 @@ const deleteThingie = async (thingieId) => {
   }
 }
 
-// ------------------------------------------------------------------- Scavenger
-const Scavenger = async () => {
+// ------------------------------------------------------- digestCompostThingies
+const digestCompostThingies = async () => {
   const now = Date.now()
-  console.log(`Scavenger: ${now}`)
   const twoWeeks = 1000 * 60 * 60 * 24 * 14 // two weeks in milliseconds
   const twoWeeksAgo = new Date(now - twoWeeks)
   const compostThingies = await MC.model.Thingie.find({
@@ -76,5 +74,15 @@ const Scavenger = async () => {
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
-NodeCron.schedule('0 0 * * *', () => { Scavenger() })
+MC.app.on('mongoose-connected', async () => {
+  console.log('🪱 Scavenger started')
+  try {
+    await digestCompostThingies()
+    console.log('🪱 Scavenger updates completed')
+    process.exit(0)
+  } catch (e) {
+    console.log('=========================================== [Cron: Scavenger]')
+    console.log(e)
+    process.exit(0)
+  }
+})

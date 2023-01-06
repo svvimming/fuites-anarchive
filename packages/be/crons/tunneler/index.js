@@ -3,86 +3,99 @@
  * ⏱️️ [Cron | every minute] Tunneler creates portals between past thingie locations
  *
  */
-console.log('⏱️️  [cron] Tunneler')
+console.log('🚇 [cron] Tunneler')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
-const NodeCron = require('node-cron')
-
 const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- createNewPortal
 const createNewPortal = async (thingieId, portalName, vertices) => {
-  for (let i = 0; i < vertices.length; i++) {
-    const vertex = vertices[i]
-    if (!vertex.hasOwnProperty('at')) {
-      const thingie = await MC.model.Thingie.findById(thingieId)
-      vertex.at = {
-        x: thingie.at.x + (Math.floor(Math.random() * thingie.width)),
-        y: thingie.at.y + (Math.floor(Math.random() * 20))
-      }
-    }
-  }
-  const created = await MC.model.Portal.create({
-    thingie_ref: thingieId,
-    edge: portalName,
-    vertices: { a: vertices[0], b: vertices[1] }
-  })
-  if (created) {
+  try {
     for (let i = 0; i < vertices.length; i++) {
-      const updated = await MC.model.Spaze.findOneAndUpdate(
-        { name: vertices[i].location },
-        { $push: { portal_refs: created._id } },
-        { new: true }
-      ).populate({
-        path: 'portal_refs',
-        populate: { path: 'thingie_ref', select: 'colors' }
-      })
-      if (updated) {
-        MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
-        console.log(`New portal opened: ${updated._id}`)
+      const vertex = vertices[i]
+      if (!vertex.hasOwnProperty('at')) {
+        const thingie = await MC.model.Thingie.findById(thingieId)
+        vertex.at = {
+          x: thingie.at.x + (Math.floor(Math.random() * thingie.width)),
+          y: thingie.at.y + (Math.floor(Math.random() * 20))
+        }
       }
     }
+    const created = await MC.model.Portal.create({
+      thingie_ref: thingieId,
+      edge: portalName,
+      vertices: { a: vertices[0], b: vertices[1] }
+    })
+    if (created) {
+      for (let i = 0; i < vertices.length; i++) {
+        const updated = await MC.model.Spaze.findOneAndUpdate(
+          { name: vertices[i].location },
+          { $push: { portal_refs: created._id } },
+          { new: true }
+        ).populate({
+          path: 'portal_refs',
+          populate: { path: 'thingie_ref', select: 'colors' }
+        })
+        if (updated) {
+          MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+          console.log(`New portal opened: ${updated._id}`)
+        }
+      }
+    }
+  } catch (e) {
+    console.log('================================= [Function: createNewPortal]')
+    console.log(e)
   }
 }
 
 // ----------------------------------------------------------------- closePortal
 const closePortal = async (incoming) => {
-  const portal = await MC.model.Portal.findById(incoming._id)
-  const vertices = [portal.vertices.a, portal.vertices.b]
-  for (let i = 0; i < vertices.length; i++) {
-    const updated = await MC.model.Spaze.findOneAndUpdate(
-      { name: vertices[i].location },
-      { $pull: { portal_refs: portal._id } },
-      { new: true }
-    ).populate({
-      path: 'portal_refs',
-      populate: { path: 'thingie_ref', select: 'colors' }
-    })
-    MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+  try {
+    const portal = await MC.model.Portal.findById(incoming._id)
+    const vertices = [portal.vertices.a, portal.vertices.b]
+    for (let i = 0; i < vertices.length; i++) {
+      const updated = await MC.model.Spaze.findOneAndUpdate(
+        { name: vertices[i].location },
+        { $pull: { portal_refs: portal._id } },
+        { new: true }
+      ).populate({
+        path: 'portal_refs',
+        populate: { path: 'thingie_ref', select: 'colors' }
+      })
+      MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+    }
+    const closed = await MC.model.Portal.deleteOne({ id: portal._id })
+    console.log(`Portal closed: ${closed}`)
+  } catch (e) {
+    console.log('===================================== [Function: closePortal]')
+    console.log(e)
   }
-  const closed = await MC.model.Portal.deleteOne({ id: portal._id })
-  console.log(`Portal closed: ${closed}`)
 }
 
 // ---------------------------------------------------- checkPortalThingiesExist
 const checkPortalThingiesExist = async () => {
-  const allPortals = await MC.model.Portal.find({})
-  const portalsMissingThingies = []
-  for (let i = 0; i < allPortals.length; i++) {
-    const hasThingieRef = await MC.model.Thingie.exists({ _id: allPortals[i].thingie_ref })
-    if (!hasThingieRef) {
-      portalsMissingThingies.push(allPortals[i]._id)
+  try {
+    const allPortals = await MC.model.Portal.find({})
+    const portalsMissingThingies = []
+    for (let i = 0; i < allPortals.length; i++) {
+      const hasThingieRef = await MC.model.Thingie.exists({ _id: allPortals[i].thingie_ref })
+      if (!hasThingieRef) {
+        portalsMissingThingies.push(allPortals[i]._id)
+      }
     }
-  }
-  for (let j = 0; j < portalsMissingThingies.length; j++) {
-    await closePortal(portalsMissingThingies[j])
+    for (let j = 0; j < portalsMissingThingies.length; j++) {
+      await closePortal(portalsMissingThingies[j])
+    }
+  } catch (e) {
+    console.log('======================== [Function: checkPortalThingiesExist]')
+    console.log(e)
   }
 }
 
-// -------------------------------------------------------------------- Tunneler
-const Tunneler = async () => {
+// -------------------------------------------------- updatePortalsBetweenSpazes
+const updatePortalsBetweenSpazes = async () => {
   try {
     await checkPortalThingiesExist()
     const thingies = await MC.model.Thingie.find({})
@@ -112,12 +125,22 @@ const Tunneler = async () => {
       }
     }
   } catch (e) {
-    console.log('======================================== [Function: Tunneler]')
+    console.log('====================== [Function: updatePortalsBetweenSpazes]')
     console.log(e)
   }
 }
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
-NodeCron.schedule('* * * * *', () => { Tunneler() })
+MC.app.on('mongoose-connected', async () => {
+  console.log('🚇 Tunneler started')
+  try {
+    await updatePortalsBetweenSpazes()
+    console.log('🚇 Tunneler updates completed')
+    process.exit(0)
+  } catch (e) {
+    console.log('===================================== [Cron: GodessOfAnarchy]')
+    console.log(e)
+    process.exit(0)
+  }
+})

@@ -1,15 +1,13 @@
 /**
  *
- * ⏱️️ [Cron | every day]
+ * ⏱️️ [Cron | every day at noon]
  * Rezonator looks for tiny resonances throughout the site and saves them as traces
  *
  */
-console.log('⏱️️  [cron] Rezonator')
+console.log('🌀️ [cron] Rezonator')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
-const NodeCron = require('node-cron')
-
 const MC = require('../../config')
 
 // /////////////////////////////////////////////////////////////////// Functions
@@ -24,6 +22,7 @@ const getCommonSubstrings = (string, chars) => {
   return matches.flat()
 }
 
+// ------------------------------------------------------------- countDuplicates
 const countDuplicates = (array) => {
   const counts = {}
   array.forEach((el) => {
@@ -32,11 +31,9 @@ const countDuplicates = (array) => {
   return counts
 }
 
-// ------------------------------------------------------------------- Rezonator
-const Rezonator = async () => {
+// ------------------------------------------------------------ recordTextTraces
+const recordTextTraces = async () => {
   try {
-    const now = Date.now()
-    console.log(`Rezonator: ${now}`)
     const pockets = await MC.model.Pocket
       .find({})
       .select('token')
@@ -93,12 +90,22 @@ const Rezonator = async () => {
     })
     await MC.model.Trace.create({ traces: duplicates })
   } catch (e) {
-    console.log('======================================= [Function: Rezonator]')
+    console.log('================================ [Function: recordTextTraces]')
     console.log(e)
   }
 }
 
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
-
-NodeCron.schedule('0 0 * * *', () => { Rezonator() })
+MC.app.on('mongoose-connected', async () => {
+  console.log('🌀 Rezonator started')
+  try {
+    await recordTextTraces()
+    console.log('🌀 Rezonator traces recorded')
+    process.exit(0)
+  } catch (e) {
+    console.log('=========================================== [Cron: Rezonator]')
+    console.log(e)
+    process.exit(0)
+  }
+})
