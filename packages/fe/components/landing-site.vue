@@ -32,8 +32,8 @@
               <li
                 v-if="tip !== 'br'"
                 :key="tip"
-                class="tip">
-                {{ tip }}
+                class="tip"
+                v-html="tip">
               </li>
               <br v-else>
             </template>
