@@ -150,7 +150,7 @@ const GenerateWebsocketClient = () => {
   return io(MC.backendUrl, {
     withCredentials: true,
     secure: true,
-    ca: Fs.readFileSync(`${MC.repoRoot}/localhost_cert.pem`, 'ascii'),
+    // ca: Fs.readFileSync(`${MC.repoRoot}/localhost_cert.pem`, 'ascii'),
     agent: https.globalAgent
   })
 }
