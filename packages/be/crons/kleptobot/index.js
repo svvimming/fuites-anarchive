@@ -84,18 +84,30 @@ const thingieMigrator = async () => {
             }
           }
           if (newSpazeLocation) {
+            const firstThingie = thingies[0]
             migrations.push({
-              _id: thingies[0]._id,
+              _id: firstThingie._id,
               location: newSpazeLocation,
-              last_update_token: 'kleptobot',
-              record_new_location: true
+              last_location: {
+                location: newSpazeLocation,
+                at: {
+                  x: firstThingie.at.x,
+                  y: firstThingie.at.y
+                }
+              }
             })
           }
         }
       }
       if (migrations.length) {
         for (let j = 0; j < migrations.length; j++) {
-          socket.emit('cron|migrate-thingie|initialize', migrations[j])
+          const migration = migrations[j]
+          const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
+            location: migration.location,
+            last_update_token: 'kleptobot',
+            $push: { last_locations: migration.last_location }
+          }, { new: true })
+          socket.emit('cron|migrate-thingie|initialize', thingie)
         }
       }
     }
