@@ -86,7 +86,7 @@ export default {
         this.addThingie(thingie)
       })
       this.socket.on('module|kleptobot-migrate-thingie|payload', (migrated) => {
-        this.initUpdate(migrated)
+        this.updateThingie(migrated)
       })
     })
   },
