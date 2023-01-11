@@ -105,6 +105,7 @@ const thingieMigrator = async () => {
           const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
             location: migration.location,
             last_update_token: 'kleptobot',
+            update_count: 0,
             $push: { last_locations: migration.last_location }
           }, { new: true })
           socket.emit('cron|migrate-thingie|initialize', thingie)
