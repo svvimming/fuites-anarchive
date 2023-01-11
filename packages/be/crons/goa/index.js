@@ -139,7 +139,7 @@ const spazePreaccelerator = async () => {
             populate: { path: 'thingie_ref', select: 'colors' }
           })
         socket.emit('cron|spaze-state-update|initialize', updated)
-      } else if (totalBytes <= 16666667 && spazeThingies.length <= 40 && spaze.state === 'leaking') { // change spaze state to clumping
+      } else if (totalBytes <= 30000000 && spazeThingies.length <= 32 && spaze.state === 'leaking') { // change spaze state to clumping
         const updated = await MC.model.Spaze
           .findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
           .populate({
