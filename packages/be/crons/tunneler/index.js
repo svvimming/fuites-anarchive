@@ -148,6 +148,7 @@ const updatePortalsBetweenSpazes = async () => {
     for (let i = 0; i < thingies.length; i++) {
       const thingie = thingies[i]
       const locations = [...thingie.last_locations].reverse()
+      console.log(locations)
       const portals = await MC.model.Portal
         .find({ thingie_ref: thingie._id })
         .sort({ createdAt: 'desc' })
@@ -159,6 +160,7 @@ const updatePortalsBetweenSpazes = async () => {
           const portalExists = portals.some(portal => portal.edge === portalName)
           const notPocketOrCompost = vA.location !== 'pocket' && vB.location !== 'pocket' && vA.location !== 'compost' && vB.location !== 'compost'
           if (!portalExists && notPocketOrCompost) {
+            console.log('hit open portal')
             createNewPortal(thingie._id, portalName, [vA, vB])
           }
         }
@@ -166,6 +168,7 @@ const updatePortalsBetweenSpazes = async () => {
       if (portals.length > (locations.length - 1)) {
         const outdatedPortals = portals.slice(locations.length - 1)
         for (let k = 0; k < outdatedPortals.length; k++) {
+          console.log('hit close portal')
           closePortal(outdatedPortals[k]._id)
         }
       }
