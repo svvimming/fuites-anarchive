@@ -89,7 +89,7 @@ const thingiePreaccelerator = async () => {
           return {
             thingie_id: thingie._id,
             movement: thingie.update_count ? thingie.update_count : 0,
-            weight: thingie.width,
+            weight: 250 * Math.log(thingie.width / 30 + 1),
             distance
           }
         })
