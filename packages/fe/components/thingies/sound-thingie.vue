@@ -183,6 +183,12 @@ export default {
     }
   },
 
+  mounted () {
+    if (this.audioContext) {
+      this.initSoundThingie()
+    }
+  },
+
   beforeDestroy () {
     if (this.player) { this.player.pause() }
     if (this.mousemove) { window.removeEventListener('mousemove', this.mousemove) }
