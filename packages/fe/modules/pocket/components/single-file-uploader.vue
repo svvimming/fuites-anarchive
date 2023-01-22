@@ -2,6 +2,7 @@
   <UploadInput
     :prompt-to-upload="true"
     accepted-mimetypes="image/jpeg,image/png,audio/wav,audio/mpeg,audio/x-m4a"
+    :max-file-size-mb="maxFileSizeMB"
     class="single-file-uploader"
     @statusChanged="statusChanged"
     @fileSelected="fileSelected"
@@ -64,11 +65,14 @@
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
-      <div class="upload-prompt">
-        {{ finalizeUploadPrompt }}
+      <div
+        class="upload-prompt"
+        v-html="finalizeUploadPrompt">
       </div>
 
-      <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
+      <Bichos
+        v-if="filesize < (maxFileSizeMB * 1000000)"
+        @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
 
       <Button
         text="cancel"
@@ -130,6 +134,11 @@ export default {
       type: String,
       required: false,
       default: ''
+    },
+    maxFileSizeMB: {
+      type: Number,
+      required: false,
+      default: 8
     }
   },
 
@@ -146,10 +155,13 @@ export default {
     initializeUploadPrompt () {
       return this.initPrompt ? this.initPrompt : 'Upload a file'
     },
+    filesize () {
+      return this.file ? this.file.size : 0
+    },
     finalizeUploadPrompt () {
       if (this.file) {
-        return this.file.size > 5000000 ?
-          ":-O woaahh that's a big file !" :
+        return this.file.size > (this.maxFileSizeMB * 1000000) ?
+          `compressed file size is too big! :-O<br>max is ${this.maxFileSizeMB}mb` :
           this.finalPrompt ?
             this.finalPrompt :
             'Draw a shape to upload selected file'

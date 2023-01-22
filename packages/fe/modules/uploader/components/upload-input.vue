@@ -68,13 +68,12 @@ const getImageData = async (instance, file) => {
   }
 }
 
-const compressImage = async (file, useWebWorker) => {
+const compressImage = async (file, useWebWorker, maxSizeMB) => {
   ImageCompression.getExifOrientation(file).then((o) => {
     console.log("ExifOrientation", o)
   })
   const controller = typeof AbortController !== 'undefined' && new AbortController()
-  const maxSizeMB = 5
-  const maxWidthOrHeight = 2048
+  const maxWidthOrHeight = 3072
   const onProgress = (p) => {
     console.log("onProgress", p)
   }
@@ -124,6 +123,11 @@ export default {
       type: Boolean,
       required: false,
       default: false
+    },
+    maxFileSizeMB: {
+      type: Number,
+      required: false,
+      default: 8
     }
   },
 
@@ -186,7 +190,7 @@ export default {
         this.$emit('fileSelected')
         if (['image/jpeg', 'image/png'].includes(file.type)) {
           await getImageData(this, file)
-          const compressedImageFile = await compressImage(file, true)
+          const compressedImageFile = await compressImage(file, true, this.maxFileSizeMB)
           this.file = compressedImageFile
         } else {
           this.file = file
