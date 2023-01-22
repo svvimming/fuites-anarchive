@@ -4,6 +4,7 @@
     accepted-mimetypes="image/jpeg,image/png,audio/wav,audio/mpeg,audio/x-m4a"
     class="single-file-uploader"
     @statusChanged="statusChanged"
+    @fileSelected="fileSelected"
     @fileChanged="fileChanged">
 
     <template #metadata="{ filename, filesize, mimetype }">
@@ -45,17 +46,20 @@
 
     <template #file-upload-button="{ clickFileInput }">
       <Button
-        v-if="!file && status !== 'upload-complete'"
+        v-if="!file && status !== 'upload-complete' && !processingFile"
         :text="initializeUploadPrompt"
         class="select-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
       <Button
-        v-if="status === 'upload-finalized'"
+        v-if="status === 'upload-finalized' && !processingFile"
         text="Upload another file"
         class="upload-another-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
+      <LoaderTripleDot
+        v-if="processingFile"
+        class="file-processing-loader theme-dark" />
     </template>
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
@@ -86,6 +90,7 @@ import Filesize from 'filesize'
 
 import UploadInput from '@/modules/uploader/components/upload-input'
 import Button from '@/components/button'
+import LoaderTripleDot from '@/components/spinners/triple-dot'
 import Tag from '@/components/tag'
 import Spinner from '@/components/spinners/material-circle'
 import IconCheckmark from '@/components/icons/checkmark'
@@ -98,6 +103,7 @@ export default {
   components: {
     UploadInput,
     Button,
+    LoaderTripleDot,
     Tag,
     Spinner,
     IconCheckmark,
@@ -131,7 +137,8 @@ export default {
     return {
       status: false,
       file: false,
-      pathData: []
+      pathData: [],
+      processingFile: false
     }
   },
 
@@ -179,7 +186,12 @@ export default {
     statusChanged (status) {
       this.status = status
     },
+    fileSelected () {
+      console.log('hit')
+      this.processingFile = true
+    },
     fileChanged (file) {
+      this.processingFile = false
       this.file = file
     },
     async finalizeUpload () {
@@ -338,5 +350,13 @@ export default {
   text-align: center;
   margin: 0.375rem 0;
   white-space: nowrap;
+}
+
+.file-processing-loader {
+  position: relative;
+  padding: 0.875rem 1rem;
+  // width: 100%;
+  // height: 100%;
+  opacity: 1;
 }
 </style>
