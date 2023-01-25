@@ -74,25 +74,16 @@ const compressImage = async (file, useWebWorker, maxSizeMB) => {
   })
   const controller = typeof AbortController !== 'undefined' && new AbortController()
   const maxWidthOrHeight = 3072
-  const onProgress = (p) => {
-    console.log("onProgress", p)
-  }
   const options = {
     maxSizeMB,
     maxWidthOrHeight,
-    useWebWorker,
-    onProgress
+    useWebWorker
   }
-  console.log(controller)
   if (controller) {
     options.signal = controller.signal
   }
   const compressedFile = await ImageCompression (file, options)
-    .then((output) => {
-      console.log("original", file)
-      console.log("output", output)
-      return output
-    })
+    .then((output) => { return output })
     .catch((error) => {
       console.log(error.message)
     })
