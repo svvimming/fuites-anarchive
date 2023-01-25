@@ -106,6 +106,7 @@ const thingieMigrator = async () => {
         }
       }
       if (migrations.length) {
+        console.log('kleptobot migrations:', migrations)
         for (let j = 0; j < migrations.length; j++) {
           const migration = migrations[j]
           const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
