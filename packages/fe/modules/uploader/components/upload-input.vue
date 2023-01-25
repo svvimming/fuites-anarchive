@@ -50,11 +50,12 @@
 import { mapGetters } from 'vuex'
 
 import ColorThief from 'colorthief'
+import ImageCompression from 'browser-image-compression'
 
 // =================================================================== Functions
-const getImageData = (instance) => {
+const getImageData = async (instance, file) => {
   const reader = new FileReader()
-  reader.readAsDataURL(instance.file)
+  reader.readAsDataURL(file)
   reader.onload = (e) => {
     const image = new Image()
     const colorThief = new ColorThief()
@@ -65,6 +66,38 @@ const getImageData = (instance) => {
       instance.imageColorPalette = palette
     }
   }
+}
+
+const compressImage = async (file, useWebWorker, maxSizeMB) => {
+  ImageCompression.getExifOrientation(file).then((o) => {
+    console.log("ExifOrientation", o)
+  })
+  const controller = typeof AbortController !== 'undefined' && new AbortController()
+  const maxWidthOrHeight = 3072
+  const onProgress = (p) => {
+    console.log("onProgress", p)
+  }
+  const options = {
+    maxSizeMB,
+    maxWidthOrHeight,
+    useWebWorker,
+    onProgress
+  }
+  console.log(controller)
+  if (controller) {
+    options.signal = controller.signal
+  }
+  const compressedFile = await ImageCompression (file, options)
+    .then((output) => {
+      console.log("original", file)
+      console.log("output", output)
+      return output
+    })
+    .catch((error) => {
+      console.log(error.message)
+    })
+
+  return compressedFile
 }
 
 // ====================================================================== Export
@@ -90,6 +123,11 @@ export default {
       type: Boolean,
       required: false,
       default: false
+    },
+    maxFileSizeMB: {
+      type: Number,
+      required: false,
+      default: 8
     }
   },
 
@@ -143,20 +181,19 @@ export default {
       this.socket.on('module|file-upload-chunk|payload', this.uploadNextChunk)
       this.socket.on('module|file-upload-complete|payload', this.fileUploadComplete)
     })
-    // this.socket.on('disconnect', () => {
-    //   this.error = true
-    //   this.resetVideoUpload()
-    // })
   },
 
   methods: {
-    handleInputChange (e) {
+    async handleInputChange (e) {
       const file = e.target.files[0]
       if (file) {
-        this.file = file
         this.$emit('fileSelected')
-        if (['image/jpeg', 'image/png'].includes(this.file.type)) {
-          getImageData(this)
+        if (['image/jpeg', 'image/png'].includes(file.type)) {
+          await getImageData(this, file)
+          const compressedImageFile = await compressImage(file, true, this.maxFileSizeMB)
+          this.file = compressedImageFile
+        } else {
+          this.file = file
         }
         if (!this.promptToUpload) {
           this.uploadFile()
