@@ -70,8 +70,14 @@ const thingieMigrator = async () => {
       const migrations = []
       for (let i = 0; i < leaking.length; i++) {
         const spaze = leaking[i]
-        const thingies = await MC.model.Thingie.find({ location: spaze.name }).sort({ preacceleration: 'desc' })
-        if (thingies.length) {
+        const thingies = await MC.model.Thingie
+          .find({ location: spaze.name })
+          .sort({ preacceleration: 'desc' })
+        const now = Date.now()
+        const day = 1000 * 60 * 60 * 24 // one day in milliseconds
+        const oneDayAgo = new Date(now - day)
+        const recentlyUpdated = await MC.model.Thingie.exists({ location: spaze.name, updatedAt: { $lt: oneDayAgo } })
+        if (thingies.length && !recentlyUpdated) {
           const overflow = await MC.model.Spaze.findOne({ overflow_spaze: spaze.name })
           let newSpazeLocation = ''
           if (overflow) {
@@ -100,6 +106,7 @@ const thingieMigrator = async () => {
         }
       }
       if (migrations.length) {
+        console.log('kleptobot migrations:', migrations)
         for (let j = 0; j < migrations.length; j++) {
           const migration = migrations[j]
           const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {

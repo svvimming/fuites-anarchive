@@ -1,9 +1,11 @@
 <template>
   <UploadInput
     :prompt-to-upload="true"
-    accepted-mimetypes="image/jpeg,image/png,audio/wav,audio/mpeg,audio/x-m4a"
+    accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    :max-file-size-mb="maxFileSizeMB"
     class="single-file-uploader"
     @statusChanged="statusChanged"
+    @fileSelected="fileSelected"
     @fileChanged="fileChanged">
 
     <template #metadata="{ filename, filesize, mimetype }">
@@ -45,26 +47,32 @@
 
     <template #file-upload-button="{ clickFileInput }">
       <Button
-        v-if="!file && status !== 'upload-complete'"
+        v-if="!file && status !== 'upload-complete' && !processingFile"
         :text="initializeUploadPrompt"
         class="select-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
       <Button
-        v-if="status === 'upload-finalized'"
+        v-if="status === 'upload-finalized' && !processingFile"
         text="Upload another file"
         class="upload-another-file-button uploader-button"
         type="A"
         @clicked="clickFileInput" />
+      <LoaderTripleDot
+        v-if="processingFile"
+        class="file-processing-loader theme-dark" />
     </template>
 
     <template #prompt-to-upload="{ uploadFile, clearFileInput }">
 
-      <div class="upload-prompt">
-        {{ finalizeUploadPrompt }}
+      <div
+        class="upload-prompt"
+        v-html="finalizeUploadPrompt">
       </div>
 
-      <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
+      <Bichos
+        v-if="filesize < (maxFileSizeMB * 1000000)"
+        @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
 
       <Button
         text="cancel"
@@ -86,6 +94,7 @@ import Filesize from 'filesize'
 
 import UploadInput from '@/modules/uploader/components/upload-input'
 import Button from '@/components/button'
+import LoaderTripleDot from '@/components/spinners/triple-dot'
 import Tag from '@/components/tag'
 import Spinner from '@/components/spinners/material-circle'
 import IconCheckmark from '@/components/icons/checkmark'
@@ -98,6 +107,7 @@ export default {
   components: {
     UploadInput,
     Button,
+    LoaderTripleDot,
     Tag,
     Spinner,
     IconCheckmark,
@@ -124,6 +134,11 @@ export default {
       type: String,
       required: false,
       default: ''
+    },
+    maxFileSizeMB: {
+      type: Number,
+      required: false,
+      default: 8
     }
   },
 
@@ -131,7 +146,8 @@ export default {
     return {
       status: false,
       file: false,
-      pathData: []
+      pathData: [],
+      processingFile: false
     }
   },
 
@@ -139,10 +155,13 @@ export default {
     initializeUploadPrompt () {
       return this.initPrompt ? this.initPrompt : 'Upload a file'
     },
+    filesize () {
+      return this.file ? this.file.size : 0
+    },
     finalizeUploadPrompt () {
       if (this.file) {
-        return this.file.size > 5000000 ?
-          ":-O woaahh that's a big file !" :
+        return this.file.size > (this.maxFileSizeMB * 1000000) ?
+          `compressed file size is too big! :-O<br>max is ${this.maxFileSizeMB}mb` :
           this.finalPrompt ?
             this.finalPrompt :
             'Draw a shape to upload selected file'
@@ -179,11 +198,15 @@ export default {
     statusChanged (status) {
       this.status = status
     },
+    fileSelected () {
+      this.processingFile = true
+    },
     fileChanged (file) {
+      this.processingFile = false
       this.file = file
     },
     async finalizeUpload () {
-      const thingietype = ['audio/mpeg', 'audio/wav', 'audio/x-m4a'].includes(this.file.type) ? 'sound' : 'image'
+      const thingietype = ['audio/mpeg', 'audio/x-m4a'].includes(this.file.type) ? 'sound' : 'image'
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: this.destination,
@@ -338,5 +361,13 @@ export default {
   text-align: center;
   margin: 0.375rem 0;
   white-space: nowrap;
+}
+
+.file-processing-loader {
+  position: relative;
+  padding: 0.875rem 1rem;
+  // width: 100%;
+  // height: 100%;
+  opacity: 1;
 }
 </style>
