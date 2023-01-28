@@ -113,9 +113,13 @@ const actions = {
     }
   },
   // /////////////////////////////////////////////////////////////// getThingies
-  async getThingies ({ commit, getters }) {
+  async getThingies ({ commit, getters }, data) {
     try {
-      const response = await this.$axiosAuth.get('/get-thingies')
+      const response = await this.$axiosAuth.get('/get-thingies', {
+        params: {
+          locations: ['pocket', data.spazename]
+        }
+      })
       commit('ADD_THINGIES', response.data.payload)
     } catch (e) {
       console.log('=================== [Store Action: collections/getThingies]')

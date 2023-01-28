@@ -75,10 +75,10 @@ export default {
     Button
   },
 
-  async fetch ({ app, store }) {
+  async fetch ({ app, store, route }) {
     await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getSpazes')
-    await store.dispatch('collections/getThingies')
+    await store.dispatch('collections/getThingies', { spazename: route.params.id })
   },
 
   data () {

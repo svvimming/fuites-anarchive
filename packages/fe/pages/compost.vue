@@ -44,7 +44,7 @@ export default {
   async fetch ({ app, store }) {
     await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getSpazes')
-    await store.dispatch('collections/getThingies')
+    await store.dispatch('collections/getThingies', { spazename: 'compost' })
   },
 
   head () {
