@@ -194,6 +194,10 @@ export default {
       this.keydown = (e) => { handleUndoCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
     }
+    // disable user tokens for a-lull-nearby spaze
+    if (this.$route.path === '/a-lull-nearby') {
+      this.authenticate('a-lull-nearby')
+    }
   },
 
   beforeDestroy () {
@@ -209,7 +213,8 @@ export default {
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',
       updateSpaze: 'collections/updateSpaze',
-      setModal: 'general/setModal'
+      setModal: 'general/setModal',
+      authenticate: 'general/authenticate'
     }),
     openNewSpazeModal () {
       this.setModal(true)
