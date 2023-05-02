@@ -360,6 +360,7 @@ export default {
     pointer-events: none;
   }
   &.editing {
+    touch-action: none;
     &:before {
       content: '';
       position: absolute;
