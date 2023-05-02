@@ -15,14 +15,16 @@
       :spz="spazeName"
       :location="editor" />
 
-    <Thingie
-      v-for="thingie in spazeThingies"
-      :key="thingie._id"
-      :thingie="thingie"
-      :bounds="spazeBounds"
-      @initmousedown="initMousedown"
-      @initupdate="initUpdate"
-      @initmouseup="initMouseup" />
+    <template v-for="thingie in spazeThingies">
+      <component
+        :is="thingieComponent"
+        :key="thingie._id"
+        :thingie="thingie"
+        :bounds="spazeBounds"
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup" />
+    </template>
 
     <Portal
       v-for="(portal, i) in portals"
@@ -38,6 +40,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
 import Portal from '@/components/portal'
 import Bingo from '@/components/bingo'
 import Button from '@/components/button'
@@ -61,6 +64,10 @@ const handleUndoCommand = (e, instance) => {
   }
 }
 
+const isTouchDevice = () => {
+  return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
+}
+
 // ====================================================================== Export
 export default {
   name: 'SpazeIsThePlaze',
@@ -70,6 +77,7 @@ export default {
   components: {
     PropBoard,
     Thingie,
+    TouchThingie,
     Portal,
     Bingo,
     Button
@@ -97,7 +105,8 @@ export default {
       },
       keydown: false,
       lastUpdate: false,
-      updateInterval: false
+      updateInterval: false,
+      touchmode: false
     }
   },
 
@@ -127,6 +136,9 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     },
     portals () {
       const portals = []
@@ -187,6 +199,9 @@ export default {
         })
       })
     })
+    if (isTouchDevice()) {
+      this.touchmode = true
+    }
     if (!this.spaze) {
       this.spazeExists = false
     } else {

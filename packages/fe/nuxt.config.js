@@ -97,7 +97,8 @@ export default {
     '~/plugins/helpers',
     '~/plugins/directives',
     '~/plugins/scroll-to',
-    '~/plugins/simplify-svg-path'
+    '~/plugins/simplify-svg-path',
+    '~/plugins/nuxt-hammer.js'
   ],
   // /////////////////////////////////////////////////// [Module] Nuxt Socket.io
   // ---------------------------------- Doc: https://nuxt-socket-io.netlify.app/
