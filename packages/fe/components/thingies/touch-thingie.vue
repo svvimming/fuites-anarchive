@@ -182,9 +182,8 @@ export default {
       updateThingie: 'collections/updateThingie'
     }),
     panstart (evt) {
-      console.log(evt)
-      evt.preventDefault()
       if (this.authenticated && !this.thingie.dragging && this.editing) {
+        evt.preventDefault()
         const thingie = this.$el
         const thingieRect = thingie.getBoundingClientRect()
         this.handleX = evt.touches[0].clientX - thingieRect.left
@@ -195,8 +194,8 @@ export default {
       }
     },
     drag (evt) {
-      evt.preventDefault()
       if (this.authenticated) {
+        evt.preventDefault()
         const parent = this.$parent.$el
         const rect = parent.getBoundingClientRect()
         let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.touches[0].clientX - rect.left - this.handleX))
@@ -218,8 +217,8 @@ export default {
       }
     },
     panend (evt) {
-      evt.preventDefault()
       if (this.authenticated) {
+        evt.preventDefault()
         this.handleX = false
         this.handleY = false
         document.ontouchmove = null
