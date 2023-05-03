@@ -5,8 +5,9 @@
     :class="['touch-thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
-    @wheel="wheel($event)"
     v-hammer:tap="(evt) => thingieEditor(evt)"
+    v-hammer:pinch="(evt) => pinch(evt)"
+    v-hammer:rotate="(evt) => rotateThingie(evt)"
     v-touch-outside="closeEditor">
 
     <TextThingie
@@ -226,22 +227,23 @@ export default {
         this.$emit('initmouseup', { _id: this.thingie._id })
       }
     },
-    wheel (evt) {
-      if (this.authenticated && this.editing) {
-        evt.preventDefault();
-        const width = this.thingie.width ? this.thingie.width : 80
-        const newWidth = Math.max(width - evt.deltaY, 1)
-        const delta = (width - newWidth) / 2
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          width: newWidth,
-          at: {
-            x: this.thingie.at.x + delta,
-            y: this.thingie.at.y + delta,
-            z: this.thingie.at.z
-          }
-        })
-      }
+    pinch (evt) {
+      console.log(evt)
+      // if (this.authenticated && this.editing) {
+      //   evt.preventDefault();
+      //   const width = this.thingie.width ? this.thingie.width : 80
+      //   const newWidth = Math.max(width - evt.deltaY, 1)
+      //   const delta = (width - newWidth) / 2
+      //   this.$emit('initupdate', {
+      //     _id: this.thingie._id,
+      //     width: newWidth,
+      //     at: {
+      //       x: this.thingie.at.x + delta,
+      //       y: this.thingie.at.y + delta,
+      //       z: this.thingie.at.z
+      //     }
+      //   })
+      // }
     },
     thingieEditor (evt) {
       console.log(evt)
@@ -288,9 +290,10 @@ export default {
         colors: newColors
       })
     },
-    rotateThingie (delta) {
+    rotateThingie (evt) {
+      console.log(evt)
       const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      const newAngle = angle - delta
+      const newAngle = angle - evt.rotation
       this.$emit('initupdate', {
         _id: this.thingie._id,
         angle: newAngle
