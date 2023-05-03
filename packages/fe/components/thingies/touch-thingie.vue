@@ -8,7 +8,7 @@
     v-hammer:tap="(evt) => thingieEditor(evt)"
     v-hammer:pinch="(evt) => pinch(evt)"
     v-hammer:rotatestart="setInitAngle"
-    v-hammer:rotatemove="(evt) => rotateThingie(evt)"
+    v-hammer:rotate="(evt) => rotateThingie(evt)"
     v-hammer:rotateend="clearInitAngle"
     v-touch-outside="closeEditor">
 
@@ -297,13 +297,16 @@ export default {
       })
     },
     setInitAngle () {
+      console.log(this.thingie.angle)
       if (this.editing) {
         this.initAngle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
       }
+      console.log(this.initAngle)
     },
     rotateThingie (evt) {
       // const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      if (!Number.isNaN(this.initAngle) && this.editing) {
+      if (this.editing) {
+        const offset = !Number.isNaN(this.initAngle) ? this.initAngle : 0
         const newAngle = evt.rotation + this.initAngle
         this.$emit('initupdate', {
           _id: this.thingie._id,
@@ -312,7 +315,9 @@ export default {
       }
     },
     clearInitAngle () {
+      console.log('init angle cleared')
       this.initAngle = false
+      console.log(this.initAngle)
     },
     changeZindex (direction) {
       if (direction === 'front') {
