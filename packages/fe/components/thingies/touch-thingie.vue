@@ -7,7 +7,9 @@
     tabindex="1"
     v-hammer:tap="(evt) => thingieEditor(evt)"
     v-hammer:pinch="(evt) => pinch(evt)"
-    v-hammer:rotate="(evt) => rotateThingie(evt)"
+    v-hammer:rotatestart="setInitAngle"
+    v-hammer:rotatemove="(evt) => rotateThingie(evt)"
+    v-hammer:rotateend="clearInitAngle"
     v-touch-outside="closeEditor">
 
     <TextThingie
@@ -85,7 +87,8 @@ export default {
       handleX: false,
       handleY: false,
       editing: false,
-      touchstart: false
+      touchstart: false,
+      initAngle: false
     }
   },
 
@@ -293,14 +296,23 @@ export default {
         colors: newColors
       })
     },
+    setInitAngle () {
+      if (this.editing) {
+        this.initAngle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+      }
+    },
     rotateThingie (evt) {
-      console.log(evt)
       // const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      const newAngle = evt.rotation
-      this.$emit('initupdate', {
-        _id: this.thingie._id,
-        angle: newAngle
-      })
+      if (!Number.isNaN(this.initAngle) && this.editing) {
+        const newAngle = evt.rotation + this.initAngle
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          angle: newAngle
+        })
+      }
+    },
+    clearInitAngle () {
+      this.initAngle = false
     },
     changeZindex (direction) {
       if (direction === 'front') {
