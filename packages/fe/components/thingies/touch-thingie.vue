@@ -6,7 +6,9 @@
     :style="styles"
     tabindex="1"
     v-hammer:tap="(evt) => thingieEditor(evt)"
+    v-hammer:pinchstart="setInitWidth"
     v-hammer:pinch="(evt) => pinch(evt)"
+    v-hammer:pinchend="clearInitWidth"
     v-hammer:rotatestart="setInitAngle"
     v-hammer:rotate="(evt) => rotateThingie(evt)"
     v-hammer:rotateend="clearInitAngle"
@@ -88,7 +90,8 @@ export default {
       handleY: false,
       editing: false,
       touchstart: false,
-      initAngle: false
+      initAngle: false,
+      initWidth: false
     }
   },
 
@@ -233,23 +236,53 @@ export default {
         this.$emit('initmouseup', { _id: this.thingie._id })
       }
     },
+    setInitWidth () {
+      console.log(this.thingie.width)
+      if (this.authenticated && this.editing) {
+        this.initWidth = !Number.isNaN(this.thingie.width) ? this.thingie.width : 80
+      }
+      console.log(this.initWidth)
+    },
     pinch (evt) {
-      // console.log(evt)
-      // if (this.authenticated && this.editing) {
-      //   evt.preventDefault();
-      //   const width = this.thingie.width ? this.thingie.width : 80
-      //   const newWidth = Math.max(width - evt.deltaY, 1)
-      //   const delta = (width - newWidth) / 2
-      //   this.$emit('initupdate', {
-      //     _id: this.thingie._id,
-      //     width: newWidth,
-      //     at: {
-      //       x: this.thingie.at.x + delta,
-      //       y: this.thingie.at.y + delta,
-      //       z: this.thingie.at.z
-      //     }
-      //   })
-      // }
+      console.log(evt)
+      if (this.authenticated && this.editing && this.initWidth !== false) {
+        evt.preventDefault()
+        const width = this.thingie.width ? this.thingie.width : 80
+        const newWidth = Math.max(this.initWidth * evt.scale, 1)
+        const delta = (width - newWidth) / 2
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          width: newWidth,
+          at: {
+            x: this.thingie.at.x + delta,
+            y: this.thingie.at.y + delta,
+            z: this.thingie.at.z
+          }
+        })
+      }
+    },
+    clearInitWidth () {
+      console.log('init width cleared')
+      this.initWidth = false
+      console.log(this.initWidth)
+    },
+    setInitAngle () {
+      if (this.authenticated && this.editing) {
+        this.initAngle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+      }
+    },
+    rotateThingie (evt) {
+      if (this.authenticated && this.editing) {
+        const offset = !Number.isNaN(this.initAngle) ? this.initAngle : 0
+        const newAngle = evt.rotation + this.initAngle
+        this.$emit('initupdate', {
+          _id: this.thingie._id,
+          angle: newAngle
+        })
+      }
+    },
+    clearInitAngle () {
+      this.initAngle = false
     },
     thingieEditor (evt) {
       console.log(evt)
@@ -295,29 +328,6 @@ export default {
         _id: this.thingie._id,
         colors: newColors
       })
-    },
-    setInitAngle () {
-      console.log(this.thingie.angle)
-      if (this.editing) {
-        this.initAngle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      }
-      console.log(this.initAngle)
-    },
-    rotateThingie (evt) {
-      // const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      if (this.editing) {
-        const offset = !Number.isNaN(this.initAngle) ? this.initAngle : 0
-        const newAngle = evt.rotation + this.initAngle
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          angle: newAngle
-        })
-      }
-    },
-    clearInitAngle () {
-      console.log('init angle cleared')
-      this.initAngle = false
-      console.log(this.initAngle)
     },
     changeZindex (direction) {
       if (direction === 'front') {
