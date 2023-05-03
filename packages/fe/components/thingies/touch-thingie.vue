@@ -154,15 +154,15 @@ export default {
     }
   },
 
-  watch: {
-    editing (val) {
-      if (val) {
-        document.onkeydown = (e) => { this.handleKeydown(e) }
-      } else {
-        document.onkeydown = null
-      }
-    }
-  },
+  // watch: {
+  //   editing (val) {
+  //     if (val) {
+  //       document.onkeydown = (e) => { this.handleKeydown(e) }
+  //     } else {
+  //       document.onkeydown = null
+  //     }
+  //   }
+  // },
 
   mounted () {
     if (this.$refs.thingieRef) {
@@ -197,24 +197,27 @@ export default {
     drag (evt) {
       if (this.authenticated) {
         evt.preventDefault()
-        const parent = this.$parent.$el
-        const rect = parent.getBoundingClientRect()
-        let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.touches[0].clientX - rect.left - this.handleX))
-        let y = Math.max(0, Math.min(this.bounds.y - this.height, evt.touches[0].clientY - rect.top - this.handleY))
-        if (this.thingie.location === 'pocket') {
-          const thingie = this.$el
-          const thingieRect = thingie.getBoundingClientRect()
-          x = Math.min(640 - thingieRect.width, x)
-          y = Math.min(400 - thingieRect.height, y)
-        }
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          at: {
-            x: x,
-            y: y,
-            z: this.position.z
+        if (evt.touches.length < 2) {
+          console.log(evt)
+          const parent = this.$parent.$el
+          const rect = parent.getBoundingClientRect()
+          let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.touches[0].clientX - rect.left - this.handleX))
+          let y = Math.max(0, Math.min(this.bounds.y - this.height, evt.touches[0].clientY - rect.top - this.handleY))
+          if (this.thingie.location === 'pocket') {
+            const thingie = this.$el
+            const thingieRect = thingie.getBoundingClientRect()
+            x = Math.min(640 - thingieRect.width, x)
+            y = Math.min(400 - thingieRect.height, y)
           }
-        })
+          this.$emit('initupdate', {
+            _id: this.thingie._id,
+            at: {
+              x: x,
+              y: y,
+              z: this.position.z
+            }
+          })
+        }
       }
     },
     panend (evt) {
@@ -292,8 +295,8 @@ export default {
     },
     rotateThingie (evt) {
       console.log(evt)
-      const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
-      const newAngle = angle - evt.rotation
+      // const angle = !Number.isNaN(this.thingie.angle) ? this.thingie.angle : 0
+      const newAngle = evt.rotation
       this.$emit('initupdate', {
         _id: this.thingie._id,
         angle: newAngle
@@ -331,25 +334,25 @@ export default {
     },
     changeSoundLevel (val) {
       this.$emit('initupdate', { _id: this.thingie._id, gain: val })
-    },
-    handleKeydown (e) {
-      e.preventDefault()
-      if (e.keyCode === 38 || e.key === 'ArrowUp') {
-        this.changeZindex('front')
-      } else if (e.keyCode === 40 || e.key === 'ArrowDown') {
-        this.changeZindex('back')
-      } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
-        this.rotateThingie(1)
-        this.$pressKeyAndHold(document, 500, () => {
-          this.rotateThingie(2)
-        })
-      } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
-        this.rotateThingie(-1)
-        this.$pressKeyAndHold(document, 500, () => {
-          this.rotateThingie(-2)
-        })
-      }
     }
+    // handleKeydown (e) {
+    //   e.preventDefault()
+    //   if (e.keyCode === 38 || e.key === 'ArrowUp') {
+    //     this.changeZindex('front')
+    //   } else if (e.keyCode === 40 || e.key === 'ArrowDown') {
+    //     this.changeZindex('back')
+    //   } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
+    //     this.rotateThingie(1)
+    //     this.$pressKeyAndHold(document, 500, () => {
+    //       this.rotateThingie(2)
+    //     })
+    //   } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
+    //     this.rotateThingie(-1)
+    //     this.$pressKeyAndHold(document, 500, () => {
+    //       this.rotateThingie(-2)
+    //     })
+    //   }
+    // }
   }
 }
 </script>
