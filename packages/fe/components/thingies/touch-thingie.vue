@@ -234,7 +234,7 @@ export default {
       }
     },
     pinch (evt) {
-      console.log(evt)
+      // console.log(evt)
       // if (this.authenticated && this.editing) {
       //   evt.preventDefault();
       //   const width = this.thingie.width ? this.thingie.width : 80
