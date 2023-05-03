@@ -237,14 +237,11 @@ export default {
       }
     },
     setInitWidth () {
-      console.log(this.thingie.width)
       if (this.authenticated && this.editing) {
         this.initWidth = !Number.isNaN(this.thingie.width) ? this.thingie.width : 80
       }
-      console.log(this.initWidth)
     },
     pinch (evt) {
-      console.log(evt)
       if (this.authenticated && this.editing && this.initWidth !== false) {
         evt.preventDefault()
         const width = this.thingie.width ? this.thingie.width : 80
@@ -262,9 +259,7 @@ export default {
       }
     },
     clearInitWidth () {
-      console.log('init width cleared')
       this.initWidth = false
-      console.log(this.initWidth)
     },
     setInitAngle () {
       if (this.authenticated && this.editing) {
