@@ -12,7 +12,8 @@ const state = () => ({
   filterValue: '',
   loaders: [],
   portalView: true,
-  modal: false
+  modal: false,
+  touchmode: true
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -24,7 +25,8 @@ const getters = {
   filterValue: state => state.filterValue,
   loaders: state => state.loaders,
   portalView: state => state.portalView,
-  modal: state => state.modal
+  modal: state => state.modal,
+  touchmode: state => state.touchmode
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -87,6 +89,10 @@ const actions = {
       console.log(e)
       commit('SET_AUTHENTICATION_STATUS', false)
     }
+  },
+  // ////////////////////////////////////////////////////////////// setTouchMode
+  setTouchMode ({ commit }, value) {
+    commit('SET_TOUCH_MODE', value)
   }
 }
 
@@ -119,6 +125,9 @@ const mutations = {
   },
   SET_AUTHENTICATION_STATUS (state, status) {
     state.authenticated = status
+  },
+  SET_TOUCH_MODE (state, value) {
+    state.touchmode = value
   }
 }
 

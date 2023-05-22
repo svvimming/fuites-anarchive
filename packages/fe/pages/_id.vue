@@ -9,20 +9,29 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <TouchEditor 
+      v-if="touchmode && spaze"
+      :thingie="editorThingie"
+      :current-spaze="spaze.name"
+      @initupdate="initUpdate"
+      @close-editor="clearEditorThingie" />
+
     <PropBoard
       v-if="authenticated && spazeExists"
       ref="propboard"
       :spz="spazeName"
       :location="editor" />
 
-    <Thingie
-      v-for="thingie in spazeThingies"
-      :key="thingie._id"
-      :thingie="thingie"
-      :bounds="spazeBounds"
-      @initmousedown="initMousedown"
-      @initupdate="initUpdate"
-      @initmouseup="initMouseup" />
+    <template v-for="thingie in spazeThingies">
+      <component
+        :is="thingieComponent"
+        :key="thingie._id"
+        :thingie="thingie"
+        :bounds="spazeBounds"
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup" />
+    </template>
 
     <Portal
       v-for="(portal, i) in portals"
@@ -38,6 +47,8 @@ import { mapGetters, mapActions } from 'vuex'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
+import TouchEditor from '@/components/thingies/touch-editor'
 import Portal from '@/components/portal'
 import Bingo from '@/components/bingo'
 import Button from '@/components/button'
@@ -70,6 +81,8 @@ export default {
   components: {
     PropBoard,
     Thingie,
+    TouchThingie,
+    TouchEditor,
     Portal,
     Bingo,
     Button
@@ -111,11 +124,13 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
+      editorThingie: 'collections/editorThingie',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
       pocket: 'pocket/pocket',
-      modal: 'general/modal'
+      modal: 'general/modal',
+      touchmode: 'general/touchmode'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -127,6 +142,9 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     },
     portals () {
       const portals = []
@@ -205,6 +223,7 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
+      clearEditorThingie: 'collections/clearEditorThingie',
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',

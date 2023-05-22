@@ -35,7 +35,7 @@
       v-if="type === 'sound'"
       :audio="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
-      :last-gain="gain"
+      :gain="gain"
       :path="thingie.path_data"
       :editor="editing"
       :colors="thingie.colors"
@@ -50,7 +50,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
@@ -165,9 +165,6 @@ export default {
   },
 
   methods: {
-    ...mapActions({
-      updateThingie: 'collections/updateThingie'
-    }),
     mousedown (evt) {
       if (this.authenticated) {
         if (!evt.shiftKey && !evt.metaKey && !this.thingie.dragging) {
@@ -322,7 +319,8 @@ export default {
       })
     },
     changeSoundLevel (val) {
-      this.$emit('initupdate', { _id: this.thingie._id, gain: val })
+      const gain = val === 'up' ? Math.min(this.gain + 0.1, 3.0) : Math.max(this.gain - 0.1, 0.1)
+      this.$emit('initupdate', { _id: this.thingie._id, gain })
     },
     handleKeydown (e) {
       e.preventDefault()

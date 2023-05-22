@@ -38,6 +38,11 @@ export default {
   name: 'ImageThingie',
 
   props: {
+    touchEnabled: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
     image: {
       type: String,
       required: true,

@@ -25,7 +25,8 @@ const getNewSpazeName = (array) => {
 // -----------------------------------------------------------------------------
 const state = () => ({
   spazes: [],
-  thingies: []
+  thingies: [],
+  editorThingie: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -33,6 +34,7 @@ const state = () => ({
 const getters = {
   spazes: state => state.spazes,
   thingies: state => state.thingies,
+  editorThingie: state => state.editorThingie,
   zindices: (state) => {
     const spazeNames = [...new Set(state.thingies.map(thingie => thingie.location))]
     const spzZindexData = {}
@@ -205,6 +207,18 @@ const actions = {
   // ///////////////////////////////////////////////////////////// clearThingies
   clearThingies ({ commit, getters}) {
     commit('CLEAR_THINGIES')
+  },
+  // ////////////////////////////////////////////////////////// setEditorThingie
+  setEditorThingie ({ commit, rootGetters, dispatch }, thingie) {
+    const pocketIsOpen = rootGetters['pocket/pocketIsOpen']
+    if (pocketIsOpen) {
+      dispatch('pocket/setPocketIsOpen', false, { root: true })
+    }
+    commit('SET_EDITOR_THINGIE', thingie)
+  },
+  // //////////////////////////////////////////////////////// clearEditorThingie
+  clearEditorThingie ({ commit, getters }) {
+    commit('CLEAR_EDITOR_THINGIE')
   }
 }
 
@@ -237,6 +251,12 @@ const mutations = {
   },
   CLEAR_THINGIES (state) {
     state.thingies = []
+  },
+  SET_EDITOR_THINGIE (state, thingie) {
+    state.editorThingie = thingie
+  },
+  CLEAR_EDITOR_THINGIE (state) {
+    state.editorThingie = false
   }
 }
 

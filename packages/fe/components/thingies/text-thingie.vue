@@ -55,7 +55,7 @@
 <script>
 // ====================================================================== Export
 export default {
-  name: 'Editor',
+  name: 'TextThingie',
 
   props: {
     text: {

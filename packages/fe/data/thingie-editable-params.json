@@ -1,0 +1,62 @@
+{
+  "image": [
+    {
+      "directive": "toggleImageClip",
+      "inner": "*"
+    }
+  ],
+  "text": [
+    {
+      "directive": "changeFontSize",
+      "value": "up",
+      "inner": "^"
+    },
+    {
+      "directive": "changeFontSize",
+      "value": "down",
+      "inner": "˅"
+    },
+    {
+      "directive": "changeFontFamily",
+      "inner": "f"
+    },
+    {
+      "directive": "openColorEditor",
+      "inner": "c"
+    }
+  ],
+  "sound": [
+    {
+      "directive": "changePathStrokeWidth",
+      "value": "up",
+      "inner": "^"
+    },
+    {
+      "directive": "changePathStrokeWidth",
+      "value": "down",
+      "inner": "˅"
+    },
+    {
+      "directive": "changeSoundLevel",
+      "value": "up",
+      "inner": "🔊"
+    },
+    {
+      "directive": "changeSoundLevel",
+      "value": "down",
+      "inner": "🔉"
+    }
+  ],
+  "shared": [
+    {
+      "directive": "changeZindex",
+      "value": "front",
+      "inner": "+"
+    },
+    {
+      "directive": "changeZindex",
+      "value": "back",
+      "inner": "-"
+    }
+  ]
+}
