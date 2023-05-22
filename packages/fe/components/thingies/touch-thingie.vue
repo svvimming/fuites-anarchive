@@ -12,7 +12,7 @@
     v-hammer:rotatestart="setInitAngle"
     v-hammer:rotate="(evt) => rotateThingie(evt)"
     v-hammer:rotateend="clearInitAngle"
-    v-touch-outside="closeEditor">
+    v-touch-outside="closeEditor(evt)">
 
     <TextThingie
       v-if="type === 'text'"
@@ -297,8 +297,9 @@ export default {
         }
       }
     },
-    closeEditor () {
+    closeEditor (evt) {
       console.log('close editor')
+      console.log(evt)
       if (this.editorThingie) {
         this.clearEditorThingie()
       }
