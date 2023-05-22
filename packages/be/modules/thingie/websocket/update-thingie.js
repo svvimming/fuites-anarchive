@@ -14,7 +14,7 @@ const thingieWithLocationHistory = async (incoming) => {
   const thingie = await MC.model.Thingie.findOne({ _id: incoming._id })
   const locations = thingie.last_locations ? thingie.last_locations : []
   const newVertex = {
-    location: incoming.location === 'pocket' || incoming.location === 'compost' ? thingie.location : incoming.location,
+    location: (incoming.location === 'pocket' || incoming.location === 'compost') ? thingie.location : incoming.location,
     at: { x: thingie.at.x, y: thingie.at.y }
   }
   const latest = !locations.length ? [newVertex] : newVertex.location === locations[0].location || newVertex.location === 'pocket' || incoming.location === 'compost' ? [] : [newVertex]
