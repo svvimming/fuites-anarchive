@@ -10,7 +10,7 @@
           <div
             ref="colorpicker"
             class="color-picker"
-            v-hammer:pan="handleTouchMove($event)"
+            v-hammer:panmove="handleTouchMove($event)"
             v-hammer:panend="closeColorEditor">
           </div>
         </div>
@@ -247,14 +247,16 @@ export default {
     },
     handleTouchMove (evt) {
       const editor = this.$refs.colorpicker
-      const editorRect = editor.getBoundingClientRect()
-      const mouseX = evt.touches[0].clientX - editorRect.left
-      const mouseY = evt.touches[0].clientY - editorRect.top
-      const h = Math.floor((mouseX / editorRect.width) * 360)
-      const g = Math.floor((mouseY / editorRect.height) * 100)
-      const l = Math.max(g - 11, 0)
-      const rgb = this.$convertHSLtoRGB(h, g, l)
-      this.textColor = this.$convertRGBtoHex(rgb[0], rgb[1], rgb[2])
+      if (editor) {
+        const editorRect = editor.getBoundingClientRect()
+        const mouseX = evt.touches[0].clientX - editorRect.left
+        const mouseY = evt.touches[0].clientY - editorRect.top
+        const h = Math.floor((mouseX / editorRect.width) * 360)
+        const g = Math.floor((mouseY / editorRect.height) * 100)
+        const l = Math.max(g - 11, 0)
+        const rgb = this.$convertHSLtoRGB(h, g, l)
+        this.textColor = this.$convertRGBtoHex(rgb[0], rgb[1], rgb[2])
+      }
     }
   }
 }

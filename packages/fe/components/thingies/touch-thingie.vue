@@ -298,6 +298,7 @@ export default {
       }
     },
     closeEditor () {
+      console.log('close editor')
       if (this.editorThingie) {
         this.clearEditorThingie()
       }
