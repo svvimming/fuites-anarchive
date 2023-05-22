@@ -5,7 +5,6 @@
     :class="['touch-thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
-    @click="thingieEditor"
     v-hammer:tap="(evt) => thingieEditor(evt)"
     v-hammer:pinchstart="setInitWidth"
     v-hammer:pinch="(evt) => pinch(evt)"
