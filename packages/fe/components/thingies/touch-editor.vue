@@ -7,12 +7,12 @@
         <div
           :class="['color-modal', { open: colorpicker }]"
           :style="{ '--color-control': textColor }">
-          <div
+       <!--    <div
             ref="colorpicker"
             class="color-picker"
             v-hammer:panmove="handleTouchMove($event)"
             v-hammer:panend="closeColorEditor">
-          </div>
+          </div> -->
         </div>
 
         <div class="move-thingie">
