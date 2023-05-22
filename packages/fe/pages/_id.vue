@@ -9,6 +9,13 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <TouchEditor 
+      v-if="touchmode && spaze"
+      :thingie="editorThingie"
+      :current-spaze="spaze.name"
+      @initupdate="initUpdate"
+      @close-editor="clearEditorThingie" />
+
     <PropBoard
       v-if="authenticated && spazeExists"
       ref="propboard"
@@ -41,6 +48,7 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
+import TouchEditor from '@/components/thingies/touch-editor'
 import Portal from '@/components/portal'
 import Bingo from '@/components/bingo'
 import Button from '@/components/button'
@@ -64,10 +72,6 @@ const handleUndoCommand = (e, instance) => {
   }
 }
 
-const isTouchDevice = () => {
-  return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
-}
-
 // ====================================================================== Export
 export default {
   name: 'SpazeIsThePlaze',
@@ -78,6 +82,7 @@ export default {
     PropBoard,
     Thingie,
     TouchThingie,
+    TouchEditor,
     Portal,
     Bingo,
     Button
@@ -105,8 +110,7 @@ export default {
       },
       keydown: false,
       lastUpdate: false,
-      updateInterval: false,
-      touchmode: false
+      updateInterval: false
     }
   },
 
@@ -120,11 +124,13 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
+      editorThingie: 'collections/editorThingie',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
       pocket: 'pocket/pocket',
-      modal: 'general/modal'
+      modal: 'general/modal',
+      touchmode: 'general/touchmode'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -199,9 +205,6 @@ export default {
         })
       })
     })
-    if (isTouchDevice()) {
-      this.touchmode = true
-    }
     if (!this.spaze) {
       this.spazeExists = false
     } else {
@@ -220,6 +223,7 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
+      clearEditorThingie: 'collections/clearEditorThingie',
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',

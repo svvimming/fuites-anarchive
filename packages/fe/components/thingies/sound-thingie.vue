@@ -20,14 +20,14 @@
         v-if="audioContext"
         type="button"
         class="editor-button"
-        @click="changeGain('up')">
+        @click="$emit('change-sound-level', 'up')">
         🔊
       </button>
       <button
         v-if="audioContext"
         type="button"
         class="editor-button"
-        @click="changeGain('down')">
+        @click="$emit('change-sound-level', 'down')">
         🔉
       </button>
     </div>
@@ -77,6 +77,11 @@ export default {
   name: 'SoundThingie',
 
   props: {
+    touchEnabled: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
     audio: {
       type: String,
       required: true,
@@ -87,7 +92,7 @@ export default {
       required: true,
       default: ''
     },
-    lastGain: {
+    gain: {
       type: Number,
       required: false,
       default: 1
@@ -132,8 +137,7 @@ export default {
       source: false,
       player: false,
       gainNode: false,
-      amplitude: 0,
-      gain: 1
+      amplitude: 0
     }
   },
 
@@ -179,7 +183,6 @@ export default {
     },
     gain () {
       this.gainNode.gain.value = this.amplitude * this.gain
-      this.$emit('change-sound-level', this.gain)
     }
   },
 
@@ -202,7 +205,6 @@ export default {
         this.source = this.audioContext.createMediaElementSource(this.player)
         this.gainNode = this.audioContext.createGain()
         this.gainNode.gain.value = 0
-        this.gain = this.lastGain
         this.source.connect(this.gainNode).connect(this.audioContext.destination)
         this.addSoundThingieListeners()
         this.player.play()
@@ -211,14 +213,6 @@ export default {
     addSoundThingieListeners () {
       this.mousemove = Throttle((e) => { calculateMouseDistance(e, this) }, 100)
       window.addEventListener('mousemove', (e) => { this.mousemove(e) })
-    },
-    changeGain (val) {
-      if (val === 'up') {
-        this.gain = Math.min(this.gain + 0.1, 3.0)
-      }
-      if (val === 'down') {
-        this.gain = Math.max(this.gain - 0.1, 0.1)
-      }
     }
   }
 }

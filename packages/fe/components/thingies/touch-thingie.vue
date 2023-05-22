@@ -5,6 +5,7 @@
     :class="['touch-thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
+    @click="thingieEditor"
     v-hammer:tap="(evt) => thingieEditor(evt)"
     v-hammer:pinchstart="setInitWidth"
     v-hammer:pinch="(evt) => pinch(evt)"
@@ -16,37 +17,34 @@
 
     <TextThingie
       v-if="type === 'text'"
+      :touch-enabled="true"
       :text="thingie.text"
-      :editor="editing"
+      :editor="false"
       :fontsize="fontsize"
       :fontcolor="highlight"
-      :class="fontfamily"
-      @change-font-size="changeFontSize"
-      @change-font-family="changeFontFamily"
-      @change-color="changeTextColor" />
+      :class="fontfamily" />
 
     <ImageThingie
       v-if="type === 'image'"
+      :touch-enabled="true"
       :image="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
       :clip="thingie.clip"
       :clip-path="thingie.path_data"
-      :editor="editing"
-      @toggle-clip-path="toggleImageClip" />
+      :editor="false" />
 
     <SoundThingie
       v-if="type === 'sound'"
+      :touch-enabled="true"
       :audio="thingie.file_ref._id"
       :filetype="thingie.file_ref.file_ext"
-      :last-gain="gain"
+      :gain="gain"
       :path="thingie.path_data"
-      :editor="editing"
+      :editor="false"
       :colors="thingie.colors"
       :position="position"
       :width="width"
-      :stroke-width="strokeWidth"
-      @change-stroke-width="changePathStrokeWidth"
-      @change-sound-level="changeSoundLevel" />
+      :stroke-width="strokeWidth" />
 
   </div>
 </template>
@@ -99,7 +97,8 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       authenticated: 'general/authenticated',
-      zindices: 'collections/zindices'
+      zindices: 'collections/zindices',
+      editorThingie: 'collections/editorThingie'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -160,15 +159,23 @@ export default {
     }
   },
 
-  // watch: {
-  //   editing (val) {
-  //     if (val) {
-  //       document.onkeydown = (e) => { this.handleKeydown(e) }
-  //     } else {
-  //       document.onkeydown = null
-  //     }
-  //   }
-  // },
+  watch: {
+    thingie: {
+      handler () {
+        if (this.editorThingie._id === this.thingie._id) {
+          this.setEditorThingie(this.thingie)
+        }
+      },
+      deep: true
+    },
+    editorThingie (val) {
+      if (val._id === this.thingie._id) {
+        this.editing = true
+      } else {
+        this.editing = false
+      }
+    }
+  },
 
   mounted () {
     if (this.$refs.thingieRef) {
@@ -186,7 +193,8 @@ export default {
 
   methods: {
     ...mapActions({
-      updateThingie: 'collections/updateThingie'
+      setEditorThingie: 'collections/setEditorThingie',
+      clearEditorThingie: 'collections/clearEditorThingie'
     }),
     panstart (evt) {
       if (this.authenticated && !this.thingie.dragging && this.editing) {
@@ -283,98 +291,18 @@ export default {
       console.log(evt)
       if (this.authenticated) {
         evt.preventDefault()
-        this.editing = !this.editing
+        if (!this.editorThingie || this.editorThingie._id !== this.thingie._id) {
+          this.setEditorThingie(this.thingie)
+        } else {
+          this.clearEditorThingie()
+        }
       }
     },
     closeEditor () {
-      if (this.editing) {
-        this.editing = false
+      if (this.editorThingie) {
+        this.clearEditorThingie()
       }
-    },
-    changeFontSize (direction) {
-      const fs = this.fontsize
-      if (direction === 'up') {
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          fontsize: Math.min(500, fs + 1)
-        })
-      }
-      if (direction === 'down') {
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          fontsize: Math.max(1, fs - 1)
-        })
-      }
-    },
-    changeFontFamily () {
-      const current = this.fonts.indexOf(this.fontfamily)
-      const index = (current + 1) % this.fonts.length
-      const family = this.fonts[index]
-      this.$emit('initupdate', {
-        _id: this.thingie._id,
-        fontfamily: family
-      })
-    },
-    changeTextColor (incoming) {
-      const colors = this.thingie.colors
-      let newColors = [incoming].concat(colors)
-      if (newColors.length > 10) { newColors = newColors.slice(0, 10) }
-      this.$emit('initupdate', {
-        _id: this.thingie._id,
-        colors: newColors
-      })
-    },
-    changeZindex (direction) {
-      if (direction === 'front') {
-        const max = this.zindices[this.thingie.location].max
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          at: { x: this.position.x, y: this.position.y, z: max + 1 }
-        })
-      }
-      if (direction === 'back') {
-        const min = this.zindices[this.thingie.location].min
-        this.$emit('initupdate', {
-          _id: this.thingie._id,
-          at: { x: this.position.x, y: this.position.y, z: min - 1 }
-        })
-      }
-    },
-    toggleImageClip (val) {
-      this.$emit('initupdate', {
-        _id: this.thingie._id,
-        clip: val
-      })
-    },
-    changePathStrokeWidth (val) {
-      const stroke = typeof this.thingie.stroke_width === 'number' ? this.thingie.stroke_width : 3
-      const increment = val === 'up' ? 1 : -1
-      this.$emit('initupdate', {
-        _id: this.thingie._id,
-        stroke_width: stroke + increment
-      })
-    },
-    changeSoundLevel (val) {
-      this.$emit('initupdate', { _id: this.thingie._id, gain: val })
     }
-    // handleKeydown (e) {
-    //   e.preventDefault()
-    //   if (e.keyCode === 38 || e.key === 'ArrowUp') {
-    //     this.changeZindex('front')
-    //   } else if (e.keyCode === 40 || e.key === 'ArrowDown') {
-    //     this.changeZindex('back')
-    //   } else if (e.keyCode === 37 || e.key === 'ArrowLeft') {
-    //     this.rotateThingie(1)
-    //     this.$pressKeyAndHold(document, 500, () => {
-    //       this.rotateThingie(2)
-    //     })
-    //   } else if (e.keyCode === 39 || e.key === 'ArrowRight') {
-    //     this.rotateThingie(-1)
-    //     this.$pressKeyAndHold(document, 500, () => {
-    //       this.rotateThingie(-2)
-    //     })
-    //   }
-    // }
   }
 }
 </script>

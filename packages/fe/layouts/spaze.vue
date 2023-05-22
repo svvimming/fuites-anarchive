@@ -45,17 +45,17 @@
     <Pocket />
 
     <button
-      v-if="authenticated && !modal"
+      v-if="authenticated && !modal && !editorThingie"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
       pocket
     </button>
 
     <!-- ======================================================== COMPOST == -->
-    <CompostPortal />
+    <CompostPortal v-if="!touchmode" />
 
     <button
-      v-if="authenticated && notCompostPage && !modal"
+      v-if="authenticated && notCompostPage && !modal && !touchmode"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
       compost
@@ -81,6 +81,11 @@ import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
 import PopSpz from '@/components/pop-spz'
 import LandingSiteData from '@/data/landing.json'
+
+// =================================================================== Functions
+const isTouchDevice = () => {
+  return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
+}
 
 // ====================================================================== Export
 export default {
@@ -110,7 +115,9 @@ export default {
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
       compostPortalIsOpen: 'compost/compostPortalIsOpen',
-      modal: 'general/modal'
+      modal: 'general/modal',
+      touchmode: 'general/touchmode',
+      editorThingie: 'collections/editorThingie'
     }),
     links () {
       return LandingSiteData.portal.links
@@ -142,13 +149,20 @@ export default {
     }
   },
 
+  mounted () {
+    if (isTouchDevice()) {
+      this.setTouchMode(true)
+    }
+  },
+
   methods: {
     ...mapActions({
       setPortalView: 'general/setPortalView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
-      setAudioContextPlayState: 'mixer/setAudioContextPlayState'
+      setAudioContextPlayState: 'mixer/setAudioContextPlayState',
+      setTouchMode: 'general/setTouchMode'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
