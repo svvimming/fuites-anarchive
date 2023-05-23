@@ -11,8 +11,7 @@
     v-hammer:pinchend="clearInitWidth"
     v-hammer:rotatestart="setInitAngle"
     v-hammer:rotate="(evt) => rotateThingie(evt)"
-    v-hammer:rotateend="clearInitAngle"
-    v-touch-outside="closeEditor">
+    v-hammer:rotateend="clearInitAngle">
 
     <TextThingie
       v-if="type === 'text'"
@@ -287,21 +286,12 @@ export default {
       this.initAngle = false
     },
     thingieEditor (evt) {
-      console.log(evt)
+      evt.preventDefault()
       if (this.authenticated) {
-        evt.preventDefault()
         if (!this.editorThingie || this.editorThingie._id !== this.thingie._id) {
           this.setEditorThingie(this.thingie)
-        } else {
-          this.clearEditorThingie()
         }
       }
-    },
-    closeEditor () {
-      console.log('close editor')
-      // if (this.editorThingie) {
-      //   this.clearEditorThingie()
-      // }
     }
   }
 }

@@ -87,6 +87,11 @@ const isTouchDevice = () => {
   return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
 }
 
+const handleTouchStart = (e) => {
+  console.log(e)
+  console.log(e.target)
+}
+
 // ====================================================================== Export
 export default {
   name: 'spaze',
@@ -103,7 +108,8 @@ export default {
     return {
       prevRoute: '',
       tipsOpen: false,
-      key: 0
+      key: 0,
+      touchstart: false
     }
   },
 
@@ -152,7 +158,13 @@ export default {
   mounted () {
     if (isTouchDevice()) {
       this.setTouchMode(true)
+      this.touchstart = (e) => { handleTouchStart(e) }
+      document.addEventListener('touchstart', this.touchstart)
     }
+  },
+
+  beforeDestroy () {
+    if (this.touchstart) { document.removeEventListener('touchstart', this.touchstart) }
   },
 
   methods: {
