@@ -5,6 +5,7 @@
     :class="['thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
+    :data-thingie-id="thingie._id"
     @mousedown="mousedown($event)"
     @dragstart="startDrag($event)"
     @wheel="wheel($event)"

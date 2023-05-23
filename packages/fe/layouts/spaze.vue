@@ -87,9 +87,13 @@ const isTouchDevice = () => {
   return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
 }
 
-const handleTouchStart = (e) => {
-  console.log(e)
-  console.log(e.target)
+const handleTouchStart = (e, instance) => {
+  const targetId = e.target.getAttribute('data-thingie-id')
+  console.log(targetId)
+  console.log(instance.editorThingie)
+  if (targetId !== instance.editorThingie._id) {
+    instance.clearEditorThingie()
+  }
 }
 
 // ====================================================================== Export
@@ -158,7 +162,7 @@ export default {
   mounted () {
     if (isTouchDevice()) {
       this.setTouchMode(true)
-      this.touchstart = (e) => { handleTouchStart(e) }
+      this.touchstart = (e) => { handleTouchStart(e, this) }
       document.addEventListener('touchstart', this.touchstart)
     }
   },
@@ -174,7 +178,8 @@ export default {
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
       setAudioContextPlayState: 'mixer/setAudioContextPlayState',
-      setTouchMode: 'general/setTouchMode'
+      setTouchMode: 'general/setTouchMode',
+      clearEditorThingie: 'collections/clearEditorThingie'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen

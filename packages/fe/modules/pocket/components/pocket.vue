@@ -80,7 +80,6 @@ export default {
       this.socket.emit('join-room', 'thingies')
       this.socket.emit('join-room', 'cron|goa')
       this.socket.on('module|update-thingie|payload', (thingie) => {
-        console.log(thingie)
         this.updateThingie(thingie)
       })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {

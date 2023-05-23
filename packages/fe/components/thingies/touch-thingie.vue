@@ -5,6 +5,7 @@
     :class="['touch-thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
+    :data-thingie-id="thingie._id"
     v-hammer:tap="(evt) => thingieEditor(evt)"
     v-hammer:pinchstart="setInitWidth"
     v-hammer:pinch="(evt) => pinch(evt)"
@@ -210,7 +211,6 @@ export default {
       if (this.authenticated) {
         evt.preventDefault()
         if (evt.touches.length < 2) {
-          console.log(evt)
           const parent = this.$parent.$el
           const rect = parent.getBoundingClientRect()
           let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.touches[0].clientX - rect.left - this.handleX))

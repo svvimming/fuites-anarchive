@@ -37,7 +37,6 @@ const actions = {
   // ////////////////////////////////////////////////////////// postUpdatePocket
   async postUpdatePocket ({ commit, getters }, incoming) {
     try {
-      console.log('hit', incoming)
       if (getters.pocket.token === incoming.thingie.last_update_token) {
         let thingies
         if (incoming.action === 'add') {
