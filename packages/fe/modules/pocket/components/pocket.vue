@@ -42,7 +42,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import TouchEditor from '@/components/thingies/touch-editor'
+// import TouchEditor from '@/components/thingies/touch-editor'
 import Shader from '@/components/shader'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
@@ -53,7 +53,7 @@ export default {
   components: {
     Thingie,
     TouchThingie,
-    TouchEditor,
+    // TouchEditor,
     Shader,
     SingleFileUploader
   },
