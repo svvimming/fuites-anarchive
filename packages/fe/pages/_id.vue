@@ -364,9 +364,9 @@ export default {
   z-index: 10000;
   bottom: 2rem;
   left: 2.5rem;
-  color: #6A5ACD;
+  color: $lavender;
   @include fontWeight_Bold;
-  @include linkHover(#6A5ACD);
+  @include linkHover($lavender);
 }
 
 </style>
