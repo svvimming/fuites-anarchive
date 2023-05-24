@@ -179,9 +179,20 @@ export default {
       this[directive](value)
     },
     moveThingie (newLocation) {
+      let x = this.thingie.at.x
+      let y = this.thingie.at.y
+      if (newLocation === 'pocket') {
+        x = Math.floor(Math.random() * 560) - this.thingie.width + 40
+        y = Math.floor(Math.random() * 300)
+      }
+      if (newLocation === this.currentSpaze) {
+        x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - this.thingie.width
+        y = window.scrollY + Math.floor(Math.random() * window.innerHeight) - 100
+      }
       this.$emit('initupdate', { 
         _id: this.thingie._id, 
         location: newLocation,
+        at: { x, y, z: 1 },
         record_new_location: true
       })
       this.$emit('close-editor')
