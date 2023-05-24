@@ -1,10 +1,17 @@
 <template>
-  <div :class="['touch-editor', { active }, { expanded }]">
-    <div class="editor">
+  <div
+    :data-thingie-id="thingie._id" 
+    :class="['touch-editor', { active }, { expanded }]">
+    <div
+      :data-thingie-id="thingie._id" 
+      class="editor">
 
-      <div class="section-controls">
+      <div
+        :data-thingie-id="thingie._id"
+        class="section-controls">
 
         <div
+          :data-thingie-id="thingie._id"
           :class="['color-modal', { open: colorpicker }]"
           :style="{ '--color-control': textColor }">
        <!--    <div
@@ -15,10 +22,13 @@
           </div> -->
         </div>
 
-        <div class="move-thingie">
+        <div
+          :data-thingie-id="thingie._id"
+          class="move-thingie">
           <button
             v-if="thingie.location !== 'compost'"
             type="button"
+            :data-thingie-id="thingie._id"
             class="touch-button"
             @click="moveThingie('compost')">
             move to compost
@@ -26,6 +36,7 @@
           <button
             v-if="thingie.location !== 'pocket'"
             type="button"
+            :data-thingie-id="thingie._id"
             class="touch-button"
             @click="moveThingie('pocket')">
             move to pocket
@@ -33,17 +44,19 @@
           <button
             v-if="thingie.location !== currentSpaze"
             type="button"
+            :data-thingie-id="thingie._id"
             class="touch-button"
             @click="moveThingie(currentSpaze)">
             move to spaze
           </button>
         </div>
 
-        <div class="controls">
+        <div :data-thingie-id="thingie._id" class="controls">
           <button
             v-for="button in controls"
             :key="button.inner"
             type="button"
+            :data-thingie-id="thingie._id"
             :class="['touch-button', button.classes]"
             @click="handleControlClick(button.directive, button.value)">
             {{ button.inner }}
@@ -52,6 +65,7 @@
             v-for="button in shared"
             :key="button.inner"
             type="button"
+            :data-thingie-id="thingie._id"
             :class="['touch-button', button.classes]"
             @click="handleControlClick(button.directive, button.value)">
             {{ button.inner }}
@@ -60,15 +74,17 @@
 
       </div>
 
-      <div class="section-toggle">
+      <div :data-thingie-id="thingie._id" class="section-toggle">
         <button
           type="button"
+          :data-thingie-id="thingie._id"
           class="touch-button"
           @click="toggleEditor">
           edit
         </button>
         <button
           type="button"
+          :data-thingie-id="thingie._id"
           class="touch-button"
           @click="$emit('close-editor')">
           X
