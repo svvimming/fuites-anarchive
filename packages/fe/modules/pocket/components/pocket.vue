@@ -19,14 +19,16 @@
           <SingleFileUploader />
         </div>
 
-        <Thingie
-          v-for="thingie in pocketThingies"
-          :key="thingie._id"
-          :thingie="thingie"
-          :bounds="{ x: 640, y: 400 }"
-          @initmousedown="initMousedown"
-          @initupdate="initUpdate"
-          @initmouseup="initMouseup" />
+        <template v-for="thingie in pocketThingies">
+          <component
+            :is="thingieComponent"
+            :key="thingie._id"
+            :thingie="thingie"
+            :bounds="{ x: 640, y: 400 }"
+            @initmousedown="initMousedown"
+            @initupdate="initUpdate"
+            @initmouseup="initMouseup" />
+        </template>
 
       </div>
 
@@ -39,6 +41,8 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
+import TouchEditor from '@/components/thingies/touch-editor'
 import Shader from '@/components/shader'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
@@ -48,6 +52,8 @@ export default {
 
   components: {
     Thingie,
+    TouchThingie,
+    TouchEditor,
     Shader,
     SingleFileUploader
   },
@@ -67,11 +73,15 @@ export default {
     ...mapGetters({
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      touchmode: 'general/touchmode',
       pocket: 'pocket/pocket',
       pocketIsOpen: 'pocket/pocketIsOpen'
     }),
     pocketThingies () {
       return this.thingies.filter(obj => obj.location === 'pocket' && this.pocket.thingies.includes(obj._id))
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     }
   },
 

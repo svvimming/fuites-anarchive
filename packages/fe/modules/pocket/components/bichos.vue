@@ -4,7 +4,9 @@
       ref="canvas"
       width="200"
       height="200"
-      class="bicho-canvas">
+      class="bicho-canvas"
+      v-hammer:panmove="touchmove($event)"
+      v-hammer:panend="touchend">
     </canvas>
   </div>
 </template>
@@ -16,6 +18,7 @@ const initBichoCanvas = (instance) => {
   const ctx = canvas.getContext('2d')
   ctx.lineWidth = 1
   canvas.addEventListener('mousedown', instance.mousedown)
+  canvas.addEventListener('touchstart', instance.touchstart)
 }
 
 const drawBichoPath = (instance, closePath) => {
@@ -75,6 +78,27 @@ export default {
       drawBichoPath(this, true)
       const pathData = this.coords.map(num => Math.round(num)).join(' ')
       this.$emit('path-complete', pathData)
+    },
+    // touchstart () {
+    //   document.ontouchmove
+    // },
+    touchmove (e) {
+      console.log(e)
+      if (e.touches.length > 0) {
+        const canvas = this.$refs.canvas
+        const rect = canvas.getBoundingClientRect()
+        const x = Math.max(10, Math.min(210, e.touches[0].clientX - rect.left))
+        const y = Math.max(10, Math.min(210, e.touches[0].clientY - rect.top))
+        this.coords.push(x - 10, y - 10)
+        drawBichoPath(this, false)
+      }
+    },
+    touchend () {
+      if (this.coords.length) {
+        drawBichoPath(this, true)
+        const pathData = this.coords.map(num => Math.round(num)).join(' ')
+        this.$emit('path-complete', pathData)
+      }
     }
   }
 }

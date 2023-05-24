@@ -12,14 +12,16 @@
       :pulse="0.3"
       :exposure="0.48" /> -->
 
-    <Thingie
-      v-for="thingie in compostThingies"
-      :key="thingie._id"
-      :thingie="thingie"
-      :bounds="compostBounds"
-      @initmousedown="initMousedown"
-      @initupdate="initUpdate"
-      @initmouseup="initMouseup" />
+    <template v-for="thingie in compostThingies">
+      <component
+        :is="thingieComponent"
+        :key="thingie._id"
+        :thingie="thingie"
+        :bounds="compostBounds"
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup" />
+    </template>
 
   </div>
 </template>
@@ -29,7 +31,10 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
+import TouchEditor from '@/components/thingies/touch-editor'
 import Shader from '@/components/shader'
+
 // ====================================================================== Export
 export default {
   name: 'Compost',
@@ -38,6 +43,8 @@ export default {
 
   components: {
     Thingie,
+    TouchThingie,
+    TouchEditor,
     Shader
   },
 
@@ -70,6 +77,7 @@ export default {
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
       landing: 'general/landing',
+      touchmode: 'general/touchmode',
       pocket: 'pocket/pocket',
     }),
     compost () {
@@ -84,6 +92,9 @@ export default {
     },
     compostBounds () {
       return this.compost && this.compost.bounds ? this.compost.bounds : { x: 2732, y: 2000 }
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     }
   },
 
