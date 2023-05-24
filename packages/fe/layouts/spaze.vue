@@ -42,7 +42,7 @@
     </button>
 
     <!-- ========================================================= POCKET == -->
-    <Pocket />
+    <Pocket :class="{ 'editor-active': editorThingie }" />
 
     <button
       v-if="authenticated && !modal && !editorThingie"
@@ -223,6 +223,9 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
+  // &.editor-active {
+  //   z-index: 2;
+  // }
 }
 
 .toggle {
@@ -250,6 +253,13 @@ export default {
   color: #FA8072;
   @include fontWeight_Bold;
   @include linkHover(#FA8072);
+}
+
+:deep(.pocket-wrapper) {
+  &.editor-active {
+    overflow: hidden;
+    height: calc(100vh - 256px);
+  }
 }
 
 .compost-portal-toggle {

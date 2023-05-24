@@ -1,7 +1,7 @@
 <template>
   <div
     :data-thingie-id="thingie._id" 
-    :class="['touch-editor', { active }, { expanded }]">
+    :class="['touch-editor', { active }, { expanded }, { pocketIsOpen }]">
     <div
       :data-thingie-id="thingie._id" 
       class="editor">
@@ -129,7 +129,8 @@ export default {
   computed: {
     ...mapGetters({
       landing: 'general/landing',
-      zindices: 'collections/zindices'
+      zindices: 'collections/zindices',
+      pocketIsOpen: 'pocket/pocketIsOpen'
     }),
     position () {
       return this.thingie.at
@@ -302,6 +303,11 @@ export default {
   z-index: 10001;
   &.active {
     display: block;
+    &.pocketIsOpen {
+      .section-controls {
+        height: 200px;
+      }
+    }
   }
   &.expanded {
     .section-controls {

@@ -1,5 +1,5 @@
 <template>
-  <div :class="['pocket-wrapper', { open: pocketIsOpen }]">
+  <div :class="['pocket-wrapper', { open: pocketIsOpen }, { touchmode }]">
     <div class="pocket-container">
 
       <Shader
@@ -24,7 +24,7 @@
             :is="thingieComponent"
             :key="thingie._id"
             :thingie="thingie"
-            :bounds="{ x: 640, y: 400 }"
+            :bounds="bounds"
             @initmousedown="initMousedown"
             @initupdate="initUpdate"
             @initmouseup="initMouseup" />
@@ -42,9 +42,18 @@ import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-// import TouchEditor from '@/components/thingies/touch-editor'
 import Shader from '@/components/shader'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
+
+// =================================================================== Functions
+const calculatePocketBounds = (instance) => {
+  if (instance.touchmode) {
+    instance.bounds = {
+      x: window.innerWidth - 80,
+      y: window.innerHeight - 300
+    }
+  }
+}
 
 // ====================================================================== Export
 export default {
@@ -53,19 +62,20 @@ export default {
   components: {
     Thingie,
     TouchThingie,
-    // TouchEditor,
     Shader,
     SingleFileUploader
   },
 
   data () {
     return {
+      resize: false,
       socket: false,
       turbulence: {
         src: '/portal/turbulence.png',
         width: 800,
         height: 500
-      }
+      },
+      bounds: { x: 640, y: 400 }
     }
   },
 
@@ -86,6 +96,9 @@ export default {
   },
 
   async mounted () {
+    calculatePocketBounds(this)
+    this.resize = this.$throttle(() => { calculatePocketBounds(this) }, 1)
+    window.addEventListener('resize', this.resize)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
       this.socket.emit('join-room', 'cron|goa')
@@ -99,6 +112,10 @@ export default {
         this.updateThingie(migrated)
       })
     })
+  },
+
+  beforeDestroy () {
+    if (this.resize) { window.removeEventListener('resize', this.resize) }
   },
 
   methods: {
@@ -165,6 +182,28 @@ $pocketHeight: 30rem;
     transform: scale(1);
     opacity: 1;
     z-index: 100;
+  }
+  &.touchmode {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // &.open {
+    //   z-index: 1;
+    // }
+    .pocket-container,
+    .pocket,
+    #pocket-shader {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+    }
+    #pocket-shader {
+      :deep(.glCanvas) {
+        width: calc(100vw + 10rem);
+        height: calc(100vh + 10rem);
+      }
+    }
   }
 }
 

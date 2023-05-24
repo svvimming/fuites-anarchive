@@ -131,8 +131,8 @@ export default {
     },
     styles () {
       const styles = {
-        left: this.position.x + 'px',
-        top: this.position.y + 'px',
+        left: Math.min(this.position.x, this.bounds.x) + 'px',
+        top: Math.min(this.position.y, this.bounds.y) + 'px',
         'z-index': this.position.z,
         width: this.width + 'px',
         height: this.type !== 'text' ? `${this.height}px` : 'unset',

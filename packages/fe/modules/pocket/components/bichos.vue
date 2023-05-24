@@ -82,7 +82,7 @@ export default {
       document.ontouchend = this.touchmove
     },
     touchmove (e) {
-      console.log(e)
+      e.preventDefault()
       if (e.touches.length > 0) {
         const canvas = this.$refs.canvas
         const rect = canvas.getBoundingClientRect()
