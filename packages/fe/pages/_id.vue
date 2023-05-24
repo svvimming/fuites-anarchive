@@ -38,6 +38,13 @@
       :key="`${portal.name}_${i}`"
       :to="portal" />
 
+    <button
+      v-if="authenticated && touchmode"
+      class="toggle prop-board-toggle"
+      @click="toggleEditor">
+      prop-board
+    </button>
+
   </div>
 </template>
 
@@ -273,6 +280,14 @@ export default {
         }
       }
     },
+    toggleEditor () {
+      const propboard = this.$refs.propboard
+      if (propboard.open) {
+        propboard.closeEditor()
+      } else {
+        propboard.openEditor()
+      }
+    },
     openEditor (evt) {
       if (this.authenticated && this.spaze) {
         this.editor = {
@@ -336,6 +351,22 @@ export default {
     width: 100vw !important;
     height: 100vh !important;
   }
+}
+
+.toggle.prop-board-toggle {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  height: 2rem;
+  z-index: 10000;
+  bottom: 2rem;
+  left: 2.5rem;
+  color: #6A5ACD;
+  @include fontWeight_Bold;
+  @include linkHover(#6A5ACD);
 }
 
 </style>
