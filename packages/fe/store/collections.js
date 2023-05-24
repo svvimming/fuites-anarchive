@@ -209,15 +209,11 @@ const actions = {
     commit('CLEAR_THINGIES')
   },
   // ////////////////////////////////////////////////////////// setEditorThingie
-  setEditorThingie ({ commit, rootGetters, dispatch }, thingie) {
-    const pocketIsOpen = rootGetters['pocket/pocketIsOpen']
-    if (pocketIsOpen) {
-      dispatch('pocket/setPocketIsOpen', false, { root: true })
-    }
+  setEditorThingie ({ commit }, thingie) {
     commit('SET_EDITOR_THINGIE', thingie)
   },
   // //////////////////////////////////////////////////////// clearEditorThingie
-  clearEditorThingie ({ commit, getters }) {
+  clearEditorThingie ({ commit }) {
     commit('CLEAR_EDITOR_THINGIE')
   }
 }
