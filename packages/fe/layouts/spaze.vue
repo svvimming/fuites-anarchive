@@ -89,8 +89,6 @@ const isTouchDevice = () => {
 
 const handleTouchStart = (e, instance) => {
   const targetId = e.target.getAttribute('data-thingie-id')
-  console.log(targetId)
-  console.log(instance.editorThingie)
   if (targetId !== instance.editorThingie._id) {
     instance.clearEditorThingie()
   }
