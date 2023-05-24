@@ -4,9 +4,7 @@
       ref="canvas"
       width="200"
       height="200"
-      class="bicho-canvas"
-      v-hammer:panmove="touchmove($event)"
-      v-hammer:panend="touchend">
+      class="bicho-canvas">
     </canvas>
   </div>
 </template>
@@ -79,9 +77,10 @@ export default {
       const pathData = this.coords.map(num => Math.round(num)).join(' ')
       this.$emit('path-complete', pathData)
     },
-    // touchstart () {
-    //   document.ontouchmove
-    // },
+    touchstart () {
+      document.ontouchmove = this.$throttle((e) => { this.touchmove(e) }, 50)
+      document.ontouchend = this.touchmove
+    },
     touchmove (e) {
       console.log(e)
       if (e.touches.length > 0) {
@@ -94,6 +93,8 @@ export default {
       }
     },
     touchend () {
+      document.ontouchmove = null
+      document.ontouchend = null
       if (this.coords.length) {
         drawBichoPath(this, true)
         const pathData = this.coords.map(num => Math.round(num)).join(' ')
