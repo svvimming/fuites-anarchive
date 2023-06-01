@@ -24,12 +24,12 @@
 
         <div
           :data-thingie-id="thingie._id"
-          class="move-thingie">
+          class="grid-spaceBetween move-thingie-toolbar">
           <button
             v-if="thingie.location !== 'compost'"
             type="button"
             :data-thingie-id="thingie._id"
-            class="touch-button"
+            class="col-5 touch-button move-thingie"
             @click="moveThingie('compost')">
             move to compost
           </button>
@@ -37,7 +37,7 @@
             v-if="thingie.location !== 'pocket'"
             type="button"
             :data-thingie-id="thingie._id"
-            class="touch-button"
+            class="col-5 touch-button move-thingie"
             @click="moveThingie('pocket')">
             move to pocket
           </button>
@@ -45,19 +45,21 @@
             v-if="thingie.location !== currentSpaze"
             type="button"
             :data-thingie-id="thingie._id"
-            class="touch-button"
+            class="col-5 touch-button move-thingie"
             @click="moveThingie(currentSpaze)">
             move to spaze
           </button>
         </div>
 
-        <div :data-thingie-id="thingie._id" class="controls">
+        <div 
+          :data-thingie-id="thingie._id" 
+          class="grid-center controls">
           <button
             v-for="button in controls"
             :key="button.inner"
             type="button"
             :data-thingie-id="thingie._id"
-            :class="['touch-button', button.classes]"
+            :class="['col-3', 'touch-button', 'control', button.classes]"
             @click="handleControlClick(button.directive, button.value)">
             {{ button.inner }}
           </button>
@@ -66,7 +68,7 @@
             :key="button.inner"
             type="button"
             :data-thingie-id="thingie._id"
-            :class="['touch-button', button.classes]"
+            :class="['col-3', 'touch-button', 'control', button.classes]"
             @click="handleControlClick(button.directive, button.value)">
             {{ button.inner }}
           </button>
@@ -74,18 +76,20 @@
 
       </div>
 
-      <div :data-thingie-id="thingie._id" class="section-toggle">
+      <div 
+        :data-thingie-id="thingie._id" 
+        class="grid-spaceBetween section-toggle">
         <button
           type="button"
           :data-thingie-id="thingie._id"
-          class="touch-button"
+          class="col-3 touch-button toggle"
           @click="toggleEditor">
           edit
         </button>
         <button
           type="button"
           :data-thingie-id="thingie._id"
-          class="touch-button"
+          class="col-3 touch-button toggle"
           @click="closeEditorClick">
           X
         </button>
@@ -345,9 +349,7 @@ export default {
   height: 3.5rem;
 }
 
-.section-toggle,
-.controls,
-.move-thingie {
+.section-toggle {
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -356,13 +358,26 @@ export default {
 
 .color-modal,
 .controls,
-.move-thingie {
+.move-thingie-toolbar {
   z-index: 1;
+}
+
+.move-thingie-toolbar {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .touch-button {
   display: block;
-  padding: 0 1rem;
+  padding: 0.5rem 0;
+  &.control {
+    padding: 0.375rem 1rem;
+    @include fontWeight_Bold;
+    font-size: 1.125rem;
+    margin: 0.25rem;
+    box-shadow: 1px 1px 7px rgba($lavender, 0.5);
+    border-radius: 0.25rem;
+  }
 }
 
 .color-modal {
@@ -377,7 +392,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: rgba($lavender, 0.2);
+  background-color: rgba(#f2f1f7, 0.8);
   &.open {
     display: flex;
     z-index: 2;
