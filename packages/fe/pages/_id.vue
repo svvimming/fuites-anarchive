@@ -9,25 +9,41 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <TouchEditor 
+      v-if="touchmode && spaze"
+      :thingie="editorThingie"
+      :current-spaze="spaze.name"
+      @initupdate="initUpdate"
+      @close-editor="clearEditorThingie" />
+
     <PropBoard
       v-if="authenticated && spazeExists"
       ref="propboard"
       :spz="spazeName"
       :location="editor" />
 
-    <Thingie
-      v-for="thingie in spazeThingies"
-      :key="thingie._id"
-      :thingie="thingie"
-      :bounds="spazeBounds"
-      @initmousedown="initMousedown"
-      @initupdate="initUpdate"
-      @initmouseup="initMouseup" />
+    <template v-for="thingie in spazeThingies">
+      <component
+        :is="thingieComponent"
+        :key="thingie._id"
+        :thingie="thingie"
+        :bounds="spazeBounds"
+        @initmousedown="initMousedown"
+        @initupdate="initUpdate"
+        @initmouseup="initMouseup" />
+    </template>
 
     <Portal
       v-for="(portal, i) in portals"
       :key="`${portal.name}_${i}`"
       :to="portal" />
+
+    <button
+      v-if="authenticated && touchmode"
+      class="toggle prop-board-toggle"
+      @click="toggleEditor">
+      prop-board
+    </button>
 
   </div>
 </template>
@@ -38,6 +54,8 @@ import { mapGetters, mapActions } from 'vuex'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
+import TouchEditor from '@/components/thingies/touch-editor'
 import Portal from '@/components/portal'
 import Bingo from '@/components/bingo'
 import Button from '@/components/button'
@@ -70,6 +88,8 @@ export default {
   components: {
     PropBoard,
     Thingie,
+    TouchThingie,
+    TouchEditor,
     Portal,
     Bingo,
     Button
@@ -111,11 +131,13 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
+      editorThingie: 'collections/editorThingie',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
       pocket: 'pocket/pocket',
-      modal: 'general/modal'
+      modal: 'general/modal',
+      touchmode: 'general/touchmode'
     }),
     spaze () {
       const spaze = this.spazes.find(item => item.name === this.spazeName)
@@ -127,6 +149,9 @@ export default {
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     },
     portals () {
       const portals = []
@@ -205,6 +230,7 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
+      clearEditorThingie: 'collections/clearEditorThingie',
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',
@@ -252,6 +278,14 @@ export default {
         if (this.spaze.state === 'metastable') {
           this.createNewSpazeFromThingie(thingieId)
         }
+      }
+    },
+    toggleEditor () {
+      const propboard = this.$refs.propboard
+      if (propboard.open) {
+        propboard.closeEditor()
+      } else {
+        propboard.openEditor()
       }
     },
     openEditor (evt) {
@@ -317,6 +351,22 @@ export default {
     width: 100vw !important;
     height: 100vh !important;
   }
+}
+
+.toggle.prop-board-toggle {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  height: 2rem;
+  z-index: 10000;
+  bottom: 2rem;
+  left: 2.5rem;
+  color: $lavender;
+  @include fontWeight_Bold;
+  @include linkHover($lavender);
 }
 
 </style>

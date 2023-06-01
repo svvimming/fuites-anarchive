@@ -16,6 +16,7 @@ const initBichoCanvas = (instance) => {
   const ctx = canvas.getContext('2d')
   ctx.lineWidth = 1
   canvas.addEventListener('mousedown', instance.mousedown)
+  canvas.addEventListener('touchstart', instance.touchstart)
 }
 
 const drawBichoPath = (instance, closePath) => {
@@ -75,6 +76,30 @@ export default {
       drawBichoPath(this, true)
       const pathData = this.coords.map(num => Math.round(num)).join(' ')
       this.$emit('path-complete', pathData)
+    },
+    touchstart () {
+      document.ontouchmove = this.$throttle((e) => { this.touchmove(e) }, 50)
+      document.ontouchend = this.touchend
+    },
+    touchmove (e) {
+      e.preventDefault()
+      if (e.touches.length > 0) {
+        const canvas = this.$refs.canvas
+        const rect = canvas.getBoundingClientRect()
+        const x = Math.max(10, Math.min(210, e.touches[0].clientX - rect.left))
+        const y = Math.max(10, Math.min(210, e.touches[0].clientY - rect.top))
+        this.coords.push(x - 10, y - 10)
+        drawBichoPath(this, false)
+      }
+    },
+    touchend () {
+      document.ontouchmove = null
+      document.ontouchend = null
+      if (this.coords.length) {
+        drawBichoPath(this, true)
+        const pathData = this.coords.map(num => Math.round(num)).join(' ')
+        this.$emit('path-complete', pathData)
+      }
     }
   }
 }

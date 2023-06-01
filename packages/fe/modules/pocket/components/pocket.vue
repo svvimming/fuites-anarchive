@@ -1,5 +1,5 @@
 <template>
-  <div :class="['pocket-wrapper', { open: pocketIsOpen }]">
+  <div :class="['pocket-wrapper', { open: pocketIsOpen }, { touchmode }]">
     <div class="pocket-container">
 
       <Shader
@@ -19,14 +19,16 @@
           <SingleFileUploader />
         </div>
 
-        <Thingie
-          v-for="thingie in pocketThingies"
-          :key="thingie._id"
-          :thingie="thingie"
-          :bounds="{ x: 640, y: 400 }"
-          @initmousedown="initMousedown"
-          @initupdate="initUpdate"
-          @initmouseup="initMouseup" />
+        <template v-for="thingie in pocketThingies">
+          <component
+            :is="thingieComponent"
+            :key="thingie._id"
+            :thingie="thingie"
+            :bounds="bounds"
+            @initmousedown="initMousedown"
+            @initupdate="initUpdate"
+            @initmouseup="initMouseup" />
+        </template>
 
       </div>
 
@@ -39,8 +41,19 @@
 import { mapGetters, mapActions } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
+import TouchThingie from '@/components/thingies/touch-thingie'
 import Shader from '@/components/shader'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
+
+// =================================================================== Functions
+const calculatePocketBounds = (instance) => {
+  if (instance.touchmode) {
+    instance.bounds = {
+      x: window.innerWidth - 80,
+      y: window.innerHeight - 300
+    }
+  }
+}
 
 // ====================================================================== Export
 export default {
@@ -48,18 +61,21 @@ export default {
 
   components: {
     Thingie,
+    TouchThingie,
     Shader,
     SingleFileUploader
   },
 
   data () {
     return {
+      resize: false,
       socket: false,
       turbulence: {
         src: '/portal/turbulence.png',
         width: 800,
         height: 500
-      }
+      },
+      bounds: { x: 640, y: 400 }
     }
   },
 
@@ -67,15 +83,22 @@ export default {
     ...mapGetters({
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
+      touchmode: 'general/touchmode',
       pocket: 'pocket/pocket',
       pocketIsOpen: 'pocket/pocketIsOpen'
     }),
     pocketThingies () {
       return this.thingies.filter(obj => obj.location === 'pocket' && this.pocket.thingies.includes(obj._id))
+    },
+    thingieComponent () {
+      return this.touchmode ? 'TouchThingie' : 'Thingie'
     }
   },
 
   async mounted () {
+    calculatePocketBounds(this)
+    this.resize = this.$throttle(() => { calculatePocketBounds(this) }, 1)
+    window.addEventListener('resize', this.resize)
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
       this.socket.emit('join-room', 'cron|goa')
@@ -89,6 +112,10 @@ export default {
         this.updateThingie(migrated)
       })
     })
+  },
+
+  beforeDestroy () {
+    if (this.resize) { window.removeEventListener('resize', this.resize) }
   },
 
   methods: {
@@ -155,6 +182,28 @@ $pocketHeight: 30rem;
     transform: scale(1);
     opacity: 1;
     z-index: 100;
+  }
+  &.touchmode {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // &.open {
+    //   z-index: 1;
+    // }
+    .pocket-container,
+    .pocket,
+    #pocket-shader {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+    }
+    #pocket-shader {
+      :deep(.glCanvas) {
+        width: calc(100vw + 10rem);
+        height: calc(100vh + 10rem);
+      }
+    }
   }
 }
 

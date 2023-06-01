@@ -42,20 +42,20 @@
     </button>
 
     <!-- ========================================================= POCKET == -->
-    <Pocket />
+    <Pocket :class="{ 'editor-active': editorThingie }" />
 
     <button
-      v-if="authenticated && !modal"
+      v-if="authenticated && !modal && !editorThingie"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
       pocket
     </button>
 
     <!-- ======================================================== COMPOST == -->
-    <CompostPortal />
+    <CompostPortal v-if="!touchmode" />
 
     <button
-      v-if="authenticated && notCompostPage && !modal"
+      v-if="authenticated && notCompostPage && !modal && !touchmode"
       :class="['toggle', { compostPortalIsOpen }, 'compost-portal-toggle']"
       @click="toggleCompostPortal">
       compost
@@ -82,6 +82,18 @@ import Toaster from '@/modules/toaster/components/toaster'
 import PopSpz from '@/components/pop-spz'
 import LandingSiteData from '@/data/landing.json'
 
+// =================================================================== Functions
+const isTouchDevice = () => {
+  return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
+}
+
+const handleTouchStart = (e, instance) => {
+  const targetId = e.target.getAttribute('data-thingie-id')
+  if (targetId !== instance.editorThingie._id) {
+    instance.clearEditorThingie()
+  }
+}
+
 // ====================================================================== Export
 export default {
   name: 'spaze',
@@ -98,7 +110,8 @@ export default {
     return {
       prevRoute: '',
       tipsOpen: false,
-      key: 0
+      key: 0,
+      touchstart: false
     }
   },
 
@@ -110,7 +123,9 @@ export default {
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
       compostPortalIsOpen: 'compost/compostPortalIsOpen',
-      modal: 'general/modal'
+      modal: 'general/modal',
+      touchmode: 'general/touchmode',
+      editorThingie: 'collections/editorThingie'
     }),
     links () {
       return LandingSiteData.portal.links
@@ -142,13 +157,27 @@ export default {
     }
   },
 
+  mounted () {
+    if (isTouchDevice()) {
+      this.setTouchMode(true)
+      this.touchstart = (e) => { handleTouchStart(e, this) }
+      document.addEventListener('touchstart', this.touchstart)
+    }
+  },
+
+  beforeDestroy () {
+    if (this.touchstart) { document.removeEventListener('touchstart', this.touchstart) }
+  },
+
   methods: {
     ...mapActions({
       setPortalView: 'general/setPortalView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
-      setAudioContextPlayState: 'mixer/setAudioContextPlayState'
+      setAudioContextPlayState: 'mixer/setAudioContextPlayState',
+      setTouchMode: 'general/setTouchMode',
+      clearEditorThingie: 'collections/clearEditorThingie'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -194,6 +223,9 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
+  // &.editor-active {
+  //   z-index: 2;
+  // }
 }
 
 .toggle {
@@ -221,6 +253,13 @@ export default {
   color: #FA8072;
   @include fontWeight_Bold;
   @include linkHover(#FA8072);
+}
+
+:deep(.pocket-wrapper) {
+  &.editor-active {
+    overflow: hidden;
+    height: calc(100vh - 256px);
+  }
 }
 
 .compost-portal-toggle {

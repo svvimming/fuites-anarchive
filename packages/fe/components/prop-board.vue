@@ -1,7 +1,7 @@
 <template>
   <div
     :key="`prop-board-instance-${key}`"
-    :class="['prop-board', { open }]"
+    :class="['prop-board', { open }, { touchmode }]"
     :style="editorStyles">
 
     <TextThingie
@@ -81,12 +81,16 @@ export default {
 
   computed: {
     ...mapGetters({
-      landing: 'general/landing'
+      landing: 'general/landing',
+      touchmode: 'general/touchmode'
     }),
     fonts () {
       return this.landing.data.font_families
     },
     editorStyles () {
+      if (this.touchmode) {
+        return { '--thingie-color': this.color, '--propboard-highlight-color': this.highlight }
+      }
       return {
         left: this.location.x + 'px',
         top: this.location.y + 'px',
@@ -140,6 +144,8 @@ export default {
     },
     async createTextThingie () {
       const width = this.$refs.textArea ? this.$refs.textArea.clientWidth : 80
+      const x = this.touchmode ? window.scrollX + Math.floor(Math.random() * window.innerWidth) - 80 : this.location.x
+      const y = this.touchmode ? window.scrollY + Math.floor(Math.random() * window.innerHeight) - 300 : this.location.y
       const complete = await this.postCreateThingie({
         location: this.spazeName,
         type: 'text',
@@ -148,11 +154,7 @@ export default {
         fontfamily: this.fontfamily,
         colors: [this.color],
         width,
-        at: {
-          x: this.location.x,
-          y: this.location.y,
-          z: 1
-        }
+        at: { x, y, z: 1 }
       })
       if (complete) {
         this.status = 'upload-finalized'
@@ -199,6 +201,13 @@ export default {
   }
   .text-input {
     color: var(--thingie-color);
+  }
+  &.touchmode {
+    position: fixed;
+    left: 1.5rem;
+    bottom: 5.5rem;
+    width: calc(100vw - 4.5rem);
+    height: 8rem;
   }
 }
 

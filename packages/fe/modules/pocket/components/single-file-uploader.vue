@@ -71,7 +71,6 @@
       </div>
 
       <Bichos
-        v-if="filesize < (maxFileSizeMB * 1000000)"
         @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
 
       <Button
@@ -88,6 +87,7 @@
 
 <script>
 // ===================================================================== Imports
+          // v-if="filesize < (maxFileSizeMB * 1000000)"
 import { mapActions } from 'vuex'
 import Mime from 'mime'
 import Filesize from 'filesize'

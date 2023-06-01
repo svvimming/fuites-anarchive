@@ -26,3 +26,19 @@ Vue.directive('click-outside', {
     document.removeEventListener('keyup', el.pressEscKey)
   }
 })
+
+// ////////////////////////////////////////////////// Close element on mousedown
+// ------------- Modified version of the directive above to use mouse down event
+Vue.directive('touch-outside', {
+  bind (el, binding, vnode) {
+    el.touchOutsideEvent = function (e) {
+      if (!(el === e.target || el.contains(e.target))) {
+        vnode.context[binding.expression](e)
+      }
+    }
+    document.body.addEventListener('touchstart', el.touchOutsideEvent)
+  },
+  unbind (el) {
+    document.body.removeEventListener('touchstart', el.touchOutsideEvent)
+  }
+})
