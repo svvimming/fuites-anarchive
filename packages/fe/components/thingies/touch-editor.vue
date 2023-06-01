@@ -281,6 +281,7 @@ export default {
       }
     },
     handleTouchMove (evt) {
+      evt.preventDefault()
       const editor = this.$refs.colorpicker
       if (editor) {
         const editorRect = editor.getBoundingClientRect()
