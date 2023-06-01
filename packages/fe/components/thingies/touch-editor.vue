@@ -86,7 +86,7 @@
           type="button"
           :data-thingie-id="thingie._id"
           class="touch-button"
-          @click="$emit('close-editor')">
+          @click="closeEditorClick">
           X
         </button>
       </div>
@@ -175,6 +175,12 @@ export default {
   methods: {
     toggleEditor () {
       this.expanded = !this.expanded
+    },
+    closeEditorClick () {
+      this.$emit('close-editor')
+      if (this.colorpicker) {
+        this.colorpicker = false
+      }
     },
     handleControlClick (directive, value) {
       this[directive](value)
