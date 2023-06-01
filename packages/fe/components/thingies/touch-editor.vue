@@ -14,12 +14,12 @@
           :data-thingie-id="thingie._id"
           :class="['color-modal', { open: colorpicker }]"
           :style="{ '--color-control': textColor }">
-       <!--    <div
+          <div
             ref="colorpicker"
             class="color-picker"
-            v-hammer:panmove="handleTouchMove($event)"
+            v-hammer:panmove="(evt) => handleTouchMove(evt)"
             v-hammer:panend="closeColorEditor">
-          </div> -->
+          </div>
         </div>
 
         <div
@@ -350,7 +350,7 @@ export default {
 }
 
 .color-modal {
-  --color-control: #000000;
+  --color-control: rgba(189, 187, 215, 1);
   display: none;
   pointer-events: auto;
   position: absolute;
