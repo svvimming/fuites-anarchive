@@ -11,6 +11,7 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
+const Rules = require('../rules.json')
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -145,6 +146,8 @@ const updatePortalsBetweenSpazes = async () => {
   try {
     await checkPortalThingiesExist()
     const thingies = await MC.model.Thingie.find({})
+    const preventConnections = Rules.tunneler.prevent_connection_list
+    const maxLinks = Rules.tunneler.max_portal_chain_length
     for (let i = 0; i < thingies.length; i++) {
       const thingie = thingies[i]
       const locations = [...thingie.last_locations].reverse()
@@ -152,19 +155,22 @@ const updatePortalsBetweenSpazes = async () => {
         .find({ thingie_ref: thingie._id })
         .sort({ createdAt: 'desc' })
       if (locations.length > 1) {
-        for (let j = 0; j < locations.length - 1; j++) {
+        const len = Math.min(locations.length - 1, maxLinks)
+        for (let j = 0; j < len; j++) {
           const vA = locations[j]
           const vB = locations[j + 1]
-          const portalName = `${vA.location}_${vB.location}`
-          const portalExists = portals.some(portal => portal.edge === portalName)
-          const notPocketOrCompost = vA.location !== 'pocket' && vB.location !== 'pocket' && vA.location !== 'compost' && vB.location !== 'compost'
-          if (!portalExists && notPocketOrCompost) {
-            createNewPortal(thingie._id, portalName, [vA, vB])
+          if (vA.location !== vB.location) {
+            const portalName = `${vA.location}_${vB.location}`
+            const portalExists = portals.some(portal => portal.edge === portalName)
+            const notOnPreventList = !preventConnections.includes(vA.location) && !preventConnections.includes(vB.location)
+            if (!portalExists && notOnPreventList) {
+              createNewPortal(thingie._id, portalName, [vA, vB])
+            }
           }
         }
       }
-      if (portals.length > (locations.length - 1)) {
-        const outdatedPortals = portals.slice(locations.length - 1)
+      if (portals.length > maxLinks) {
+        const outdatedPortals = portals.slice(maxLinks)
         for (let k = 0; k < outdatedPortals.length; k++) {
           closePortal(outdatedPortals[k]._id)
         }

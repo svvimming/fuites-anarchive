@@ -1,0 +1,26 @@
+{
+  "kleptobot": {
+    "prevent_theft_list": [
+      "compost",
+      "pool"
+    ],
+    "prevent_deposit_list": [
+      "pool"
+    ],
+    "milliseconds_since_updated_grace_period": 86400000
+  },
+  "tunneler": {
+    "prevent_connection_list": [
+      "pocket",
+      "compost",
+      "pool"
+    ],
+    "max_portal_chain_length": 3
+  },
+  "goa": {
+    "ignore_list": [
+      "compost",
+      "pool"
+    ]
+  }
+}
