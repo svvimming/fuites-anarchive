@@ -13,6 +13,7 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
+const Rules = require('../rules.json')
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -61,40 +62,46 @@ socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 const thingieMigrator = async () => {
   try {
     const leaking = await MC.model.Spaze
-      .find({ state: 'leaking' })
+      .find({
+        state: 'leaking',
+        name: { $nin: Rules.kleptobot.prevent_theft_list }
+      })
       .populate({
         path: 'portal_refs',
         populate: { path: 'thingie_ref' }
       })
     if (leaking.length) {
       const migrations = []
+      const preventDepositList = Rules.kleptobot.prevent_deposit_list
       for (let i = 0; i < leaking.length; i++) {
         const spaze = leaking[i]
         const thingies = await MC.model.Thingie
           .find({ location: spaze.name })
           .sort({ preacceleration: 'desc' })
         const now = Date.now()
-        const day = 1000 * 60 * 60 * 24 // one day in milliseconds
-        const oneDayAgo = new Date(now - day)
-        const recentlyUpdated = await MC.model.Thingie.exists({ location: spaze.name, updatedAt: { $lt: oneDayAgo } })
+        const gracePeriod = Rules.kleptobot.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
+        const recentlyUpdated = thingies.some((thingie) => {
+          const lastUpdated = new Date(thingie.updatedAt)
+          return lastUpdated.getTime() > now - gracePeriod
+        })
         if (thingies.length && !recentlyUpdated) {
           const overflow = await MC.model.Spaze.findOne({ overflow_spaze: spaze.name })
           let newSpazeLocation = ''
-          if (overflow) {
+          if (overflow && !preventDepositList.includes(overflow.name)) {
             newSpazeLocation = overflow.name
           } else if (spaze.portal_refs.length) {
-            const portal = spaze.portal_refs[0]
-            const connection = portal.edge.split('_').find(name => name !== spaze.name)
+            const connection = spaze.portal_refs.find((portal) => {
+              return portal.edge.split('_').find(name => name !== spaze.name && !preventDepositList.includes(name))
+            })
             if (connection) {
-              newSpazeLocation = connection
+              newSpazeLocation = connection.edge.split('_').find(name => name !== spaze.name && !preventDepositList.includes(name))
             }
           }
           if (newSpazeLocation) {
             const firstThingie = thingies[0]
             migrations.push({
               _id: firstThingie._id,
-              location: newSpazeLocation,
-              last_location: {
+              new_location: {
                 location: newSpazeLocation,
                 at: {
                   x: firstThingie.at.x,
@@ -110,10 +117,10 @@ const thingieMigrator = async () => {
         for (let j = 0; j < migrations.length; j++) {
           const migration = migrations[j]
           const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
-            location: migration.location,
+            location: migration.new_location.location,
             last_update_token: 'kleptobot',
             update_count: 0,
-            $push: { last_locations: migration.last_location }
+            $push: { last_locations: migration.new_location }
           }, { new: true })
           socket.emit('cron|migrate-thingie|initialize', thingie)
         }

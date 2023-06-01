@@ -14,6 +14,7 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
+const Rules = require('../rules.json')
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -63,7 +64,9 @@ socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 // ------------------------------------------------------- ThingiePreaccelerator
 const thingiePreaccelerator = async () => {
   try {
-    const spazes = await MC.model.Spaze.find({})
+    const spazes = await MC.model.Spaze.find({
+      name: { $nin: Rules.goa.ignore_list }
+    })
     for (let i = 0; i < spazes.length; i++) {
       const spaze = spazes[i]
       const thingies = await MC.model.Thingie.find({ location: spaze.name })
@@ -116,7 +119,9 @@ const thingiePreaccelerator = async () => {
 // -----------------------------------------------------------------------------
 const spazePreaccelerator = async () => {
   try {
-    const spazes = await MC.model.Spaze.find({})
+    const spazes = await MC.model.Spaze.find({
+      name: { $nin: Rules.goa.ignore_list }
+    })
     const thingies = await MC.model.Thingie.find({}).populate({
       path: 'file_ref',
       select: 'filename file_ext filesize'
