@@ -18,8 +18,7 @@
             ref="colorpicker"
             :data-thingie-id="thingie._id"
             class="color-picker"
-            v-hammer:pan="(evt) => handleTouchMove(evt)"
-            v-hammer:panend="closeColorEditor">
+            @touchstart="touchstart">
           </div>
         </div>
 
@@ -280,7 +279,11 @@ export default {
         }
       }
     },
-    handleTouchMove (evt) {
+    touchstart () {
+      document.ontouchmove = this.$throttle((e) => { this.touchmove(e) }, 50)
+      document.ontouchend = this.touchend
+    },
+    touchmove (evt) {
       evt.preventDefault()
       const editor = this.$refs.colorpicker
       if (editor) {
@@ -293,6 +296,11 @@ export default {
         const rgb = this.$convertHSLtoRGB(h, g, l)
         this.textColor = this.$convertRGBtoHex(rgb[0], rgb[1], rgb[2])
       }
+    },
+    touchend () {
+      document.ontouchmove = null
+      document.ontouchend = null
+      this.closeColorEditor()
     }
   }
 }

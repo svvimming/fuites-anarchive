@@ -79,7 +79,7 @@ export default {
     },
     touchstart () {
       document.ontouchmove = this.$throttle((e) => { this.touchmove(e) }, 50)
-      document.ontouchend = this.touchmove
+      document.ontouchend = this.touchend
     },
     touchmove (e) {
       e.preventDefault()
