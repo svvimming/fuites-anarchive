@@ -16,6 +16,7 @@
           :style="{ '--color-control': textColor }">
           <div
             ref="colorpicker"
+            :data-thingie-id="thingie._id"
             class="color-picker"
             v-hammer:panmove="(evt) => handleTouchMove(evt)"
             v-hammer:panend="closeColorEditor">
