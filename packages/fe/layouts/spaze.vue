@@ -179,6 +179,11 @@ export default {
       if (!val && this.compostPortalIsOpen) {
         this.toggleCompostPortal()
       }
+    },
+    editorThingie (val) {
+      if (!val && this.editorExpanded) {
+        this.editorExpanded = false
+      } 
     }
   },
 
