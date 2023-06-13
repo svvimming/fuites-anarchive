@@ -14,10 +14,17 @@
               v-if="authenticated"
               type="button"
               :data-thingie-id="thingie._id"
-              :class="['touch-button', 'toggle', { disabled: !thingie._id }]"
               :disabled="!thingie._id"
+              :class="[
+                'touch-button', 
+                'toggle', 
+                'editor-toggle', 
+                { disabled: !thingie._id }, 
+                { editorOpen }
+              ]"
               @click="$emit('toggle-thingie-editor')">
-              edit
+              <span class="text">edit</span>
+              <Chevron />
             </button>
 
             <button
@@ -57,13 +64,15 @@
 // ====================================================================== Import
 import { mapGetters } from 'vuex'
 import LandingSite from '@/components/landing-site'
+import Chevron from '@/components/icons/chevron'
 
 // ====================================================================== Export
 export default {
   name: 'TouchmodeToolbar',
 
   components: {
-    LandingSite
+    LandingSite,
+    Chevron
   },
 
   props: {
@@ -86,6 +95,11 @@ export default {
       type: [Boolean, String],
       required: true,
       default: 'paused'
+    },
+    editorOpen: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
 
@@ -127,9 +141,6 @@ export default {
   justify-content: space-between;
   width: 100%;
   height: $touchmodeToolbarHeight;
-  // &.authenticated {
-  //   justify-content: flex-start;
-  // }
 }
 
 :deep(.landing-site) {
@@ -144,6 +155,7 @@ export default {
     align-items: center;
   }
   &.authenticated {
+    position: absolute;
     width: unset;
     .inner-panel {
       position: fixed;
@@ -175,9 +187,50 @@ export default {
 
 // /////////////////////////////////////////////////////////.//// Token Controls 
 .toggle {
+  padding: 0.375rem 1rem;
+    @include fontWeight_Bold;
+    font-size: 1.125rem;
+    margin: 0.25rem;
+    box-shadow: 1px 1px 7px rgba($lavender, 0.5);
+    border-radius: 0.25rem;
   &.disabled {
     opacity: 0.33;
   }
+}
+
+.editor-toggle {
+  display: flex;
+  align-items: center;
+  .text {
+    display: block;
+    margin-right: 0.25rem;
+  }
+  :deep(.icon-chevron) {
+    width: 7px;
+    height: 6px;
+    transition: 200ms ease;
+    transform: rotate(180deg);
+  }
+  &.disabled {
+    opacity: 0.33;
+  }
+  &.editorOpen {
+    :deep(.icon-chevron) {
+      transform: rotate(0deg);
+    }
+  }
+}
+
+.pocket-toggle {
+  color: #FA8072;
+  @include fontWeight_Bold;
+  @include linkHover(#FA8072);
+}
+
+.tips-toggle {
+  color: #000000;
+  @include fontWeight_Bold;
+  @include linkHover(#000000);
 }
 
 // ///////////////////////////////////////////////////////////// Public Controls 

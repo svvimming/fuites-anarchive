@@ -26,28 +26,13 @@
           :data-thingie-id="thingie._id"
           class="grid-spaceBetween move-thingie-toolbar">
           <button
-            v-if="thingie.location !== 'compost'"
+            v-for="button in destinations"
+            :key="button.text"
             type="button"
             :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie('compost')">
-            move to compost
-          </button>
-          <button
-            v-if="thingie.location !== 'pocket'"
-            type="button"
-            :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie('pocket')">
-            move to pocket
-          </button>
-          <button
-            v-if="thingie.location !== currentSpaze"
-            type="button"
-            :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie(currentSpaze)">
-            move to spaze
+            :class="['col-5', 'touch-button', 'move-thingie', 'control', button.location]"
+            @click="moveThingie(button.location)">
+            <span>{{ button.text }}</span>
           </button>
         </div>
 
@@ -104,9 +89,9 @@ export default {
 
   data () {
     return {
-      // active: false,
       colorpicker: false,
-      textColor: ''
+      textColor: '',
+      destinations: []
     }
   },
 
@@ -148,19 +133,17 @@ export default {
   },
 
   watch: {
-    // thingie (val) {
-    //   if (val) {
-    //     this.active = true
-    //   } else {
-    //     this.active = false
-    //   }
-    // },
     expanded (val) {
       if (!val) {
         if (this.colorpicker) { this.colorpicker = false }
         if (this.thingie) {
           this.clearEditorThingie()
         }
+      }
+    },
+    thingie (val) {
+      if (val) {
+        this.setDestinations()
       }
     }
   },
@@ -189,6 +172,7 @@ export default {
         at: { x, y, z: 1 },
         record_new_location: true
       })
+      this.$emit('close-thingie-editor')
       this.clearEditorThingie()
     },
     toggleImageClip () {
@@ -288,6 +272,14 @@ export default {
       document.ontouchmove = null
       document.ontouchend = null
       this.closeColorEditor()
+    },
+    setDestinations () {
+      const possibleLocations = [
+        { location: 'compost', text: 'move to compost' },
+        { location: this.currentSpaze, text: 'move to spaze' },
+        { location: 'pocket', text: 'move to pocket' }
+      ]
+      this.destinations = possibleLocations.filter(item => item.location !== this.thingie.location)
     }
   }
 }
@@ -348,6 +340,42 @@ export default {
     margin: 0.25rem;
     box-shadow: 1px 1px 7px rgba($lavender, 0.5);
     border-radius: 0.25rem;
+  }
+  &.move-thingie {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    &.pocket,
+    &.compost {
+      position: relative;
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0.33;
+      }
+      span {
+        position: relative;
+        color: #000000;
+        @include fontWeight_Bold;
+        @include linkHover(#000000);
+      }
+    }
+    &.pocket {
+      &:before {
+        background-image: url('~/assets/images/pocket-background.jpg');
+      }
+    }
+    &.compost {
+      &:before {
+        background-image: url('~/assets/images/compost-portal-background.jpg');
+      }
+    }
   }
 }
 
