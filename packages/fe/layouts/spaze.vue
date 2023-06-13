@@ -10,14 +10,16 @@
     <!-- ================================================== Current SPAZE == -->
     <section class="spaze-container">
 
-      <Nuxt :key="`spz-init-${key}`" />
+      <Nuxt
+        ref="spaze" 
+        :key="`spz-init-${key}`" />
 
     </section>
 
     <!-- ==================================================== PORTAL VIEW == -->
 
     <button
-      v-if="notCompostPage"
+      v-if="notCompostPage && !touchmode"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
       @click="togglePortals">
       portals
@@ -25,6 +27,7 @@
 
     <!-- ========================================================== AUDIO == -->
     <button
+      v-if="!touchmode"
       :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
       @click="toggleAudioContext">
       audio
@@ -32,10 +35,13 @@
 
     <!-- =================================================== LANDING SITE == -->
 
-    <LandingSite :links="links" :tips="tips" :tips-open="tipsOpen" />
+    <LandingSite
+      v-if="!touchmode"
+      :tips-open="tipsOpen"
+      page="spaze" />
 
     <button
-      v-if="authenticated"
+      v-if="authenticated && !touchmode"
       :class="['toggle', { tipsOpen }, 'tips-toggle', 'no-select']"
       @click="toggleTips">
       tips
@@ -45,7 +51,7 @@
     <Pocket :class="{ 'editor-active': editorThingie }" />
 
     <button
-      v-if="authenticated && !modal && !editorThingie"
+      v-if="authenticated && !modal && !editorThingie && !touchmode"
       :class="['toggle', { pocketIsOpen }, 'pocket-toggle']"
       @click="togglePocket">
       pocket
@@ -61,12 +67,26 @@
       compost
     </button>
 
-    <!-- <nuxt-link
-      v-if="authenticated && !notCompostPage"
-      :to="`/${prevRoute}`"
-      class="toggle compost-portal-toggle">
-      back
-    </nuxt-link> -->
+    <!-- ================================================== TOUCH TOOLBAR == -->
+    <TouchmodeToolbar 
+      v-if="touchmode"
+      :thingie="editorThingie"
+      :pocket-is-open="pocketIsOpen"
+      :portal-view="portalView"
+      :audio-context-state="audioContextState"
+      :editor-open="editorExpanded"
+      @toggle-thingie-editor="toggleThingieEditor"
+      @toggle-pocket="togglePocket"
+      @toggle-portal-view="togglePortals"
+      @toggle-audio-context="toggleAudioContext" />
+
+    <!-- =================================================== TOUCH EDITOR == -->
+    <TouchEditor 
+      v-if="touchmode && currentSpaze"
+      :current-spaze="currentSpaze"
+      :expanded="editorExpanded"
+      @initupdate="handleThingieUpdate"
+      @close-thingie-editor="editorExpanded = false" />
 
   </div>
 </template>
@@ -80,7 +100,8 @@ import Pocket from '@/modules/pocket/components/pocket'
 import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
 import PopSpz from '@/components/pop-spz'
-import LandingSiteData from '@/data/landing.json'
+import TouchEditor from '@/components/thingies/touch-editor'
+import TouchmodeToolbar from '@/components/touchmode-toolbar'
 
 // =================================================================== Functions
 const isTouchDevice = () => {
@@ -103,7 +124,9 @@ export default {
     Pocket,
     CompostPortal,
     Toaster,
-    PopSpz
+    PopSpz,
+    TouchEditor,
+    TouchmodeToolbar
   },
 
   data () {
@@ -111,7 +134,8 @@ export default {
       prevRoute: '',
       tipsOpen: false,
       key: 0,
-      touchstart: false
+      touchstart: false,
+      editorExpanded: false
     }
   },
 
@@ -125,20 +149,21 @@ export default {
       compostPortalIsOpen: 'compost/compostPortalIsOpen',
       modal: 'general/modal',
       touchmode: 'general/touchmode',
-      editorThingie: 'collections/editorThingie'
+      editorThingie: 'collections/editorThingie',
+      spazes: 'collections/spazes'
     }),
-    links () {
-      return LandingSiteData.portal.links
-    },
-    tips () {
-      return LandingSiteData.portal.tips
-    },
     audioContextState () {
       if (this.audioContext) { return this.playState }
       return false
     },
     notCompostPage () {
       return this.$route.name !== 'compost'
+    },
+    currentSpaze () {
+      const name = this.$route.params.id
+      const spaze = this.spazes.find(item => item.name === name)
+      if (spaze) { return spaze.name }
+      return false
     }
   },
 
@@ -200,6 +225,12 @@ export default {
     },
     handleRefresh () {
       this.key++
+    },
+    handleThingieUpdate (update) {
+      $nuxt.$emit('init-update-thingie-global', update)
+    },
+    toggleThingieEditor () {
+      this.editorExpanded = !this.editorExpanded
     }
   }
 }
@@ -223,9 +254,6 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
-  // &.editor-active {
-  //   z-index: 2;
-  // }
 }
 
 .toggle {
@@ -253,13 +281,6 @@ export default {
   color: #FA8072;
   @include fontWeight_Bold;
   @include linkHover(#FA8072);
-}
-
-:deep(.pocket-wrapper) {
-  &.editor-active {
-    overflow: hidden;
-    height: calc(100vh - 256px);
-  }
 }
 
 .compost-portal-toggle {

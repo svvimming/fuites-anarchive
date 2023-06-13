@@ -9,13 +9,6 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
-    <TouchEditor 
-      v-if="touchmode && spaze"
-      :thingie="editorThingie"
-      :current-spaze="spaze.name"
-      @initupdate="initUpdate"
-      @close-editor="clearEditorThingie" />
-
     <PropBoard
       v-if="authenticated && spazeExists"
       ref="propboard"
@@ -55,7 +48,6 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import TouchEditor from '@/components/thingies/touch-editor'
 import Portal from '@/components/portal'
 import Bingo from '@/components/bingo'
 import Button from '@/components/button'
@@ -89,7 +81,6 @@ export default {
     PropBoard,
     Thingie,
     TouchThingie,
-    TouchEditor,
     Portal,
     Bingo,
     Button
@@ -131,7 +122,6 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
-      editorThingie: 'collections/editorThingie',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
@@ -140,8 +130,7 @@ export default {
       touchmode: 'general/touchmode'
     }),
     spaze () {
-      const spaze = this.spazes.find(item => item.name === this.spazeName)
-      return spaze
+      return this.spazes.find(item => item.name === this.spazeName)
     },
     spazeThingies () {
       if (this.spaze) {
@@ -198,6 +187,12 @@ export default {
     }
   },
 
+  created () {
+    this.$nuxt.$on('init-update-thingie-global', (update) => {
+      this.initUpdate(update)
+    })
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
@@ -223,6 +218,7 @@ export default {
 
   beforeDestroy () {
     if (this.keydown) { window.removeEventListener('keydown', this.keydown )}
+    this.$nuxt.$off('init-update-thingie-global')
   },
 
   methods: {
@@ -230,7 +226,6 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
-      clearEditorThingie: 'collections/clearEditorThingie',
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',

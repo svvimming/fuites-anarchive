@@ -226,7 +226,7 @@ $pocketHeight: 30rem;
 #pocket-shader {
   position: absolute;
   z-index: -1;
-  opacity: 0.66;
+  opacity: 0.9;
   width: $pocketWidth;
   height: $pocketHeight;
   :deep(.glCanvas) {
