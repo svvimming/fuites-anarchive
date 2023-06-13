@@ -176,6 +176,7 @@ export default {
         at: { x, y, z: 1 },
         record_new_location: true
       })
+      this.clearEditorThingie()
     },
     toggleImageClip () {
       this.$emit('initupdate', {

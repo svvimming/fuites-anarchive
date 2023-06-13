@@ -109,9 +109,7 @@ const isTouchDevice = () => {
 
 const handleTouchStart = (e, instance) => {
   const targetId = e.target.getAttribute('data-thingie-id')
-  console.log(e.target)
   if (targetId !== instance.editorThingie._id) {
-    console.log('target mismatch')
     instance.clearEditorThingie()
   }
 }
@@ -182,7 +180,6 @@ export default {
       }
     },
     editorThingie (val) {
-      console.log(val)
       if (!val && this.editorExpanded) {
         this.editorExpanded = false
       } 
