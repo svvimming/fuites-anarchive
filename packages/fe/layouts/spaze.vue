@@ -181,6 +181,7 @@ export default {
       }
     },
     editorThingie (val) {
+      console.log(val)
       if (!val && this.editorExpanded) {
         this.editorExpanded = false
       } 

@@ -68,6 +68,7 @@
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
+import CloneDeep from 'lodash/cloneDeep'
 
 import EditableParams from '@/data/thingie-editable-params.json'
 
@@ -156,18 +157,19 @@ export default {
       this[directive](value)
     },
     moveThingie (newLocation) {
-      let x = this.thingie.at.x
-      let y = this.thingie.at.y
+      const thingie = CloneDeep(this.thingie)
+      let x = thingie.at.x
+      let y = thingie.at.y
       if (newLocation === 'pocket') {
-        x = Math.floor(Math.random() * 560) - this.thingie.width + 40
+        x = Math.floor(Math.random() * 560) - thingie.width + 40
         y = Math.floor(Math.random() * 300)
       }
       if (newLocation === this.currentSpaze) {
-        x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - this.thingie.width
+        x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - thingie.width
         y = window.scrollY + Math.floor(Math.random() * window.innerHeight) - 100
       }
       this.$emit('initupdate', { 
-        _id: this.thingie._id, 
+        _id: thingie._id, 
         location: newLocation,
         at: { x, y, z: 1 },
         record_new_location: true
