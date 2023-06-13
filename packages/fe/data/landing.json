@@ -39,7 +39,7 @@
       }
     ]
   },
-  "portal": {
+  "spaze": {
     "links": [
       {
         "component": "Bingo",
@@ -51,6 +51,13 @@
           "jx": 4,
           "jy": 4,
           "fsj": 6
+        },
+        "bingo_touchmode": {
+          "lsx": 10,
+          "lsy": 12,
+          "jx": 3,
+          "jy": 3,
+          "fsj": 4
         }
       }
     ],

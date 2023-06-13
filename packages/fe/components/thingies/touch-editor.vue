@@ -1,7 +1,7 @@
 <template>
   <div
     :data-thingie-id="thingie._id" 
-    :class="['touch-editor', { active }, { expanded }, { pocketIsOpen }]">
+    :class="['touch-editor', { expanded }, { pocketIsOpen }]">
     <div
       :data-thingie-id="thingie._id" 
       class="editor">
@@ -76,32 +76,13 @@
 
       </div>
 
-      <div 
-        :data-thingie-id="thingie._id" 
-        class="grid-spaceBetween section-toggle">
-        <button
-          type="button"
-          :data-thingie-id="thingie._id"
-          class="col-3 touch-button toggle"
-          @click="toggleEditor">
-          edit
-        </button>
-        <button
-          type="button"
-          :data-thingie-id="thingie._id"
-          class="col-3 touch-button toggle"
-          @click="closeEditorClick">
-          X
-        </button>
-      </div>
-
     </div>
   </div>
 </template>
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import EditableParams from '@/data/thingie-editable-params.json'
 
@@ -110,21 +91,20 @@ export default {
   name: 'TouchEditor',
 
   props: {
-    thingie: {
-      type: [Boolean, Object],
-      required: true,
-      default: false
-    },
     currentSpaze: {
       type: String,
       required: true
+    },
+    expanded: {
+      type: Boolean,
+      required: true,
+      default: false
     }
   },
 
   data () {
     return {
-      active: false,
-      expanded: false,
+      // active: false,
       colorpicker: false,
       textColor: ''
     }
@@ -134,7 +114,8 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       zindices: 'collections/zindices',
-      pocketIsOpen: 'pocket/pocketIsOpen'
+      pocketIsOpen: 'pocket/pocketIsOpen',
+      thingie: 'collections/editorThingie'
     }),
     position () {
       return this.thingie.at
@@ -167,25 +148,27 @@ export default {
   },
 
   watch: {
-    thingie (val) {
-      if (val) {
-        this.active = true
-      } else {
-        this.active = false
+    // thingie (val) {
+    //   if (val) {
+    //     this.active = true
+    //   } else {
+    //     this.active = false
+    //   }
+    // },
+    expanded (val) {
+      if (!val) {
+        if (this.colorpicker) { this.colorpicker = false }
+        if (this.thingie) {
+          this.clearEditorThingie()
+        }
       }
     }
   },
 
   methods: {
-    toggleEditor () {
-      this.expanded = !this.expanded
-    },
-    closeEditorClick () {
-      this.$emit('close-editor')
-      if (this.colorpicker) {
-        this.colorpicker = false
-      }
-    },
+    ...mapActions({
+      clearEditorThingie: 'collections/clearEditorThingie'
+    }),
     handleControlClick (directive, value) {
       this[directive](value)
     },
@@ -206,7 +189,7 @@ export default {
         at: { x, y, z: 1 },
         record_new_location: true
       })
-      this.$emit('close-editor')
+      this.clearEditorThingie()
     },
     toggleImageClip () {
       this.$emit('initupdate', {
@@ -314,15 +297,15 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .touch-editor {
   position: fixed;
-  display: none;
-  bottom: 0;
+  display: block;
+  bottom: calc($touchmodeToolbarHeight + 0.5px);
   left: 0;
   width: 100%;
   background-color: white;
-  border-top: solid 1px $gray400;
+  border-top: solid 0.5px rgba($salt, 0.3);
   z-index: 10001;
   &.active {
-    display: block;
+    
     &.pocketIsOpen {
       .section-controls {
         height: 200px;
@@ -342,18 +325,6 @@ export default {
   height: 0;
   overflow: hidden;
   transition: height 300ms ease;
-}
-
-.section-toggle {
-  display: flex;
-  height: 3.5rem;
-}
-
-.section-toggle {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .color-modal,

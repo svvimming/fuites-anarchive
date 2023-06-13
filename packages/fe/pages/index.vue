@@ -1,7 +1,7 @@
 <template>
   <div class="container">
 
-    <LandingSite :links="links" />
+    <LandingSite page="index" />
 
     <Shader
       id="irridescent-shader"

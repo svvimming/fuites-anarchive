@@ -1,5 +1,5 @@
 <template>
-  <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }]">
+  <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }, { authenticated }]">
     <div class="inner-panel">
 
       <!-- ============================================================= NAV -->
@@ -14,8 +14,8 @@
             <Bingo
               v-if="link.component === 'Bingo'"
               :text="link.text"
-              :font-size="24"
-              :custom="link.bingo" />
+              :font-size="mobile ? 10 : 24"
+              :custom="getBingoParameters(link)" />
             <div v-else>
               {{ link.text }}
             </div>
@@ -55,6 +55,8 @@ import { mapGetters } from 'vuex'
 
 import Bingo from '@/components/bingo'
 import Auth from '@/components/auth'
+import LandingSiteData from '@/data/landing.json'
+
 // ====================================================================== Export
 export default {
   name: 'LandingSite',
@@ -65,29 +67,42 @@ export default {
   },
 
   props: {
-    links: {
-      type: Array,
-      required: false,
-      default: () => []
-    },
-    tips: {
-      type: Array,
-      required: false,
-      default: () => []
-    },
     tipsOpen: {
       type: Boolean,
       required: false,
       default: false
+    },
+    mobile: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    page: {
+      type: String,
+      required: true,
+      default: 'index'
     }
   },
 
   computed: {
     ...mapGetters({
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      landing: 'general/landing'
     }),
     isNotLandingPage () {
       return this.$route.path !== '/' && this.$route.path !== '/info'
+    },
+    links () {
+      return this.landing.data[this.page].links
+    },
+    tips () {
+      return this.page === 'spaze' ? this.landing.data[this.page].tips : []
+    }
+  },
+
+  methods: {
+    getBingoParameters (link) {
+      return this.mobile ? link.bingo_touchmode : link.bingo
     }
   }
 }
