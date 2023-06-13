@@ -175,7 +175,6 @@ export default {
         record_new_location: true
       })
       this.$emit('close-thingie-editor')
-      this.clearEditorThingie()
     },
     toggleImageClip () {
       this.$emit('initupdate', {
