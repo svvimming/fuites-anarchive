@@ -32,7 +32,9 @@
             :data-thingie-id="thingie._id"
             :class="['col-5', 'touch-button', 'move-thingie', 'control', button.location]"
             @click="moveThingie(button.location)">
-            <span>{{ button.text }}</span>
+            <span :data-thingie-id="thingie._id">
+              {{ button.text }}
+            </span>
           </button>
         </div>
 
