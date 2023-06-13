@@ -23,8 +23,10 @@
                 { editorOpen }
               ]"
               @click="$emit('toggle-thingie-editor')">
-              <span class="text">edit</span>
-              <Chevron />
+              <span 
+                class="text"
+                :data-thingie-id="thingie._id">edit</span>
+              <Chevron :thingie-id="thingie._id" />
             </button>
 
             <button
@@ -162,8 +164,8 @@ export default {
       padding: 2rem 1rem;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: calc(100vh - $touchmodeToolbarHeight - 0.5px);
+      width: 100%;
+      height: calc(100% - $touchmodeToolbarHeight - 0.5px);
       overflow: scroll;
       background-color: rgba(white, 0.0);
       visibility: hidden;
