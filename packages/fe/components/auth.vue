@@ -8,9 +8,10 @@
         <input
           v-model="token"
           ref="input"
-          type="text"
+          type="email"
           autocomplete="off"
           class="input"
+          autocapitalize="none"
           @keyup.enter="submit(token)"
           placeholder="enter token" />
       </div>
@@ -54,8 +55,9 @@ export default {
       authenticate: 'general/authenticate'
     }),
     submit (token) {
-      const cleaned = token.replaceAll(' ', '-')
-      this.authenticate(cleaned)
+      const sanitized = token.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
+      const joined = sanitized.join('-')
+      this.authenticate(joined)
     }
   }
 }

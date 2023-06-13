@@ -1,6 +1,6 @@
 <template>
   <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }, { authenticated }]">
-    <div class="inner-panel">
+    <div :class="['inner-panel', { 'desktop-full-screen': !mobile }, { tipsOpen }]">
 
       <!-- ============================================================= NAV -->
 
@@ -96,7 +96,10 @@ export default {
       return this.landing.data[this.page].links
     },
     tips () {
-      return this.page === 'spaze' ? this.landing.data[this.page].tips : []
+      if (this.page === 'spaze') {
+        return this.mobile ? this.landing.data[this.page].tips_touchdevice : this.landing.data[this.page].tips
+      }
+      return []
     }
   },
 
@@ -118,6 +121,28 @@ export default {
   z-index: 1000;
   &.low-z {
     z-index: -1;
+  }
+  &.authenticated {
+    .inner-panel {
+      position: relative;
+      &.desktop-full-screen {
+        &:before {
+          content: '';
+          position: absolute;
+          width: 100vw;
+          height: 100vh;
+          top: 0;
+          left: 0;
+          background-color: rgba(white, 0.0);
+          transition: 200ms ease;
+        }
+        &.tipsOpen {
+          &:before {
+            background-color: rgba(white, 0.9);
+          }
+        }
+      }
+    }
   }
 }
 
