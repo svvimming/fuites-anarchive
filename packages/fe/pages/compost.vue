@@ -12,13 +12,6 @@
       :pulse="0.3"
       :exposure="0.48" /> -->
 
-    <TouchEditor 
-      v-if="touchmode && compost"
-      :thingie="editorThingie"
-      current-spaze="compost"
-      @initupdate="initUpdate"
-      @close-editor="clearEditorThingie" />
-
     <template v-for="thingie in compostThingies">
       <component
         :is="thingieComponent"
@@ -35,11 +28,10 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import TouchEditor from '@/components/thingies/touch-editor'
 import Shader from '@/components/shader'
 
 // ====================================================================== Export
@@ -51,7 +43,6 @@ export default {
   components: {
     Thingie,
     TouchThingie,
-    TouchEditor,
     Shader
   },
 
@@ -112,9 +103,6 @@ export default {
   },
 
   methods: {
-    ...mapActions({
-      clearEditorThingie: 'collections/clearEditorThingie'
-    }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,

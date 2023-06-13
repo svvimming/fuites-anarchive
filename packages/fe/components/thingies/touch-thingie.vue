@@ -192,8 +192,7 @@ export default {
 
   methods: {
     ...mapActions({
-      setEditorThingie: 'collections/setEditorThingie',
-      clearEditorThingie: 'collections/clearEditorThingie'
+      setEditorThingie: 'collections/setEditorThingie'
     }),
     panstart (evt) {
       if (this.authenticated && !this.thingie.dragging && this.editing) {
