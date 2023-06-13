@@ -47,8 +47,8 @@
             ref="uploader"
             :upload-on-draw-bicho="false"
             :upload-to-spaze="newSpazeName"
-            init-prompt="Upload a file to the new spaze"
-            final-prompt="Draw a shape to create the new spaze"
+            :init-prompt="`Upload a file to create ${newSpazeName}`"
+            :final-prompt="`Draw a shape to create ${newSpazeName}`"
             @draw-bicho-complete="createNewSpazeFrom404"
             @upload-finalized="successfullyCreated" />
         </div>
@@ -82,7 +82,7 @@ export default {
       inputs: [
         {
           input: 'name',
-          label: 'new spaze name:',
+          label: 'new page name:',
           disabled: true,
           value: ''
         }

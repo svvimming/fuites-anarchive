@@ -276,7 +276,7 @@ export default {
     setDestinations () {
       const possibleLocations = [
         { location: 'compost', text: 'move to compost' },
-        { location: this.currentSpaze, text: 'move to spaze' },
+        { location: this.currentSpaze, text: `move to ${this.currentSpaze}` },
         { location: 'pocket', text: 'move to pocket' }
       ]
       this.destinations = possibleLocations.filter(item => item.location !== this.thingie.location)
@@ -364,6 +364,7 @@ export default {
         color: #000000;
         @include fontWeight_Bold;
         @include linkHover(#000000);
+        white-space: nowrap;
       }
     }
     &.pocket {
