@@ -75,6 +75,7 @@
       :portal-view="portalView"
       :audio-context-state="audioContextState"
       :editor-open="editorExpanded"
+      :current-spaze="currentSpaze"
       @toggle-thingie-editor="toggleThingieEditor"
       @toggle-pocket="togglePocket"
       @toggle-portal-view="togglePortals"
@@ -85,8 +86,7 @@
       v-if="touchmode && currentSpaze"
       :current-spaze="currentSpaze"
       :expanded="editorExpanded"
-      @initupdate="handleThingieUpdate"
-      @close-thingie-editor="editorExpanded = false" />
+      @initupdate="handleThingieUpdate" />
 
   </div>
 </template>
@@ -181,7 +181,6 @@ export default {
       }
     },
     editorThingie (val) {
-      console.log(val)
       if (!val && this.editorExpanded) {
         this.editorExpanded = false
       } 

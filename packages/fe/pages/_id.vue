@@ -10,10 +10,10 @@
     @click.self="closeEditor($event)">
 
     <PropBoard
-      v-if="authenticated && spazeExists"
+      v-if="authenticated && spazeExists && !touchmode"
       ref="propboard"
       :spz="spazeName"
-      :location="editor" />
+      :location="editorCoords" />
 
     <template v-for="thingie in spazeThingies">
       <component
@@ -31,12 +31,12 @@
       :key="`${portal.name}_${i}`"
       :to="portal" />
 
-    <button
+<!--     <button
       v-if="authenticated && touchmode"
       class="toggle prop-board-toggle"
       @click="toggleEditor">
       prop-board
-    </button>
+    </button> -->
 
   </div>
 </template>
@@ -102,7 +102,7 @@ export default {
         x: 0,
         y: 0
       },
-      editor: {
+      editorCoords: {
         x: 0,
         y: 0
       },
@@ -277,7 +277,7 @@ export default {
     },
     toggleEditor () {
       const propboard = this.$refs.propboard
-      if (propboard.open) {
+      if (propboard && propboard.open) {
         propboard.closeEditor()
       } else {
         propboard.openEditor()
@@ -285,16 +285,18 @@ export default {
     },
     openEditor (evt) {
       if (this.authenticated && this.spaze) {
-        this.editor = {
+        this.editorCoords = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
         }
-        this.$refs.propboard.openEditor()
+        if (this.$refs.propboard) {
+          this.$refs.propboard.openEditor()
+        }
       }
     },
     closeEditor (evt) {
       if (this.authenticated && this.spaze) {
-        if (!evt.altKey) {
+        if (!evt.altKey && this.$refs.propboard) {
           this.$refs.propboard.closeEditor()
         }
       }

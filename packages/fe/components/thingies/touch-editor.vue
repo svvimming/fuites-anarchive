@@ -32,7 +32,9 @@
             :data-thingie-id="thingie._id"
             :class="['col-5', 'touch-button', 'move-thingie', 'control', button.location]"
             @click="moveThingie(button.location)">
-            <span>{{ button.text }}</span>
+            <span :data-thingie-id="thingie._id">
+              {{ button.text }}
+            </span>
           </button>
         </div>
 
@@ -174,7 +176,6 @@ export default {
         at: { x, y, z: 1 },
         record_new_location: true
       })
-      this.$emit('close-thingie-editor')
       this.clearEditorThingie()
     },
     toggleImageClip () {

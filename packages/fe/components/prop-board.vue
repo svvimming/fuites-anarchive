@@ -58,7 +58,7 @@ export default {
     },
     location: {
       type: Object,
-      required: true,
+      required: false,
       default: () => ({
         x: 0,
         y: 0
@@ -205,8 +205,8 @@ export default {
   &.touchmode {
     position: fixed;
     left: 1.5rem;
-    bottom: 5.5rem;
-    width: calc(100vw - 4.5rem);
+    bottom: calc($touchmodeToolbarHeight + 2.5rem);
+    width: calc(100% - 4.5rem);
     height: 8rem;
   }
 }

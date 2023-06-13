@@ -174,6 +174,9 @@ const actions = {
           const update = { thingie: incoming, action: 'remove' }
           dispatch('pocket/postUpdatePocket', update, { root: true })
         }
+        if (state.editorThingie) {
+          dispatch('collections/clearEditorThingie')
+        }
       }
       commit('UPDATE_THINGIE', { index, thingie: incoming })
     }
