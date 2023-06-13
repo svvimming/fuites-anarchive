@@ -174,7 +174,6 @@ export default {
         at: { x, y, z: 1 },
         record_new_location: true
       })
-      // this.$emit('close-thingie-editor')
     },
     toggleImageClip () {
       this.$emit('initupdate', {
