@@ -1,5 +1,11 @@
 <template>
   <div class="toolbar-container">
+
+    <PropBoard
+      v-if="authenticated && currentSpaze"
+      ref="touchPropboard"
+      :spz="currentSpaze" />
+
     <div class="grid-noGutter">
       <div class="col">
         <div :class="['touchmode-toolbar', { authenticated }]">
@@ -11,7 +17,7 @@
               :class="{ 'tips-open': tipsOpen }" />
 
             <button
-              v-if="authenticated"
+              v-if="authenticated && thingie"
               type="button"
               :data-thingie-id="thingie._id"
               :disabled="!thingie._id"
@@ -27,6 +33,14 @@
                 class="text"
                 :data-thingie-id="thingie._id">edit</span>
               <Chevron :thingie-id="thingie._id" />
+            </button>
+
+            <button
+              v-if="authenticated && !thingie"
+              :class="['toggle', 'prop-board-toggle', { disabled: pocketIsOpen || tipsOpen }, { propboardOpen }]"
+              :disabled="pocketIsOpen || tipsOpen"
+              @click="togglePropboard">
+              propboard
             </button>
 
             <button
@@ -65,7 +79,9 @@
 <script>
 // ====================================================================== Import
 import { mapGetters } from 'vuex'
+
 import LandingSite from '@/components/landing-site'
+import PropBoard from '@/components/prop-board'
 import Chevron from '@/components/icons/chevron'
 
 // ====================================================================== Export
@@ -74,6 +90,7 @@ export default {
 
   components: {
     LandingSite,
+    PropBoard,
     Chevron
   },
 
@@ -102,24 +119,60 @@ export default {
       type: Boolean,
       required: false,
       default: false
+    },
+    currentSpaze: {
+      type: [Boolean, String],
+      required: true,
+      default: false
     }
   },
 
   data () {
     return {
-      tipsOpen: false
+      tipsOpen: false,
+      propboardOpen: false
     }
   },
 
   computed: {
     ...mapGetters({
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      editorThingie: 'collections/editorThingie'
     })
+  },
+
+  watch: {
+    editorThingie (val) {
+      if (val) { this.closePropboard() }
+    },
+    pocketIsOpen (val) {
+      if (val) { this.closePropboard() }
+    },
+    tipsOpen (val) {
+      if (val) { this.closePropboard() }
+    }
   },
 
   methods: {
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
+    },
+    togglePropboard () {
+      const propboard = this.$refs.touchPropboard
+      if (propboard.open) {
+        propboard.closeEditor()
+        this.propboardOpen = false
+      } else {
+        propboard.openEditor()
+        this.propboardOpen = true
+      }
+    },
+    closePropboard () {
+      const propboard = this.$refs.touchPropboard
+      if (propboard.open) {
+        propboard.closeEditor()
+        this.propboardOpen = false
+      }
     }
   }
 }
@@ -190,13 +243,16 @@ export default {
 // /////////////////////////////////////////////////////////.//// Token Controls 
 .toggle {
   padding: 0.375rem 1rem;
-    @include fontWeight_Bold;
-    font-size: 1.125rem;
-    margin: 0.25rem;
-    box-shadow: 1px 1px 7px rgba($lavender, 0.5);
-    border-radius: 0.25rem;
+  @include fontWeight_Bold;
+  font-size: 1.125rem;
+  margin: 0.25rem;
+  box-shadow: 1px 1px 7px rgba($lavender, 0.5);
+  border-radius: 0.25rem;
   &.disabled {
     opacity: 0.33;
+  }
+  @include tiny {
+    font-size: 1rem;
   }
 }
 
@@ -227,12 +283,33 @@ export default {
   color: #FA8072;
   @include fontWeight_Bold;
   @include linkHover(#FA8072);
+  &.pocketIsOpen {
+    color: white;
+    background-color: #FA8072;
+  }
 }
 
 .tips-toggle {
   color: #000000;
   @include fontWeight_Bold;
   @include linkHover(#000000);
+  &.tipsOpen {
+    color: white;
+    background-color: $salt;
+  }
+}
+
+.prop-board-toggle {
+  color: #8c8aa1;
+  @include fontWeight_Bold;
+  @include linkHover(#8c8aa1);
+  &.disabled {
+    opacity: 0.5;
+  }
+  &.propboardOpen {
+    color: white;
+    background-color: #8c8aa1;
+  }
 }
 
 // ///////////////////////////////////////////////////////////// Public Controls 

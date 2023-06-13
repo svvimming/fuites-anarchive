@@ -75,6 +75,7 @@
       :portal-view="portalView"
       :audio-context-state="audioContextState"
       :editor-open="editorExpanded"
+      :current-spaze="currentSpaze"
       @toggle-thingie-editor="toggleThingieEditor"
       @toggle-pocket="togglePocket"
       @toggle-portal-view="togglePortals"

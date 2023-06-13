@@ -2,19 +2,19 @@
   "image": [
     {
       "directive": "toggleImageClip",
-      "inner": "*"
+      "inner": "mask"
     }
   ],
   "text": [
     {
       "directive": "changeFontSize",
       "value": "up",
-      "inner": "^"
+      "inner": "+size"
     },
     {
       "directive": "changeFontSize",
       "value": "down",
-      "inner": "˅"
+      "inner": "-size"
     },
     {
       "directive": "changeFontFamily",
@@ -29,12 +29,12 @@
     {
       "directive": "changePathStrokeWidth",
       "value": "up",
-      "inner": "^"
+      "inner": "+width"
     },
     {
       "directive": "changePathStrokeWidth",
       "value": "down",
-      "inner": "˅"
+      "inner": "-width"
     },
     {
       "directive": "changeSoundLevel",
@@ -51,12 +51,12 @@
     {
       "directive": "changeZindex",
       "value": "front",
-      "inner": "+"
+      "inner": "forward"
     },
     {
       "directive": "changeZindex",
       "value": "back",
-      "inner": "-"
+      "inner": "back"
     }
   ]
 }
