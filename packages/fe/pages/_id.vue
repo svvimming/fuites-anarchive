@@ -49,8 +49,6 @@ import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
 import Portal from '@/components/portal'
-import Bingo from '@/components/bingo'
-import Button from '@/components/button'
 
 // =================================================================== Functions
 const initSpazeScrollPosition = (instance) => {
@@ -81,9 +79,7 @@ export default {
     PropBoard,
     Thingie,
     TouchThingie,
-    Portal,
-    Bingo,
-    Button
+    Portal
   },
 
   async fetch ({ app, store, route }) {

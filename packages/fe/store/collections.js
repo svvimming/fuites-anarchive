@@ -226,6 +226,7 @@ const actions = {
 const mutations = {
   ADD_SPAZES (state, spazes) {
     state.spazes = spazes
+    console.log(state.spazes)
   },
   ADD_SPAZE (state, spaze) {
     state.spazes.push(spaze)

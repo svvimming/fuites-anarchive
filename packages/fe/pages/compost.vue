@@ -32,7 +32,7 @@ import { mapGetters } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import Shader from '@/components/shader'
+// import Shader from '@/components/shader'
 
 // ====================================================================== Export
 export default {
@@ -42,8 +42,8 @@ export default {
 
   components: {
     Thingie,
-    TouchThingie,
-    Shader
+    TouchThingie
+    // Shader
   },
 
   async fetch ({ app, store }) {
