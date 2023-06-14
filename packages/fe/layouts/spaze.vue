@@ -157,10 +157,10 @@ export default {
       return false
     },
     notCompostPage () {
-      return this.$route.name !== 'compost'
+      return this.$route.params.id !== 'compost'
     },
     currentSpaze () {
-      const name = this.notCompostPage ? this.$route.params.id : this.$route.name
+      const name = this.$route.params.id
       const spaze = this.spazes.find(item => item.name === name)
       if (spaze) { return spaze.name }
       return false
