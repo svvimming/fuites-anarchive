@@ -160,9 +160,8 @@ export default {
       return this.$route.name !== 'compost'
     },
     currentSpaze () {
-      const name = this.$route.params.id
+      const name = this.notCompostPage ? this.$route.params.id : this.$route.name
       const spaze = this.spazes.find(item => item.name === name)
-      console.log('spaze layout, current spaze name:', spaze.name)
       if (spaze) { return spaze.name }
       return false
     }
