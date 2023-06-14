@@ -96,10 +96,20 @@ export default {
     }
   },
 
+  created () {
+    this.$nuxt.$on('init-update-thingie-global', (update) => {
+      this.initUpdate(update)
+    })
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
+  },
+
+  beforeDestroy () {
+    this.$nuxt.$off('init-update-thingie-global')
   },
 
   methods: {
