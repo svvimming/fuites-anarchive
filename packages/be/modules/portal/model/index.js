@@ -42,6 +42,10 @@ const PortalSchema = new Schema({
     b: {
       type: VertexSchema
     }
+  },
+  enabled: {
+    type: Boolean,
+    required: false
   }
 }, {
   timestamps: true,

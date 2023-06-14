@@ -182,12 +182,38 @@ const updatePortalsBetweenSpazes = async () => {
   }
 }
 
+// //////////////////////////////////////////////////////////// SetActivePortals
+const setActivePortals = async () => {
+  try {
+    const spazes = await MC.model.Spaze.find({}).populate({
+      path: 'portal_refs',
+      populate: { path: 'thingie_ref' }
+    })
+    const len = spazes.length
+    for (let i = 0; i < len; i++) {
+      const spaze = spazes[i]
+      if (spaze.portal_refs.length) {
+        const lowestP = spaze.portal_refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
+        const enabled = spaze.portal_refs.filter((portal) => portal.enabled)
+        for (let i = 0; i < enabled.length; i++) {
+          await MC.model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
+        }
+        await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
+      }
+    }
+  } catch (e) {
+    console.log('==================================== [Cron: setActivePortals]')
+    console.log(e)
+  }
+}
+
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
 MC.app.on('mongoose-connected', async () => {
   console.log('🚇 Tunneler started')
   try {
     await updatePortalsBetweenSpazes()
+    await setActivePortals()
     console.log('🚇 Tunneler updates completed')
     socket.disconnect()
     process.exit(0)

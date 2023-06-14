@@ -144,7 +144,7 @@ export default {
         const connections = this.spaze.portal_refs
         connections.forEach((connection) => {
           const vertices = connection.vertices
-          if (vertices.a.location === this.spazeName) {
+          if (vertices.a.location === this.spazeName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.b.location,
@@ -152,7 +152,7 @@ export default {
               colors: connection.thingie_ref ? connection.thingie_ref.colors : []
             })
           }
-          if (vertices.b.location === this.spazeName) {
+          if (vertices.b.location === this.spazeName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.a.location,
@@ -162,7 +162,15 @@ export default {
           }
         })
       }
-      return portals
+      const queue = []
+      const slugs = portals.map(portal => portal.slug)
+      const uniqueSlugs = [...new Set(slugs)]
+      for (let i = 0; i < uniqueSlugs.length; i++) {
+        const slug = uniqueSlugs[i]
+        const found = portals.find(portal => portal.slug === slug)
+        queue.push(found)
+      }
+      return queue
     },
     spazeBounds () {
       return this.spaze && this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }

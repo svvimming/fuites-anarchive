@@ -86,7 +86,7 @@ export default {
   }
   &:hover {
     .portal-thingie {
-      transform: scale(1.5);
+      transform: scale(2);
       &:before {
         animation: 2s linear 0s infinite normal forwards running hoverRing;
       }
@@ -96,11 +96,12 @@ export default {
 
 .portal-thingie {
   position: relative;
-  width: 1rem;
-  height: 1rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   z-index: 2;
   transition: 300ms ease;
+  opacity: 0.9;
   &:before,
   &:after {
     content: '';
