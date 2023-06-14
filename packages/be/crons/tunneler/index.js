@@ -192,13 +192,24 @@ const setActivePortals = async () => {
     const len = spazes.length
     for (let i = 0; i < len; i++) {
       const spaze = spazes[i]
+      const connections = spaze.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== spaze.name))
+
       if (spaze.portal_refs.length) {
-        const lowestP = spaze.portal_refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
-        const enabled = spaze.portal_refs.filter((portal) => portal.enabled)
-        for (let i = 0; i < enabled.length; i++) {
-          await MC.model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
+        const slugs = [...new Set(connections.flat())]
+        for (let j = 0; j < slugs.length; j++) {
+          const slug = slugs[j]
+          const refs = spaze.portal_refs.filter(ref => ref.edge.includes(slug))
+          const lowestP = refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
+          const enabled = refs.filter((portal) => portal.enabled)
+          for (let k = 0; k < enabled.length; k++) {
+            await MC.model.Portal.findOneAndUpdate({ _id: enabled[k]._id }, { enabled: false })
+          }
+          await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
         }
-        await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
+        // for (let i = 0; i < enabled.length; i++) {
+        //   await MC.model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
+        // }
+        // await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
       }
     }
   } catch (e) {
