@@ -157,7 +157,7 @@ export default {
       return false
     },
     notCompostPage () {
-      return this.$route.name !== 'compost'
+      return this.$route.params.id !== 'compost'
     },
     currentSpaze () {
       const name = this.$route.params.id
@@ -245,11 +245,11 @@ export default {
 // /////////////////////////////////////////////////////////////// Scoped Styles
 .super-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  &.page-compost {
-    overflow: hidden;
-  }
+  width: 100%;
+  height: 100%;
+  // &.page-compost {
+  //   overflow: hidden;
+  // }
 }
 
 .spaze-container {

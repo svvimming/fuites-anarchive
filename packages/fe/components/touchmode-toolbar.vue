@@ -159,17 +159,19 @@ export default {
     },
     togglePropboard () {
       const propboard = this.$refs.touchPropboard
-      if (propboard.open) {
-        propboard.closeEditor()
-        this.propboardOpen = false
-      } else {
-        propboard.openEditor()
-        this.propboardOpen = true
+      if (propboard) {
+        if (propboard.open) {
+          propboard.closeEditor()
+          this.propboardOpen = false
+        } else {
+          propboard.openEditor()
+          this.propboardOpen = true
+        }
       }
     },
     closePropboard () {
       const propboard = this.$refs.touchPropboard
-      if (propboard.open) {
+      if (propboard && propboard.open) {
         propboard.closeEditor()
         this.propboardOpen = false
       }

@@ -32,7 +32,7 @@ import { mapGetters } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import Shader from '@/components/shader'
+// import Shader from '@/components/shader'
 
 // ====================================================================== Export
 export default {
@@ -42,8 +42,8 @@ export default {
 
   components: {
     Thingie,
-    TouchThingie,
-    Shader
+    TouchThingie
+    // Shader
   },
 
   async fetch ({ app, store }) {
@@ -96,10 +96,20 @@ export default {
     }
   },
 
+  created () {
+    this.$nuxt.$on('init-update-thingie-global', (update) => {
+      this.initUpdate(update)
+    })
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
+  },
+
+  beforeDestroy () {
+    this.$nuxt.$off('init-update-thingie-global')
   },
 
   methods: {
