@@ -162,6 +162,7 @@ export default {
     currentSpaze () {
       const name = this.$route.params.id
       const spaze = this.spazes.find(item => item.name === name)
+      console.log('spaze layout, current spaze name:', spaze.name)
       if (spaze) { return spaze.name }
       return false
     }
@@ -245,11 +246,11 @@ export default {
 // /////////////////////////////////////////////////////////////// Scoped Styles
 .super-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  &.page-compost {
-    overflow: hidden;
-  }
+  width: 100%;
+  height: 100%;
+  // &.page-compost {
+  //   overflow: hidden;
+  // }
 }
 
 .spaze-container {
