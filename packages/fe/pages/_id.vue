@@ -9,18 +9,11 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
-    <TouchEditor 
-      v-if="touchmode && spaze"
-      :thingie="editorThingie"
-      :current-spaze="spaze.name"
-      @initupdate="initUpdate"
-      @close-editor="clearEditorThingie" />
-
     <PropBoard
-      v-if="authenticated && spazeExists"
+      v-if="authenticated && spazeExists && !touchmode"
       ref="propboard"
       :spz="spazeName"
-      :location="editor" />
+      :location="editorCoords" />
 
     <template v-for="thingie in spazeThingies">
       <component
@@ -38,12 +31,12 @@
       :key="`${portal.name}_${i}`"
       :to="portal" />
 
-    <button
+<!--     <button
       v-if="authenticated && touchmode"
       class="toggle prop-board-toggle"
       @click="toggleEditor">
       prop-board
-    </button>
+    </button> -->
 
   </div>
 </template>
@@ -55,10 +48,7 @@ import { mapGetters, mapActions } from 'vuex'
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import TouchEditor from '@/components/thingies/touch-editor'
 import Portal from '@/components/portal'
-import Bingo from '@/components/bingo'
-import Button from '@/components/button'
 
 // =================================================================== Functions
 const initSpazeScrollPosition = (instance) => {
@@ -89,10 +79,7 @@ export default {
     PropBoard,
     Thingie,
     TouchThingie,
-    TouchEditor,
-    Portal,
-    Bingo,
-    Button
+    Portal
   },
 
   async fetch ({ app, store, route }) {
@@ -111,7 +98,7 @@ export default {
         x: 0,
         y: 0
       },
-      editor: {
+      editorCoords: {
         x: 0,
         y: 0
       },
@@ -131,7 +118,6 @@ export default {
     ...mapGetters({
       spazes: 'collections/spazes',
       thingies: 'collections/thingies',
-      editorThingie: 'collections/editorThingie',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
@@ -140,8 +126,7 @@ export default {
       touchmode: 'general/touchmode'
     }),
     spaze () {
-      const spaze = this.spazes.find(item => item.name === this.spazeName)
-      return spaze
+      return this.spazes.find(item => item.name === this.spazeName)
     },
     spazeThingies () {
       if (this.spaze) {
@@ -198,6 +183,12 @@ export default {
     }
   },
 
+  created () {
+    this.$nuxt.$on('init-update-thingie-global', (update) => {
+      this.initUpdate(update)
+    })
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'spazes')
@@ -223,6 +214,7 @@ export default {
 
   beforeDestroy () {
     if (this.keydown) { window.removeEventListener('keydown', this.keydown )}
+    this.$nuxt.$off('init-update-thingie-global')
   },
 
   methods: {
@@ -230,7 +222,6 @@ export default {
       updateThingie: 'collections/updateThingie',
       clearSpazes: 'collections/clearSpazes',
       clearThingies: 'collections/clearThingies',
-      clearEditorThingie: 'collections/clearEditorThingie',
       postCreateSpaze: 'collections/postCreateSpaze',
       postUpdateSpaze: 'collections/postUpdateSpaze',
       addSpaze: 'collections/addSpaze',
@@ -282,7 +273,7 @@ export default {
     },
     toggleEditor () {
       const propboard = this.$refs.propboard
-      if (propboard.open) {
+      if (propboard && propboard.open) {
         propboard.closeEditor()
       } else {
         propboard.openEditor()
@@ -290,16 +281,18 @@ export default {
     },
     openEditor (evt) {
       if (this.authenticated && this.spaze) {
-        this.editor = {
+        this.editorCoords = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
         }
-        this.$refs.propboard.openEditor()
+        if (this.$refs.propboard) {
+          this.$refs.propboard.openEditor()
+        }
       }
     },
     closeEditor (evt) {
       if (this.authenticated && this.spaze) {
-        if (!evt.altKey) {
+        if (!evt.altKey && this.$refs.propboard) {
           this.$refs.propboard.closeEditor()
         }
       }

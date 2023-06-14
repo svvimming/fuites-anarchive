@@ -1,6 +1,6 @@
 <template>
-  <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }]">
-    <div class="inner-panel">
+  <div :class="['landing-site', { 'low-z': authenticated && isNotLandingPage && !tipsOpen }, { authenticated }]">
+    <div :class="['inner-panel', { 'desktop-full-screen': !mobile }, { tipsOpen }]">
 
       <!-- ============================================================= NAV -->
 
@@ -14,8 +14,8 @@
             <Bingo
               v-if="link.component === 'Bingo'"
               :text="link.text"
-              :font-size="24"
-              :custom="link.bingo" />
+              :font-size="mobile ? 10 : 24"
+              :custom="getBingoParameters(link)" />
             <div v-else>
               {{ link.text }}
             </div>
@@ -55,6 +55,8 @@ import { mapGetters } from 'vuex'
 
 import Bingo from '@/components/bingo'
 import Auth from '@/components/auth'
+import LandingSiteData from '@/data/landing.json'
+
 // ====================================================================== Export
 export default {
   name: 'LandingSite',
@@ -65,29 +67,45 @@ export default {
   },
 
   props: {
-    links: {
-      type: Array,
-      required: false,
-      default: () => []
-    },
-    tips: {
-      type: Array,
-      required: false,
-      default: () => []
-    },
     tipsOpen: {
       type: Boolean,
       required: false,
       default: false
+    },
+    mobile: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    page: {
+      type: String,
+      required: true,
+      default: 'index'
     }
   },
 
   computed: {
     ...mapGetters({
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      landing: 'general/landing'
     }),
     isNotLandingPage () {
       return this.$route.path !== '/' && this.$route.path !== '/info'
+    },
+    links () {
+      return this.landing.data[this.page].links
+    },
+    tips () {
+      if (this.page === 'spaze') {
+        return this.mobile ? this.landing.data[this.page].tips_touchdevice : this.landing.data[this.page].tips
+      }
+      return []
+    }
+  },
+
+  methods: {
+    getBingoParameters (link) {
+      return this.mobile ? link.bingo_touchmode : link.bingo
     }
   }
 }
@@ -103,6 +121,28 @@ export default {
   z-index: 1000;
   &.low-z {
     z-index: -1;
+  }
+  &.authenticated {
+    .inner-panel {
+      position: relative;
+      &.desktop-full-screen {
+        &:before {
+          content: '';
+          position: absolute;
+          width: 100vw;
+          height: 100vh;
+          top: 0;
+          left: 0;
+          background-color: rgba(white, 0.0);
+          transition: 200ms ease;
+        }
+        &.tipsOpen {
+          &:before {
+            background-color: rgba(white, 0.9);
+          }
+        }
+      }
+    }
   }
 }
 

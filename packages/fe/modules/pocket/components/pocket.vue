@@ -194,15 +194,19 @@ $pocketHeight: 30rem;
     .pocket-container,
     .pocket,
     #pocket-shader {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       border-radius: 0;
     }
     #pocket-shader {
       :deep(.glCanvas) {
-        width: calc(100vw + 10rem);
-        height: calc(100vh + 10rem);
+        width: calc(100% + 10rem);
+        height: calc(100% + 10rem);
       }
+    }
+    :deep(.canvas-container) {
+      width: 100%;
+      height: 100%;
     }
   }
 }
@@ -226,7 +230,7 @@ $pocketHeight: 30rem;
 #pocket-shader {
   position: absolute;
   z-index: -1;
-  opacity: 0.66;
+  opacity: 0.9;
   width: $pocketWidth;
   height: $pocketHeight;
   :deep(.glCanvas) {

@@ -1,29 +1,27 @@
 <template>
   <div
     v-if="!authenticated && isNotLandingPage"
-    :class="['auth-container', { active: authPanelOpen }]">
-    <button
-      v-if="!authPanelOpen"
-      class="link portal-link"
-      @click="toggleAuth(true)">
-      enter token
-    </button>
-    <div
-      :class="['input-container', { visible: authPanelOpen }]">
-      <div class="input-wrapper">
+    :class="['auth-container', { touchmode }]">
+    <div class="input-container">
+
+      <div :class="['input-wrapper', { active: token }]">
         <input
           v-model="token"
           ref="input"
-          type="text"
+          type="email"
           autocomplete="off"
           class="input"
-          @keyup.enter="submit(token)" />
+          autocapitalize="none"
+          @keyup.enter="submit(token)"
+          placeholder="enter token" />
       </div>
+
       <button
-        class="link portal-link submit"
+        :class="['link', 'portal-link', 'submit', { active: token }]"
         @click="submit(token)">
         submit
       </button>
+
     </div>
   </div>
 </template>
@@ -38,14 +36,14 @@ export default {
 
   data () {
     return {
-      authPanelOpen: false,
       token: ''
     }
   },
 
   computed: {
     ...mapGetters({
-      authenticated: 'general/authenticated'
+      authenticated: 'general/authenticated',
+      touchmode: 'general/touchmode'
     }),
     isNotLandingPage () {
       return this.$route.path !== '/' && this.$route.path !== '/info'
@@ -56,16 +54,10 @@ export default {
     ...mapActions({
       authenticate: 'general/authenticate'
     }),
-    toggleAuth (status) {
-      this.authPanelOpen = status
-      if (!status) {
-        this.token = ''
-      }
-      this.$refs.input.focus()
-    },
     submit (token) {
-      const cleaned = token.replaceAll(' ', '-')
-      this.authenticate(cleaned)
+      const sanitized = token.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
+      const joined = sanitized.join('-')
+      this.authenticate(joined)
     }
   }
 }
@@ -86,6 +78,28 @@ export default {
   }
 }
 
+.auth-container {
+  &.touchmode {
+    padding-left: 0.5rem;
+    .input-container {
+      flex-direction: row;
+    }
+    .input-wrapper {
+      margin: 0;
+    }
+    .input {
+      width: 8rem;
+      font-size: 1.25rem;
+    }
+    .submit {
+      position: relative;
+      margin: 0 0.5rem;
+      padding: 0 0.5rem;
+      font-size: 1rem;
+    }
+  }
+}
+
 // ////////////////////////////////////////////////////////////// authentication
 .input-container {
   display: flex;
@@ -93,10 +107,6 @@ export default {
   flex-direction: column;
   margin-right: 0.25rem;
   width: 100%;
-  visibility: hidden;
-  &.visible {
-    visibility: visible;
-  }
 }
 
 .input-wrapper {
@@ -113,28 +123,57 @@ export default {
     bottom: -2px;
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
-    opacity: 0.7;
+    opacity: 0;
     transition: 200ms ease;
   }
   &:hover {
     &:after {
+      opacity: 0.7;
       width: calc(100% + 1rem);
       left: -0.5rem;
+    }
+  }
+  &.active {
+    &:after {
+      opacity: 0.7;
     }
   }
 }
 
 .input {
   width: 100%;
+  height: 2rem;
   @include fontSize_Main;
   @include fontWeight_Bold;
   letter-spacing: 0.1em;
 }
 
+input::-webkit-input-placeholder {
+  color: black;
+}
+
+input::-moz-placeholder {
+  color: black;
+}
+
+input::-ms-placeholder {
+  color: black;
+}
+
+input::placeholder {
+  color: black;
+}
+
 .submit {
+  position: absolute;
+  top: 100%;
   margin: 0.25rem 0;
   margin-left: 1.5rem;
   text-align: left;
+  opacity: 0;
+  &.active {
+    opacity: 1;
+  }
 }
 
 </style>

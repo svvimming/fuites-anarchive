@@ -12,13 +12,6 @@
       :pulse="0.3"
       :exposure="0.48" /> -->
 
-    <TouchEditor 
-      v-if="touchmode && compost"
-      :thingie="editorThingie"
-      current-spaze="compost"
-      @initupdate="initUpdate"
-      @close-editor="clearEditorThingie" />
-
     <template v-for="thingie in compostThingies">
       <component
         :is="thingieComponent"
@@ -35,12 +28,11 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
-import TouchEditor from '@/components/thingies/touch-editor'
-import Shader from '@/components/shader'
+// import Shader from '@/components/shader'
 
 // ====================================================================== Export
 export default {
@@ -50,9 +42,8 @@ export default {
 
   components: {
     Thingie,
-    TouchThingie,
-    TouchEditor,
-    Shader
+    TouchThingie
+    // Shader
   },
 
   async fetch ({ app, store }) {
@@ -105,16 +96,23 @@ export default {
     }
   },
 
+  created () {
+    this.$nuxt.$on('init-update-thingie-global', (update) => {
+      this.initUpdate(update)
+    })
+  },
+
   async mounted () {
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'thingies')
     })
   },
 
+  beforeDestroy () {
+    this.$nuxt.$off('init-update-thingie-global')
+  },
+
   methods: {
-    ...mapActions({
-      clearEditorThingie: 'collections/clearEditorThingie'
-    }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {
         _id: thingie._id,

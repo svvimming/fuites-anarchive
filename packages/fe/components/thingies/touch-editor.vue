@@ -1,7 +1,7 @@
 <template>
   <div
     :data-thingie-id="thingie._id" 
-    :class="['touch-editor', { active }, { expanded }, { pocketIsOpen }]">
+    :class="['touch-editor', { expanded }, { pocketIsOpen }]">
     <div
       :data-thingie-id="thingie._id" 
       class="editor">
@@ -26,28 +26,15 @@
           :data-thingie-id="thingie._id"
           class="grid-spaceBetween move-thingie-toolbar">
           <button
-            v-if="thingie.location !== 'compost'"
+            v-for="button in destinations"
+            :key="button.text"
             type="button"
             :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie('compost')">
-            move to compost
-          </button>
-          <button
-            v-if="thingie.location !== 'pocket'"
-            type="button"
-            :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie('pocket')">
-            move to pocket
-          </button>
-          <button
-            v-if="thingie.location !== currentSpaze"
-            type="button"
-            :data-thingie-id="thingie._id"
-            class="col-5 touch-button move-thingie"
-            @click="moveThingie(currentSpaze)">
-            move to spaze
+            :class="['col-5', 'touch-button', 'move-thingie', 'control', button.location]"
+            @click="moveThingie(button.location)">
+            <span :data-thingie-id="thingie._id">
+              {{ button.text }}
+            </span>
           </button>
         </div>
 
@@ -76,32 +63,14 @@
 
       </div>
 
-      <div 
-        :data-thingie-id="thingie._id" 
-        class="grid-spaceBetween section-toggle">
-        <button
-          type="button"
-          :data-thingie-id="thingie._id"
-          class="col-3 touch-button toggle"
-          @click="toggleEditor">
-          edit
-        </button>
-        <button
-          type="button"
-          :data-thingie-id="thingie._id"
-          class="col-3 touch-button toggle"
-          @click="closeEditorClick">
-          X
-        </button>
-      </div>
-
     </div>
   </div>
 </template>
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
+import CloneDeep from 'lodash/cloneDeep'
 
 import EditableParams from '@/data/thingie-editable-params.json'
 
@@ -110,23 +79,22 @@ export default {
   name: 'TouchEditor',
 
   props: {
-    thingie: {
-      type: [Boolean, Object],
-      required: true,
-      default: false
-    },
     currentSpaze: {
       type: String,
       required: true
+    },
+    expanded: {
+      type: Boolean,
+      required: true,
+      default: false
     }
   },
 
   data () {
     return {
-      active: false,
-      expanded: false,
       colorpicker: false,
-      textColor: ''
+      textColor: '',
+      destinations: []
     }
   },
 
@@ -134,7 +102,8 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       zindices: 'collections/zindices',
-      pocketIsOpen: 'pocket/pocketIsOpen'
+      pocketIsOpen: 'pocket/pocketIsOpen',
+      thingie: 'collections/editorThingie'
     }),
     position () {
       return this.thingie.at
@@ -167,46 +136,47 @@ export default {
   },
 
   watch: {
+    expanded (val) {
+      if (!val) {
+        if (this.colorpicker) { this.colorpicker = false }
+        if (this.thingie) {
+          this.clearEditorThingie()
+        }
+      }
+    },
     thingie (val) {
       if (val) {
-        this.active = true
-      } else {
-        this.active = false
+        this.setDestinations()
       }
     }
   },
 
   methods: {
-    toggleEditor () {
-      this.expanded = !this.expanded
-    },
-    closeEditorClick () {
-      this.$emit('close-editor')
-      if (this.colorpicker) {
-        this.colorpicker = false
-      }
-    },
+    ...mapActions({
+      clearEditorThingie: 'collections/clearEditorThingie'
+    }),
     handleControlClick (directive, value) {
       this[directive](value)
     },
     moveThingie (newLocation) {
-      let x = this.thingie.at.x
-      let y = this.thingie.at.y
+      const thingie = CloneDeep(this.thingie)
+      let x = thingie.at.x
+      let y = thingie.at.y
       if (newLocation === 'pocket') {
-        x = Math.floor(Math.random() * 560) - this.thingie.width + 40
+        x = Math.floor(Math.random() * 560) - thingie.width + 40
         y = Math.floor(Math.random() * 300)
       }
       if (newLocation === this.currentSpaze) {
-        x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - this.thingie.width
+        x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - thingie.width
         y = window.scrollY + Math.floor(Math.random() * window.innerHeight) - 100
       }
       this.$emit('initupdate', { 
-        _id: this.thingie._id, 
+        _id: thingie._id, 
         location: newLocation,
         at: { x, y, z: 1 },
         record_new_location: true
       })
-      this.$emit('close-editor')
+      this.clearEditorThingie()
     },
     toggleImageClip () {
       this.$emit('initupdate', {
@@ -305,6 +275,14 @@ export default {
       document.ontouchmove = null
       document.ontouchend = null
       this.closeColorEditor()
+    },
+    setDestinations () {
+      const possibleLocations = [
+        { location: 'compost', text: 'move to compost' },
+        { location: this.currentSpaze, text: `move to ${this.currentSpaze}` },
+        { location: 'pocket', text: 'move to pocket' }
+      ]
+      this.destinations = possibleLocations.filter(item => item.location !== this.thingie.location)
     }
   }
 }
@@ -314,15 +292,15 @@ export default {
 // ///////////////////////////////////////////////////////////////////// General
 .touch-editor {
   position: fixed;
-  display: none;
-  bottom: 0;
+  display: block;
+  bottom: calc($touchmodeToolbarHeight + 0.5px);
   left: 0;
   width: 100%;
   background-color: white;
-  border-top: solid 1px $gray400;
+  border-top: solid 0.5px rgba($salt, 0.3);
   z-index: 10001;
   &.active {
-    display: block;
+    
     &.pocketIsOpen {
       .section-controls {
         height: 200px;
@@ -342,18 +320,6 @@ export default {
   height: 0;
   overflow: hidden;
   transition: height 300ms ease;
-}
-
-.section-toggle {
-  display: flex;
-  height: 3.5rem;
-}
-
-.section-toggle {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .color-modal,
@@ -377,6 +343,43 @@ export default {
     margin: 0.25rem;
     box-shadow: 1px 1px 7px rgba($lavender, 0.5);
     border-radius: 0.25rem;
+  }
+  &.move-thingie {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    &.pocket,
+    &.compost {
+      position: relative;
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0.33;
+      }
+      span {
+        position: relative;
+        color: #000000;
+        @include fontWeight_Bold;
+        @include linkHover(#000000);
+        white-space: nowrap;
+      }
+    }
+    &.pocket {
+      &:before {
+        background-image: url('~/assets/images/pocket-background.jpg');
+      }
+    }
+    &.compost {
+      &:before {
+        background-image: url('~/assets/images/compost-portal-background.jpg');
+      }
+    }
   }
 }
 
