@@ -67,6 +67,13 @@
       compost
     </button>
 
+    <button
+      v-if="authenticated && !notCompostPage && !modal && !touchmode"
+      :class="['toggle', 'delete-button']"
+      @click="deleteThingie">
+      delete
+    </button>
+
     <!-- ================================================== TOUCH TOOLBAR == -->
     <TouchmodeToolbar 
       v-if="touchmode"
@@ -86,7 +93,8 @@
       v-if="touchmode && currentSpaze"
       :current-spaze="currentSpaze"
       :expanded="editorExpanded"
-      @initupdate="handleThingieUpdate" />
+      @initupdate="handleThingieUpdate"
+      @delete-thingie="deleteThingie" />
 
   </div>
 </template>
@@ -207,7 +215,8 @@ export default {
       createAudioContext: 'mixer/createAudioContext',
       setAudioContextPlayState: 'mixer/setAudioContextPlayState',
       setTouchMode: 'general/setTouchMode',
-      clearEditorThingie: 'collections/clearEditorThingie'
+      clearEditorThingie: 'collections/clearEditorThingie',
+      postDeleteThingie: 'collections/postDeleteThingie'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -236,6 +245,17 @@ export default {
     },
     toggleThingieEditor () {
       this.editorExpanded = !this.editorExpanded
+    },
+    async deleteThingie () {
+      const id = this.editorThingie._id
+      if (id) {
+        const deleted = await this.postDeleteThingie({ id })
+        this.$toaster.addToast({
+          type: 'toast',
+          category: deleted ? 'success' : 'error',
+          message: 'thingie deleted! 💨'
+        })
+      }
     }
   }
 }
@@ -288,12 +308,22 @@ export default {
   @include linkHover(#FA8072);
 }
 
-.compost-portal-toggle {
+.compost-portal-toggle,
+.delete-button {
   bottom: 2rem;
   left: 2.5rem;
+}
+
+.compost-portal-toggle {
   color: #6A5ACD;
   @include fontWeight_Bold;
   @include linkHover(#6A5ACD);
+}
+
+.delete-button {
+  color: #2d0b3d;
+  @include fontWeight_Bold;
+  @include linkHover(#2d0b3d);
 }
 
 .portals-toggle {

@@ -51,7 +51,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
@@ -94,7 +94,8 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       authenticated: 'general/authenticated',
-      zindices: 'collections/zindices'
+      zindices: 'collections/zindices',
+      editorThingie: 'collections/editorThingie'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -158,14 +159,22 @@ export default {
   watch: {
     editing (val) {
       if (val) {
+        this.setEditorThingie(this.thingie)
         document.onkeydown = (e) => { this.handleKeydown(e) }
       } else {
+        if (this.editorThingie && (this.editorThingie._id === this.thingie._id)) {
+          this.clearEditorThingie(this.thingie)
+        }
         document.onkeydown = null
       }
     }
   },
 
   methods: {
+    ...mapActions({
+      setEditorThingie: 'collections/setEditorThingie',
+      clearEditorThingie: 'collections/clearEditorThingie'
+    }),
     mousedown (evt) {
       if (this.authenticated) {
         if (!evt.shiftKey && !evt.metaKey && !this.thingie.dragging) {

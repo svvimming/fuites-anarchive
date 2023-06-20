@@ -51,14 +51,14 @@ export default {
     })
   },
 
-  async mounted () {
-    await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'thingies')
-      this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
-        this.removeThingie(thingieId)
-      })
-    })
-  },
+  // async mounted () {
+  //   await this.$connectWebsocket(this, () => {
+  //     this.socket.emit('join-room', 'thingies')
+  //     this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
+  //       this.removeThingie(thingieId)
+  //     })
+  //   })
+  // },
 
   methods: {
     ...mapActions({

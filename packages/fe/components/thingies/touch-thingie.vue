@@ -161,14 +161,14 @@ export default {
   watch: {
     thingie: {
       handler () {
-        if (this.editorThingie._id === this.thingie._id) {
+        if (this.editorThingie && this.editorThingie._id === this.thingie._id) {
           this.setEditorThingie(this.thingie)
         }
       },
       deep: true
     },
     editorThingie (val) {
-      if (val._id === this.thingie._id) {
+      if (val && val._id === this.thingie._id) {
         this.editing = true
       } else {
         this.editing = false

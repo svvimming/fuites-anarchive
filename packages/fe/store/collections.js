@@ -238,6 +238,7 @@ const mutations = {
   },
   ADD_THINGIES (state, thingies) {
     state.thingies = thingies
+    console.log(state.thingies)
   },
   ADD_THINGIE (state, thingie) {
     state.thingies.push(thingie)

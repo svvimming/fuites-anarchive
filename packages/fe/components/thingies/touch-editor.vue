@@ -25,6 +25,7 @@
         <div
           :data-thingie-id="thingie._id"
           class="grid-spaceBetween move-thingie-toolbar">
+
           <button
             v-for="button in destinations"
             :key="button.text"
@@ -36,6 +37,18 @@
               {{ button.text }}
             </span>
           </button>
+
+          <button
+            v-if="$route.params.id === 'compost'"
+            type="button"
+            :data-thingie-id="thingie._id"
+            :class="['col-5', 'touch-button', 'move-thingie', 'control', 'delete']"
+            @click="$emit('delete-thingie')">
+            <span :data-thingie-id="thingie._id">
+              delete
+            </span>
+          </button>
+
         </div>
 
         <div 
@@ -278,10 +291,12 @@ export default {
     },
     setDestinations () {
       const possibleLocations = [
-        { location: 'compost', text: 'move to compost' },
         { location: this.currentSpaze, text: `move to ${this.currentSpaze}` },
         { location: 'pocket', text: 'move to pocket' }
       ]
+      if (this.$route.params.id !== 'compost') {
+        possibleLocations.unshift({ location: 'compost', text: 'move to compost' })
+      }
       this.destinations = possibleLocations.filter(item => item.location !== this.thingie.location)
     }
   }
