@@ -16,4 +16,7 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
+.super-container {
+  overflow: auto;
+}
 </style>
