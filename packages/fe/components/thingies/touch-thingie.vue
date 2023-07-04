@@ -212,12 +212,12 @@ export default {
         if (evt.touches.length < 2) {
           const parent = this.$parent.$el
           const rect = parent.getBoundingClientRect()
+          const thingie = this.$el
+          const thingieRect = thingie.getBoundingClientRect()
           let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.touches[0].clientX - rect.left - this.handleX))
-          let y = Math.max(0, Math.min(this.bounds.y - this.height, evt.touches[0].clientY - rect.top - this.handleY))
+          let y = Math.max(0, Math.min(this.bounds.y - thingieRect.height, evt.touches[0].clientY - rect.top - this.handleY))
           if (this.thingie.location === 'pocket') {
-            const thingie = this.$el
-            const thingieRect = thingie.getBoundingClientRect()
-            x = Math.min(640 - thingieRect.width, x)
+            x = Math.min(640 - this.width, x)
             y = Math.min(400 - thingieRect.height, y)
           }
           this.$emit('initupdate', {
