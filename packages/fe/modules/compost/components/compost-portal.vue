@@ -51,14 +51,11 @@ export default {
     })
   },
 
-  // async mounted () {
-  //   await this.$connectWebsocket(this, () => {
-  //     this.socket.emit('join-room', 'thingies')
-  //     this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
-  //       this.removeThingie(thingieId)
-  //     })
-  //   })
-  // },
+  async mounted () {
+    await this.$connectWebsocket(this, () => {
+      this.socket.emit('join-room', 'thingies')
+    })
+  },
 
   methods: {
     ...mapActions({
@@ -82,13 +79,6 @@ export default {
         record_new_location: true
       })
     }
-    // async deleteThingie (id) {
-    //   const deleted = await this.postDeleteThingie({ id })
-    //   console.log(deleted)
-    // },
-    // handleClick (e) {
-    //   this.$router.push({ name: 'compost' })
-    // }
   }
 }
 </script>

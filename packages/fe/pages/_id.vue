@@ -16,14 +16,14 @@
       :location="editorCoords" />
 
     <template v-for="thingie in spazeThingies">
-<!--       <component
+      <component
         :is="thingieComponent"
         :key="thingie._id"
         :thingie="thingie"
         :bounds="spazeBounds"
         @initmousedown="initMousedown"
         @initupdate="initUpdate"
-        @initmouseup="initMouseup" /> -->
+        @initmouseup="initMouseup" />
     </template>
 
     <Portal
@@ -218,7 +218,6 @@ export default {
       this.keydown = (e) => { handleUndoCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
     }
-    console.log(this.spazeThingies)
   },
 
   beforeDestroy () {

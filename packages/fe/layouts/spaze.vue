@@ -241,7 +241,9 @@ export default {
       this.key++
     },
     handleThingieUpdate (update) {
-      $nuxt.$emit('init-update-thingie-global', update)
+      if (this.editorThingie) {
+        $nuxt.$emit('init-update-thingie-global', update)
+      }
     },
     toggleThingieEditor () {
       this.editorExpanded = !this.editorExpanded
@@ -250,6 +252,9 @@ export default {
       const id = this.editorThingie._id
       if (id) {
         const deleted = await this.postDeleteThingie({ id })
+        if (deleted) {
+          this.clearEditorThingie()
+        }
         this.$toaster.addToast({
           type: 'toast',
           category: deleted ? 'success' : 'error',
