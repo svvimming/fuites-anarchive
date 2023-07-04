@@ -51,7 +51,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
@@ -94,7 +94,8 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       authenticated: 'general/authenticated',
-      zindices: 'collections/zindices'
+      zindices: 'collections/zindices',
+      editorThingie: 'collections/editorThingie'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -158,14 +159,22 @@ export default {
   watch: {
     editing (val) {
       if (val) {
+        this.setEditorThingie(this.thingie)
         document.onkeydown = (e) => { this.handleKeydown(e) }
       } else {
+        if (this.editorThingie && (this.editorThingie._id === this.thingie._id)) {
+          this.clearEditorThingie(this.thingie)
+        }
         document.onkeydown = null
       }
     }
   },
 
   methods: {
+    ...mapActions({
+      setEditorThingie: 'collections/setEditorThingie',
+      clearEditorThingie: 'collections/clearEditorThingie'
+    }),
     mousedown (evt) {
       if (this.authenticated) {
         if (!evt.shiftKey && !evt.metaKey && !this.thingie.dragging) {
@@ -185,12 +194,12 @@ export default {
         evt.preventDefault()
         const parent = this.$parent.$el
         const rect = parent.getBoundingClientRect()
+        const thingie = this.$el
+        const thingieRect = thingie.getBoundingClientRect()
         let x = Math.max(0, Math.min(this.bounds.x - this.width, evt.clientX - rect.left - this.handleX))
-        let y = Math.max(0, Math.min(this.bounds.y - this.height, evt.clientY - rect.top - this.handleY))
+        let y = Math.max(0, Math.min(this.bounds.y - thingieRect.height, evt.clientY - rect.top - this.handleY))
         if (this.thingie.location === 'pocket') {
-          const thingie = this.$el
-          const thingieRect = thingie.getBoundingClientRect()
-          x = Math.min(640 - thingieRect.width, x)
+          x = Math.min(640 - this.width, x)
           y = Math.min(400 - thingieRect.height, y)
         }
         this.$emit('initupdate', {
