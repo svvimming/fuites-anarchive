@@ -111,6 +111,9 @@ export default {
       this.socket.on('module|kleptobot-migrate-thingie|payload', (migrated) => {
         this.updateThingie(migrated)
       })
+      this.socket.on('module|post-delete-thingie|payload', (thingieId) => {
+        this.removeThingie(thingieId)
+      })
     })
   },
 
@@ -121,7 +124,8 @@ export default {
   methods: {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
-      addThingie: 'collections/addThingie'
+      addThingie: 'collections/addThingie',
+      removeThingie: 'collections/removeThingie'
     }),
     initMousedown (thingie) {
       this.socket.emit('update-thingie', {

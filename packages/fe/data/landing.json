@@ -65,9 +65,10 @@
       "to upload a thingie, open the pocket and click upload",
       "to move a thingie, click and drag it",
       "to drag and drop a thingie into your pocket, the compost or a page,<br>click and drag while holding shift (chrome, firefox), or holding command (safari)",
-      "br",
-      "to get rid of a thingie, drag and drop it into the open compost",
       "to add a text thingie, hold option and click anywhere on the white space",
+      "br",
+      "to remove a thingie from the page, drag and drop it into the open compost",
+      "to <i><b>delete</b></i> a thingie from the site, once it has been composted, navigate to<a href='https://fuit.es/compost' class='text-link'><b> the compost</b></a>. There, you'll be able to delete it.",
       "br",
       "to edit a thingie, click on it while holding option",
       "in edit mode, a thingie can be rotated with ← and →, brought forward or sent backward with ↑ and ↓,<br>or resized by making a pinch gesture while hovering over it",
@@ -83,6 +84,7 @@
       "to edit a thingie, while it's highlighted, open the editor in the bottom left corner",
       "in the editor, you can move it to the page, the pocket or the compost",
       "other options appear in the editor depending on what type of thingie you are editing",
+      "to <i><b>delete</b></i> a thingie from the site, once it has been composted, navigate to<a href='https://fuit.es/compost' class='text-link'><b> the compost</b></a>. There, you'll be able to delete it.",
       "br",
       "when audio is on, sound thingies can be heard by taping on them"
     ]

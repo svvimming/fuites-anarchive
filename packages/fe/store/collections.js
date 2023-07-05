@@ -197,11 +197,13 @@ const actions = {
   // ///////////////////////////////////////////////////////////// removeThingie
   removeThingie ({ commit, getters, dispatch }, thingieId) {
     const index = getters.thingies.findIndex(obj => obj._id === thingieId)
-    const thingieToRemove = getters.thingies[index]
-    if (thingieToRemove.location === 'pocket') {
-      dispatch('pocket/postUpdatePocket', { thingie: thingieToRemove, action: 'remove' }, { root: true })
+    if (index >= 0) {
+      const thingieToRemove = getters.thingies[index]
+      if (thingieToRemove.location === 'pocket') {
+        dispatch('pocket/postUpdatePocket', { thingie: thingieToRemove, action: 'remove' }, { root: true })
+      }
+      commit('REMOVE_THINGIE', index)
     }
-    commit('REMOVE_THINGIE', index)
   },
   // /////////////////////////////////////////////////////////////// clearSpazes
   clearSpazes ({ commit, getters}) {

@@ -186,6 +186,10 @@ export default {
     opacity: 1;
     z-index: 100;
   }
+  :deep(.text-link) {
+    @include link;
+    @include linkHover(#000000);
+  }
 }
 
 .tip {
