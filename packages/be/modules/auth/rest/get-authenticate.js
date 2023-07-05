@@ -11,7 +11,8 @@ const MC = require('@Root/config')
 MC.app.get('/authenticate', async (req, res) => {
   try {
     const token = req.query.token
-    const tokens = process.env.AUTH_TOKENS
+    const tokensString = process.env.AUTH_TOKENS
+    const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
       SendData(res, 200, '💫 💫 💫', true)
     } else {

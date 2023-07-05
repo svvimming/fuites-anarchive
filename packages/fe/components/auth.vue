@@ -54,10 +54,14 @@ export default {
     ...mapActions({
       authenticate: 'general/authenticate'
     }),
-    submit (token) {
+    async submit (token) {
       const sanitized = token.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
       const joined = sanitized.join('-')
-      this.authenticate(joined)
+      const authenticated = await this.authenticate(joined)
+      if (process.client && authenticated) {
+        localStorage.setItem('fuitesAnarchiveAuthToken', joined)
+        localStorage.setItem('fuitesAnarchiveAuthDate', Date.now().toString())
+      }
     }
   }
 }
