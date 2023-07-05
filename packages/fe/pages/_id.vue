@@ -218,6 +218,13 @@ export default {
       this.keydown = (e) => { handleUndoCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
     }
+    const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+    const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
+    if (process.client && authToken && authDate) {
+      if (Date.now() - parseInt(authDate) <= 10800000) {
+        this.authenticate(authToken)
+      }
+    }
   },
 
   beforeDestroy () {

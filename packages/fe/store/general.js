@@ -82,8 +82,9 @@ const actions = {
       })
       if (authenticated) {
         dispatch('pocket/getPocket', token, { root: true })
+        commit('SET_AUTHENTICATION_STATUS', authenticated)
+        return authenticated
       }
-      commit('SET_AUTHENTICATION_STATUS', authenticated)
     } catch (e) {
       console.log('====================== [Store Action: general/authenticate]')
       console.log(e)
