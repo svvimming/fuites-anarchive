@@ -94,44 +94,44 @@ export default {
     ...mapGetters({
       authenticated: 'general/authenticated',
       modal: 'general/modal',
-      landing: 'general/landing',
-      traces: 'rezonator/resonances'
+      landing: 'general/landing'
+      // traces: 'rezonator/resonances'
     }),
     newSpazeName () {
       return this.inputs[0].value
     }
   },
 
-  watch: {
-    traces (val) {
-      const traces = CloneDeep(val)
-      const inputs = []
-      for (let i = 0; i < 3; i++) {
-        if (traces.length > 2 - i) {
-          const index = Math.floor(Math.random() * traces.length)
-          const trace = traces[index]
-          inputs.push({
-            input: trace,
-            label: `something '${trace}'-like:`,
-            value: ''
-          })
-          traces.splice(index, 1)
-        }
-      }
-      this.inputs = this.inputs.concat(inputs)
-      this.key++
-    }
-  },
+  // watch: {
+  //   traces (val) {
+  //     const traces = CloneDeep(val)
+  //     const inputs = []
+  //     for (let i = 0; i < 3; i++) {
+  //       if (traces.length > 2 - i) {
+  //         const index = Math.floor(Math.random() * traces.length)
+  //         const trace = traces[index]
+  //         inputs.push({
+  //           input: trace,
+  //           label: `something '${trace}'-like:`,
+  //           value: ''
+  //         })
+  //         traces.splice(index, 1)
+  //       }
+  //     }
+  //     this.inputs = this.inputs.concat(inputs)
+  //     this.key++
+  //   }
+  // },
 
   mounted () {
     this.inputs[0].value = this.$route.params.id
-    this.getTraces()
+    // this.getTraces()
   },
 
   methods: {
     ...mapActions({
       setModal: 'general/setModal',
-      getTraces: 'rezonator/getTraces',
+      // getTraces: 'rezonator/getTraces',
       postCreateSpaze: 'collections/postCreateSpaze'
     }),
     closeModal () {
