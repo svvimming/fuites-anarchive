@@ -21,7 +21,8 @@
       :class="fontfamily"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
-      @change-color="changeTextColor" />
+      @change-color="changeTextColor"
+      @change-opacity="changeOpacity" />
 
     <ImageThingie
       v-if="type === 'image'"
@@ -30,7 +31,8 @@
       :clip="thingie.clip"
       :clip-path="thingie.path_data"
       :editor="editing"
-      @toggle-clip-path="toggleImageClip" />
+      @toggle-clip-path="toggleImageClip"
+      @change-opacity="changeOpacity" />
 
     <SoundThingie
       v-if="type === 'sound'"
@@ -44,7 +46,8 @@
       :width="width"
       :stroke-width="strokeWidth"
       @change-stroke-width="changePathStrokeWidth"
-      @change-sound-level="changeSoundLevel" />
+      @change-sound-level="changeSoundLevel"
+      @change-opacity="changeOpacity" />
 
   </div>
 </template>
@@ -127,6 +130,9 @@ export default {
     highlight () {
       return this.thingie.colors.length ? this.thingie.colors[0] : ''
     },
+    opacity () {
+      return this.thingie.opacity
+    },
     styles () {
       const styles = {
         left: this.position.x + 'px',
@@ -136,6 +142,9 @@ export default {
         height: this.type !== 'text' ? `${this.height}px` : 'unset',
         transform: `rotate(${this.rotate}deg)`,
         '--highlight-color': this.thingie.colors[0]
+      }
+      if (this.opacity) {
+        styles.opacity = this.opacity
       }
       return styles
     },
@@ -332,6 +341,11 @@ export default {
       const gain = val === 'up' ? Math.min(this.gain + 0.1, 3.0) : Math.max(this.gain - 0.1, 0.1)
       this.$emit('initupdate', { _id: this.thingie._id, gain })
     },
+    changeOpacity () {
+      let opacity = this.opacity ? this.opacity : 1.0
+      opacity = Math.round(((((opacity * 10) % 10) / 10) + 0.1) * 10) / 10
+      this.$emit('initupdate', { _id: this.thingie._id, opacity })
+    },
     handleKeydown (e) {
       e.preventDefault()
       if (e.keyCode === 38 || e.key === 'ArrowUp') {
@@ -389,7 +403,7 @@ export default {
     }
   }
   :deep(.image-thingie) {
-    .clip-toggle-button {
+    .editor-button {
       color: var(--highlight-color);
     }
   }

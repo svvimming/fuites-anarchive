@@ -4,9 +4,15 @@
     <button
       v-if="clipPath"
       type="button"
-      :class="['clip-toggle-button', { editor }]"
+      :class="['editor-button', 'clip-toggle-button', { editor }]"
       @click="$emit('toggle-clip-path', !clip)">
-      *
+      <span>*</span>
+    </button>
+    <button
+      type="button"
+      :class="['editor-button', 'opacity-control', { editor }]"
+      @click="$emit('change-opacity')">
+      o
     </button>
 
     <div
@@ -114,18 +120,30 @@ export default {
   height: 100%;
 }
 
-.clip-toggle-button {
+.clip-toggle-button,
+.opacity-control {
   position: absolute;
   display: none;
   pointer-events: auto;
   padding: 0.25rem;
   line-height: 1;
   text-align: center;
-  top: 0;
   left: calc(100% + 1.75rem);
   &.editor {
     display: block;
   }
+}
+
+.clip-toggle-button {
+  top: -0.5rem;
+  span {
+    display: block;
+    transform: translateY(0.25rem);
+  }
+}
+
+.opacity-control {
+  top: 1rem;
 }
 
 .image-wrapper {

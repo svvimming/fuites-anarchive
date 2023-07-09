@@ -30,6 +30,12 @@
         @click="$emit('change-sound-level', 'down')">
         🔉
       </button>
+      <button
+        type="button"
+        class="editor-button"
+        @click="$emit('change-opacity')">
+        o
+      </button>
     </div>
 
     <audio

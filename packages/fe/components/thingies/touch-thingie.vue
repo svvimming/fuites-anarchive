@@ -137,7 +137,10 @@ export default {
         width: this.width + 'px',
         height: this.type !== 'text' ? `${this.height}px` : 'unset',
         transform: `rotate(${this.rotate}deg)`,
-        '--highlight-color': this.thingie.colors[0]
+        '--highlight-color': this.thingie.colors[0],
+      }
+      if (this.thingie.opacity) {
+        styles.opacity = this.thingie.opacity
       }
       return styles
     },

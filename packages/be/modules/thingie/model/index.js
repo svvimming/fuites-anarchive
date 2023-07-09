@@ -106,6 +106,11 @@ const ThingieSchema = new Schema({
     type: [String],
     required: false
   },
+  opacity: {
+    type: Number,
+    required: false,
+    default: 1.0
+  },
   clip: {
     type: Boolean,
     required: false,

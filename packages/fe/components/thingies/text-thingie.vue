@@ -34,6 +34,13 @@
 
         <button
           type="button"
+          :class="['editor-button', 'opacity-control']"
+          @click="$emit('change-opacity')">
+          o
+        </button>
+
+        <button
+          type="button"
           :class="['editor-button', 'color-control', { active: colorpicker }]"
           @click="openColorEditor">
           c

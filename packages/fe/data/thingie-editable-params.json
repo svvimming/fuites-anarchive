@@ -57,6 +57,11 @@
       "directive": "changeZindex",
       "value": "back",
       "inner": "back"
+    },
+    {
+      "directive": "changeOpacity",
+      "value": "1.0",
+      "inner": "opacity"
     }
   ]
 }
