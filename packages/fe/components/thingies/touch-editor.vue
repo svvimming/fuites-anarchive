@@ -268,7 +268,8 @@ export default {
     },
     changeOpacity () {
       let opacity = this.thingie.opacity ? this.thingie.opacity : 1.0
-      opacity = Math.round(((((opacity * 10) % 10) / 10) + 0.1) * 10) / 10
+      opacity -= 0.1
+      if (opacity < 0.1) { opacity = 1.0 }
       this.$emit('initupdate', { _id: this.thingie._id, opacity })
     },
     touchstart () {

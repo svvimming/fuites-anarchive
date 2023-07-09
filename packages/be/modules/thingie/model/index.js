@@ -138,6 +138,10 @@ const ThingieSchema = new Schema({
   compostedAt: {
     type: Date,
     required: false
+  },
+  css: {
+    type: [String],
+    required: false
   }
 }, {
   timestamps: true,

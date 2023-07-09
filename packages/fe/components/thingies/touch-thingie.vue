@@ -1,7 +1,7 @@
 <template>
   <div
     ref="thingieRef"
-    draggable
+    draggable="true"
     :class="['touch-thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
@@ -18,10 +18,10 @@
       v-if="type === 'text'"
       :touch-enabled="true"
       :text="thingie.text"
-      :editor="false"
       :fontsize="fontsize"
       :fontcolor="highlight"
-      :class="fontfamily" />
+      :class="fontfamily"
+      :css="css" />
 
     <ImageThingie
       v-if="type === 'image'"
@@ -30,7 +30,7 @@
       :filetype="thingie.file_ref.file_ext"
       :clip="thingie.clip"
       :clip-path="thingie.path_data"
-      :editor="false" />
+      :css="css" />
 
     <SoundThingie
       v-if="type === 'sound'"
@@ -39,11 +39,11 @@
       :filetype="thingie.file_ref.file_ext"
       :gain="gain"
       :path="thingie.path_data"
-      :editor="false"
       :colors="thingie.colors"
       :position="position"
       :width="width"
-      :stroke-width="strokeWidth" />
+      :stroke-width="strokeWidth"
+      :css="css" />
 
   </div>
 </template>
@@ -143,6 +143,9 @@ export default {
         styles.opacity = this.thingie.opacity
       }
       return styles
+    },
+    css () {
+      return this.thingie.css
     },
     clipPath () {
       return this.thingie.clip

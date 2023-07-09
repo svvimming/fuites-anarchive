@@ -2,7 +2,7 @@
   "image": [
     {
       "directive": "toggleImageClip",
-      "inner": "mask"
+      "inner": "clip"
     }
   ],
   "text": [
@@ -18,11 +18,11 @@
     },
     {
       "directive": "changeFontFamily",
-      "inner": "f"
+      "inner": "font"
     },
     {
       "directive": "openColorEditor",
-      "inner": "c"
+      "inner": "color"
     }
   ],
   "sound": [

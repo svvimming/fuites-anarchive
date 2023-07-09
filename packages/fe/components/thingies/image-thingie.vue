@@ -1,19 +1,7 @@
 <template>
-  <div class="image-thingie">
-
-    <button
-      v-if="clipPath"
-      type="button"
-      :class="['editor-button', 'clip-toggle-button', { editor }]"
-      @click="$emit('toggle-clip-path', !clip)">
-      <span>*</span>
-    </button>
-    <button
-      type="button"
-      :class="['editor-button', 'opacity-control', { editor }]"
-      @click="$emit('change-opacity')">
-      o
-    </button>
+  <div
+    class="image-thingie"
+    :style="thingieStyles">
 
     <div
       :class="['image-wrapper', { 'no-clip-path': !clipPath || !clip }]"
@@ -69,8 +57,8 @@ export default {
       required: false,
       default: ''
     },
-    editor: {
-      type: Boolean,
+    css: {
+      type: [Boolean, Array],
       required: false,
       default: false
     }
@@ -101,6 +89,19 @@ export default {
         return svgPath + ' Z'
       }
       return this.clipPath
+    },
+    thingieStyles () {
+      if (Array.isArray(this.css)) {
+        const styles = {}
+        this.css.forEach((line) => {
+          const props = line.split(': ')
+          const key = props[0]
+          const value = props[1]
+          styles[key] = value
+        })
+        return styles
+      }
+      return false
     }
   },
 
@@ -118,32 +119,6 @@ export default {
   pointer-events: none;
   width: 100%;
   height: 100%;
-}
-
-.clip-toggle-button,
-.opacity-control {
-  position: absolute;
-  display: none;
-  pointer-events: auto;
-  padding: 0.25rem;
-  line-height: 1;
-  text-align: center;
-  left: calc(100% + 1.75rem);
-  &.editor {
-    display: block;
-  }
-}
-
-.clip-toggle-button {
-  top: -0.5rem;
-  span {
-    display: block;
-    transform: translateY(0.25rem);
-  }
-}
-
-.opacity-control {
-  top: 1rem;
 }
 
 .image-wrapper {

@@ -9,6 +9,11 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <CssBreakoutBox
+      v-if="!touchmode"
+      :active="breakout"
+      @update-css-properties="initUpdate" />
+
     <PropBoard
       v-if="authenticated && spazeExists && !touchmode"
       ref="propboard"
@@ -49,6 +54,7 @@ import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
 import Portal from '@/components/portal'
+import CssBreakoutBox from '@/components/css-breakout-box'
 
 // =================================================================== Functions
 const initSpazeScrollPosition = (instance) => {
@@ -63,9 +69,12 @@ const initSpazeScrollPosition = (instance) => {
   }
 }
 
-const handleUndoCommand = (e, instance) => {
+const handleKeyCommand = (e, instance) => {
   if ((e.key === 'z' || e.keyCode === 90) && e.metaKey) {
     instance.initUpdate(instance.lastUpdate)
+  }
+  if ((e.key === 'i' || e.keyCode === 73) && e.metaKey) {
+    instance.breakout = true
   }
 }
 
@@ -79,7 +88,8 @@ export default {
     PropBoard,
     Thingie,
     TouchThingie,
-    Portal
+    Portal,
+    CssBreakoutBox
   },
 
   async fetch ({ app, store, route }) {
@@ -104,7 +114,8 @@ export default {
       },
       keydown: false,
       lastUpdate: false,
-      updateInterval: false
+      updateInterval: false,
+      breakout: false
     }
   },
 
@@ -215,7 +226,7 @@ export default {
       this.spazeExists = false
     } else {
       this.$nextTick(() => { initSpazeScrollPosition(this) })
-      this.keydown = (e) => { handleUndoCommand(e, this) }
+      this.keydown = (e) => { handleKeyCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
     }
     const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
@@ -307,6 +318,7 @@ export default {
     },
     closeEditor (evt) {
       if (this.authenticated && this.spaze) {
+        if (this.breakout) { this.breakout = false }
         if (!evt.altKey && this.$refs.propboard) {
           this.$refs.propboard.closeEditor()
         }
