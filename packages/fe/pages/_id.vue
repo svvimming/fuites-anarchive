@@ -74,7 +74,7 @@ const handleKeyCommand = (e, instance) => {
     instance.initUpdate(instance.lastUpdate)
   }
   if ((e.key === 'i' || e.keyCode === 73) && e.metaKey) {
-    instance.breakout = true
+    instance.breakout = !instance.breakout
   }
 }
 

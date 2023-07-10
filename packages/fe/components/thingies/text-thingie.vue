@@ -83,7 +83,7 @@ export default {
       if (Array.isArray(this.css)) {
         const styles = {}
         this.css.forEach((line) => {
-          const props = line.split(': ')
+          const props = line.split(':')
           const key = props[0]
           const value = props[1]
           styles[key] = value

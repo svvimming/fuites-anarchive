@@ -57,6 +57,9 @@ export default {
       }
     },
     editorThingie (val) {
+      if (val && this.active) {
+        document.onkeydown = null
+      }
       if (val) {
         this.setStylesFromEditorThingie()
       }
@@ -71,16 +74,19 @@ export default {
     setStylesFromEditorThingie () {
       const thingie = this.editorThingie
       if (thingie && Array.isArray(thingie.css) && thingie.css.length) {
-        this.styles = this.editorThingie.css.join(';\n') + ';'
+        this.styles = `{\n${this.editorThingie.css.join(';\n') + ';'}\n}`
+      } else if (thingie) {
+        this.styles = '{}'
       } else {
         this.styles = ''
       }
     },
     addStyles () {
       if (this.editorThingie) {
-        const styles = this.styles.replace(/(?:\r\n|\r|\n)/g, '')
+        let styles = this.styles.replace(/\s/g, '')
+        styles = styles.replace(/[{}]/g, '')
+        styles = styles.replace(/(?:\r\n|\r|\n)/g, '')
         const properties = styles.split(';').filter(line => line !== '')
-        console.log(properties)
         this.$emit('update-css-properties', {
           _id: this.editorThingie._id,
           css: properties
