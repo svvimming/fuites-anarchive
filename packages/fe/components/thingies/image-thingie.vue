@@ -84,7 +84,7 @@ export default {
       return false
     },
     svgPath () {
-      if (Array.isArray(this.points)) {
+      if (Array.isArray(this.points) && this.points.length) {
         const svgPath = this.$simplifySvgPath(this.points, { tolerance: 0.001 })
         return svgPath + ' Z'
       }

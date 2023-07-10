@@ -10,7 +10,7 @@
     </audio>
 
     <svg
-      v-if="path"
+      v-if="processedPathData"
       class="svg"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 200 200">
@@ -127,8 +127,11 @@ export default {
       return points
     },
     processedPathData () {
-      const svgPath = this.$simplifySvgPath(this.points)
-      return svgPath
+      if (this.points.length) {
+        const svgPath = this.$simplifySvgPath(this.points)
+        return svgPath
+      }
+      return false
     },
     limitStrokeWidth () {
       if (this.strokeWidth < 1) { return -1 / (this.strokeWidth - 1) }
