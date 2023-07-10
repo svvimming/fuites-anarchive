@@ -106,6 +106,11 @@ const ThingieSchema = new Schema({
     type: [String],
     required: false
   },
+  opacity: {
+    type: Number,
+    required: false,
+    default: 1.0
+  },
   clip: {
     type: Boolean,
     required: false,
@@ -132,6 +137,10 @@ const ThingieSchema = new Schema({
   },
   compostedAt: {
     type: Date,
+    required: false
+  },
+  css: {
+    type: [String],
     required: false
   }
 }, {
