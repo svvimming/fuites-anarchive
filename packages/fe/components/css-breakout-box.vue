@@ -83,10 +83,11 @@ export default {
     },
     addStyles () {
       if (this.editorThingie) {
-        let styles = this.styles.replace(/\s/g, '')
+        let styles = this.styles
         styles = styles.replace(/[{}]/g, '')
         styles = styles.replace(/(?:\r\n|\r|\n)/g, '')
-        const properties = styles.split(';').filter(line => line !== '')
+        const properties = styles.split(';').map(line => line.trim()).filter(line => line !== '')
+        console.log(properties)
         this.$emit('update-css-properties', {
           _id: this.editorThingie._id,
           css: properties
