@@ -10,7 +10,7 @@
     @click.self="closeEditor($event)">
 
     <CssBreakoutBox
-      v-if="!touchmode"
+      v-if="authenticated && !touchmode"
       :active="breakout"
       @update-css-properties="initUpdate" />
 
