@@ -1,7 +1,7 @@
 <template>
   <div
     ref="thingieRef"
-    draggable
+    draggable="true"
     :class="['thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
@@ -12,16 +12,37 @@
     @click.alt.self="thingieEditor($event)"
     v-click-outside="closeEditor">
 
+    <div :class="['toolbar', { editor: editing }, { 'audio-context': audioContext }]">
+      <button
+        v-for="button in controls"
+        :key="button.inner"
+        type="button"
+        :class="['editor-button', button.directive]"
+        @click="handleControlClick(button.directive, button.value)">
+        {{ button.inner }}
+      </button>
+      <button
+        type="button"
+        class="editor-button"
+        @click="changeOpacity">
+        o
+      </button>
+    </div>
+
     <TextThingie
       v-if="type === 'text'"
+      ref="textThingie"
       :text="thingie.text"
-      :editor="editing"
+      :colorpicker="colorpicker"
       :fontsize="fontsize"
       :fontcolor="highlight"
       :class="fontfamily"
+      :css="css"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
-      @change-color="changeTextColor" />
+      @change-color="changeTextColor"
+      @close-color-editor="closeColorEditor"
+      @change-opacity="changeOpacity" />
 
     <ImageThingie
       v-if="type === 'image'"
@@ -29,8 +50,9 @@
       :filetype="thingie.file_ref.file_ext"
       :clip="thingie.clip"
       :clip-path="thingie.path_data"
-      :editor="editing"
-      @toggle-clip-path="toggleImageClip" />
+      :css="css"
+      @toggle-clip-path="toggleImageClip"
+      @change-opacity="changeOpacity" />
 
     <SoundThingie
       v-if="type === 'sound'"
@@ -38,13 +60,14 @@
       :filetype="thingie.file_ref.file_ext"
       :gain="gain"
       :path="thingie.path_data"
-      :editor="editing"
       :colors="thingie.colors"
       :position="position"
       :width="width"
       :stroke-width="strokeWidth"
+      :css="css"
       @change-stroke-width="changePathStrokeWidth"
-      @change-sound-level="changeSoundLevel" />
+      @change-sound-level="changeSoundLevel"
+      @change-opacity="changeOpacity" />
 
   </div>
 </template>
@@ -56,6 +79,8 @@ import { mapGetters, mapActions } from 'vuex'
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
 import SoundThingie from '@/components/thingies/sound-thingie'
+
+import EditableParams from '@/data/thingie-editable-params.json'
 
 // ====================================================================== Export
 export default {
@@ -86,7 +111,8 @@ export default {
     return {
       handleX: false,
       handleY: false,
-      editing: false
+      editing: false,
+      colorpicker: false
     }
   },
 
@@ -95,7 +121,8 @@ export default {
       landing: 'general/landing',
       authenticated: 'general/authenticated',
       zindices: 'collections/zindices',
-      editorThingie: 'collections/editorThingie'
+      editorThingie: 'collections/editorThingie',
+      audioContext: 'mixer/audioContext'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -127,6 +154,9 @@ export default {
     highlight () {
       return this.thingie.colors.length ? this.thingie.colors[0] : ''
     },
+    opacity () {
+      return this.thingie.opacity
+    },
     styles () {
       const styles = {
         left: this.position.x + 'px',
@@ -137,7 +167,13 @@ export default {
         transform: `rotate(${this.rotate}deg)`,
         '--highlight-color': this.thingie.colors[0]
       }
+      if (this.opacity) {
+        styles.opacity = this.opacity
+      }
       return styles
+    },
+    css () {
+      return this.thingie.css
     },
     clipPath () {
       return this.thingie.clip
@@ -153,6 +189,10 @@ export default {
     },
     gain () {
       return this.thingie.gain ? this.thingie.gain : 1
+    },
+    controls () {
+      if (this.type) { return EditableParams[this.type] }
+      return []
     }
   },
 
@@ -175,6 +215,9 @@ export default {
       setEditorThingie: 'collections/setEditorThingie',
       clearEditorThingie: 'collections/clearEditorThingie'
     }),
+    handleControlClick (directive, value) {
+      this[directive](value)
+    },
     mousedown (evt) {
       if (this.authenticated) {
         if (!evt.shiftKey && !evt.metaKey && !this.thingie.dragging) {
@@ -252,9 +295,12 @@ export default {
         this.editing = !this.editing
       }
     },
-    closeEditor () {
+    closeEditor (e) {
       if (this.editing) {
-        this.editing = false
+        const targetId = e.target.getAttribute('data-thingie-id')
+        if (targetId !== this.thingie._id) {
+          this.editing = false
+        }
       }
     },
     changeFontSize (direction) {
@@ -314,10 +360,10 @@ export default {
         })
       }
     },
-    toggleImageClip (val) {
+    toggleImageClip () {
       this.$emit('initupdate', {
         _id: this.thingie._id,
-        clip: val
+        clip: !this.thingie.clip
       })
     },
     changePathStrokeWidth (val) {
@@ -331,6 +377,18 @@ export default {
     changeSoundLevel (val) {
       const gain = val === 'up' ? Math.min(this.gain + 0.1, 3.0) : Math.max(this.gain - 0.1, 0.1)
       this.$emit('initupdate', { _id: this.thingie._id, gain })
+    },
+    changeOpacity () {
+      let opacity = this.opacity ? this.opacity : 1.0
+      opacity -= 0.1
+      if (opacity < 0.1) { opacity = 1.0 }
+      this.$emit('initupdate', { _id: this.thingie._id, opacity })
+    },
+    openColorEditor () {
+      this.colorpicker = !this.colorpicker
+    },
+    closeColorEditor () {
+      this.colorpicker = false
     },
     handleKeydown (e) {
       e.preventDefault()
@@ -388,10 +446,46 @@ export default {
       box-shadow: 0 0 3px 3px var(--highlight-color);
     }
   }
+  .editor-button {
+    color: var(--highlight-color);
+  }
   :deep(.image-thingie) {
-    .clip-toggle-button {
+    .editor-button {
       color: var(--highlight-color);
     }
   }
+}
+
+// ////////////////////////////////////////////////////////////////////// Editor
+.changeSoundLevel {
+  display: none;
+}
+.toolbar {
+  display: none;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 1.25rem;
+  height: 100%;
+  position: absolute;
+  pointer-events: auto;
+  left: calc(100% + 1.75rem);
+  top: -1rem;
+  &.editor {
+    display: flex;
+  }
+  &.audio-context {
+    .changeSoundLevel {
+      display: block;
+    }
+  }
+}
+
+.editor-button {
+  pointer-events: auto;
+  padding: 0.375rem 0.25rem;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 0.75rem;
 }
 </style>

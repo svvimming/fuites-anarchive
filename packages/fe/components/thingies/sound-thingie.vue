@@ -3,35 +3,6 @@
     class="sound-thingie"
     :style="styles">
 
-    <div :class="['toolbar', { editor }]">
-      <button
-        type="button"
-        class="editor-button"
-        @click="$emit('change-stroke-width', 'up')">
-        ˄
-      </button>
-      <button
-        type="button"
-        class="editor-button"
-        @click="$emit('change-stroke-width', 'down')">
-        ˅
-      </button>
-      <button
-        v-if="audioContext"
-        type="button"
-        class="editor-button"
-        @click="$emit('change-sound-level', 'up')">
-        🔊
-      </button>
-      <button
-        v-if="audioContext"
-        type="button"
-        class="editor-button"
-        @click="$emit('change-sound-level', 'down')">
-        🔉
-      </button>
-    </div>
-
     <audio
       ref="audioElement"
       :loop="true"
@@ -39,7 +10,7 @@
     </audio>
 
     <svg
-      v-if="path"
+      v-if="processedPathData"
       class="svg"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 200 200">
@@ -102,11 +73,6 @@ export default {
       required: true,
       default: ''
     },
-    editor: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
     colors: {
       type: Array,
       required: false,
@@ -128,6 +94,11 @@ export default {
       type: Number,
       required: false,
       default: 3
+    },
+    css: {
+      type: [Boolean, Array],
+      required: false,
+      default: false
     }
   },
 
@@ -156,8 +127,11 @@ export default {
       return points
     },
     processedPathData () {
-      const svgPath = this.$simplifySvgPath(this.points)
-      return svgPath
+      if (this.points.length) {
+        const svgPath = this.$simplifySvgPath(this.points)
+        return svgPath
+      }
+      return false
     },
     limitStrokeWidth () {
       if (this.strokeWidth < 1) { return -1 / (this.strokeWidth - 1) }
@@ -167,11 +141,20 @@ export default {
       return this.playState === 'running' ? 0.4 + (this.amplitude * 0.6) : 0.4
     },
     styles () {
-      return {
+      const styles = {
         '--path-stroke-color': this.colors[0] ? this.colors[0] : '#6c6575',
         '--path-opacity': `${this.opacity}`,
         '--path-stroke-width': this.limitStrokeWidth
       }
+      if (Array.isArray(this.css)) {
+        this.css.forEach((line) => {
+          const props = line.split(':')
+          const key = props[0]
+          const value = props[1]
+          styles[key] = value
+        })
+      }
+      return styles
     }
   },
 
@@ -182,7 +165,9 @@ export default {
       }
     },
     gain () {
-      this.gainNode.gain.value = this.amplitude * this.gain
+      if (this.gainNode) {
+        this.gainNode.gain.value = this.amplitude * this.gain
+      }
     }
   },
 
@@ -238,31 +223,6 @@ export default {
       stroke-width: var(--path-stroke-width);
     }
   }
-  .editor-button {
-    color: var(--path-stroke-color);
-  }
-}
-
-.toolbar {
-  display: none;
-  flex-direction: column;
-  justify-content: flex-start;
-  width: 1.25rem;
-  height: 100%;
-  position: absolute;
-  pointer-events: auto;
-  left: calc(100% + 1.75rem);
-  top: 0;
-  &.editor {
-    display: flex;
-  }
-}
-
-.editor-button {
-  pointer-events: auto;
-  padding: 0.25rem;
-  line-height: 1;
-  text-align: center;
 }
 
 </style>

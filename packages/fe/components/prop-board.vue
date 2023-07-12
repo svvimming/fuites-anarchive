@@ -9,6 +9,7 @@
       :fontsize="13"
       :editor="true"
       :propboard="true"
+      :colorpicker="false"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
       @change-color="changeColor" />

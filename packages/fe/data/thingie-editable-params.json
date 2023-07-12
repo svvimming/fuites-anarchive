@@ -2,7 +2,7 @@
   "image": [
     {
       "directive": "toggleImageClip",
-      "inner": "mask"
+      "inner": "clip"
     }
   ],
   "text": [
@@ -18,11 +18,11 @@
     },
     {
       "directive": "changeFontFamily",
-      "inner": "f"
+      "inner": "font"
     },
     {
       "directive": "openColorEditor",
-      "inner": "c"
+      "inner": "color"
     }
   ],
   "sound": [
@@ -57,6 +57,11 @@
       "directive": "changeZindex",
       "value": "back",
       "inner": "back"
+    },
+    {
+      "directive": "changeOpacity",
+      "value": "1.0",
+      "inner": "opacity"
     }
   ]
 }

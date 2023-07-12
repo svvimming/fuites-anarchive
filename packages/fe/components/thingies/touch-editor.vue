@@ -266,6 +266,12 @@ export default {
         }
       }
     },
+    changeOpacity () {
+      let opacity = this.thingie.opacity ? this.thingie.opacity : 1.0
+      opacity -= 0.1
+      if (opacity < 0.1) { opacity = 1.0 }
+      this.$emit('initupdate', { _id: this.thingie._id, opacity })
+    },
     touchstart () {
       document.ontouchmove = this.$throttle((e) => { this.touchmove(e) }, 50)
       document.ontouchend = this.touchend
