@@ -9,7 +9,11 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
-    <div class="page-background" :style="pageBackground"></div>
+    <div
+      id="page-background-image"
+      class="page-background"
+      :style="pageBackground">
+    </div>
 
     <button @click="generateScreenShot" class="screencap">
       screencap
@@ -367,10 +371,17 @@ export default {
       }
     },
     generateScreenShot () {
-      if (window && this.$refs.page) {
-        Html2Canvas(this.$refs.page).then((canvas) => {
+      if (document && window && this.$refs.page) {
+        const bg = document.getElementById('page-background-image')
+        if (bg) {
+          bg.style.opacity = 1.0
+        }
+        Html2Canvas(this.$refs.page, { backgroundColor: null }).then((canvas) => {
           const dataURL = canvas.toDataURL()
           this.backgroundImage = dataURL
+          if (bg) {
+            bg.style.opacity = 0.5
+          }
         })
       }
     }
@@ -403,7 +414,7 @@ export default {
   background-size: 100%;
   background-repeat: no-repeat;
   z-index: -10000;
-  opacity: 0.1;
+  opacity: 0.2;
 }
 
 .toggle.prop-board-toggle {
