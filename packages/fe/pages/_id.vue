@@ -9,6 +9,8 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <div class="page-background" :style="pageBackground"></div>
+
     <button @click="generateScreenShot" class="screencap">
       screencap
     </button>
@@ -195,9 +197,13 @@ export default {
     pageStyles () {
       return {
         '--page-var-field-width': `${this.pageBounds.x}px`,
-        '--page-var-field-height': `${this.pageBounds.y}px`,
-        '--page-background-image': `url(${this.backgroundImage})`
+        '--page-var-field-height': `${this.pageBounds.y}px`
       }
+    },
+    pageBackground () {
+      return this.backgroundImage ? 
+        { 'background-image': `url(${this.backgroundImage})` } : 
+        { 'background-image': 'none' }
     }
   },
 
@@ -377,7 +383,6 @@ export default {
 .page {
   --page-var-field-width: 2732px;
   --page-var-field-height: 2000px;
-  --page-background-image: none;
   position: absolute;
   width: var(--page-var-field-width);
   height: var(--page-var-field-height);
@@ -387,19 +392,18 @@ export default {
     width: 100vw !important;
     height: 100vh !important;
   }
-  &:before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    background-size: 100%;
-    background-repeat: no-repeat;
-    background-image: var(--page-background-image);
-    z-index: -10000;
-    opacity: 0.1;
-  }
+}
+
+.page-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  z-index: -10000;
+  opacity: 0.1;
 }
 
 .toggle.prop-board-toggle {
