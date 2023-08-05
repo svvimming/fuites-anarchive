@@ -92,7 +92,7 @@ export default {
   name: 'TouchEditor',
 
   props: {
-    currentSpaze: {
+    currentPage: {
       type: String,
       required: true
     },
@@ -179,7 +179,7 @@ export default {
         x = Math.floor(Math.random() * 560) - thingie.width + 40
         y = Math.floor(Math.random() * 300)
       }
-      if (newLocation === this.currentSpaze) {
+      if (newLocation === this.currentPage) {
         x = window.scrollX + Math.floor(Math.random() * window.innerWidth) - thingie.width
         y = window.scrollY + Math.floor(Math.random() * window.innerHeight) - 100
       }
@@ -297,7 +297,7 @@ export default {
     },
     setDestinations () {
       const possibleLocations = [
-        { location: this.currentSpaze, text: `move to ${this.currentSpaze}` },
+        { location: this.currentPage, text: `move to ${this.currentPage}` },
         { location: 'pocket', text: 'move to pocket' }
       ]
       if (this.$route.params.id !== 'compost') {

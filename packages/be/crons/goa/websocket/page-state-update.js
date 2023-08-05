@@ -1,4 +1,4 @@
-console.log('⚡️ [websocket] cron|app|spaze-state-update')
+console.log('⚡️ [websocket] cron|app|page-state-update')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,10 +7,10 @@ const MC = require('@Root/config')
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.socket.listeners.push({
-  name: 'cron|spaze-state-update|initialize',
+  name: 'cron|page-state-update|initialize',
   handler (updated) {
     if (updated) {
-      MC.socket.io.to('cron|goa').emit('module|spaze-state-update|payload', updated)
+      MC.socket.io.to('cron|goa').emit('module|page-state-update|payload', updated)
     }
   }
 })

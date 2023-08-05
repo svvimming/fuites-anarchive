@@ -1,4 +1,4 @@
-console.log('💿 [model] spaze')
+console.log('💿 [model] page')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,7 +7,7 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const SpazeSchema = new Schema({
+const PageSchema = new Schema({
   name: {
     type: String,
     required: true
@@ -31,7 +31,7 @@ const SpazeSchema = new Schema({
     ref: 'thingies',
     required: false
   },
-  overflow_spaze: {
+  overflow_page: {
     type: String,
     required: false
   },
@@ -65,4 +65,4 @@ const SpazeSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('spazes', SpazeSchema)
+module.exports = Mongoose.model('pages', PageSchema)

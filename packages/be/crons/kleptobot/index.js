@@ -1,8 +1,8 @@
 /**
  *
  * ⏱️️ [Cron | every day]
- * Kleptobot moves thingies from leaking spaces to
- * new spazes based on their preacceleration
+ * Kleptobot moves thingies from leaking pages to
+ * new pages based on their preacceleration
  *
  */
 console.log('🤖️ [cron] Kleptobot')
@@ -44,7 +44,7 @@ try {
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
 require('@Module_Thingie')
-require('@Module_Spaze')
+require('@Module_Page')
 require('@Module_Portal')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
@@ -61,10 +61,10 @@ socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 // ------------------------------------------------------------- thingieMigrator
 const thingieMigrator = async () => {
   try {
-    const leaking = await MC.model.Spaze
+    const leaking = await MC.model.Page
       .find({
         state: 'leaking',
-        name: { $nin: Rules.kleptobot.prevent_theft_list }
+        name: { $nin: Rules.kleptobot.prevent_leak_list }
       })
       .populate({
         path: 'portal_refs',
@@ -74,9 +74,9 @@ const thingieMigrator = async () => {
       const migrations = []
       const preventDepositList = Rules.kleptobot.prevent_deposit_list
       for (let i = 0; i < leaking.length; i++) {
-        const spaze = leaking[i]
+        const page = leaking[i]
         const thingies = await MC.model.Thingie
-          .find({ location: spaze.name })
+          .find({ location: page.name })
           .sort({ preacceleration: 'desc' })
         const now = Date.now()
         const gracePeriod = Rules.kleptobot.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
@@ -85,24 +85,24 @@ const thingieMigrator = async () => {
           return lastUpdated.getTime() > now - gracePeriod
         })
         if (thingies.length && !recentlyUpdated) {
-          const overflow = await MC.model.Spaze.findOne({ overflow_spaze: spaze.name })
-          let newSpazeLocation = ''
+          const overflow = await MC.model.Page.findOne({ overflow_page: page.name })
+          let newPageLocation = ''
           if (overflow && !preventDepositList.includes(overflow.name)) {
-            newSpazeLocation = overflow.name
-          } else if (spaze.portal_refs.length) {
-            const connection = spaze.portal_refs.find((portal) => {
-              return portal.edge.split('_').find(name => name !== spaze.name && !preventDepositList.includes(name))
+            newPageLocation = overflow.name
+          } else if (page.portal_refs.length) {
+            const connection = page.portal_refs.find((portal) => {
+              return portal.edge.split('_').find(name => name !== page.name && !preventDepositList.includes(name))
             })
             if (connection) {
-              newSpazeLocation = connection.edge.split('_').find(name => name !== spaze.name && !preventDepositList.includes(name))
+              newPageLocation = connection.edge.split('_').find(name => name !== page.name && !preventDepositList.includes(name))
             }
           }
-          if (newSpazeLocation) {
+          if (newPageLocation) {
             const firstThingie = thingies[0]
             migrations.push({
               _id: firstThingie._id,
               new_location: {
-                location: newSpazeLocation,
+                location: newPageLocation,
                 at: {
                   x: firstThingie.at.x,
                   y: firstThingie.at.y

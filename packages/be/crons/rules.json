@@ -1,6 +1,6 @@
 {
   "kleptobot": {
-    "prevent_theft_list": [
+    "prevent_leak_list": [
       "compost",
       "pool"
     ],

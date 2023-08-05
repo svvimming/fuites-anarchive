@@ -1,8 +1,8 @@
 <template>
   <div
-    ref="spz"
-    :class="['spz', {'non-existent': !spazeExists }]"
-    :style="spazeStyles"
+    ref="page"
+    :class="['page', {'non-existent': !pageExists }]"
+    :style="pageStyles"
     @drop="onDrop($event)"
     @dragover.prevent
     @dragenter.prevent
@@ -15,17 +15,17 @@
       @update-css-properties="initUpdate" />
 
     <PropBoard
-      v-if="authenticated && spazeExists && !touchmode"
+      v-if="authenticated && pageExists && !touchmode"
       ref="propboard"
-      :spz="spazeName"
+      :pagename="pageName"
       :location="editorCoords" />
 
-    <template v-for="thingie in spazeThingies">
+    <template v-for="thingie in pageThingies">
       <component
         :is="thingieComponent"
         :key="thingie._id"
         :thingie="thingie"
-        :bounds="spazeBounds"
+        :bounds="pageBounds"
         @initmousedown="initMousedown"
         @initupdate="initUpdate"
         @initmouseup="initMouseup" />
@@ -57,9 +57,9 @@ import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
 
 // =================================================================== Functions
-const initSpazeScrollPosition = (instance) => {
-  if (instance.$refs.spz) {
-    const bounds = instance.spazeBounds
+const initPageScrollPosition = (instance) => {
+  if (instance.$refs.page) {
+    const bounds = instance.pageBounds
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
     const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
     const x = Math.round((bounds.x - vw) / 2)
@@ -80,9 +80,9 @@ const handleKeyCommand = (e, instance) => {
 
 // ====================================================================== Export
 export default {
-  name: 'SpazeIsThePlaze',
+  name: 'Page',
 
-  layout: 'spaze',
+  layout: 'page',
 
   components: {
     PropBoard,
@@ -94,15 +94,15 @@ export default {
 
   async fetch ({ app, store, route }) {
     await store.dispatch('general/setLandingData')
-    await store.dispatch('collections/getSpazes')
-    await store.dispatch('collections/getThingies', { spazename: route.params.id })
+    await store.dispatch('collections/getPages')
+    await store.dispatch('collections/getThingies', { pagename: route.params.id })
   },
 
   data () {
     const name = this.$route.params.id
     return {
-      spazeName: name,
-      spazeExists: true,
+      pageName: name,
+      pageExists: true,
       socket: false,
       offset: {
         x: 0,
@@ -121,13 +121,13 @@ export default {
 
   head () {
     return {
-      title: `${this.spazeName.replaceAll('-', ' ')} - f u i t e s`
+      title: `${this.pageName.replaceAll('-', ' ')} - f u i t e s`
     }
   },
 
   computed: {
     ...mapGetters({
-      spazes: 'collections/spazes',
+      pages: 'collections/pages',
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
@@ -136,12 +136,12 @@ export default {
       modal: 'general/modal',
       touchmode: 'general/touchmode'
     }),
-    spaze () {
-      return this.spazes.find(item => item.name === this.spazeName)
+    page () {
+      return this.pages.find(item => item.name === this.pageName)
     },
-    spazeThingies () {
-      if (this.spaze) {
-        const name = this.spaze.name
+    pageThingies () {
+      if (this.page) {
+        const name = this.page.name
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
@@ -151,11 +151,11 @@ export default {
     },
     portals () {
       const portals = []
-      if (this.spaze && this.showPortals) {
-        const connections = this.spaze.portal_refs
+      if (this.page && this.showPortals) {
+        const connections = this.page.portal_refs
         connections.forEach((connection) => {
           const vertices = connection.vertices
-          if (vertices.a.location === this.spazeName && connection.enabled) {
+          if (vertices.a.location === this.pageName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.b.location,
@@ -163,7 +163,7 @@ export default {
               colors: connection.thingie_ref ? connection.thingie_ref.colors : []
             })
           }
-          if (vertices.b.location === this.spazeName && connection.enabled) {
+          if (vertices.b.location === this.pageName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.a.location,
@@ -183,21 +183,21 @@ export default {
       }
       return queue
     },
-    spazeBounds () {
-      return this.spaze && this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
+    pageBounds () {
+      return this.page && this.page.bounds ? this.page.bounds : { x: 2732, y: 2000 }
     },
-    spazeStyles () {
+    pageStyles () {
       return {
-        '--spaze-var-field-width': `${this.spazeBounds.x}px`,
-        '--spaze-var-field-height': `${this.spazeBounds.y}px`,
+        '--page-var-field-width': `${this.pageBounds.x}px`,
+        '--page-var-field-height': `${this.pageBounds.y}px`,
       }
     }
   },
 
   watch: {
     authenticated (val) {
-      if (val && !this.spazeExists) {
-        this.openNewSpazeModal()
+      if (val && !this.pageExists) {
+        this.openNewPageModal()
       }
     }
   },
@@ -210,22 +210,22 @@ export default {
 
   async mounted () {
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'spazes')
+      this.socket.emit('join-room', 'pages')
       this.socket.emit('join-room', 'cron|goa')
-      this.socket.on('module|post-create-spaze|payload', (spaze) => {
-        this.addSpaze(spaze)
+      this.socket.on('module|post-create-page|payload', (page) => {
+        this.addPage(page)
       })
-      const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
+      const socketEvents = ['module|post-update-page|payload', 'module|page-state-update|payload']
       socketEvents.forEach((message) => {
-        this.socket.on(message, (spaze) => {
-          this.updateSpaze(spaze)
+        this.socket.on(message, (page) => {
+          this.updatePage(page)
         })
       })
     })
-    if (!this.spaze) {
-      this.spazeExists = false
+    if (!this.page) {
+      this.pageExists = false
     } else {
-      this.$nextTick(() => { initSpazeScrollPosition(this) })
+      this.$nextTick(() => { initPageScrollPosition(this) })
       this.keydown = (e) => { handleKeyCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
     }
@@ -246,16 +246,16 @@ export default {
   methods: {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
-      clearSpazes: 'collections/clearSpazes',
+      clearPages: 'collections/clearPages',
       clearThingies: 'collections/clearThingies',
-      postCreateSpaze: 'collections/postCreateSpaze',
-      postUpdateSpaze: 'collections/postUpdateSpaze',
-      addSpaze: 'collections/addSpaze',
-      updateSpaze: 'collections/updateSpaze',
+      postCreatePage: 'collections/postCreatePage',
+      postUpdatePage: 'collections/postUpdatePage',
+      addPage: 'collections/addPage',
+      updatePage: 'collections/updatePage',
       setModal: 'general/setModal',
       authenticate: 'general/authenticate'
     }),
-    openNewSpazeModal () {
+    openNewPageModal () {
       this.setModal(true)
     },
     initMousedown (thingie) {
@@ -278,7 +278,7 @@ export default {
       this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         evt.preventDefault()
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
@@ -286,14 +286,14 @@ export default {
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
-          location: this.spazeName,
+          location: this.pageName,
           last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 },
           record_new_location: true
         })
-        if (this.spaze.state === 'metastable') {
-          this.createNewSpazeFromThingie(thingieId)
+        if (this.page.state === 'metastable') {
+          this.createNewPageFromThingie(thingieId)
         }
       }
     },
@@ -306,7 +306,7 @@ export default {
       }
     },
     openEditor (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         this.editorCoords = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
@@ -317,20 +317,20 @@ export default {
       }
     },
     closeEditor (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         if (this.breakout) { this.breakout = false }
         if (!evt.altKey && this.$refs.propboard) {
           this.$refs.propboard.closeEditor()
         }
       }
     },
-    async createNewSpazeFromThingie (thingieId) {
-      const complete = await this.postCreateSpaze({
+    async createNewPageFromThingie (thingieId) {
+      const complete = await this.postCreatePage({
         creator_thingie: thingieId,
-        overflow_spaze: this.spazeName
+        overflow_page: this.pageName
       })
       if (complete) {
-        const created = this.spazes.find(item => item.name === complete.name)
+        const created = this.pages.find(item => item.name === complete.name)
         if (created) {
           this.socket.emit('update-thingie', {
             _id: created.creator_thingie,
@@ -359,12 +359,12 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.spz {
-  --spaze-var-field-width: 2732px;
-  --spaze-var-field-height: 2000px;
+.page {
+  --page-var-field-width: 2732px;
+  --page-var-field-height: 2000px;
   position: absolute;
-  width: var(--spaze-var-field-width);
-  height: var(--spaze-var-field-height);
+  width: var(--page-var-field-width);
+  height: var(--page-var-field-height);
   overflow: hidden;
   z-index: 1;
   &.non-existent {

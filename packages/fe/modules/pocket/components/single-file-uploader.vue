@@ -130,7 +130,7 @@ export default {
       required: false,
       default: ''
     },
-    uploadToSpaze: {
+    uploadToPage: {
       type: String,
       required: false,
       default: ''
@@ -169,7 +169,7 @@ export default {
       return ''
     },
     destination () {
-      return this.uploadToSpaze ? this.uploadToSpaze : 'pocket'
+      return this.uploadToPage ? this.uploadToPage : 'pocket'
     }
   },
 
@@ -212,7 +212,7 @@ export default {
         location: this.destination,
         type: thingietype,
         pathData: this.pathData,
-        at: this.uploadToSpaze ? {
+        at: this.uploadToPage ? {
           x: 683 + Math.random() * 1200,
           y: 500 + Math.random() * 700,
           z: 1

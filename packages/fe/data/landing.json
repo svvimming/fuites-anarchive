@@ -39,7 +39,7 @@
       }
     ]
   },
-  "spaze": {
+  "page": {
     "links": [
       {
         "component": "Bingo",
@@ -65,7 +65,7 @@
       "to upload a thingie, open the pocket and click upload",
       "to move a thingie, click and drag it",
       "to drag and drop a thingie into your pocket, the compost or a page,<br>click and drag while holding shift (chrome, firefox), or holding command (safari)",
-      "to add a text thingie, hold option and click anywhere on the white space",
+      "to add a text thingie, hold option and click anywhere on the white background",
       "br",
       "to remove a thingie from the page, drag and drop it into the open compost",
       "to <i><b>delete</b></i> a thingie from the site, once it has been composted, navigate to<a href='https://fuit.es/compost' class='text-link'><b> the compost</b></a>. There, you'll be able to delete it by option-clicking it: When it's highlighted, click the 'delete' button in the bottom left corner.",

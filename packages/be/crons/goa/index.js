@@ -1,9 +1,9 @@
 /**
  *
  * ⏱️️ [Cron | every 5 minutes]
- * GOA scans through the spazes database and
- * accesses/changes spaze states as well as
- * thingie propensities to leave a leaking space.
+ * GOA scans through the pages database and
+ * accesses/changes page states as well as
+ * thingie propensities to leave a leaking page.
  *
  */
 console.log('🔱 [cron] GOA')
@@ -45,7 +45,7 @@ try {
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
 require('@Module_Thingie')
-require('@Module_Spaze')
+require('@Module_Page')
 require('@Module_Uploader')
 require('@Module_Portal')
 
@@ -64,12 +64,12 @@ socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 // ------------------------------------------------------- ThingiePreaccelerator
 const thingiePreaccelerator = async () => {
   try {
-    const spazes = await MC.model.Spaze.find({
+    const pages = await MC.model.Page.find({
       name: { $nin: Rules.goa.ignore_list }
     })
-    for (let i = 0; i < spazes.length; i++) {
-      const spaze = spazes[i]
-      const thingies = await MC.model.Thingie.find({ location: spaze.name })
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i]
+      const thingies = await MC.model.Thingie.find({ location: page.name })
       if (thingies.length) {
         const points = thingies.map((thingie) => {
           return {
@@ -83,11 +83,11 @@ const thingiePreaccelerator = async () => {
         const massSum = points.reduce((collector, point) => collector + point.m, 0)
         const centerOfMassX = massPositionsX / massSum
         const centerOfMassY = massPositionsY / massSum
-        const spazeCenterOfMass = [centerOfMassX, centerOfMassY]
+        const pageCenterOfMass = [centerOfMassX, centerOfMassY]
         const thingieData = thingies.map((thingie) => {
           const position = [thingie.at.x + thingie.width / 2, thingie.at.y]
-          const deltaX = position[0] - spazeCenterOfMass[0]
-          const deltaY = position[1] - spazeCenterOfMass[1]
+          const deltaX = position[0] - pageCenterOfMass[0]
+          const deltaY = position[1] - pageCenterOfMass[1]
           const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
           return {
             thingie_id: thingie._id,
@@ -117,45 +117,45 @@ const thingiePreaccelerator = async () => {
 
 // ///////////////////////////////////////////////////////////////////////// GOA
 // -----------------------------------------------------------------------------
-const spazePreaccelerator = async () => {
+const pagePreaccelerator = async () => {
   try {
-    const spazes = await MC.model.Spaze.find({
+    const pages = await MC.model.Page.find({
       name: { $nin: Rules.goa.ignore_list }
     })
     const thingies = await MC.model.Thingie.find({}).populate({
       path: 'file_ref',
       select: 'filename file_ext filesize'
     })
-    for (let i = 0; i < spazes.length; i++) {
-      const spaze = spazes[i]
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i]
       let totalBytes = 0
-      const spazeThingies = thingies.filter(thingie => thingie.location === spaze.name)
-      spazeThingies.forEach((thingie) => {
+      const pageThingies = thingies.filter(thingie => thingie.location === page.name)
+      pageThingies.forEach((thingie) => {
         if (thingie.file_ref) {
           totalBytes += thingie.file_ref.filesize
         }
       })
-      const saturated = totalBytes > 40000000 || spazeThingies.length > 40
-      if (saturated && spaze.state === 'clumping') { // change spaze state to metastable
-        const updated = await MC.model.Spaze
-          .findOneAndUpdate({ _id: spaze._id }, { state: 'metastable' }, { new: true })
+      const saturated = totalBytes > 40000000 || pageThingies.length > 40
+      if (saturated && page.state === 'clumping') { // change page state to metastable
+        const updated = await MC.model.Page
+          .findOneAndUpdate({ _id: page._id }, { state: 'metastable' }, { new: true })
           .populate({
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        socket.emit('cron|spaze-state-update|initialize', updated)
-      } else if (totalBytes <= 30000000 && spazeThingies.length <= 32 && spaze.state === 'leaking') { // change spaze state to clumping
-        const updated = await MC.model.Spaze
-          .findOneAndUpdate({ _id: spaze._id }, { state: 'clumping' }, { new: true })
+        socket.emit('cron|page-state-update|initialize', updated)
+      } else if (totalBytes <= 30000000 && pageThingies.length <= 32 && page.state === 'leaking') { // change page state to clumping
+        const updated = await MC.model.Page
+          .findOneAndUpdate({ _id: page._id }, { state: 'clumping' }, { new: true })
           .populate({
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        socket.emit('cron|spaze-state-update|initialize', updated)
+        socket.emit('cron|page-state-update|initialize', updated)
       }
     }
   } catch (e) {
-    console.log('============================= [Function: spazePreaccelerator]')
+    console.log('============================= [Function: pagePreaccelerator]')
     console.log(e)
   }
 }
@@ -165,7 +165,7 @@ const spazePreaccelerator = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🔱 Godess Of Anarchy started')
   try {
-    await spazePreaccelerator()
+    await pagePreaccelerator()
     await thingiePreaccelerator()
     socket.disconnect()
     console.log('🔱 GOA updates completed')

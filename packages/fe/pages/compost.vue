@@ -38,7 +38,7 @@ import TouchThingie from '@/components/thingies/touch-thingie'
 export default {
   name: 'Compost',
 
-  layout: 'spaze',
+  layout: 'page',
 
   components: {
     Thingie,
@@ -48,8 +48,8 @@ export default {
 
   async fetch ({ app, store }) {
     await store.dispatch('general/setLandingData')
-    await store.dispatch('collections/getSpazes')
-    await store.dispatch('collections/getThingies', { spazename: 'compost' })
+    await store.dispatch('collections/getPages')
+    await store.dispatch('collections/getThingies', { pagename: 'compost' })
   },
 
   head () {
@@ -71,7 +71,7 @@ export default {
 
   computed: {
     ...mapGetters({
-      spazes: 'collections/spazes',
+      pages: 'collections/pages',
       thingies: 'collections/thingies',
       authenticated: 'general/authenticated',
       landing: 'general/landing',
@@ -79,7 +79,7 @@ export default {
       pocket: 'pocket/pocket',
     }),
     compost () {
-      const compost = this.spazes.find(item => item.name === 'compost')
+      const compost = this.pages.find(item => item.name === 'compost')
       return compost
     },
     compostThingies () {
