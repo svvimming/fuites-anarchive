@@ -126,8 +126,7 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false,
-      backgroundImage: ''
+      breakout: false
     }
   },
 
@@ -205,8 +204,8 @@ export default {
       }
     },
     pageBackground () {
-      return this.backgroundImage ? 
-        { 'background-image': `url(${this.backgroundImage})` } : 
+      return this.page && this.page.background ? 
+        { 'background-image': `url(${this.page.background})` } : 
         { 'background-image': 'none' }
     }
   },
@@ -373,15 +372,11 @@ export default {
     generateScreenShot () {
       if (document && window && this.$refs.page) {
         const bg = document.getElementById('page-background-image')
-        if (bg) {
-          bg.style.opacity = 1.0
-        }
+        if (bg) { bg.style.opacity = 1.0 }
         Html2Canvas(this.$refs.page, { backgroundColor: null }).then((canvas) => {
           const dataURL = canvas.toDataURL()
-          this.backgroundImage = dataURL
-          if (bg) {
-            bg.style.opacity = 0.5
-          }
+          this.postUpdatePage({ name: this.pageName, background: dataURL })
+          if (bg) { bg.style.opacity = 0.2 }
         })
       }
     }

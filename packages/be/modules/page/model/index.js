@@ -57,6 +57,11 @@ const PageSchema = new Schema({
     type: [String],
     required: false,
     default: []
+  },
+  background: {
+    type: String,
+    required: false,
+    default: ''
   }
 }, {
   timestamps: true,
