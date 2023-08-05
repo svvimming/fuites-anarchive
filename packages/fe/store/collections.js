@@ -100,7 +100,6 @@ const actions = {
   async postUpdatePage ({ getters }, payload) {
     try {
       const response = await this.$axiosAuth.post('/post-update-page', payload)
-      console.log(response.data.payload)
       return response.data.payload
     } catch (e) {
       console.log('=============== [Store Action: collections/postUpdatePage]')
