@@ -9,6 +9,10 @@
     @click.alt.self="openEditor($event)"
     @click.self="closeEditor($event)">
 
+    <button @click="generateScreenShot" class="screencap">
+      screencap
+    </button>
+
     <CssBreakoutBox
       v-if="authenticated && !touchmode"
       :active="breakout"
@@ -49,6 +53,7 @@
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
+import Html2Canvas from 'html2canvas'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
@@ -352,6 +357,15 @@ export default {
           this.updateInterval = false
         }, 1500)
       }
+    },
+    generateScreenShot () {
+      if (window && this.$refs.page) {
+        Html2Canvas(this.$refs.page).then((canvas) => {
+          // document.body.appendChild(canvas)
+          const dataURL = canvas.toDataURL()
+          console.log(dataURL)
+        })
+      }
     }
   }
 }
@@ -387,6 +401,12 @@ export default {
   color: $lavender;
   @include fontWeight_Bold;
   @include linkHover($lavender);
+}
+
+.screencap {
+  position: absolute;
+  top: 200px;
+  left: 200px;
 }
 
 </style>
