@@ -120,7 +120,8 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false
+      breakout: false,
+      backgroundImage: ''
     }
   },
 
@@ -195,6 +196,7 @@ export default {
       return {
         '--page-var-field-width': `${this.pageBounds.x}px`,
         '--page-var-field-height': `${this.pageBounds.y}px`,
+        '--page-background-image': `url(${this.backgroundImage})`
       }
     }
   },
@@ -361,9 +363,8 @@ export default {
     generateScreenShot () {
       if (window && this.$refs.page) {
         Html2Canvas(this.$refs.page).then((canvas) => {
-          // document.body.appendChild(canvas)
           const dataURL = canvas.toDataURL()
-          console.log(dataURL)
+          this.backgroundImage = dataURL
         })
       }
     }
@@ -376,6 +377,7 @@ export default {
 .page {
   --page-var-field-width: 2732px;
   --page-var-field-height: 2000px;
+  --page-background-image: none;
   position: absolute;
   width: var(--page-var-field-width);
   height: var(--page-var-field-height);
@@ -384,6 +386,19 @@ export default {
   &.non-existent {
     width: 100vw !important;
     height: 100vh !important;
+  }
+  &:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-image: var(--page-background-image);
+    z-index: -10000;
+    opacity: 0.1;
   }
 }
 
