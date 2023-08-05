@@ -42,7 +42,7 @@ try {
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
 require('@Module_Thingie')
-require('@Module_Spaze')
+require('@Module_Page')
 require('@Module_Portal')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
@@ -78,7 +78,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
     if (created) {
       console.log(`New portal opened between ${created.edge.replace('_', ' and ')}.`)
       for (let i = 0; i < vertices.length; i++) {
-        const updated = await MC.model.Spaze.findOneAndUpdate(
+        const updated = await MC.model.Page.findOneAndUpdate(
           { name: vertices[i].location },
           { $push: { portal_refs: created._id } },
           { new: true }
@@ -87,7 +87,7 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
           populate: { path: 'thingie_ref', select: 'colors' }
         })
         if (updated) {
-          socket.emit('cron|spaze-portals-changed|initialize', updated)
+          socket.emit('cron|page-portals-changed|initialize', updated)
         }
       }
     }
@@ -103,7 +103,7 @@ const closePortal = async (incoming) => {
     const portal = await MC.model.Portal.findById(incoming._id)
     const vertices = [portal.vertices.a, portal.vertices.b]
     for (let i = 0; i < vertices.length; i++) {
-      const updated = await MC.model.Spaze.findOneAndUpdate(
+      const updated = await MC.model.Page.findOneAndUpdate(
         { name: vertices[i].location },
         { $pull: { portal_refs: portal._id } },
         { new: true }
@@ -111,7 +111,7 @@ const closePortal = async (incoming) => {
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }
       })
-      socket.emit('cron|spaze-portals-changed|initialize', updated)
+      socket.emit('cron|page-portals-changed|initialize', updated)
     }
     const closed = await MC.model.Portal.deleteOne({ id: portal._id })
     console.log(`Portal closed: ${closed}`)
@@ -141,8 +141,8 @@ const checkPortalThingiesExist = async () => {
   }
 }
 
-// -------------------------------------------------- updatePortalsBetweenSpazes
-const updatePortalsBetweenSpazes = async () => {
+// -------------------------------------------------- updatePortalsBetweenPages
+const updatePortalsBetweenPages = async () => {
   try {
     await checkPortalThingiesExist()
     const thingies = await MC.model.Thingie.find({})
@@ -177,7 +177,7 @@ const updatePortalsBetweenSpazes = async () => {
       }
     }
   } catch (e) {
-    console.log('====================== [Function: updatePortalsBetweenSpazes]')
+    console.log('====================== [Function: updatePortalsBetweenPages]')
     console.log(e)
   }
 }
@@ -185,20 +185,20 @@ const updatePortalsBetweenSpazes = async () => {
 // //////////////////////////////////////////////////////////// SetActivePortals
 const setActivePortals = async () => {
   try {
-    const spazes = await MC.model.Spaze.find({}).populate({
+    const pages = await MC.model.Page.find({}).populate({
       path: 'portal_refs',
       populate: { path: 'thingie_ref' }
     })
-    const len = spazes.length
+    const len = pages.length
     for (let i = 0; i < len; i++) {
-      const spaze = spazes[i]
-      const connections = spaze.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== spaze.name))
+      const page = pages[i]
+      const connections = page.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== page.name))
 
-      if (spaze.portal_refs.length) {
+      if (page.portal_refs.length) {
         const slugs = [...new Set(connections.flat())]
         for (let j = 0; j < slugs.length; j++) {
           const slug = slugs[j]
-          const refs = spaze.portal_refs.filter(ref => ref.edge.includes(slug))
+          const refs = page.portal_refs.filter(ref => ref.edge.includes(slug))
           const lowestP = refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
           const enabled = refs.filter((portal) => portal.enabled)
           for (let k = 0; k < enabled.length; k++) {
@@ -223,7 +223,7 @@ const setActivePortals = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🚇 Tunneler started')
   try {
-    await updatePortalsBetweenSpazes()
+    await updatePortalsBetweenPages()
     await setActivePortals()
     console.log('🚇 Tunneler updates completed')
     socket.disconnect()

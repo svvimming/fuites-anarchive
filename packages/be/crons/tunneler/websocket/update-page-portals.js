@@ -1,4 +1,4 @@
-console.log('⚡️ [websocket] cron|app|spaze-portals-changed')
+console.log('⚡️ [websocket] cron|app|page-portals-changed')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,10 +7,10 @@ const MC = require('@Root/config')
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.socket.listeners.push({
-  name: 'cron|spaze-portals-changed|initialize',
+  name: 'cron|page-portals-changed|initialize',
   handler (updated) {
     if (updated) {
-      MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
+      MC.socket.io.to('pages').emit('module|post-update-page|payload', updated)
     }
   }
 })

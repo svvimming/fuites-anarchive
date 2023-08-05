@@ -52,7 +52,7 @@ export default {
   },
 
   props: {
-    spz: {
+    pagename: {
       type: String,
       required: false,
       default: ''
@@ -99,8 +99,8 @@ export default {
         '--propboard-highlight-color': this.highlight
       }
     },
-    spazeName () {
-      return this.spz ? this.spz : this.$route.params.id
+    pageName () {
+      return this.pagename ? this.pagename : this.$route.params.id
     },
     textStyles () {
       return {
@@ -148,7 +148,7 @@ export default {
       const x = this.touchmode ? window.scrollX + Math.floor(Math.random() * window.innerWidth) - 80 : this.location.x
       const y = this.touchmode ? window.scrollY + Math.floor(Math.random() * window.innerHeight) - 300 : this.location.y
       const complete = await this.postCreateThingie({
-        location: this.spazeName,
+        location: this.pageName,
         type: 'text',
         text: this.text,
         fontsize: this.fontsize,
