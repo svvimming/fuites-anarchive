@@ -18,9 +18,9 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <button @click="generateScreenShot" class="screencap">
+      <!-- <button @click="generateScreenShot" class="screencap">
         screencap
-      </button>
+      </button> -->
 
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
@@ -72,7 +72,7 @@ import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
 
 // =================================================================== Functions
-const initPageScrollPosition = (instance) => {
+const initPageScrollPosition = (instance, next) => {
   if (instance.$refs.page) {
     const bounds = instance.pageBounds
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
@@ -81,6 +81,8 @@ const initPageScrollPosition = (instance) => {
     const y = Math.round((bounds.y - vh) / 2)
     window.scrollTo(x, y)
     instance.offset = { x, y }
+    // callback function
+    return next()
   }
 }
 
@@ -229,6 +231,8 @@ export default {
   },
 
   async mounted () {
+    console.log(this.page)
+    // init socket connections
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'pages')
       this.socket.emit('join-room', 'cron|goa')
@@ -242,18 +246,31 @@ export default {
         })
       })
     })
+    // Check if page exists
     if (!this.page) {
       this.pageExists = false
     } else {
-      this.$nextTick(() => { initPageScrollPosition(this) })
       this.keydown = (e) => { handleKeyCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
+      // Scroll view to the center of the page.
+      // When finished callback checks if a screencap should be generated
+      // and saved to the page background.
+      this.$nextTick(() => { 
+        initPageScrollPosition(this, () => {
+          if (this.page.init_screencap) {
+            this.generateScreenShot()
+          }
+        })
+      })
     }
-    const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
-    const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
-    if (process.client && authToken && authDate) {
-      if (Date.now() - parseInt(authDate) <= 10800000) {
-        this.authenticate(authToken)
+    // Retrieve token from local storage and if it exists automate login
+    if (!this.authenticated) {
+      const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+      const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
+      if (process.client && authToken && authDate) {
+        if (Date.now() - parseInt(authDate) <= 10800000) {
+          this.authenticate(authToken)
+        }
       }
     }
   },
@@ -388,8 +405,9 @@ export default {
           const context = canvas.getContext('2d')
           this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
-            this.postUpdatePage({ name: this.pageName, background: dataURL })
-            if (bg) { bg.style.opacity = 0.5 }
+            this.postUpdatePage({ name: this.pageName, background: dataURL, init_screencap: false })
+            if (bg) { bg.style.opacity = 0.25 }
+            console.log('page background updated')
           })
         })
       }
@@ -427,7 +445,7 @@ export default {
   background-size: 100%;
   background-repeat: no-repeat;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.25;
 }
 
 .toggle.prop-board-toggle {

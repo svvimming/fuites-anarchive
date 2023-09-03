@@ -62,6 +62,16 @@ const PageSchema = new Schema({
     type: String,
     required: false,
     default: ''
+  },
+  temperature: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  init_screencap: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 }, {
   timestamps: true,

@@ -12,7 +12,7 @@ MC.app.post('/post-update-page', async (req, res) => {
   try {
     const body = req.body
     const pageUpdates = {}
-    const properties = ['connections', 'state', 'background']
+    const properties = ['connections', 'state', 'background', 'init_screencap']
     properties.forEach((prop) => {
       if (body.hasOwnProperty(prop)) {
         pageUpdates[prop] = body[prop]
