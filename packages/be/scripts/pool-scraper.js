@@ -91,7 +91,7 @@ MC.app.on('mongoose-connected', async () => {
     console.log(updatedEntries)
     process.exit(0)
   } catch (e) {
-    console.log('=========================================== [Cron: Kleptobot]')
+    console.log('====================================== [Script: Pool scraper]')
     console.log(e)
     process.exit(0)
   }

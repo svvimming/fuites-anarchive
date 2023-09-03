@@ -1,11 +1,11 @@
 /**
  *
  * ⏱️️ [Cron | every day]
- * Kleptobot moves thingies from leaking pages to
+ * fuites thingie migratormoves thingies from leaking pages to
  * new pages based on their preacceleration
  *
  */
-console.log('🤖️ [cron] Kleptobot')
+console.log('💧 [cron] fuites')
 
 // ///////////////////////////////////////////////////// Imports + general setup
 // -----------------------------------------------------------------------------
@@ -64,7 +64,7 @@ const thingieMigrator = async () => {
     const leaking = await MC.model.Page
       .find({
         state: 'leaking',
-        name: { $nin: Rules.kleptobot.prevent_leak_list }
+        name: { $nin: Rules.fuites.prevent_leak_list }
       })
       .populate({
         path: 'portal_refs',
@@ -72,14 +72,14 @@ const thingieMigrator = async () => {
       })
     if (leaking.length) {
       const migrations = []
-      const preventDepositList = Rules.kleptobot.prevent_deposit_list
+      const preventDepositList = Rules.fuites.prevent_deposit_list
       for (let i = 0; i < leaking.length; i++) {
         const page = leaking[i]
         const thingies = await MC.model.Thingie
           .find({ location: page.name })
           .sort({ preacceleration: 'desc' })
         const now = Date.now()
-        const gracePeriod = Rules.kleptobot.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
+        const gracePeriod = Rules.fuites.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
         const recentlyUpdated = thingies.some((thingie) => {
           const lastUpdated = new Date(thingie.updatedAt)
           return lastUpdated.getTime() > now - gracePeriod
@@ -102,7 +102,7 @@ const thingieMigrator = async () => {
             migrations.push({
               _id: firstThingie._id,
               new_location: {
-                location: newPageLocation,
+                location: newageLocation,
                 at: {
                   x: firstThingie.at.x,
                   y: firstThingie.at.y
@@ -113,12 +113,12 @@ const thingieMigrator = async () => {
         }
       }
       if (migrations.length) {
-        console.log('kleptobot migrations:', migrations)
+        console.log('fuites migrations:', migrations)
         for (let j = 0; j < migrations.length; j++) {
           const migration = migrations[j]
           const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
             location: migration.new_location.location,
-            last_update_token: 'kleptobot',
+            last_update_token: 'fuites',
             update_count: 0,
             $push: { last_locations: migration.new_location }
           }, { new: true })
@@ -127,7 +127,7 @@ const thingieMigrator = async () => {
       }
     }
   } catch (e) {
-    console.log('===================== [Function: Kleptobot - thingieMigrator]')
+    console.log('===================== [Function: fuites - thingieMigrator]')
     console.log(e)
   }
 }
@@ -135,14 +135,14 @@ const thingieMigrator = async () => {
 // ////////////////////////////////////////////////////////////////// Initialize
 // -----------------------------------------------------------------------------
 MC.app.on('mongoose-connected', async () => {
-  console.log('🤖️ Kleptobot started')
+  console.log('💧fuites migrations started')
   try {
     await thingieMigrator()
     socket.disconnect()
-    console.log('🤖️ Kleptobot finished')
+    console.log('💧fuites migrations finished')
     process.exit(0)
   } catch (e) {
-    console.log('=========================================== [Cron: Kleptobot]')
+    console.log('=========================================== [Cron: fuites]')
     console.log(e)
     process.exit(0)
   }

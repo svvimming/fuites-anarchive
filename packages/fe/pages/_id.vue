@@ -1,13 +1,8 @@
 <template>
-  <div
+  <section
     ref="page"
-    :class="['page', {'non-existent': !pageExists }]"
-    :style="pageStyles"
-    @drop="onDrop($event)"
-    @dragover.prevent
-    @dragenter.prevent
-    @click.alt.self="openEditor($event)"
-    @click.self="closeEditor($event)">
+    class="page-container"
+    :style="pageDimensions">
 
     <div
       id="page-background-image"
@@ -15,45 +10,54 @@
       :style="pageBackground">
     </div>
 
-    <button @click="generateScreenShot" class="screencap">
-      screencap
-    </button>
+    <div
+      :class="['page', {'non-existent': !pageExists }]"
+      @drop="onDrop($event)"
+      @dragover.prevent
+      @dragenter.prevent
+      @click.alt.self="openEditor($event)"
+      @click.self="closeEditor($event)">
 
-    <CssBreakoutBox
-      v-if="authenticated && !touchmode"
-      :active="breakout"
-      @update-css-properties="initUpdate" />
+      <button @click="generateScreenShot" class="screencap">
+        screencap
+      </button>
 
-    <PropBoard
-      v-if="authenticated && pageExists && !touchmode"
-      ref="propboard"
-      :pagename="pageName"
-      :location="editorCoords" />
+      <CssBreakoutBox
+        v-if="authenticated && !touchmode"
+        :active="breakout"
+        @update-css-properties="initUpdate" />
 
-    <template v-for="thingie in pageThingies">
-      <component
-        :is="thingieComponent"
-        :key="thingie._id"
-        :thingie="thingie"
-        :bounds="pageBounds"
-        @initmousedown="initMousedown"
-        @initupdate="initUpdate"
-        @initmouseup="initMouseup" />
-    </template>
+      <PropBoard
+        v-if="authenticated && pageExists && !touchmode"
+        ref="propboard"
+        :pagename="pageName"
+        :location="editorCoords" />
 
-    <Portal
-      v-for="(portal, i) in portals"
-      :key="`${portal.name}_${i}`"
-      :to="portal" />
+      <template v-for="thingie in pageThingies">
+        <component
+          :is="thingieComponent"
+          :key="thingie._id"
+          :thingie="thingie"
+          :bounds="pageBounds"
+          @initmousedown="initMousedown"
+          @initupdate="initUpdate"
+          @initmouseup="initMouseup" />
+      </template>
 
-<!--     <button
-      v-if="authenticated && touchmode"
-      class="toggle prop-board-toggle"
-      @click="toggleEditor">
-      prop-board
-    </button> -->
+      <Portal
+        v-for="(portal, i) in portals"
+        :key="`${portal.name}_${i}`"
+        :to="portal" />
 
-  </div>
+  <!--     <button
+        v-if="authenticated && touchmode"
+        class="toggle prop-board-toggle"
+        @click="toggleEditor">
+        prop-board
+      </button> -->
+
+    </div>
+  </section>
 </template>
 
 <script>
@@ -126,8 +130,7 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false,
-      backgroundImage: ''
+      breakout: false
     }
   },
 
@@ -198,15 +201,15 @@ export default {
     pageBounds () {
       return this.page && this.page.bounds ? this.page.bounds : { x: 2732, y: 2000 }
     },
-    pageStyles () {
+    pageDimensions () {
       return {
         '--page-var-field-width': `${this.pageBounds.x}px`,
         '--page-var-field-height': `${this.pageBounds.y}px`
       }
     },
     pageBackground () {
-      return this.backgroundImage ? 
-        { 'background-image': `url(${this.backgroundImage})` } : 
+      return this.page && this.page.background ? 
+        { 'background-image': `url(${this.page.background})` } : 
         { 'background-image': 'none' }
     }
   },
@@ -373,15 +376,21 @@ export default {
     generateScreenShot () {
       if (document && window && this.$refs.page) {
         const bg = document.getElementById('page-background-image')
-        if (bg) {
-          bg.style.opacity = 1.0
-        }
-        Html2Canvas(this.$refs.page, { backgroundColor: null }).then((canvas) => {
-          const dataURL = canvas.toDataURL()
-          this.backgroundImage = dataURL
-          if (bg) {
-            bg.style.opacity = 0.5
-          }
+        if (bg) { bg.style.opacity = 1.0 }
+        const newCanvas = document.createElement('canvas')
+        newCanvas.style.width = `${this.pageBounds.x}px`
+        newCanvas.style.height = `${this.pageBounds.y}px`
+        newCanvas.width = this.pageBounds.x
+        newCanvas.height = this.pageBounds.y
+        const ctx = newCanvas.getContext('2d')
+        ctx.filter = 'blur(4px)'
+        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
+          const context = canvas.getContext('2d')
+          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
+            const dataURL = canvas.toDataURL('image/png', 0.1)
+            this.postUpdatePage({ name: this.pageName, background: dataURL })
+            if (bg) { bg.style.opacity = 0.5 }
+          })
         })
       }
     }
@@ -391,12 +400,18 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.page {
+.page-container {
   --page-var-field-width: 2732px;
   --page-var-field-height: 2000px;
+  .page,
+  .page-background {
+    width: var(--page-var-field-width);
+    height: var(--page-var-field-height);
+  }
+}
+
+.page {
   position: absolute;
-  width: var(--page-var-field-width);
-  height: var(--page-var-field-height);
   overflow: hidden;
   z-index: 1;
   &.non-existent {
@@ -407,14 +422,12 @@ export default {
 
 .page-background {
   position: absolute;
-  width: 100%;
-  height: 100%;
   top: 0;
   left: 0;
   background-size: 100%;
   background-repeat: no-repeat;
-  z-index: -10000;
-  opacity: 0.2;
+  z-index: 0;
+  opacity: 0.5;
 }
 
 .toggle.prop-board-toggle {

@@ -9,6 +9,6 @@ const MC = require('@Root/config')
 MC.socket.listeners.push({
   name: 'cron|migrate-thingie|initialize',
   handler (thingie) {
-    MC.socket.io.to('cron|goa').emit('module|kleptobot-migrate-thingie|payload', thingie)
+    MC.socket.io.to('cron|goa').emit('module|fuites-migrate-thingie|payload', thingie)
   }
 })

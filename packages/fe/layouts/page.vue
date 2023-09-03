@@ -8,16 +8,11 @@
       @page-created="handleRefresh" />
 
     <!-- ================================================== Current PAGE == -->
-    <section class="page-container">
-
-      <Nuxt
-        ref="page" 
-        :key="`page-init-${key}`" />
-
-    </section>
+    <Nuxt
+      ref="page" 
+      :key="`page-init-${key}`" />
 
     <!-- ==================================================== PORTAL VIEW == -->
-
     <button
       v-if="notCompostPage && !touchmode"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
@@ -34,7 +29,6 @@
     </button>
 
     <!-- =================================================== LANDING SITE == -->
-
     <LandingSite
       v-if="!touchmode"
       :tips-open="tipsOpen"
