@@ -107,6 +107,17 @@ const actions = {
       return false
     }
   },
+  // /////////////////////////////////////////////////////////// postUpdatePage
+  async postUpdatePageBackground ({ getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.post('/post-update-background', payload)
+      return response.data.payload
+    } catch (e) {
+      console.log('====== [Store Action: collections/postUpdatePageBackground]')
+      console.log(e)
+      return false
+    }
+  },
   // /////////////////////////////////////////////////////////////// updatePage
   updatePage ({ commit, getters }, incoming) {
     const index = getters.pages.findIndex(obj => obj._id === incoming._id)

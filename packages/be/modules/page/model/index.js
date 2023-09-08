@@ -22,6 +22,11 @@ const PageSchema = new Schema({
     ],
     required: false
   },
+  print_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'prints',
+    required: false
+  },
   initiator_token: {
     type: String,
     required: true
@@ -57,11 +62,6 @@ const PageSchema = new Schema({
     type: [String],
     required: false,
     default: []
-  },
-  background: {
-    type: String,
-    required: false,
-    default: ''
   },
   temperature: {
     type: Number,

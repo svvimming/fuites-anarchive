@@ -221,6 +221,9 @@ export default {
       if (val && !this.pageExists) {
         this.openNewPageModal()
       }
+    },
+    page (val) {
+      console.log(val)
     }
   },
 
@@ -231,7 +234,6 @@ export default {
   },
 
   async mounted () {
-    console.log(this.page)
     // init socket connections
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'pages')
@@ -287,6 +289,7 @@ export default {
       clearThingies: 'collections/clearThingies',
       postCreatePage: 'collections/postCreatePage',
       postUpdatePage: 'collections/postUpdatePage',
+      postUpdatePageBackground: 'collections/postUpdatePageBackground',
       addPage: 'collections/addPage',
       updatePage: 'collections/updatePage',
       setModal: 'general/setModal',
@@ -405,8 +408,14 @@ export default {
           const context = canvas.getContext('2d')
           this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
-            this.postUpdatePage({ name: this.pageName, background: dataURL, init_screencap: false })
-            if (bg) { bg.style.opacity = 0.25 }
+            this.postUpdatePageBackground({
+              page_name: this.pageName,
+              data_url: dataURL,
+              print_id: this.page.print_ref
+            })
+            if (bg) {
+              bg.style.opacity = 0.25
+            }
             console.log('page background updated')
           })
         })
