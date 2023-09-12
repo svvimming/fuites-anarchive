@@ -428,7 +428,9 @@ export default {
     generateScreenShot () {
       if (document && window && this.$refs.page && !this.touchmode) {
         const bg = document.getElementById('page-background-image')
+        const page = document.getElementById(`page-${this.pageName}`)
         if (bg) { bg.style.opacity = 1.0 }
+        if (page) { page.style.opacity = 0.5 }
         const newCanvas = document.createElement('canvas')
         newCanvas.style.width = `${this.pageBounds.x}px`
         newCanvas.style.height = `${this.pageBounds.y}px`
@@ -439,11 +441,11 @@ export default {
         Html2Canvas(this.$refs.page, { 
           backgroundColor: null,
           canvas: newCanvas,
-          scale: 1,
-          onclone: (cloneDoc) => {
-            const pageClone = cloneDoc.getElementById(`page-${this.pageName}`)
-            pageClone.style.opacity = 0.5
-          }
+          scale: 1
+          // onclone: (cloneDoc) => {
+          //   const pageClone = cloneDoc.getElementById(`page-${this.pageName}`)
+          //   pageClone.style.opacity = 0.5
+          // }
         }).then((canvas) => {
           const context = canvas.getContext('2d')
           this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
@@ -454,6 +456,7 @@ export default {
               print_id: this.page.print_ref
             })
             if (bg) { bg.style.opacity = 0.25 }
+            if (page) { page.style.opacity = 1.0 }
             console.log('page background updated')
           })
         })
