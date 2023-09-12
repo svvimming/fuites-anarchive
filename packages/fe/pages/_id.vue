@@ -19,10 +19,6 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <button @click="generateScreenShot" class="screencap">
-        screencap
-      </button>
-
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
         :active="breakout"
@@ -49,13 +45,6 @@
         v-for="(portal, i) in portals"
         :key="`${portal.name}_${i}`"
         :to="portal" />
-
-  <!--     <button
-        v-if="authenticated && touchmode"
-        class="toggle prop-board-toggle"
-        @click="toggleEditor">
-        prop-board
-      </button> -->
 
     </div>
   </section>
@@ -96,7 +85,6 @@ const handleKeyCommand = (e, instance) => {
   }
 }
 
-// dependencies => [page.print_ref, page background, page load]
 const handlePageBackgroundUpdate = async (instance) => {
   const page = instance.page
   await instance.getPageBackground({ print_id: page.print_ref })
@@ -104,29 +92,6 @@ const handlePageBackgroundUpdate = async (instance) => {
     instance.generateScreenShot()
   }
 }
-  // console.log({
-  //   print: page.print_ref,
-  //   init_screencap: page.init_screencap,
-  //   page_loaded: instance.loaded,
-  //   background_loaded: instance.background.slice(0, 20)
-  // })
-  // // a print id exists but no background in the store
-  // if (page.print_ref && !instance.background) {
-  //   // console.log('a print id exists but no background in the store')
-  //   instance.getPageBackground({ print_id: page.print_ref })
-  //   return
-  // }
-  // // if a print doesn't exist but is needed and the page is loaded
-  // if (!page.print_ref && page.init_screencap && instance.loaded) {
-  //   // console.log('a print doesnt exist but is needed and the page is loaded')
-  //   instance.generateScreenShot()
-  //   return
-  // }
-  // // if a print exists and is loaded, a screencap is needed and the page is loaded
-  // if (page.print_ref && page.init_screencap && instance.loaded && instance.background) {
-  //   // console.log('a print exists and is loaded, a screencap is needed and the page is loaded')
-  //   instance.generateScreenShot()
-  // }
 
 // ====================================================================== Export
 export default {
@@ -244,13 +209,10 @@ export default {
       }
     },
     pageBackground () {
-      return this.page.print_ref && this.background ? 
+      return this.page && this.page.print_ref && this.background ? 
         { 'background-image': `url(${this.background})` } : 
         { 'background-image': 'none' }
     }
-    // backgroundLoaderDependencies () {
-    //   return `${this.page.print_ref}|${this.background}|${this.loaded}`
-    // }
   },
 
   watch: {
@@ -259,9 +221,6 @@ export default {
         this.openNewPageModal()
       }
     }
-    // backgroundLoaderDependencies () { // depend on print ref, background loaded and page loaded
-    //   handlePageBackgroundUpdate(this)
-    // }
   },
 
   created () {
