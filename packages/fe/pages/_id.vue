@@ -11,7 +11,7 @@
     </div>
 
     <div
-      :id="`${pageName}-thingies`"
+      :id="`page-${pageName}`"
       :class="['page', {'non-existent': !pageExists }]"
       @drop="onDrop($event)"
       @dragover.prevent
@@ -107,19 +107,19 @@ const handlePageBackgroundUpdate = (instance) => {
   })
   // a print id exists but no background in the store
   if (page.print_ref && !instance.background) {
-    console.log('a print id exists but no background in the store')
+    // console.log('a print id exists but no background in the store')
     instance.getPageBackground({ print_id: page.print_ref })
     return
   }
   // if a print doesn't exist but is needed and the page is loaded
   if (!page.print_ref && page.init_screencap && instance.loaded) {
-    console.log('a print doesnt exist but is needed and the page is loaded')
+    // console.log('a print doesnt exist but is needed and the page is loaded')
     instance.generateScreenShot()
     return
   }
   // if a print exists and is loaded, a screencap is needed and the page is loaded
   if (page.print_ref && page.init_screencap && instance.loaded && instance.background) {
-    console.log('a print exists and is loaded, a screencap is needed and the page is loaded')
+    // console.log('a print exists and is loaded, a screencap is needed and the page is loaded')
     instance.generateScreenShot()
   }
 }
@@ -426,9 +426,9 @@ export default {
       }
     },
     generateScreenShot () {
-      if (document && window && this.$refs.page) {
+      if (document && window && this.$refs.page && !this.touchmode) {
         const bg = document.getElementById('page-background-image')
-        // if (bg) { bg.style.opacity = 1.0 }
+        if (bg) { bg.style.opacity = 1.0 }
         const newCanvas = document.createElement('canvas')
         newCanvas.style.width = `${this.pageBounds.x}px`
         newCanvas.style.height = `${this.pageBounds.y}px`
@@ -438,11 +438,10 @@ export default {
         ctx.filter = 'blur(4px)'
         Html2Canvas(this.$refs.page, { 
           backgroundColor: null,
-          canvas: newCanvas, scale: 1,
+          canvas: newCanvas,
+          scale: 1,
           onclone: (cloneDoc) => {
-            const bgClone = cloneDoc.getElementById('page-background-image')
-            const pageClone = cloneDoc.getElementById(`${this.pageName}-thingies`)
-            bgClone.style.opacity = 0.5
+            const pageClone = cloneDoc.getElementById(`page-${this.pageName}`)
             pageClone.style.opacity = 0.5
           }
         }).then((canvas) => {
@@ -454,9 +453,7 @@ export default {
               data_url: dataURL,
               print_id: this.page.print_ref
             })
-            // if (bg) {
-            //   bg.style.opacity = 0.25
-            // }
+            if (bg) { bg.style.opacity = 0.25 }
             console.log('page background updated')
           })
         })
@@ -495,7 +492,7 @@ export default {
   background-size: 100%;
   background-repeat: no-repeat;
   z-index: 0;
-  // opacity: 0.25;
+  opacity: 0.25;
 }
 
 .toggle.prop-board-toggle {
