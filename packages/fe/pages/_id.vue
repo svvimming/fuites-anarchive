@@ -442,7 +442,7 @@ export default {
           onclone: (cloneDoc) => {
             const bgClone = cloneDoc.getElementById('page-background-image')
             const pageClone = cloneDoc.getElementById(`${this.pageName}-thingies`)
-            bgClone.style.opacity = 1.0
+            bgClone.style.opacity = 0.5
             pageClone.style.opacity = 0.5
           }
         }).then((canvas) => {
