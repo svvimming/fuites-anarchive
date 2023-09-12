@@ -125,6 +125,7 @@ const actions = {
   async getPageBackground ({ dispatch, getters }, payload) {
     try {
       const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
+      console.log(response)
       if (response.data.payload && response.data.payload.data_url) {
         dispatch('setPageBackground', response.data.payload.data_url)
       }

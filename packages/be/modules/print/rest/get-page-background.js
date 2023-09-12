@@ -12,7 +12,7 @@ MC.app.get('/get-page-background', async (req, res) => {
   try {
     const query = req.query
     let print
-    if (query.print) {
+    if (query.print !== 'undefined') {
       print = await MC.model.Print.findOne({ _id: query.print })
     }
     SendData(res, 200, 'Print retrieved successfully', print)
