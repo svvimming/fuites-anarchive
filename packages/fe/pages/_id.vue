@@ -11,6 +11,7 @@
     </div>
 
     <div
+      :id="`${pageName}-thingies`"
       :class="['page', {'non-existent': !pageExists }]"
       @drop="onDrop($event)"
       @dragover.prevent
@@ -434,8 +435,15 @@ export default {
         newCanvas.width = this.pageBounds.x
         newCanvas.height = this.pageBounds.y
         const ctx = newCanvas.getContext('2d')
-        ctx.filter = 'blur(4px) opacity(0.5)'
-        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
+        ctx.filter = 'blur(4px)'
+        Html2Canvas(this.$refs.page, { 
+          backgroundColor: null,
+          canvas: newCanvas, scale: 1,
+          onclone: (cloneDoc) => {
+            const pageClone = cloneDoc.getElementById(`${this.pageName}-thingies`)
+            pageClone.style.opacity = 0.5
+          }
+        }).then((canvas) => {
           const context = canvas.getContext('2d')
           this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
