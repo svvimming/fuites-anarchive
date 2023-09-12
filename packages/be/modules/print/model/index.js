@@ -16,6 +16,9 @@ const PrintSchema = new Schema({
     type: String,
     required: true
   }
+}, {
+  timestamps: true,
+  minimize: false
 })
 
 // ////////////////////////////////////////////////////////////////////// Export

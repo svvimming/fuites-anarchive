@@ -26,7 +26,8 @@ const getNewPageName = (array) => {
 const state = () => ({
   pages: [],
   thingies: [],
-  editorThingie: false
+  editorThingie: false,
+  background: ''
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -35,6 +36,7 @@ const getters = {
   pages: state => state.pages,
   thingies: state => state.thingies,
   editorThingie: state => state.editorThingie,
+  background: state => state.background,
   zindices: (state) => {
     const pageNames = [...new Set(state.thingies.map(thingie => thingie.location))]
     const pageZindexData = {}
@@ -52,7 +54,7 @@ const getters = {
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
-  // ///////////////////////////////////////////////////////////////// getPages
+  // ////////////////////////////////////////////////////////////////// getPages
   async getPages ({ commit, getters }) {
     try {
       const response = await this.$axiosAuth.get('/get-pages')
@@ -63,11 +65,11 @@ const actions = {
       return false
     }
   },
-  // ////////////////////////////////////////////////////////////////// addPage
+  // /////////////////////////////////////////////////////////////////// addPage
   addPage ({ commit }, page) {
     commit('ADD_PAGE', page)
   },
-  // /////////////////////////////////////////////////////////// postCreatePage
+  // //////////////////////////////////////////////////////////// postCreatePage
   async postCreatePage ({ dispatch, getters, rootGetters }, payload) {
     try {
       const thingie = getters.thingies.find(obj => obj._id === payload.creator_thingie)
@@ -96,7 +98,7 @@ const actions = {
       return false
     }
   },
-  // /////////////////////////////////////////////////////////// postUpdatePage
+  // //////////////////////////////////////////////////////////// postUpdatePage
   async postUpdatePage ({ getters }, payload) {
     try {
       const response = await this.$axiosAuth.post('/post-update-page', payload)
@@ -107,7 +109,7 @@ const actions = {
       return false
     }
   },
-  // /////////////////////////////////////////////////////////// postUpdatePage
+  // ////////////////////////////////////////////////// postUpdatePageBackground
   async postUpdatePageBackground ({ getters }, payload) {
     try {
       const response = await this.$axiosAuth.post('/post-update-background', payload)
@@ -118,7 +120,18 @@ const actions = {
       return false
     }
   },
-  // /////////////////////////////////////////////////////////////// updatePage
+  // ///////////////////////////////////////////////////////// getPageBackground
+  async getPageBackground ({ commit, getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
+      commit('SET_PAGE_BACKGROUND', { data_url: response.data.payload.data_url })
+    } catch (e) {
+      console.log('============= [Store Action: collections/getPageBackground]')
+      console.log(e)
+      return false
+    }
+  },
+  // //////////////////////////////////////////////////////////////// updatePage
   updatePage ({ commit, getters }, incoming) {
     const index = getters.pages.findIndex(obj => obj._id === incoming._id)
     if (index >= 0) {
@@ -216,7 +229,7 @@ const actions = {
       commit('REMOVE_THINGIE', index)
     }
   },
-  // /////////////////////////////////////////////////////////////// clearPages
+  // //////////////////////////////////////////////////////////////// clearPages
   clearPages ({ commit, getters}) {
     commit('CLEAR_PAGES')
   },
@@ -269,6 +282,9 @@ const mutations = {
   },
   CLEAR_EDITOR_THINGIE (state) {
     state.editorThingie = false
+  },
+  SET_PAGE_BACKGROUND (state, payload) {
+    state.background = payload.data_url
   }
 }
 

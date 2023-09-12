@@ -10,8 +10,8 @@ const MC = require('@Root/config')
 // -----------------------------------------------------------------------------
 MC.app.get('/get-page-background', async (req, res) => {
   try {
-    const body = req.body
-    const print = await MC.model.Print.findOne({ _id: body.print_id })
+    const query = req.query
+    const print = await MC.model.Print.findOne({ _id: query.print })
     SendData(res, 200, 'Print retrieved successfully', print)
   } catch (e) {
     console.log('============================ [Endpoint: /get-page-background]')
