@@ -14,7 +14,7 @@ MC.app.post('/post-update-background', async (req, res) => {
     if (body.print_id) {
       console.log('print id found, updating print')
       await MC.model.Print
-        .findOneAndUpdate({ _id: body.print_id }, { data_url: body.data_url})
+        .findOneAndUpdate({ _id: body.print_id }, { data_url: body.data_url })
       await MC.model.Page
         .findOneAndUpdate({ name: body.page_name }, { init_screencap: false })
     } else {

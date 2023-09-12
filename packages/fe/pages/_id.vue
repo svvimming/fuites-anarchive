@@ -19,10 +19,6 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <!-- <button @click="generateScreenShot" class="screencap">
-        screencap
-      </button> -->
-
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
         :active="breakout"
@@ -49,13 +45,6 @@
         v-for="(portal, i) in portals"
         :key="`${portal.name}_${i}`"
         :to="portal" />
-
-  <!--     <button
-        v-if="authenticated && touchmode"
-        class="toggle prop-board-toggle"
-        @click="toggleEditor">
-        prop-board
-      </button> -->
 
     </div>
   </section>
@@ -96,30 +85,10 @@ const handleKeyCommand = (e, instance) => {
   }
 }
 
-// dependencies => [page.print_ref, page background, page load]
-const handlePageBackgroundUpdate = (instance) => {
+const handlePageBackgroundUpdate = async (instance) => {
   const page = instance.page
-  console.log({
-    print: page.print_ref,
-    init_screencap: page.init_screencap,
-    page_loaded: instance.loaded,
-    background_loaded: instance.background.slice(0, 20)
-  })
-  // a print id exists but no background in the store
-  if (page.print_ref && !instance.background) {
-    // console.log('a print id exists but no background in the store')
-    instance.getPageBackground({ print_id: page.print_ref })
-    return
-  }
-  // if a print doesn't exist but is needed and the page is loaded
-  if (!page.print_ref && page.init_screencap && instance.loaded) {
-    // console.log('a print doesnt exist but is needed and the page is loaded')
-    instance.generateScreenShot()
-    return
-  }
-  // if a print exists and is loaded, a screencap is needed and the page is loaded
-  if (page.print_ref && page.init_screencap && instance.loaded && instance.background) {
-    // console.log('a print exists and is loaded, a screencap is needed and the page is loaded')
+  await instance.getPageBackground({ print_id: page.print_ref })
+  if (page.init_screencap) {
     instance.generateScreenShot()
   }
 }
@@ -161,8 +130,7 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false,
-      loaded: false
+      breakout: false
     }
   },
 
@@ -241,12 +209,9 @@ export default {
       }
     },
     pageBackground () {
-      return this.page.print_ref && this.background ? 
+      return this.page && this.page.print_ref && this.background ? 
         { 'background-image': `url(${this.background})` } : 
         { 'background-image': 'none' }
-    },
-    backgroundLoaderDependencies () {
-      return `${this.page.print_ref}|${this.background}|${this.loaded}`
     }
   },
 
@@ -255,9 +220,6 @@ export default {
       if (val && !this.pageExists) {
         this.openNewPageModal()
       }
-    },
-    backgroundLoaderDependencies () { // depend on print ref, background loaded and page loaded
-      handlePageBackgroundUpdate(this)
     }
   },
 
@@ -292,7 +254,7 @@ export default {
       // When finished callback sets page loaded state to true
       this.$nextTick(() => { 
         initPageScrollPosition(this, () => {
-          this.loaded = true
+          handlePageBackgroundUpdate(this)
         })
       })
     }
@@ -324,6 +286,7 @@ export default {
       updatePage: 'collections/updatePage',
       postUpdatePageBackground: 'collections/postUpdatePageBackground',
       getPageBackground: 'collections/getPageBackground',
+      setPageBackground: 'collections/setPageBackground',
       setModal: 'general/setModal',
       authenticate: 'general/authenticate'
     }),
@@ -438,26 +401,17 @@ export default {
         newCanvas.height = this.pageBounds.y
         const ctx = newCanvas.getContext('2d')
         ctx.filter = 'blur(4px)'
-        Html2Canvas(this.$refs.page, { 
-          backgroundColor: null,
-          canvas: newCanvas,
-          scale: 1
-          // onclone: (cloneDoc) => {
-          //   const pageClone = cloneDoc.getElementById(`page-${this.pageName}`)
-          //   pageClone.style.opacity = 0.5
-          // }
-        }).then((canvas) => {
+        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
           const context = canvas.getContext('2d')
-          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
+          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, async () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
-            this.postUpdatePageBackground({
+            await this.postUpdatePageBackground({
               page_name: this.pageName,
               data_url: dataURL,
               print_id: this.page.print_ref
             })
             if (bg) { bg.style.opacity = 0.25 }
             if (page) { page.style.opacity = 1.0 }
-            console.log('page background updated')
           })
         })
       }
