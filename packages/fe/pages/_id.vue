@@ -1,54 +1,59 @@
 <template>
-  <div
-    ref="spz"
-    :class="['spz', {'non-existent': !spazeExists }]"
-    :style="spazeStyles"
-    @drop="onDrop($event)"
-    @dragover.prevent
-    @dragenter.prevent
-    @click.alt.self="openEditor($event)"
-    @click.self="closeEditor($event)">
+  <section
+    ref="page"
+    class="page-container"
+    :style="pageDimensions">
 
-    <CssBreakoutBox
-      v-if="authenticated && !touchmode"
-      :active="breakout"
-      @update-css-properties="initUpdate" />
+    <div
+      id="page-background-image"
+      class="page-background"
+      :style="pageBackground">
+    </div>
 
-    <PropBoard
-      v-if="authenticated && spazeExists && !touchmode"
-      ref="propboard"
-      :spz="spazeName"
-      :location="editorCoords" />
+    <div
+      :id="`page-${pageName}`"
+      :class="['page', {'non-existent': !pageExists }]"
+      @drop="onDrop($event)"
+      @dragover.prevent
+      @dragenter.prevent
+      @click.alt.self="openEditor($event)"
+      @click.self="closeEditor($event)">
 
-    <template v-for="thingie in spazeThingies">
-      <component
-        :is="thingieComponent"
-        :key="thingie._id"
-        :thingie="thingie"
-        :bounds="spazeBounds"
-        @initmousedown="initMousedown"
-        @initupdate="initUpdate"
-        @initmouseup="initMouseup" />
-    </template>
+      <CssBreakoutBox
+        v-if="authenticated && !touchmode"
+        :active="breakout"
+        @update-css-properties="initUpdate" />
 
-    <Portal
-      v-for="(portal, i) in portals"
-      :key="`${portal.name}_${i}`"
-      :to="portal" />
+      <PropBoard
+        v-if="authenticated && pageExists && !touchmode"
+        ref="propboard"
+        :pagename="pageName"
+        :location="editorCoords" />
 
-<!--     <button
-      v-if="authenticated && touchmode"
-      class="toggle prop-board-toggle"
-      @click="toggleEditor">
-      prop-board
-    </button> -->
+      <template v-for="thingie in pageThingies">
+        <component
+          :is="thingieComponent"
+          :key="thingie._id"
+          :thingie="thingie"
+          :bounds="pageBounds"
+          @initmousedown="initMousedown"
+          @initupdate="initUpdate"
+          @initmouseup="initMouseup" />
+      </template>
 
-  </div>
+      <Portal
+        v-for="(portal, i) in portals"
+        :key="`${portal.name}_${i}`"
+        :to="portal" />
+
+    </div>
+  </section>
 </template>
 
 <script>
 // ====================================================================== Import
 import { mapGetters, mapActions } from 'vuex'
+import Html2Canvas from 'html2canvas'
 
 import PropBoard from '@/components/prop-board'
 import Thingie from '@/components/thingies/thingie'
@@ -57,15 +62,17 @@ import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
 
 // =================================================================== Functions
-const initSpazeScrollPosition = (instance) => {
-  if (instance.$refs.spz) {
-    const bounds = instance.spazeBounds
+const initPageScrollPosition = (instance, next) => {
+  if (instance.$refs.page) {
+    const bounds = instance.pageBounds
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
     const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
     const x = Math.round((bounds.x - vw) / 2)
     const y = Math.round((bounds.y - vh) / 2)
     window.scrollTo(x, y)
     instance.offset = { x, y }
+    // callback function
+    return next()
   }
 }
 
@@ -78,11 +85,19 @@ const handleKeyCommand = (e, instance) => {
   }
 }
 
+const handlePageBackgroundUpdate = async (instance) => {
+  const page = instance.page
+  await instance.getPageBackground({ print_id: page.print_ref })
+  if (page.init_screencap) {
+    instance.generateScreenShot()
+  }
+}
+
 // ====================================================================== Export
 export default {
-  name: 'SpazeIsThePlaze',
+  name: 'Page',
 
-  layout: 'spaze',
+  layout: 'page',
 
   components: {
     PropBoard,
@@ -94,15 +109,15 @@ export default {
 
   async fetch ({ app, store, route }) {
     await store.dispatch('general/setLandingData')
-    await store.dispatch('collections/getSpazes')
-    await store.dispatch('collections/getThingies', { spazename: route.params.id })
+    await store.dispatch('collections/getPages')
+    await store.dispatch('collections/getThingies', { pagename: route.params.id })
   },
 
   data () {
     const name = this.$route.params.id
     return {
-      spazeName: name,
-      spazeExists: true,
+      pageName: name,
+      pageExists: true,
       socket: false,
       offset: {
         x: 0,
@@ -121,14 +136,15 @@ export default {
 
   head () {
     return {
-      title: `${this.spazeName.replaceAll('-', ' ')} - f u i t e s`
+      title: `${this.pageName.replaceAll('-', ' ')} - f u i t e s`
     }
   },
 
   computed: {
     ...mapGetters({
-      spazes: 'collections/spazes',
+      pages: 'collections/pages',
       thingies: 'collections/thingies',
+      background: 'collections/background',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
@@ -136,12 +152,12 @@ export default {
       modal: 'general/modal',
       touchmode: 'general/touchmode'
     }),
-    spaze () {
-      return this.spazes.find(item => item.name === this.spazeName)
+    page () {
+      return this.pages.find(item => item.name === this.pageName)
     },
-    spazeThingies () {
-      if (this.spaze) {
-        const name = this.spaze.name
+    pageThingies () {
+      if (this.page) {
+        const name = this.page.name
         return this.thingies.filter(obj => obj.location === name)
       }
       return []
@@ -151,11 +167,11 @@ export default {
     },
     portals () {
       const portals = []
-      if (this.spaze && this.showPortals) {
-        const connections = this.spaze.portal_refs
+      if (this.page && this.showPortals) {
+        const connections = this.page.portal_refs
         connections.forEach((connection) => {
           const vertices = connection.vertices
-          if (vertices.a.location === this.spazeName && connection.enabled) {
+          if (vertices.a.location === this.pageName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.b.location,
@@ -163,7 +179,7 @@ export default {
               colors: connection.thingie_ref ? connection.thingie_ref.colors : []
             })
           }
-          if (vertices.b.location === this.spazeName && connection.enabled) {
+          if (vertices.b.location === this.pageName && connection.enabled) {
             portals.push({
               name: connection.edge,
               slug: vertices.a.location,
@@ -183,21 +199,26 @@ export default {
       }
       return queue
     },
-    spazeBounds () {
-      return this.spaze && this.spaze.bounds ? this.spaze.bounds : { x: 2732, y: 2000 }
+    pageBounds () {
+      return this.page && this.page.bounds ? this.page.bounds : { x: 2732, y: 2000 }
     },
-    spazeStyles () {
+    pageDimensions () {
       return {
-        '--spaze-var-field-width': `${this.spazeBounds.x}px`,
-        '--spaze-var-field-height': `${this.spazeBounds.y}px`,
+        '--page-var-field-width': `${this.pageBounds.x}px`,
+        '--page-var-field-height': `${this.pageBounds.y}px`
       }
+    },
+    pageBackground () {
+      return this.page && this.page.print_ref && this.background ? 
+        { 'background-image': `url(${this.background})` } : 
+        { 'background-image': 'none' }
     }
   },
 
   watch: {
     authenticated (val) {
-      if (val && !this.spazeExists) {
-        this.openNewSpazeModal()
+      if (val && !this.pageExists) {
+        this.openNewPageModal()
       }
     }
   },
@@ -209,31 +230,42 @@ export default {
   },
 
   async mounted () {
+    // init socket connections
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'spazes')
+      this.socket.emit('join-room', 'pages')
       this.socket.emit('join-room', 'cron|goa')
-      this.socket.on('module|post-create-spaze|payload', (spaze) => {
-        this.addSpaze(spaze)
+      this.socket.on('module|post-create-page|payload', (page) => {
+        this.addPage(page)
       })
-      const socketEvents = ['module|post-update-spaze|payload', 'module|spaze-state-update|payload']
+      const socketEvents = ['module|post-update-page|payload', 'module|page-state-update|payload']
       socketEvents.forEach((message) => {
-        this.socket.on(message, (spaze) => {
-          this.updateSpaze(spaze)
+        this.socket.on(message, (page) => {
+          this.updatePage(page)
         })
       })
     })
-    if (!this.spaze) {
-      this.spazeExists = false
+    // Check if page exists
+    if (!this.page) {
+      this.pageExists = false
     } else {
-      this.$nextTick(() => { initSpazeScrollPosition(this) })
       this.keydown = (e) => { handleKeyCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
+      // Scroll view to the center of the page.
+      // When finished callback sets page loaded state to true
+      this.$nextTick(() => { 
+        initPageScrollPosition(this, () => {
+          handlePageBackgroundUpdate(this)
+        })
+      })
     }
-    const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
-    const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
-    if (process.client && authToken && authDate) {
-      if (Date.now() - parseInt(authDate) <= 10800000) {
-        this.authenticate(authToken)
+    // Retrieve token from local storage and if it exists automate login
+    if (!this.authenticated) {
+      const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+      const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
+      if (process.client && authToken && authDate) {
+        if (Date.now() - parseInt(authDate) <= 10800000) {
+          this.authenticate(authToken)
+        }
       }
     }
   },
@@ -246,16 +278,19 @@ export default {
   methods: {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
-      clearSpazes: 'collections/clearSpazes',
+      clearPages: 'collections/clearPages',
       clearThingies: 'collections/clearThingies',
-      postCreateSpaze: 'collections/postCreateSpaze',
-      postUpdateSpaze: 'collections/postUpdateSpaze',
-      addSpaze: 'collections/addSpaze',
-      updateSpaze: 'collections/updateSpaze',
+      postCreatePage: 'collections/postCreatePage',
+      postUpdatePage: 'collections/postUpdatePage',
+      addPage: 'collections/addPage',
+      updatePage: 'collections/updatePage',
+      postUpdatePageBackground: 'collections/postUpdatePageBackground',
+      getPageBackground: 'collections/getPageBackground',
+      setPageBackground: 'collections/setPageBackground',
       setModal: 'general/setModal',
       authenticate: 'general/authenticate'
     }),
-    openNewSpazeModal () {
+    openNewPageModal () {
       this.setModal(true)
     },
     initMousedown (thingie) {
@@ -278,7 +313,7 @@ export default {
       this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         evt.preventDefault()
         const rect = evt.target.getBoundingClientRect()
         const x = evt.clientX - rect.left
@@ -286,14 +321,14 @@ export default {
         const thingieId = evt.dataTransfer.getData('_id')
         this.socket.emit('update-thingie', {
           _id: thingieId,
-          location: this.spazeName,
+          location: this.pageName,
           last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 },
           record_new_location: true
         })
-        if (this.spaze.state === 'metastable') {
-          this.createNewSpazeFromThingie(thingieId)
+        if (this.page.state === 'metastable') {
+          this.createNewPageFromThingie(thingieId)
         }
       }
     },
@@ -306,7 +341,7 @@ export default {
       }
     },
     openEditor (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         this.editorCoords = {
           x: evt.clientX + window.scrollX,
           y: evt.clientY + window.scrollY
@@ -317,20 +352,20 @@ export default {
       }
     },
     closeEditor (evt) {
-      if (this.authenticated && this.spaze) {
+      if (this.authenticated && this.page) {
         if (this.breakout) { this.breakout = false }
         if (!evt.altKey && this.$refs.propboard) {
           this.$refs.propboard.closeEditor()
         }
       }
     },
-    async createNewSpazeFromThingie (thingieId) {
-      const complete = await this.postCreateSpaze({
+    async createNewPageFromThingie (thingieId) {
+      const complete = await this.postCreatePage({
         creator_thingie: thingieId,
-        overflow_spaze: this.spazeName
+        overflow_page: this.pageName
       })
       if (complete) {
-        const created = this.spazes.find(item => item.name === complete.name)
+        const created = this.pages.find(item => item.name === complete.name)
         if (created) {
           this.socket.emit('update-thingie', {
             _id: created.creator_thingie,
@@ -352,6 +387,34 @@ export default {
           this.updateInterval = false
         }, 1500)
       }
+    },
+    generateScreenShot () {
+      if (document && window && this.$refs.page && !this.touchmode) {
+        const bg = document.getElementById('page-background-image')
+        const page = document.getElementById(`page-${this.pageName}`)
+        if (bg) { bg.style.opacity = 1.0 }
+        if (page) { page.style.opacity = 0.5 }
+        const newCanvas = document.createElement('canvas')
+        newCanvas.style.width = `${this.pageBounds.x}px`
+        newCanvas.style.height = `${this.pageBounds.y}px`
+        newCanvas.width = this.pageBounds.x
+        newCanvas.height = this.pageBounds.y
+        const ctx = newCanvas.getContext('2d')
+        ctx.filter = 'blur(4px)'
+        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
+          const context = canvas.getContext('2d')
+          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, async () => {
+            const dataURL = canvas.toDataURL('image/png', 0.1)
+            await this.postUpdatePageBackground({
+              page_name: this.pageName,
+              data_url: dataURL,
+              print_id: this.page.print_ref
+            })
+            if (bg) { bg.style.opacity = 0.25 }
+            if (page) { page.style.opacity = 1.0 }
+          })
+        })
+      }
     }
   }
 }
@@ -359,18 +422,34 @@ export default {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.spz {
-  --spaze-var-field-width: 2732px;
-  --spaze-var-field-height: 2000px;
+.page-container {
+  --page-var-field-width: 2732px;
+  --page-var-field-height: 2000px;
+  .page,
+  .page-background {
+    width: var(--page-var-field-width);
+    height: var(--page-var-field-height);
+  }
+}
+
+.page {
   position: absolute;
-  width: var(--spaze-var-field-width);
-  height: var(--spaze-var-field-height);
   overflow: hidden;
   z-index: 1;
   &.non-existent {
     width: 100vw !important;
     height: 100vh !important;
   }
+}
+
+.page-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  z-index: 0;
+  opacity: 0.25;
 }
 
 .toggle.prop-board-toggle {
@@ -387,6 +466,12 @@ export default {
   color: $lavender;
   @include fontWeight_Bold;
   @include linkHover($lavender);
+}
+
+.screencap {
+  position: absolute;
+  top: 200px;
+  left: 200px;
 }
 
 </style>

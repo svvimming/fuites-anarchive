@@ -1,5 +1,5 @@
 // /////////////////////////////////////////////////////////////////// Functions
-const getNewSpazeName = (array) => {
+const getNewPageName = (array) => {
   const consistencies = array.join(' ').split(' ')
   let index = Math.floor(Math.random() * consistencies.length)
   let name = consistencies[index]
@@ -24,60 +24,62 @@ const getNewSpazeName = (array) => {
 // /////////////////////////////////////////////////////////////////////// State
 // -----------------------------------------------------------------------------
 const state = () => ({
-  spazes: [],
+  pages: [],
   thingies: [],
-  editorThingie: false
+  editorThingie: false,
+  background: ''
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
 // -----------------------------------------------------------------------------
 const getters = {
-  spazes: state => state.spazes,
+  pages: state => state.pages,
   thingies: state => state.thingies,
   editorThingie: state => state.editorThingie,
+  background: state => state.background,
   zindices: (state) => {
-    const spazeNames = [...new Set(state.thingies.map(thingie => thingie.location))]
-    const spzZindexData = {}
-    spazeNames.forEach((name) => {
+    const pageNames = [...new Set(state.thingies.map(thingie => thingie.location))]
+    const pageZindexData = {}
+    pageNames.forEach((name) => {
       const indices = state.thingies.filter(thingie => thingie.location === name).map(thingie => thingie.at.z)
-      spzZindexData[name] = {
+      pageZindexData[name] = {
         max: Math.max(...indices),
         min: Math.min(...indices)
       }
     })
-    return spzZindexData
+    return pageZindexData
   }
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
 // -----------------------------------------------------------------------------
 const actions = {
-  // ///////////////////////////////////////////////////////////////// getSpazes
-  async getSpazes ({ commit, getters }) {
+  // ////////////////////////////////////////////////////////////////// getPages
+  async getPages ({ commit, getters }) {
     try {
-      const response = await this.$axiosAuth.get('/get-spazes')
-      commit('ADD_SPAZES', response.data.payload)
+      const response = await this.$axiosAuth.get('/get-pages')
+      commit('ADD_PAGES', response.data.payload)
     } catch (e) {
-      console.log('===================== [Store Action: collections/getSpazes]')
+      console.log('===================== [Store Action: collections/getPages]')
       console.log(e)
       return false
     }
   },
-  // ////////////////////////////////////////////////////////////////// addSpaze
-  addSpaze ({ commit }, spaze) {
-    commit('ADD_SPAZE', spaze)
+  // /////////////////////////////////////////////////////////////////// addPage
+  addPage ({ commit }, page) {
+    commit('ADD_PAGE', page)
   },
-  // /////////////////////////////////////////////////////////// postCreateSpaze
-  async postCreateSpaze ({ dispatch, getters, rootGetters }, payload) {
+  // //////////////////////////////////////////////////////////// postCreatePage
+  async postCreatePage ({ dispatch, getters, rootGetters }, payload) {
     try {
       const thingie = getters.thingies.find(obj => obj._id === payload.creator_thingie)
-      const existingSpazes = getters.spazes.map(spaze => spaze.name)
-      const spazeName = payload.spaze_name ? payload.spaze_name : getNewSpazeName(thingie.consistencies)
-      if (spazeName && !existingSpazes.includes(spazeName)) {
+      const existingPages = getters.pages.map(page => page.name)
+      const pageName = payload.page_name ? payload.page_name : getNewPageName(thingie.consistencies)
+      if (pageName && !existingPages.includes(pageName)) {
         const pocket = rootGetters['pocket/pocket']
-        const props = ['overflow_spaze', 'creator_thingie']
+        const props = ['overflow_page', 'creator_thingie']
         const data = {
-          spaze_name: spazeName,
+          page_name: pageName,
           session_token: pocket.token
         }
         props.forEach((prop) => {
@@ -85,33 +87,64 @@ const actions = {
             data[prop] = payload[prop]
           }
         })
-        const response = await this.$axiosAuth.post('/post-create-spaze', data)
+        const response = await this.$axiosAuth.post('/post-create-page', data)
         return response.data.payload
       }
-      console.log('could not name new spaze')
+      console.log('could not name new page')
       return false
     } catch (e) {
-      console.log('=============== [Store Action: collections/postCreateSpaze]')
+      console.log('=============== [Store Action: collections/postCreatePage]')
       console.log(e)
       return false
     }
   },
-  // /////////////////////////////////////////////////////////// postUpdateSpaze
-  async postUpdateSpaze ({ getters }, payload) {
+  // //////////////////////////////////////////////////////////// postUpdatePage
+  async postUpdatePage ({ getters }, payload) {
     try {
-      const response = await this.$axiosAuth.post('/post-update-spaze', payload)
+      const response = await this.$axiosAuth.post('/post-update-page', payload)
       return response.data.payload
     } catch (e) {
-      console.log('=============== [Store Action: collections/postUpdateSpaze]')
+      console.log('=============== [Store Action: collections/postUpdatePage]')
       console.log(e)
       return false
     }
   },
-  // /////////////////////////////////////////////////////////////// updateSpaze
-  updateSpaze ({ commit, getters }, incoming) {
-    const index = getters.spazes.findIndex(obj => obj._id === incoming._id)
+  // ////////////////////////////////////////////////// postUpdatePageBackground
+  async postUpdatePageBackground ({ dispatch, getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.post('/post-update-background', payload)
+      dispatch('setPageBackground', payload.data_url)
+      return response.data.payload
+    } catch (e) {
+      console.log('====== [Store Action: collections/postUpdatePageBackground]')
+      console.log(e)
+      return false
+    }
+  },
+  // ///////////////////////////////////////////////////////// getPageBackground
+  async getPageBackground ({ dispatch, getters }, payload) {
+    try {
+      const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
+      if (response.data.payload && response.data.payload.data_url) {
+        dispatch('setPageBackground', response.data.payload.data_url)
+      }
+      return
+    } catch (e) {
+      console.log('============= [Store Action: collections/getPageBackground]')
+      console.log(e)
+      return false
+    }
+  },
+  // ///////////////////////////////////////////////////////// setPageBackground
+  setPageBackground ({ commit }, payload) {
+    console.log('store set background')
+    commit('SET_PAGE_BACKGROUND', { data_url: payload })
+  },
+  // //////////////////////////////////////////////////////////////// updatePage
+  updatePage ({ commit, getters }, incoming) {
+    const index = getters.pages.findIndex(obj => obj._id === incoming._id)
     if (index >= 0) {
-      commit('UPDATE_SPAZE', { index, spaze: incoming })
+      commit('UPDATE_PAGE', { index, page: incoming })
     }
   },
   // /////////////////////////////////////////////////////////////// getThingies
@@ -119,7 +152,7 @@ const actions = {
     try {
       const response = await this.$axiosAuth.get('/get-thingies', {
         params: {
-          locations: ['pocket', data.spazename]
+          locations: ['pocket', data.pagename]
         }
       })
       commit('ADD_THINGIES', response.data.payload)
@@ -205,9 +238,9 @@ const actions = {
       commit('REMOVE_THINGIE', index)
     }
   },
-  // /////////////////////////////////////////////////////////////// clearSpazes
-  clearSpazes ({ commit, getters}) {
-    commit('CLEAR_SPAZES')
+  // //////////////////////////////////////////////////////////////// clearPages
+  clearPages ({ commit, getters}) {
+    commit('CLEAR_PAGES')
   },
   // ///////////////////////////////////////////////////////////// clearThingies
   clearThingies ({ commit, getters}) {
@@ -226,17 +259,17 @@ const actions = {
 // /////////////////////////////////////////////////////////////////// Mutations
 // -----------------------------------------------------------------------------
 const mutations = {
-  ADD_SPAZES (state, spazes) {
-    state.spazes = spazes
+  ADD_PAGES (state, pages) {
+    state.pages = pages
   },
-  ADD_SPAZE (state, spaze) {
-    state.spazes.push(spaze)
+  ADD_PAGE (state, page) {
+    state.pages.push(page)
   },
-  UPDATE_SPAZE (state, payload) {
-    state.spazes.splice(payload.index, 1, payload.spaze)
+  UPDATE_PAGE (state, payload) {
+    state.pages.splice(payload.index, 1, payload.page)
   },
-  CLEAR_SPAZES (state) {
-    state.spazes = []
+  CLEAR_PAGES (state) {
+    state.pages = []
   },
   ADD_THINGIES (state, thingies) {
     state.thingies = thingies
@@ -258,6 +291,9 @@ const mutations = {
   },
   CLEAR_EDITOR_THINGIE (state) {
     state.editorThingie = false
+  },
+  SET_PAGE_BACKGROUND (state, payload) {
+    state.background = payload.data_url
   }
 }
 

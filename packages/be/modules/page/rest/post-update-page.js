@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /post-update-spaze')
+console.log('💡 [endpoint] /post-update-page')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -8,26 +8,26 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.post('/post-update-spaze', async (req, res) => {
+MC.app.post('/post-update-page', async (req, res) => {
   try {
     const body = req.body
-    const spazeUpdates = {}
-    const properties = ['connections', 'state']
+    const pageUpdates = {}
+    const properties = ['connections', 'state', 'background', 'init_screencap']
     properties.forEach((prop) => {
       if (body.hasOwnProperty(prop)) {
-        spazeUpdates[prop] = body[prop]
+        pageUpdates[prop] = body[prop]
       }
     })
-    const updated = await MC.model.Spaze
-      .findOneAndUpdate({ name: body.name }, spazeUpdates, { new: true })
+    const updated = await MC.model.Page
+      .findOneAndUpdate({ name: body.name }, pageUpdates, { new: true })
       .populate({
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }
       })
-    MC.socket.io.to('spazes').emit('module|post-update-spaze|payload', updated)
-    SendData(res, 200, 'Spaze succesfully updated', updated)
+    MC.socket.io.to('pages').emit('module|post-update-page|payload', updated)
+    SendData(res, 200, 'Page succesfully updated', updated)
   } catch (e) {
-    console.log('============================== [Endpoint: /post-update-spaze]')
+    console.log('============================== [Endpoint: /post-update-page]')
     console.log(e)
     SendData(res, 500, 'Something went wrong. Please try again.')
   }

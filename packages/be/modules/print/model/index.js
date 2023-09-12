@@ -1,4 +1,4 @@
-console.log('💿 [model] trace')
+console.log('💿 [model] print')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,11 +7,14 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const TraceSchema = new Schema({
-  traces: {
-    type: [String],
-    required: true,
-    default: []
+const PrintSchema = new Schema({
+  page: {
+    type: String,
+    required: true
+  },
+  data_url: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true,
@@ -20,4 +23,4 @@ const TraceSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('traces', TraceSchema)
+module.exports = Mongoose.model('prints', PrintSchema)

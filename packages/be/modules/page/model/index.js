@@ -1,4 +1,4 @@
-console.log('💿 [model] spaze')
+console.log('💿 [model] page')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,7 +7,7 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const SpazeSchema = new Schema({
+const PageSchema = new Schema({
   name: {
     type: String,
     required: true
@@ -22,6 +22,11 @@ const SpazeSchema = new Schema({
     ],
     required: false
   },
+  print_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'prints',
+    required: false
+  },
   initiator_token: {
     type: String,
     required: true
@@ -31,7 +36,7 @@ const SpazeSchema = new Schema({
     ref: 'thingies',
     required: false
   },
-  overflow_spaze: {
+  overflow_page: {
     type: String,
     required: false
   },
@@ -57,6 +62,16 @@ const SpazeSchema = new Schema({
     type: [String],
     required: false,
     default: []
+  },
+  temperature: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  init_screencap: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 }, {
   timestamps: true,
@@ -65,4 +80,4 @@ const SpazeSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('spazes', SpazeSchema)
+module.exports = Mongoose.model('pages', PageSchema)

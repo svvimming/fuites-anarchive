@@ -2,9 +2,9 @@
   <div class="toolbar-container">
 
     <PropBoard
-      v-if="authenticated && currentSpaze"
+      v-if="authenticated && currentPage"
       ref="touchPropboard"
-      :spz="currentSpaze" />
+      :pagename="currentPage" />
 
     <div class="grid-noGutter">
       <div class="col">
@@ -13,7 +13,7 @@
             <LandingSite
               :tips-open="tipsOpen"
               :mobile="true"
-              page="spaze"
+              page="page"
               :class="{ 'tips-open': tipsOpen }" />
 
             <button
@@ -120,7 +120,7 @@ export default {
       required: false,
       default: false
     },
-    currentSpaze: {
+    currentPage: {
       type: [Boolean, String],
       required: true,
       default: false

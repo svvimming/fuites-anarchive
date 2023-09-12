@@ -1,4 +1,4 @@
-console.log('⚡️ [websocket] cron|app|migrate-thingie')
+console.log('⚡️ [websocket] cron|app|page-portals-changed')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,8 +7,10 @@ const MC = require('@Root/config')
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.socket.listeners.push({
-  name: 'cron|migrate-thingie|initialize',
-  handler (thingie) {
-    MC.socket.io.to('cron|goa').emit('module|kleptobot-migrate-thingie|payload', thingie)
+  name: 'cron|page-portals-changed|initialize',
+  handler (updated) {
+    if (updated) {
+      MC.socket.io.to('pages').emit('module|post-update-page|payload', updated)
+    }
   }
 })

@@ -3,21 +3,16 @@
 
     <Toaster />
 
-    <PopSpz
+    <PageCreator
       v-if="notCompostPage"
-      @spaze-created="handleRefresh" />
+      @page-created="handleRefresh" />
 
-    <!-- ================================================== Current SPAZE == -->
-    <section class="spaze-container">
-
-      <Nuxt
-        ref="spaze" 
-        :key="`spz-init-${key}`" />
-
-    </section>
+    <!-- ================================================== Current PAGE == -->
+    <Nuxt
+      ref="page" 
+      :key="`page-init-${key}`" />
 
     <!-- ==================================================== PORTAL VIEW == -->
-
     <button
       v-if="notCompostPage && !touchmode"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
@@ -34,11 +29,10 @@
     </button>
 
     <!-- =================================================== LANDING SITE == -->
-
     <LandingSite
       v-if="!touchmode"
       :tips-open="tipsOpen"
-      page="spaze" />
+      page="page" />
 
     <button
       v-if="authenticated && !touchmode"
@@ -82,7 +76,7 @@
       :portal-view="portalView"
       :audio-context-state="audioContextState"
       :editor-open="editorExpanded"
-      :current-spaze="currentSpaze"
+      :current-page="currentPage"
       @toggle-thingie-editor="toggleThingieEditor"
       @toggle-pocket="togglePocket"
       @toggle-portal-view="togglePortals"
@@ -90,8 +84,8 @@
 
     <!-- =================================================== TOUCH EDITOR == -->
     <TouchEditor 
-      v-if="touchmode && currentSpaze"
-      :current-spaze="currentSpaze"
+      v-if="touchmode && currentPage"
+      :current-page="currentPage"
       :expanded="editorExpanded"
       @initupdate="handleThingieUpdate"
       @delete-thingie="deleteThingie" />
@@ -107,7 +101,7 @@ import LandingSite from '@/components/landing-site'
 import Pocket from '@/modules/pocket/components/pocket'
 import CompostPortal from '@/modules/compost/components/compost-portal'
 import Toaster from '@/modules/toaster/components/toaster'
-import PopSpz from '@/components/pop-spz'
+import PageCreator from '@/components/page-creator'
 import TouchEditor from '@/components/thingies/touch-editor'
 import TouchmodeToolbar from '@/components/touchmode-toolbar'
 
@@ -125,14 +119,14 @@ const handleTouchStart = (e, instance) => {
 
 // ====================================================================== Export
 export default {
-  name: 'spaze',
+  name: 'page',
 
   components: {
     LandingSite,
     Pocket,
     CompostPortal,
     Toaster,
-    PopSpz,
+    PageCreator,
     TouchEditor,
     TouchmodeToolbar
   },
@@ -158,7 +152,7 @@ export default {
       modal: 'general/modal',
       touchmode: 'general/touchmode',
       editorThingie: 'collections/editorThingie',
-      spazes: 'collections/spazes'
+      pages: 'collections/pages'
     }),
     audioContextState () {
       if (this.audioContext) { return this.playState }
@@ -167,10 +161,10 @@ export default {
     notCompostPage () {
       return this.$route.params.id !== 'compost'
     },
-    currentSpaze () {
+    currentPage () {
       const name = this.$route.params.id
-      const spaze = this.spazes.find(item => item.name === name)
-      if (spaze) { return spaze.name }
+      const page = this.pages.find(item => item.name === name)
+      if (page) { return page.name }
       return false
     }
   },
@@ -277,7 +271,7 @@ export default {
   // }
 }
 
-.spaze-container {
+.page-container {
   position: absolute;
   z-index: 1;
   width: 100%;

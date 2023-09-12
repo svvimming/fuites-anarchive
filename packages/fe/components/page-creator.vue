@@ -12,13 +12,13 @@
       </div>
 
       <div
-        v-if="authenticated && newSpazeName"
+        v-if="authenticated && newPageName"
         class="form-wrapper">
 
         <form
           :key="key"
           class="form"
-          @submit.prevent="createNewSpazeFrom404">
+          @submit.prevent="createNewPageFrom404">
 
           <div
             v-for="(item, index) in inputs"
@@ -46,10 +46,10 @@
           <SingleFileUploader
             ref="uploader"
             :upload-on-draw-bicho="false"
-            :upload-to-spaze="newSpazeName"
-            :init-prompt="`Upload a file to create ${newSpazeName}`"
-            :final-prompt="`Draw a shape to create ${newSpazeName}`"
-            @draw-bicho-complete="createNewSpazeFrom404"
+            :upload-to-page="newPageName"
+            :init-prompt="`Upload a file to create ${newPageName}`"
+            :final-prompt="`Draw a shape to create ${newPageName}`"
+            @draw-bicho-complete="createNewPageFrom404"
             @upload-finalized="successfullyCreated" />
         </div>
 
@@ -69,7 +69,7 @@ import Auth from '@/components/auth'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 // ====================================================================== Export
 export default {
-  name: 'PopSpz',
+  name: 'PageCreator',
 
   components: {
     Auth,
@@ -95,54 +95,30 @@ export default {
       authenticated: 'general/authenticated',
       modal: 'general/modal',
       landing: 'general/landing'
-      // traces: 'rezonator/resonances'
     }),
-    newSpazeName () {
+    newPageName () {
       return this.inputs[0].value
     }
   },
 
-  // watch: {
-  //   traces (val) {
-  //     const traces = CloneDeep(val)
-  //     const inputs = []
-  //     for (let i = 0; i < 3; i++) {
-  //       if (traces.length > 2 - i) {
-  //         const index = Math.floor(Math.random() * traces.length)
-  //         const trace = traces[index]
-  //         inputs.push({
-  //           input: trace,
-  //           label: `something '${trace}'-like:`,
-  //           value: ''
-  //         })
-  //         traces.splice(index, 1)
-  //       }
-  //     }
-  //     this.inputs = this.inputs.concat(inputs)
-  //     this.key++
-  //   }
-  // },
-
   mounted () {
     this.inputs[0].value = this.$route.params.id
-    // this.getTraces()
   },
 
   methods: {
     ...mapActions({
       setModal: 'general/setModal',
-      // getTraces: 'rezonator/getTraces',
-      postCreateSpaze: 'collections/postCreateSpaze'
+      postCreatePage: 'collections/postCreatePage'
     }),
     closeModal () {
       if (this.modal) {
         this.setModal(false)
       }
     },
-    async createNewSpazeFrom404 () {
+    async createNewPageFrom404 () {
       const consistencies = this.inputs.filter(item => item.input !== 'name').map(item => item.value)
-      const complete = await this.postCreateSpaze({
-        spaze_name: this.inputs[0].value,
+      const complete = await this.postCreatePage({
+        page_name: this.inputs[0].value,
         consistencies
       })
       if (complete) {
@@ -154,7 +130,7 @@ export default {
     },
     successfullyCreated () {
       this.$nuxt.refresh()
-      this.$emit('spaze-created')
+      this.$emit('page-created')
       this.closeModal()
     }
   }
@@ -183,7 +159,6 @@ export default {
     left: inherit;
     width: inherit;
     height: inherit;
-    // background: rgba(0, 0, 0, 0.5);
     opacity: 0;
     z-index: 5;
     transition: 250ms ease-out;

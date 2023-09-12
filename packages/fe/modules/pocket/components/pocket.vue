@@ -108,7 +108,7 @@ export default {
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
         this.addThingie(thingie)
       })
-      this.socket.on('module|kleptobot-migrate-thingie|payload', (migrated) => {
+      this.socket.on('module|fuites-migrate-thingie|payload', (migrated) => {
         this.updateThingie(migrated)
       })
       this.socket.on('module|post-delete-thingie|payload', (thingieId) => {

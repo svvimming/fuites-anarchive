@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /post-create-spaze')
+console.log('💡 [endpoint] /post-create-page')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -8,18 +8,18 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.post('/post-create-spaze', async (req, res) => {
+MC.app.post('/post-create-page', async (req, res) => {
   try {
     const body = req.body
-    const created = await MC.model.Spaze.create({
-      name: body.spaze_name,
-      overflow_spaze: body.overflow_spaze ? body.overflow_spaze : '',
+    const created = await MC.model.Page.create({
+      name: body.page_name,
+      overflow_page: body.overflow_page ? body.overflow_page : '',
       initiator_token: body.session_token,
       creator_thingie: body.creator_thingie,
       consistencies: body.consistencies ? body.consistencies : []
     })
-    if (created.overflow_spaze) {
-      await MC.model.Spaze.findOneAndUpdate({ name: created.overflow_spaze }, { state: 'leaking' }, { new: true })
+    if (created.overflow_page) {
+      await MC.model.Page.findOneAndUpdate({ name: created.overflow_page }, { state: 'leaking' }, { new: true })
     }
     const compostThingies = await MC.model.Thingie.find({ location: 'compost' }).select('_id')
     if (compostThingies.length) {
@@ -33,10 +33,10 @@ MC.app.post('/post-create-spaze', async (req, res) => {
         }
       }, { new: true })
     }
-    MC.socket.io.to('spazes').emit('module|post-create-spaze|payload', created)
-    SendData(res, 200, 'Spaze succesfully created', created)
+    MC.socket.io.to('pages').emit('module|post-create-page|payload', created)
+    SendData(res, 200, 'Page succesfully created', created)
   } catch (e) {
-    console.log('================== [Endpoint: /post-create-spaze]')
+    console.log('================== [Endpoint: /post-create-page]')
     console.log(e)
     SendData(res, 500, 'Something went wrong. Please try again.')
   }

@@ -96,7 +96,7 @@ export default {
       return this.landing.data[this.page].links
     },
     tips () {
-      if (this.page === 'spaze') {
+      if (this.page === 'page') {
         return this.mobile ? this.landing.data[this.page].tips_touchdevice : this.landing.data[this.page].tips
       }
       return []

@@ -1,6 +1,6 @@
 {
-  "kleptobot": {
-    "prevent_theft_list": [
+  "fuites": {
+    "prevent_leak_list": [
       "compost",
       "pool"
     ],
@@ -22,5 +22,8 @@
       "compost",
       "pool"
     ]
+  },
+  "cyanobot": {
+    "temperature_margin": 100
   }
 }

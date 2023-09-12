@@ -34,8 +34,8 @@ const thingieWithLocationHistory = async (incoming) => {
 // are sent to the compost from other pages.
 // This is the only page where this is necessary as thingies never
 // move directly between pages other than via the pocket.
-// It is also necessary for movements between pages made by the
-// kleptobot. Currently thingies moving between pages (not via the
+// It is also necessary for movements between pages made by the fuites cron.
+// Currently thingies moving between pages (not via the
 // pocket) will disappear from a page in real time but not appear
 // on the new page unless it is refreshed.
 // This is low priority as it doesn't break anything to not have
