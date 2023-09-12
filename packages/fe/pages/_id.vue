@@ -327,6 +327,7 @@ export default {
       updatePage: 'collections/updatePage',
       postUpdatePageBackground: 'collections/postUpdatePageBackground',
       getPageBackground: 'collections/getPageBackground',
+      setPageBackground: 'collections/setPageBackground',
       setModal: 'general/setModal',
       authenticate: 'general/authenticate'
     }),
@@ -450,10 +451,8 @@ export default {
               data_url: dataURL,
               print_id: this.page.print_ref
             })
-            await this.getPageBackground({ print_id: this.page.print_ref })
             if (bg) { bg.style.opacity = 0.25 }
             if (page) { page.style.opacity = 1.0 }
-            console.log('page background updated')
           })
         })
       }

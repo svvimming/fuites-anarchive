@@ -110,9 +110,10 @@ const actions = {
     }
   },
   // ////////////////////////////////////////////////// postUpdatePageBackground
-  async postUpdatePageBackground ({ getters }, payload) {
+  async postUpdatePageBackground ({ dispatch, getters }, payload) {
     try {
       const response = await this.$axiosAuth.post('/post-update-background', payload)
+      dispatch('setPageBackground', payload.data_url)
       return response.data.payload
     } catch (e) {
       console.log('====== [Store Action: collections/postUpdatePageBackground]')
@@ -121,11 +122,11 @@ const actions = {
     }
   },
   // ///////////////////////////////////////////////////////// getPageBackground
-  async getPageBackground ({ commit, getters }, payload) {
+  async getPageBackground ({ dispatch, getters }, payload) {
     try {
       const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
       if (response.data.payload && response.data.payload.data_url) {
-        commit('SET_PAGE_BACKGROUND', { data_url: response.data.payload.data_url })
+        dispatch('setPageBackground', response.data.payload.data_url)
       }
       return
     } catch (e) {
@@ -133,6 +134,11 @@ const actions = {
       console.log(e)
       return false
     }
+  },
+  // ///////////////////////////////////////////////////////// setPageBackground
+  setPageBackground ({ commit }, payload) {
+    console.log('store set background')
+    commit('SET_PAGE_BACKGROUND', { data_url: payload })
   },
   // //////////////////////////////////////////////////////////////// updatePage
   updatePage ({ commit, getters }, incoming) {
