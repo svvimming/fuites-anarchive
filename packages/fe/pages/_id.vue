@@ -19,9 +19,9 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <!-- <button @click="generateScreenShot" class="screencap">
+      <button @click="generateScreenShot" class="screencap">
         screencap
-      </button> -->
+      </button>
 
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
@@ -438,23 +438,16 @@ export default {
         newCanvas.height = this.pageBounds.y
         const ctx = newCanvas.getContext('2d')
         ctx.filter = 'blur(4px)'
-        Html2Canvas(this.$refs.page, { 
-          backgroundColor: null,
-          canvas: newCanvas,
-          scale: 1
-          // onclone: (cloneDoc) => {
-          //   const pageClone = cloneDoc.getElementById(`page-${this.pageName}`)
-          //   pageClone.style.opacity = 0.5
-          // }
-        }).then((canvas) => {
+        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
           const context = canvas.getContext('2d')
-          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
+          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, async () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
-            this.postUpdatePageBackground({
+            await this.postUpdatePageBackground({
               page_name: this.pageName,
               data_url: dataURL,
               print_id: this.page.print_ref
             })
+            await this.getPageBackground({ print_id: this.page.print_ref })
             if (bg) { bg.style.opacity = 0.25 }
             if (page) { page.style.opacity = 1.0 }
             console.log('page background updated')
