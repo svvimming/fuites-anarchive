@@ -22,5 +22,8 @@
       "compost",
       "pool"
     ]
+  },
+  "cyanobot": {
+    "temperature_margin": 100
   }
 }

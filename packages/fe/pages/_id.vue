@@ -18,9 +18,9 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <button @click="generateScreenShot" class="screencap">
+      <!-- <button @click="generateScreenShot" class="screencap">
         screencap
-      </button>
+      </button> -->
 
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
@@ -72,7 +72,7 @@ import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
 
 // =================================================================== Functions
-const initPageScrollPosition = (instance) => {
+const initPageScrollPosition = (instance, next) => {
   if (instance.$refs.page) {
     const bounds = instance.pageBounds
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
@@ -81,6 +81,8 @@ const initPageScrollPosition = (instance) => {
     const y = Math.round((bounds.y - vh) / 2)
     window.scrollTo(x, y)
     instance.offset = { x, y }
+    // callback function
+    return next()
   }
 }
 
@@ -90,6 +92,34 @@ const handleKeyCommand = (e, instance) => {
   }
   if ((e.key === 'i' || e.keyCode === 73) && e.metaKey) {
     instance.breakout = !instance.breakout
+  }
+}
+
+// dependencies => [page.print_ref, page background, page load]
+const handlePageBackgroundUpdate = (instance) => {
+  const page = instance.page
+  console.log({
+    print: page.print_ref,
+    init_screencap: page.init_screencap,
+    page_loaded: instance.loaded,
+    background_loaded: instance.background.slice(0, 20)
+  })
+  // a print id exists but no background in the store
+  if (page.print_ref && !instance.background) {
+    console.log('a print id exists but no background in the store')
+    instance.getPageBackground({ print_id: page.print_ref })
+    return
+  }
+  // if a print doesn't exist but is needed and the page is loaded
+  if (!page.print_ref && page.init_screencap && instance.loaded) {
+    console.log('a print doesnt exist but is needed and the page is loaded')
+    instance.generateScreenShot()
+    return
+  }
+  // if a print exists and is loaded, a screencap is needed and the page is loaded
+  if (page.print_ref && page.init_screencap && instance.loaded && instance.background) {
+    console.log('a print exists and is loaded, a screencap is needed and the page is loaded')
+    instance.generateScreenShot()
   }
 }
 
@@ -130,7 +160,8 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false
+      breakout: false,
+      loaded: false
     }
   },
 
@@ -144,6 +175,7 @@ export default {
     ...mapGetters({
       pages: 'collections/pages',
       thingies: 'collections/thingies',
+      background: 'collections/background',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
       landing: 'general/landing',
@@ -208,9 +240,12 @@ export default {
       }
     },
     pageBackground () {
-      return this.page && this.page.background ? 
-        { 'background-image': `url(${this.page.background})` } : 
+      return this.page.print_ref && this.background ? 
+        { 'background-image': `url(${this.background})` } : 
         { 'background-image': 'none' }
+    },
+    backgroundLoaderDependencies () {
+      return `${this.page.print_ref}|${this.background}|${this.loaded}`
     }
   },
 
@@ -219,6 +254,9 @@ export default {
       if (val && !this.pageExists) {
         this.openNewPageModal()
       }
+    },
+    backgroundLoaderDependencies () { // depend on print ref, background loaded and page loaded
+      handlePageBackgroundUpdate(this)
     }
   },
 
@@ -229,6 +267,7 @@ export default {
   },
 
   async mounted () {
+    // init socket connections
     await this.$connectWebsocket(this, () => {
       this.socket.emit('join-room', 'pages')
       this.socket.emit('join-room', 'cron|goa')
@@ -242,18 +281,28 @@ export default {
         })
       })
     })
+    // Check if page exists
     if (!this.page) {
       this.pageExists = false
     } else {
-      this.$nextTick(() => { initPageScrollPosition(this) })
       this.keydown = (e) => { handleKeyCommand(e, this) }
       window.addEventListener('keydown', this.keydown)
+      // Scroll view to the center of the page.
+      // When finished callback sets page loaded state to true
+      this.$nextTick(() => { 
+        initPageScrollPosition(this, () => {
+          this.loaded = true
+        })
+      })
     }
-    const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
-    const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
-    if (process.client && authToken && authDate) {
-      if (Date.now() - parseInt(authDate) <= 10800000) {
-        this.authenticate(authToken)
+    // Retrieve token from local storage and if it exists automate login
+    if (!this.authenticated) {
+      const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+      const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
+      if (process.client && authToken && authDate) {
+        if (Date.now() - parseInt(authDate) <= 10800000) {
+          this.authenticate(authToken)
+        }
       }
     }
   },
@@ -272,6 +321,8 @@ export default {
       postUpdatePage: 'collections/postUpdatePage',
       addPage: 'collections/addPage',
       updatePage: 'collections/updatePage',
+      postUpdatePageBackground: 'collections/postUpdatePageBackground',
+      getPageBackground: 'collections/getPageBackground',
       setModal: 'general/setModal',
       authenticate: 'general/authenticate'
     }),
@@ -383,13 +434,20 @@ export default {
         newCanvas.width = this.pageBounds.x
         newCanvas.height = this.pageBounds.y
         const ctx = newCanvas.getContext('2d')
-        ctx.filter = 'blur(4px)'
+        ctx.filter = 'blur(4px) opacity(0.5)'
         Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
           const context = canvas.getContext('2d')
           this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, () => {
             const dataURL = canvas.toDataURL('image/png', 0.1)
-            this.postUpdatePage({ name: this.pageName, background: dataURL })
-            if (bg) { bg.style.opacity = 0.5 }
+            this.postUpdatePageBackground({
+              page_name: this.pageName,
+              data_url: dataURL,
+              print_id: this.page.print_ref
+            })
+            if (bg) {
+              bg.style.opacity = 0.25
+            }
+            console.log('page background updated')
           })
         })
       }
@@ -427,7 +485,7 @@ export default {
   background-size: 100%;
   background-repeat: no-repeat;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.25;
 }
 
 .toggle.prop-board-toggle {
