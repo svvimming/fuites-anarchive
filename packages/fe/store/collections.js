@@ -124,7 +124,10 @@ const actions = {
   async getPageBackground ({ commit, getters }, payload) {
     try {
       const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
-      commit('SET_PAGE_BACKGROUND', { data_url: response.data.payload.data_url })
+      if (response.data.payload && response.data.payload.data_url) {
+        commit('SET_PAGE_BACKGROUND', { data_url: response.data.payload.data_url })
+      }
+      return
     } catch (e) {
       console.log('============= [Store Action: collections/getPageBackground]')
       console.log(e)
