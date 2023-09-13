@@ -4,7 +4,13 @@
     class="portal"
     :style="portalStyles">
 
-    <div class="portal-thingie"></div>
+    <div class="portal-thingie">
+      <div
+        v-if="print"
+        class="page-preview"
+        :style="pagePreview">
+      </div>
+    </div>
 
   </nuxt-link>
 </template>
@@ -24,7 +30,15 @@ export default {
 
   data () {
     return {
-      fallback: ['#BDBBD7', '#6c6575', '#ffffff']
+      fallback: ['#BDBBD7', '#6c6575', '#ffffff'],
+      print: ''
+    }
+  },
+
+  async fetch () {
+    const response = await this.$axiosAuth.get(`/get-page-background?page=${this.to.slug}`)
+    if (response.data.payload) {
+      this.print = response.data.payload.data_url
     }
   },
 
@@ -59,6 +73,9 @@ export default {
         '--portal-gradient-stop': `${this.colors[1]}80`,
         '--portal-hover-ring': `${this.colors[2]}80`
       }
+    },
+    pagePreview () {
+      return this.print ? { 'background-image': `url(${this.print})` } : { 'background-image': 'none' }
     }
   }
 }
@@ -74,6 +91,9 @@ export default {
   z-index: 10000;
   user-select: none;
   -webkit-user-drag: none;
+  .page-preview {
+    filter: drop-shadow(0px 0px 2px var(--portal-gradient-stop));
+  }
   .portal-thingie {
     &:before {
       background-color: var(--portal-hover-ring);
@@ -86,12 +106,32 @@ export default {
   }
   &:hover {
     .portal-thingie {
-      transform: scale(3);
+      transform: scale(2.5);
       &:before {
         animation: 2s linear 0s infinite normal forwards running hoverRing;
       }
+      &:after {
+        transform: scale(3);
+        background: radial-gradient(circle, var(--portal-gradient-start) 5%, var(--portal-gradient-stop) 20%, rgba(255, 255, 255, 0) 66%);
+      }
+    }
+    .page-preview {
+      opacity: 1;
     }
   }
+}
+
+.page-preview {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-position: center;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: 300ms ease;
 }
 
 .portal-thingie {

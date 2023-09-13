@@ -19,6 +19,10 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
+      <button class="screencap" @click="generateScreenShot">
+        screencap
+      </button>
+
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
         :active="breakout"
@@ -395,24 +399,30 @@ export default {
         if (bg) { bg.style.opacity = 1.0 }
         if (page) { page.style.opacity = 0.5 }
         const newCanvas = document.createElement('canvas')
-        newCanvas.style.width = `${this.pageBounds.x}px`
-        newCanvas.style.height = `${this.pageBounds.y}px`
-        newCanvas.width = this.pageBounds.x
-        newCanvas.height = this.pageBounds.y
+        newCanvas.style.width = `${this.pageBounds.x * 0.1}px`
+        newCanvas.style.height = `${this.pageBounds.y * 0.1}px`
+        newCanvas.width = this.pageBounds.x * 0.1
+        newCanvas.height = this.pageBounds.y * 0.1
         const ctx = newCanvas.getContext('2d')
-        ctx.filter = 'blur(4px)'
-        Html2Canvas(this.$refs.page, { backgroundColor: null, canvas: newCanvas, scale: 1 }).then((canvas) => {
+        Html2Canvas(this.$refs.page, {
+          backgroundColor: null,
+          canvas: newCanvas,
+          scale: 0.1,
+          width: this.pageBounds.x * 0.1,
+          height: this.pageBounds.y * 0.1 
+        }).then(async (canvas) => {
           const context = canvas.getContext('2d')
-          this.$sharpenCanvas(context, this.pageBounds.x, this.pageBounds.y, 1.0, async () => {
-            const dataURL = canvas.toDataURL('image/png', 0.1)
-            await this.postUpdatePageBackground({
-              page_name: this.pageName,
-              data_url: dataURL,
-              print_id: this.page.print_ref
-            })
-            if (bg) { bg.style.opacity = 0.25 }
-            if (page) { page.style.opacity = 1.0 }
+          const dataURL = canvas.toDataURL('image/png', 1.0)
+          await this.postUpdatePageBackground({
+            page_name: this.pageName,
+            data_url: dataURL,
+            print_id: this.page.print_ref
           })
+          if (bg) { bg.style.opacity = 0.25 }
+          if (page) { page.style.opacity = 1.0 }
+        }).catch((e) => {
+          console.log('====================== [_id method: generateScreenShot]')
+          console.log(e)
         })
       }
     }
