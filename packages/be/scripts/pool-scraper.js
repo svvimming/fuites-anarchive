@@ -8,6 +8,7 @@ const Util = require('util')
 const Stream = require('stream')
 const Pipeline = Util.promisify(Stream.pipeline)
 const readline = require('node:readline')
+const moment = require('moment')
 require('dotenv').config({ path: Path.resolve(__dirname, '../.env') })
 
 const MC = require('../config')
@@ -70,15 +71,16 @@ MC.app.on('mongoose-connected', async () => {
     for (let i = 0; i < len; i++) {
       thingie = poolThingies[i]
       if (!existingText.includes(thingie.text)) {
-        const text = JSON.stringify({
-          text: thingie.text, 
-          date: thingie.createdAt, 
-          font: {
-            family: thingie.fontfamily,
-            size: thingie.fontsize,
-            color: thingie.colors[0]
-          }
-        })
+        // const text = JSON.stringify({
+        //   text: thingie.text, 
+        //   date: thingie.createdAt, 
+        //   font: {
+        //     family: thingie.fontfamily,
+        //     size: thingie.fontsize,
+        //     color: thingie.colors[0]
+        //   }
+        // })
+        const text = `${moment(thingie.createdAt).format('MMM Do YYYY, HH:mm:ss')}: ${thingie.text}`
         existingText.push(thingie.text)
         newEntries.push(text)
       }
