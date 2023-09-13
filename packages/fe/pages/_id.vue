@@ -19,10 +19,6 @@
       @click.alt.self="openEditor($event)"
       @click.self="closeEditor($event)">
 
-      <button class="screencap" @click="generateScreenShot">
-        screencap
-      </button>
-
       <CssBreakoutBox
         v-if="authenticated && !touchmode"
         :active="breakout"
@@ -476,12 +472,6 @@ export default {
   color: $lavender;
   @include fontWeight_Bold;
   @include linkHover($lavender);
-}
-
-.screencap {
-  position: absolute;
-  top: 200px;
-  left: 200px;
 }
 
 </style>
