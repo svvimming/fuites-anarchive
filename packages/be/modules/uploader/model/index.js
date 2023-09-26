@@ -50,4 +50,4 @@ const UploadSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('uploads', UploadSchema)
+module.exports = UploadSchema // Mongoose.model('uploads', UploadSchema)

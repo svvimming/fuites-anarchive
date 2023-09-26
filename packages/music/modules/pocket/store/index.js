@@ -21,7 +21,7 @@ const actions = {
   // ///////////////////////////////////////////////////////////////// getPocket
   async getPocket ({ commit }, token) {
     try {
-      const response = await this.$axiosAuth.get(`/get-pocket?token=${token}`)
+      const response = await this.$axiosAuth.get(`/${this.app.$config.mongoInstance}/get-pocket?token=${token}`)
       const pocket = response.data.payload
       if (pocket) {
         commit('SET_POCKET', pocket)
@@ -55,7 +55,7 @@ const actions = {
           throw 'missing pocket update action type'
         }
         const data = { token: getters.pocket.token, thingies }
-        const response = await this.$axiosAuth.post('/post-update-pocket', data)
+        const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-update-pocket`, data)
         const pocket = response.data.payload
         commit('SET_POCKET', pocket)
       }

@@ -100,12 +100,13 @@ export default {
     this.resize = this.$throttle(() => { calculatePocketBounds(this) }, 1)
     window.addEventListener('resize', this.resize)
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'thingies')
-      this.socket.emit('join-room', 'cron|goa')
+      this.socket.emit('join-room', `${this.$config.mongoInstance}|thingies`)
+      this.socket.emit('join-room', `${this.$config.mongoInstance}|goa`)
       this.socket.on('module|update-thingie|payload', (thingie) => {
         this.updateThingie(thingie)
       })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
+        console.log(thingie)
         this.addThingie(thingie)
       })
       this.socket.on('module|fuites-migrate-thingie|payload', (migrated) => {
@@ -128,14 +129,14 @@ export default {
       removeThingie: 'collections/removeThingie'
     }),
     initMousedown (thingie) {
-      this.socket.emit('update-thingie', {
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
         _id: thingie._id,
         dragging: true,
         last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
-      this.socket.emit('update-thingie', {
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
         _id: thingie._id,
         dragging: false,
         last_update_token: this.pocket.token
@@ -145,7 +146,7 @@ export default {
       if (!thingie.last_update_token) {
         thingie.last_update_token = this.pocket.token
       }
-      this.socket.emit('update-thingie', thingie)
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, thingie)
     },
     onDrop (evt) {
       if (this.authenticated) {
@@ -154,7 +155,7 @@ export default {
         const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
         const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
         const thingieId = evt.dataTransfer.getData('_id')
-        this.socket.emit('update-thingie', {
+        this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
           _id: thingieId,
           location: 'pocket',
           last_update_token: this.pocket.token,

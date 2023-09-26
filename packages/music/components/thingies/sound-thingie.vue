@@ -6,7 +6,7 @@
     <audio
       ref="audioElement"
       :loop="true"
-      :src="`${$config.backendUrl}/${audio}.${filetype}`">
+      :src="`${$config.backendUrl}/${$config.mongoInstance}/${audio}.${filetype}`">
     </audio>
 
     <svg

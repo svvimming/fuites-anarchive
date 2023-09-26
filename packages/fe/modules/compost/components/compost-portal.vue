@@ -53,7 +53,7 @@ export default {
 
   async mounted () {
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'thingies')
+      this.socket.emit('join-room', `${this.$config.mongoInstance}|thingies`)
     })
   },
 
@@ -66,7 +66,7 @@ export default {
       evt.preventDefault()
       const thingieId = evt.dataTransfer.getData('_id')
       const thingie = this.thingies.find(obj => obj._id === thingieId)
-      this.socket.emit('update-thingie', {
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
         _id: thingieId,
         location: 'compost',
         last_update_token: this.pocket.token,

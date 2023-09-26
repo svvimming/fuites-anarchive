@@ -16,7 +16,7 @@ const PageSchema = new Schema({
     type: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'portals',
+        ref: 'Portal',
         required: false
       }
     ],
@@ -24,7 +24,7 @@ const PageSchema = new Schema({
   },
   print_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'prints',
+    ref: 'Print',
     required: false
   },
   initiator_token: {
@@ -33,7 +33,7 @@ const PageSchema = new Schema({
   },
   creator_thingie: {
     type: Schema.Types.ObjectId,
-    ref: 'thingies',
+    ref: 'Thingie',
     required: false
   },
   overflow_page: {
@@ -80,4 +80,4 @@ const PageSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('pages', PageSchema)
+module.exports = PageSchema // Mongoose.model('pages', PageSchema)

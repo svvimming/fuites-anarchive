@@ -8,6 +8,7 @@ const BodyParser = require('body-parser')
 const ExpressSession = require('express-session')
 const MongoStore = require('connect-mongo')
 const Fs = require('fs-extra')
+const CloneDeep = require('lodash/clonedeep')
 require('mongoose')
 
 const MC = require('@Root/config')
@@ -23,21 +24,28 @@ MC.app.use(BodyParser.json({ limit: '25mb' }))
 
 // ////////////////////////////////////////////////// Initialize Express Session
 // -----------------------------------------------------------------------------
-MC.expressSessionOptions.store = MongoStore.create({
-  client: MC.mongooseConnection
-})
-MC.expressSession = ExpressSession(MC.expressSessionOptions)
-MC.app.use(MC.expressSession)
+const mongoInstances = Object.keys(MC.mongoInstances)
+for (let i = 0; i < mongoInstances.length; i++) {
+  const instance = mongoInstances[i]
+  const options = CloneDeep(MC.expressSessionOptions)
+  options.name = instance
+  options.store = MongoStore.create({
+    client: MC.mongoInstances[instance].mongooseConnection,
+    dbName: MC.mongoInstances[instance].databaseName
+  })
+  MC.expressSession[instance] = ExpressSession(MC.expressSessionOptions)
+  MC.app.use(`/${instance}`, MC.expressSession[instance])
+}
 
 // ////////////////////////////////////////////////////////// Import all Modules
 // -----------------------------------------------------------------------------
 try {
-  const excluded = ['database', 'utilities', '_REFACTOR']
+  const modules = ['auth', 'rest', 'websocket']
   const modulesRoot = `${MC.packageRoot}/modules`
   const items = Fs.readdirSync(modulesRoot)
   let modulePath
   items.forEach((name) => {
-    if (!excluded.includes(name)) {
+    if (modules.includes(name)) {
       modulePath = `${modulesRoot}/${name}`
       if (Fs.statSync(modulePath).isDirectory()) {
         const moduleName = (name[0].toUpperCase() + name.substring(1)).replace(/-./g, x => x[1].toUpperCase())

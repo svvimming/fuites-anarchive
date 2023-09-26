@@ -19,7 +19,7 @@
         </defs>
       </svg>
 
-      <img :src="`${$config.backendUrl}/${image}.${filetype}`" />
+      <img :src="`${$config.backendUrl}/${$config.mongoInstance}/${image}.${filetype}`" />
 
     </div>
 

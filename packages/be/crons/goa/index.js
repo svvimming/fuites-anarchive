@@ -15,6 +15,8 @@ const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
 const Rules = require('../rules.json')
+const argv = require('minimist')(process.argv.slice(2))
+const instance = argv.mongoinstance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -46,7 +48,7 @@ try {
 require('@Module_Database')
 require('@Module_Thingie')
 require('@Module_Page')
-require('@Module_Uploader')
+require('@Module_Upload')
 require('@Module_Portal')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
@@ -58,18 +60,18 @@ MC.app = Express()
 const socket = GenerateWebsocketClient()
 
 // ===================================================================== connect
-socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
+socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------- ThingiePreaccelerator
 const thingiePreaccelerator = async () => {
   try {
-    const pages = await MC.model.Page.find({
-      name: { $nin: Rules.goa.ignore_list }
+    const pages = await MC.mongoInstances[instance].model.Page.find({
+      name: { $nin: Rules[instance].goa.ignore_list }
     })
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i]
-      const thingies = await MC.model.Thingie.find({ location: page.name })
+      const thingies = await MC.mongoInstances[instance].model.Thingie.find({ location: page.name })
       if (thingies.length) {
         const points = thingies.map((thingie) => {
           return {
@@ -106,7 +108,7 @@ const thingiePreaccelerator = async () => {
             }
           }
         })
-        await MC.model.Thingie.bulkWrite(preaccelerations)
+        await MC.mongoInstances[instance].model.Thingie.bulkWrite(preaccelerations)
       }
     }
   } catch (e) {
@@ -119,10 +121,10 @@ const thingiePreaccelerator = async () => {
 // -----------------------------------------------------------------------------
 const pagePreaccelerator = async () => {
   try {
-    const pages = await MC.model.Page.find({
-      name: { $nin: Rules.goa.ignore_list }
+    const pages = await MC.mongoInstances[instance].model.Page.find({
+      name: { $nin: Rules[instance].goa.ignore_list }
     })
-    const thingies = await MC.model.Thingie.find({}).populate({
+    const thingies = await MC.mongoInstances[instance].model.Thingie.find({}).populate({
       path: 'file_ref',
       select: 'filename file_ext filesize'
     })
@@ -137,21 +139,21 @@ const pagePreaccelerator = async () => {
       })
       const saturated = totalBytes > 40000000 || pageThingies.length > 40
       if (saturated && page.state === 'clumping') { // change page state to metastable
-        const updated = await MC.model.Page
+        const updated = await MC.mongoInstances[instance].model.Page
           .findOneAndUpdate({ _id: page._id }, { state: 'metastable' }, { new: true })
           .populate({
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        socket.emit('cron|page-state-update|initialize', updated)
+        socket.emit(`${instance}|cron|page-state-update|initialize`, updated)
       } else if (totalBytes <= 30000000 && pageThingies.length <= 32 && page.state === 'leaking') { // change page state to clumping
-        const updated = await MC.model.Page
+        const updated = await MC.mongoInstances[instance].model.Page
           .findOneAndUpdate({ _id: page._id }, { state: 'clumping' }, { new: true })
           .populate({
             path: 'portal_refs',
             populate: { path: 'thingie_ref', select: 'colors' }
           })
-        socket.emit('cron|page-state-update|initialize', updated)
+        socket.emit(`${instance}|cron|page-state-update|initialize`, updated)
       }
     }
   } catch (e) {
@@ -165,6 +167,9 @@ const pagePreaccelerator = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🔱 Godess Of Anarchy started')
   try {
+    if (!instance) {
+      throw new Error('Missing argument: no Mongo instance name provided.')
+    }
     await pagePreaccelerator()
     await thingiePreaccelerator()
     socket.disconnect()

@@ -12,6 +12,8 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
+const argv = require('minimist')(process.argv.slice(2))
+const instance = argv.mongoinstance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -44,7 +46,7 @@ try {
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
 require('@Module_Thingie')
-require('@Module_Uploader')
+require('@Module_Upload')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
 
@@ -55,13 +57,13 @@ MC.app = Express()
 const socket = GenerateWebsocketClient()
 
 // ===================================================================== connect
-socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
+socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // --------------------------------------------------------------- deleteThingie
 const deleteThingie = async (thingieId) => {
   try {
-    const thingie = await MC.model.Thingie
+    const thingie = await MC.mongoInstances[instance].model.Thingie
       .findById(thingieId)
       .populate({
         path: 'file_ref',
@@ -72,7 +74,7 @@ const deleteThingie = async (thingieId) => {
     }
     if (thingie.file_ref) {
       const upload = thingie.file_ref
-      await MC.model.Upload.deleteOne({ _id: upload._id })
+      await MC.mongoInstances[instance].model.Upload.deleteOne({ _id: upload._id })
       Fs.unlink(`${UPLOADS_DIR}/${upload._id}.${upload.file_ext}`, (err) => {
         if (err) {
           console.log(err)
@@ -81,9 +83,9 @@ const deleteThingie = async (thingieId) => {
         }
       })
     }
-    const deleted = await MC.model.Thingie.deleteOne({ _id: thingie._id })
+    const deleted = await MC.mongoInstances[instance].model.Thingie.deleteOne({ _id: thingie._id })
     if (deleted) {
-      socket.emit('cron|digest-compost-thingie|initialize', thingie._id)
+      socket.emit(`${instance}|cron|digest-compost-thingie|initialize`, thingie._id)
       console.log(`deleted thingie ${thingie._id}`)
     }
   } catch (e) {
@@ -98,7 +100,7 @@ const digestCompostThingies = async () => {
     const now = Date.now()
     const twoWeeks = 1000 * 60 * 60 * 24 * 14 // two weeks in milliseconds
     const twoWeeksAgo = new Date(now - twoWeeks)
-    const compostThingies = await MC.model.Thingie.find({
+    const compostThingies = await MC.mongoInstances[instance].model.Thingie.find({
       location: 'compost',
       $or: [
         { compostedAt: { $lt: twoWeeksAgo } },
@@ -122,6 +124,9 @@ const digestCompostThingies = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🪱 Scavenger started')
   try {
+    if (!instance) {
+      throw new Error('Missing argument: no Mongo instance name provided.')
+    }
     await digestCompostThingies()
     console.log('🪱 Scavenger updates completed')
     socket.disconnect()

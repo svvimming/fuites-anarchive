@@ -57,7 +57,8 @@ const actions = {
   // ////////////////////////////////////////////////////////////////// getPages
   async getPages ({ commit, getters }) {
     try {
-      const response = await this.$axiosAuth.get('/get-pages')
+      const response = await this.$axiosAuth.get(`/${this.app.$config.mongoInstance}/get-pages`)
+      // console.log(JSON.parse(response.data.payload))
       commit('ADD_PAGES', response.data.payload)
     } catch (e) {
       console.log('===================== [Store Action: collections/getPages]')
@@ -87,7 +88,7 @@ const actions = {
             data[prop] = payload[prop]
           }
         })
-        const response = await this.$axiosAuth.post('/post-create-page', data)
+        const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-create-page`, data)
         return response.data.payload
       }
       console.log('could not name new page')
@@ -101,7 +102,7 @@ const actions = {
   // //////////////////////////////////////////////////////////// postUpdatePage
   async postUpdatePage ({ getters }, payload) {
     try {
-      const response = await this.$axiosAuth.post('/post-update-page', payload)
+      const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-update-page`, payload)
       return response.data.payload
     } catch (e) {
       console.log('=============== [Store Action: collections/postUpdatePage]')
@@ -112,7 +113,7 @@ const actions = {
   // ////////////////////////////////////////////////// postUpdatePageBackground
   async postUpdatePageBackground ({ dispatch, getters }, payload) {
     try {
-      const response = await this.$axiosAuth.post('/post-update-background', payload)
+      const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-update-background`, payload)
       dispatch('setPageBackground', payload.data_url)
       return response.data.payload
     } catch (e) {
@@ -124,7 +125,7 @@ const actions = {
   // ///////////////////////////////////////////////////////// getPageBackground
   async getPageBackground ({ dispatch, getters }, payload) {
     try {
-      const response = await this.$axiosAuth.get(`/get-page-background?print=${payload.print_id}`)
+      const response = await this.$axiosAuth.get(`/${this.app.$config.mongoInstance}/get-page-background?print=${payload.print_id}`)
       if (response.data.payload && response.data.payload.data_url) {
         dispatch('setPageBackground', response.data.payload.data_url)
       }
@@ -150,7 +151,7 @@ const actions = {
   // /////////////////////////////////////////////////////////////// getThingies
   async getThingies ({ commit, getters }, data) {
     try {
-      const response = await this.$axiosAuth.get('/get-thingies', {
+      const response = await this.$axiosAuth.get(`/${this.app.$config.mongoInstance}/get-thingies`, {
         params: {
           locations: ['pocket', data.pagename]
         }
@@ -181,7 +182,7 @@ const actions = {
           data[prop] = payload[prop]
         }
       })
-      const response = await this.$axiosAuth.post('/post-create-thingie', data)
+      const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-create-thingie`, data)
       const thingie = response.data.payload
       if (thingie.location === 'pocket') { // add thingie id to this client-pocket's thingie list
         const update = { thingie, action: 'add' }
@@ -217,7 +218,7 @@ const actions = {
   // ///////////////////////////////////////////////////////// postDeleteThingie
   async postDeleteThingie ({ dispatch }, payload) {
     try {
-      const response = await this.$axiosAuth.post('/post-delete-thingie', {
+      const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-delete-thingie`, {
         thingie_id: payload.id
       })
       return response.data.payload

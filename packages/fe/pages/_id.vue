@@ -232,12 +232,15 @@ export default {
   async mounted () {
     // init socket connections
     await this.$connectWebsocket(this, () => {
-      this.socket.emit('join-room', 'pages')
-      this.socket.emit('join-room', 'cron|goa')
+      this.socket.emit('join-room', `${this.$config.mongoInstance}|pages`)
+      this.socket.emit('join-room', `${this.$config.mongoInstance}|goa`)
       this.socket.on('module|post-create-page|payload', (page) => {
         this.addPage(page)
       })
-      const socketEvents = ['module|post-update-page|payload', 'module|page-state-update|payload']
+      const socketEvents = [
+        `${this.$config.mongoInstance}|module|post-update-page|payload`,
+        `${this.$config.mongoInstance}|module|page-state-update|payload`
+      ]
       socketEvents.forEach((message) => {
         this.socket.on(message, (page) => {
           this.updatePage(page)
@@ -294,14 +297,14 @@ export default {
       this.setModal(true)
     },
     initMousedown (thingie) {
-      this.socket.emit('update-thingie', {
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
         _id: thingie._id,
         dragging: true,
         last_update_token: this.pocket.token
       })
     },
     initMouseup (thingie) {
-      this.socket.emit('update-thingie', {
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
         _id: thingie._id,
         dragging: false,
         last_update_token: this.pocket.token
@@ -309,7 +312,7 @@ export default {
     },
     initUpdate (thingie) {
       thingie.last_update_token = this.pocket.token
-      this.socket.emit('update-thingie', thingie)
+      this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, thingie)
       this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
@@ -319,7 +322,7 @@ export default {
         const x = evt.clientX - rect.left
         const y = evt.clientY - rect.top
         const thingieId = evt.dataTransfer.getData('_id')
-        this.socket.emit('update-thingie', {
+        this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
           _id: thingieId,
           location: this.pageName,
           last_update_token: this.pocket.token,
@@ -367,7 +370,7 @@ export default {
       if (complete) {
         const created = this.pages.find(item => item.name === complete.name)
         if (created) {
-          this.socket.emit('update-thingie', {
+          this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
             _id: created.creator_thingie,
             location: created.name,
             last_update_token: created.initiator_token,

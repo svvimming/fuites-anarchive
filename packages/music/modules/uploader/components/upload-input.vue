@@ -163,14 +163,14 @@ export default {
   async mounted () {
     this.fileReader = new FileReader()
     this.fileReader.onload = (e) => {
-      this.socket.emit('module|file-upload-chunk|payload', Object.assign(this.nextChunkPayload, {
+      this.socket.emit(`${this.$config.mongoInstance}|module|file-upload-chunk|payload`, Object.assign(this.nextChunkPayload, {
         chunk: e.target.result
       }))
     }
-    this.$emit('statusChanged', status)
+    this.$emit('statusChanged', this.status)
     await this.$connectWebsocket(this, () => {
-      this.socket.on('module|file-upload-chunk|payload', this.uploadNextChunk)
-      this.socket.on('module|file-upload-complete|payload', this.fileUploadComplete)
+      this.socket.on(`${this.$config.mongoInstance}|module|file-upload-chunk|payload`, this.uploadNextChunk)
+      this.socket.on(`${this.$config.mongoInstance}|module|file-upload-complete|payload`, this.fileUploadComplete)
     })
   },
 
@@ -217,7 +217,7 @@ export default {
           const value = file[key]
           typeof value !== 'function' && (formMetadata[key] = value)
         }
-        this.socket.emit('module|file-upload-initialize|payload', {
+        this.socket.emit(`${this.$config.mongoInstance}|module|file-upload-initialize|payload`, {
           socket_id: this.socket.id,
           filename: this.filename,
           filesize: this.filesize,

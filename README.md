@@ -28,3 +28,11 @@ In a terminal shell:
 Now, navigate back to your cloned repo and into the `packages/fe` directory. Add the two generated .pem files to the `packages/fe` directory with the following command. These keys are .gitignored by default.
 
 `cp -v ~/.ssh/localhost_cert.pem ~/.ssh/localhost_key.pem .`
+
+
+
+
+
+TO DO:
+- namespace auth model/endpoints with mongo instances
+- namespace sockets with mongo instances

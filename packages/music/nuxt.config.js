@@ -5,7 +5,7 @@ export default {
   publicRuntimeConfig: {
     frontendUrl: (function () {
       const env = process.env.SERVER_ENV
-      let uri = 'https://localhost:2001'
+      let uri = 'https://localhost:2004'
       switch (env) {
         case 'stable': uri = 'https://stable.fuit.es'; break
         case 'production': uri = 'https://fuit.es'; break
@@ -21,8 +21,10 @@ export default {
     }()),
     serverFlag: process.env.SERVER_ENV,
     socketOptions: {
-      withCredentials: true
-    }
+      withCredentials: true,
+      channel: 'music'
+    },
+    mongoInstance: 'music'
   },
   // --------------------------------------------------------- [Runtime] Private
   privateRuntimeConfig: {},
@@ -31,10 +33,10 @@ export default {
   server: {
     port: (function () {
       const env = process.env.SERVER_ENV
-      let port = 2001 // development
+      let port = 2004 // development
       switch (env) {
-        case 'stable': port = 2002; break
-        case 'production': port = 2003; break
+        case 'stable': port = 2005; break
+        case 'production': port = 2006; break
       } return port
     }()),
     host: process.env.NODE_ENV !== 'development' ? '0.0.0.0' : 'localhost'
@@ -106,7 +108,7 @@ export default {
     sockets: [{
       url: (function () {
         const env = process.env.SERVER_ENV
-        let uri = 'https://localhost:3001' // development
+        let uri = 'https://localhost:3001/' // development
         switch (env) {
           case 'stable': uri = 'https://stable.fuit.es'; break
           case 'production': uri = 'https://fuit.es'; break
