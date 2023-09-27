@@ -8,7 +8,7 @@ const BodyParser = require('body-parser')
 const ExpressSession = require('express-session')
 const MongoStore = require('connect-mongo')
 const Fs = require('fs-extra')
-const CloneDeep = require('lodash/clonedeep')
+const CloneDeep = require('lodash/cloneDeep')
 require('mongoose')
 
 const MC = require('@Root/config')
