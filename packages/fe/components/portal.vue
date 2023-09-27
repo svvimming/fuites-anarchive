@@ -36,7 +36,7 @@ export default {
   },
 
   async fetch () {
-    const response = await this.$axiosAuth.get(`/get-page-background?page=${this.to.slug}`)
+    const response = await this.$axiosAuth.get(`/${this.$config.mongoInstance}/get-page-background?page=${this.to.slug}`)
     if (response.data.payload) {
       this.print = response.data.payload.data_url
     }
