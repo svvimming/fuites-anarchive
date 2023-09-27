@@ -14,6 +14,8 @@ const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
 const Rules = require('../rules.json')
+const argv = require('minimist')(process.argv.slice(2))
+const instance = argv.mongoinstance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -55,16 +57,16 @@ MC.app = Express()
 const socket = GenerateWebsocketClient()
 
 // ===================================================================== connect
-socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
+socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
 
 // /////////////////////////////////////////////////////////////////// Functions
 // ------------------------------------------------------------- thingieMigrator
 const thingieMigrator = async () => {
   try {
-    const leaking = await MC.model.Page
+    const leaking = await MC.mongoInstances[instance].model.Page
       .find({
         state: 'leaking',
-        name: { $nin: Rules.fuites.prevent_leak_list }
+        name: { $nin: Rules[instance].fuites.prevent_leak_list }
       })
       .populate({
         path: 'portal_refs',
@@ -72,20 +74,20 @@ const thingieMigrator = async () => {
       })
     if (leaking.length) {
       const migrations = []
-      const preventDepositList = Rules.fuites.prevent_deposit_list
+      const preventDepositList = Rules[instance].fuites.prevent_deposit_list
       for (let i = 0; i < leaking.length; i++) {
         const page = leaking[i]
-        const thingies = await MC.model.Thingie
+        const thingies = await MC.mongoInstances[instance].model.Thingie
           .find({ location: page.name })
           .sort({ preacceleration: 'desc' })
         const now = Date.now()
-        const gracePeriod = Rules.fuites.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
+        const gracePeriod = Rules[instance].fuites.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
         const recentlyUpdated = thingies.some((thingie) => {
           const lastUpdated = new Date(thingie.updatedAt)
           return lastUpdated.getTime() > now - gracePeriod
         })
         if (thingies.length && !recentlyUpdated) {
-          const overflow = await MC.model.Page.findOne({ overflow_page: page.name })
+          const overflow = await MC.mongoInstances[instance].model.Page.findOne({ overflow_page: page.name })
           let newPageLocation = ''
           if (overflow && !preventDepositList.includes(overflow.name)) {
             newPageLocation = overflow.name
@@ -102,7 +104,7 @@ const thingieMigrator = async () => {
             migrations.push({
               _id: firstThingie._id,
               new_location: {
-                location: newageLocation,
+                location: newPageLocation,
                 at: {
                   x: firstThingie.at.x,
                   y: firstThingie.at.y
@@ -116,13 +118,13 @@ const thingieMigrator = async () => {
         console.log('fuites migrations:', migrations)
         for (let j = 0; j < migrations.length; j++) {
           const migration = migrations[j]
-          const thingie = await MC.model.Thingie.findOneAndUpdate({ _id: migration._id }, {
+          const thingie = await MC.mongoInstances[instance].model.Thingie.findOneAndUpdate({ _id: migration._id }, {
             location: migration.new_location.location,
             last_update_token: 'fuites',
             update_count: 0,
             $push: { last_locations: migration.new_location }
           }, { new: true })
-          socket.emit('cron|migrate-thingie|initialize', thingie)
+          socket.emit(`${instance}|cron|migrate-thingie|initialize`, thingie)
         }
       }
     }
@@ -137,6 +139,9 @@ const thingieMigrator = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('💧fuites migrations started')
   try {
+    if (!instance) {
+      throw new Error('Missing argument: no Mongo instance name provided.')
+    }
     await thingieMigrator()
     socket.disconnect()
     console.log('💧fuites migrations finished')

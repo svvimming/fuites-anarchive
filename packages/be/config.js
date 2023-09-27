@@ -42,23 +42,47 @@ module.exports = {
     { type: 'dir', path: 'static' },
     { type: 'dir', path: 'tmp' },
     { type: 'dir', path: 'tmp/uploads' },
+    { type: 'dir', path: 'tmp/uploads/instance-fe' },
+    { type: 'dir', path: 'tmp/uploads/music' },
     { type: 'dir', path: 'public' },
-    { type: 'dir', path: 'public/uploads' }
+    { type: 'dir', path: 'public/uploads' },
+    { type: 'dir', path: 'public/uploads/instance-fe' },
+    { type: 'dir', path: 'public/uploads/music' }
   ],
   serveStaticDirectories: [
     '/public/uploads'
   ],
   // ================================================================== Database
-  databaseUrl: process.env.DATABASE_URL,
-  mongoConnectionOptions: {
-    // ssl: true,
-    auth: {
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD
+  mongoInstances: {
+    'instance-fe': {
+      databaseUrl: process.env.DATABASE_URL_INSTANCE_FE,
+      databaseName: process.env.DATABASE_NAME_INSTANCE_FE,
+      mongoConnectionOptions: {
+        // ssl: true,
+        auth: {
+          username: process.env.DATABASE_USER,
+          password: process.env.DATABASE_PASSWORD
+        }
+      },
+      mongooseConnection: false,
+      model: {},
+      excludeModules: []
+    },
+    music: {
+      databaseUrl: process.env.DATABASE_URL_MUSIC,
+      databaseName: process.env.DATABASE_NAME_MUSIC,
+      mongoConnectionOptions: {
+        // ssl: true,
+        auth: {
+          username: process.env.DATABASE_USER,
+          password: process.env.DATABASE_PASSWORD
+        }
+      },
+      mongooseConnection: false,
+      model: {},
+      excludeModules: []
     }
   },
-  mongooseConnection: false,
-  model: {},
   // ================================================================= Socket.Io
   socket: {
     io: false,
@@ -79,11 +103,12 @@ module.exports = {
       unset: 'destroy'
     }
   },
-  expressSession: false,
+  expressSession: {},
   // ====================================================================== CORS
   cors: {
     origin: [
-      'https://localhost:2001'
+      'https://localhost:2001',
+      'https://localhost:2004'
     ],
     methods: 'OPTIONS,GET,POST',
     allowedHeaders: 'Origin,Accept,Authorization,X-Requested-With,Content-Type,Cache-Control',

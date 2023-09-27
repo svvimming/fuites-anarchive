@@ -21,8 +21,10 @@ export default {
     }()),
     serverFlag: process.env.SERVER_ENV,
     socketOptions: {
-      withCredentials: true
-    }
+      withCredentials: true,
+      channel: 'instance-fe'
+    },
+    mongoInstance: 'instance-fe'
   },
   // --------------------------------------------------------- [Runtime] Private
   privateRuntimeConfig: {},
@@ -106,7 +108,7 @@ export default {
     sockets: [{
       url: (function () {
         const env = process.env.SERVER_ENV
-        let uri = 'https://localhost:3001' // development
+        let uri = 'https://localhost:3001/' // development
         switch (env) {
           case 'stable': uri = 'https://stable.fuit.es'; break
           case 'production': uri = 'https://fuit.es'; break
@@ -123,6 +125,7 @@ export default {
   // /////////////////////////////////////////////////////// Build configuration
   // ------------------------------------------------ Extend webpack config here
   build: {
+    transpile: [({ isLegacy }) => isLegacy && 'axios'],
     // -------------------------------------------------------------- Extensions
     extend (config, ctx) {
       config.module.rules.push(
