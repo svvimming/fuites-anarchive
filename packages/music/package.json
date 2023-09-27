@@ -10,8 +10,8 @@
     "dev": "../../node_modules/.bin/nuxt",
     "start": "../../node_modules/.bin/nuxt start",
     "build": "../../node_modules/.bin/nuxt build",
-    "launch": "../../node_modules/.bin/nuxt build && pm2 restart v1-fe",
-    "launch-stable": "../../node_modules/.bin/nuxt build && pm2 restart v1-stable-fe"
+    "launch": "../../node_modules/.bin/nuxt build && pm2 restart v1-music",
+    "launch-stable": "../../node_modules/.bin/nuxt build && pm2 restart v1-stable-music"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
