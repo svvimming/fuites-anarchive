@@ -145,9 +145,9 @@ const ParseQuerySearch = async (search = '') => {
 }
 
 // ///////////////////////////////////////////////////// GenerateWebsocketClient
-const GenerateWebsocketClient = () => {
+const GenerateWebsocketClient = (namespace) => {
   https.globalAgent.options.rejectUnauthorized = false
-  return io(MC.backendUrl, {
+  return io(`${MC.backendUrl}/${namespace}`, {
     withCredentials: true,
     secure: true,
     // ca: Fs.readFileSync(`${MC.repoRoot}/localhost_cert.pem`, 'ascii'),

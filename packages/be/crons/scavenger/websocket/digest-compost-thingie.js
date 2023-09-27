@@ -12,7 +12,7 @@ for (let i = 0; i < mongoInstances.length; i++) {
   MC.socket.listeners.push({
     name: `${instance}|cron|digest-compost-thingie|initialize`,
     handler (id) {
-      console.log(`deleted thingie with ${id}`)
+      console.log(`deleted thingie ${id}`)
       MC.socket.io
         .of(`/${instance}`)
         .to(`${instance}|thingies`)

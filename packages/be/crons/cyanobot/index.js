@@ -22,7 +22,7 @@ const Express = require('express')
 const moment = require('moment')
 const Rules = require('../rules.json')
 const argv = require('minimist')(process.argv.slice(2))
-const instance = argv.mongoinstance
+const instance = argv.instance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -52,8 +52,8 @@ try {
 
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
-require('@Module_Thingie')
-require('@Module_Page')
+// require('@Module_Thingie')
+// require('@Module_Page')
 
 // ////////////////////////////////////////////////////////////////// Initialize
 MC.app = Express()
@@ -123,8 +123,12 @@ const pageTemperatureCheck = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🌡️ cyanobot temperature check started')
   try {
+    const mongoInstances = Object.keys(MC.mongoInstances)
     if (!instance) {
       throw new Error('Missing argument: no Mongo instance name provided.')
+    }
+    if (!mongoInstances.includes(instance)) {
+      throw new Error('The provided instance does not exist.')
     }
     const temperatureUpdates = await pageTemperatureCheck()
     console.log(`${temperatureUpdates.length} pages updated with new temperatures:`)

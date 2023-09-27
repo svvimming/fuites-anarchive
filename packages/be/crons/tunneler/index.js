@@ -13,7 +13,7 @@ const Fs = require('fs-extra')
 const Express = require('express')
 const Rules = require('../rules.json')
 const argv = require('minimist')(process.argv.slice(2))
-const instance = argv.mongoinstance
+const instance = argv.instance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -43,9 +43,9 @@ try {
 
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
-require('@Module_Thingie')
-require('@Module_Page')
-require('@Module_Portal')
+// require('@Module_Thingie')
+// require('@Module_Page')
+// require('@Module_Portal')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
 
@@ -53,7 +53,7 @@ const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities
 // -----------------------------------------------------------------------------
 MC.app = Express()
 
-const socket = GenerateWebsocketClient()
+const socket = GenerateWebsocketClient(instance)
 
 // ===================================================================== connect
 socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
@@ -225,8 +225,12 @@ const setActivePortals = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🚇 Tunneler started')
   try {
+    const mongoInstances = Object.keys(MC.mongoInstances)
     if (!instance) {
       throw new Error('Missing argument: no Mongo instance name provided.')
+    }
+    if (!mongoInstances.includes(instance)) {
+      throw new Error('The provided instance does not exist.')
     }
     await updatePortalsBetweenPages()
     await setActivePortals()
