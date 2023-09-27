@@ -237,10 +237,7 @@ export default {
       this.socket.on('module|post-create-page|payload', (page) => {
         this.addPage(page)
       })
-      const socketEvents = [
-        `${this.$config.mongoInstance}|module|post-update-page|payload`,
-        `${this.$config.mongoInstance}|module|page-state-update|payload`
-      ]
+      const socketEvents = ['module|post-update-page|payload', 'module|page-state-update|payload']
       socketEvents.forEach((message) => {
         this.socket.on(message, (page) => {
           this.updatePage(page)
