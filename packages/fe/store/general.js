@@ -71,7 +71,7 @@ const actions = {
   // ////////////////////////////////////////////////////////////// authenticate
   async authenticate ({ commit, getters, dispatch }, token) {
     try {
-      const response = await this.$axiosAuth.get('/authenticate', {
+      const response = await this.$axiosAuth.get(`/${this.app.$config.mongoInstance}/authenticate`, {
         params: { token }
       })
       const authenticated = response.data.payload
