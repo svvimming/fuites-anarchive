@@ -3,7 +3,7 @@
     "links": [
       {
         "component": "Bingo",
-        "text": "fuites",
+        "text": "interweave",
         "route": "/",
         "bingo": {
           "lsx": 20,
@@ -12,30 +12,12 @@
           "jy": 4,
           "fsj": 6
         }
-      },
-      {
-        "component": "div",
-        "text": "info",
-        "route": "/info"
-      },
-      {
-        "component": "div",
-        "text": "portal",
-        "route": "/portal"
       }
     ],
     "contact": [
       {
         "text": "contact@fuit.es",
         "url": "mailto:contact@fuit.es"
-      },
-      {
-        "text": "instagram",
-        "url": "https://www.instagram.com/fuit_es/"
-      },
-      {
-        "text": "bandcamp",
-        "url": "https://fuites.bandcamp.com/music"
       }
     ]
   },
@@ -43,7 +25,7 @@
     "links": [
       {
         "component": "Bingo",
-        "text": "fuites",
+        "text": "interweave",
         "route": "/",
         "bingo": {
           "lsx": 20,
