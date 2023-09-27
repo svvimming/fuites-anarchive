@@ -108,7 +108,8 @@ module.exports = {
   cors: {
     origin: [
       'https://localhost:2001',
-      'https://localhost:2004'
+      'https://localhost:2004',
+      'https://music.fuit.es'
     ],
     methods: 'OPTIONS,GET,POST',
     allowedHeaders: 'Origin,Accept,Authorization,X-Requested-With,Content-Type,Cache-Control',

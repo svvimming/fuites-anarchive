@@ -7,8 +7,8 @@ export default {
       const env = process.env.SERVER_ENV
       let uri = 'https://localhost:2004'
       switch (env) {
-        case 'stable': uri = 'https://stable.fuit.es'; break
-        case 'production': uri = 'https://fuit.es'; break
+        case 'stable': uri = 'https://music-stable.fuit.es'; break
+        case 'production': uri = 'https://music.fuit.es'; break
       } return uri
     }()),
     backendUrl: (function () {
