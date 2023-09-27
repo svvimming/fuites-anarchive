@@ -2,16 +2,12 @@ console.log('⚡️ [websocket] module|update-thingie|payload')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
-// const Mime = require('mime')
-
-// const { GetSocket } = require('@Module_Utilities')
-
 const MC = require('@Root/config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // -----------------------------------------------------------------------------
-const thingieWithLocationHistory = async (incoming) => {
-  const thingie = await MC.model.Thingie.findOne({ _id: incoming._id })
+const thingieWithLocationHistory = async (instance, incoming) => {
+  const thingie = await MC.mongoInstances[instance].model.Thingie.findOne({ _id: incoming._id })
   const locations = thingie.last_locations ? thingie.last_locations : []
   const newVertex = {
     location: (incoming.location === 'pocket' || incoming.location === 'compost') ? thingie.location : incoming.location,
@@ -40,25 +36,32 @@ const thingieWithLocationHistory = async (incoming) => {
 // on the new page unless it is refreshed.
 // This is low priority as it doesn't break anything to not have
 // thingies appear.
-MC.socket.listeners.push({
-  name: 'update-thingie',
-  async handler (incoming) {
-    let updated
-    if (incoming.record_new_location) {
-      delete incoming.record_new_location
-      if (incoming.location === 'compost') {
-        incoming.compostedAt = Date.now()
+const mongoInstances = Object.keys(MC.mongoInstances)
+for (let i = 0; i < mongoInstances.length; i++) {
+  const instance = mongoInstances[i]
+  MC.socket.listeners.push({
+    name: `${instance}|update-thingie`,
+    async handler (incoming) {
+      let updated
+      if (incoming.record_new_location) {
+        delete incoming.record_new_location
+        if (incoming.location === 'compost') {
+          incoming.compostedAt = Date.now()
+        }
+        updated = await thingieWithLocationHistory(instance, incoming)
+      } else {
+        incoming.$inc = { update_count: 1 }
+        updated = await MC.mongoInstances[instance].model.Thingie
+          .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
+          .populate({
+            path: 'file_ref',
+            select: 'filename file_ext aspect'
+          })
       }
-      updated = await thingieWithLocationHistory(incoming)
-    } else {
-      incoming.$inc = { update_count: 1 }
-      updated = await MC.model.Thingie
-        .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
-        .populate({
-          path: 'file_ref',
-          select: 'filename file_ext aspect'
-        })
+      MC.socket.io
+        .of(`/${instance}`)
+        .to(`${instance}|thingies`)
+        .emit('module|update-thingie|payload', updated)
     }
-    MC.socket.io.to('thingies').emit('module|update-thingie|payload', updated)
-  }
-})
+  })
+}

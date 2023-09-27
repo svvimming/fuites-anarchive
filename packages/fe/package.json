@@ -1,5 +1,5 @@
 {
-  "name": "fuites-anarchive-fe",
+  "name": "fe",
   "version": "1.1.1",
   "description": "Frontend",
   "repository": {
@@ -7,11 +7,11 @@
     "url": "git+https://github.com/svvimming/fuites-anarchive.git"
   },
   "scripts": {
-    "dev": "node_modules/.bin/nuxt",
-    "start": "node_modules/.bin/nuxt start",
-    "build": "node_modules/.bin/nuxt build",
-    "launch": "node_modules/.bin/nuxt build && pm2 restart v1-fe",
-    "launch-stable": "node_modules/.bin/nuxt build && pm2 restart v1-stable-fe"
+    "dev": "../../node_modules/.bin/nuxt",
+    "start": "../../node_modules/.bin/nuxt start",
+    "build": "../../node_modules/.bin/nuxt build",
+    "launch": "../../node_modules/.bin/nuxt build && pm2 restart v1-fe",
+    "launch-stable": "../../node_modules/.bin/nuxt build && pm2 restart v1-stable-fe"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",

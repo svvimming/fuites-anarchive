@@ -24,4 +24,4 @@ const PocketSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('pockets', PocketSchema)
+module.exports = PocketSchema // Mongoose.model('pockets', PocketSchema)

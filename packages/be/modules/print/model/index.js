@@ -23,4 +23,4 @@ const PrintSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('prints', PrintSchema)
+module.exports = PrintSchema // Mongoose.model('prints', PrintSchema)

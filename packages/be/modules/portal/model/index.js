@@ -28,7 +28,7 @@ const VertexSchema = new Schema({
 const PortalSchema = new Schema({
   thingie_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'thingies',
+    ref: 'Thingie',
     required: false
   },
   edge: {
@@ -54,4 +54,4 @@ const PortalSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = Mongoose.model('portals', PortalSchema)
+module.exports = PortalSchema // Mongoose.model('portals', PortalSchema)

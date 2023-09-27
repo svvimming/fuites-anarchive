@@ -6,10 +6,17 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.socket.listeners.push({
-  name: 'cron|digest-compost-thingie|initialize',
-  handler (id) {
-    console.log(id)
-    MC.socket.io.to('thingies').emit('module|post-delete-thingie|payload', id)
-  }
-})
+const mongoInstances = Object.keys(MC.mongoInstances)
+for (let i = 0; i < mongoInstances.length; i++) {
+  const instance = mongoInstances[i]
+  MC.socket.listeners.push({
+    name: `${instance}|cron|digest-compost-thingie|initialize`,
+    handler (id) {
+      console.log(`deleted thingie with ${id}`)
+      MC.socket.io
+        .of(`/${instance}`)
+        .to(`${instance}|thingies`)
+        .emit('module|post-delete-thingie|payload', id)
+    }
+  })
+}
