@@ -5,8 +5,8 @@
 
     <audio
       ref="audioElement"
-      :loop="true"
-      :src="`${$config.backendUrl}/${$config.mongoInstance}/${audio}.${filetype}`">
+      crossorigin="anonymous"
+      :loop="true">
     </audio>
 
     <svg
@@ -187,6 +187,7 @@ export default {
       if (this.$refs.audioElement) {
         this.player = this.$refs.audioElement
         this.player.crossOrigin = 'anonymous'
+        this.player.src = `${this.$config.backendUrl}/${this.$config.mongoInstance}/${this.audio}.${this.filetype}`
         this.source = this.audioContext.createMediaElementSource(this.player)
         this.gainNode = this.audioContext.createGain()
         this.gainNode.gain.value = 0
