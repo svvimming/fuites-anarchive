@@ -16,7 +16,7 @@ export default {
       let uri = 'https://localhost:3001'
       switch (env) {
         case 'stable': uri = 'https://stable.fuit.es/api'; break
-        case 'production': uri = 'https://fuit.es/api'; break
+        case 'production': uri = 'https://interweave.fuit.es/api'; break
       } return uri
     }()),
     serverFlag: process.env.SERVER_ENV,
