@@ -136,7 +136,7 @@ export default {
 
   head () {
     return {
-      title: `${this.pageName.replaceAll('-', ' ')} - f u i t e s`
+      title: `${this.pageName.replaceAll('-', ' ')} - b l i n k r a t e`
     }
   },
 

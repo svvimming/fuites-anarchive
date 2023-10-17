@@ -44,7 +44,7 @@ export default {
   // /////////////////////////////////////////////////////// Headers of the Page
   // ---------------------------------------------------------------------------
   head: {
-    title: 'f u i t e s',
+    title: 'b l i n k r a t e',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
