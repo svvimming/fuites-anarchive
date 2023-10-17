@@ -10,7 +10,8 @@
     "dev-be": "npm run dev -w be",
     "dev-fe": "npm run dev -w fe",
     "dev-interweave": "npm run dev -w interweave",
-    "dev-music": "npm run dev -w music"
+    "dev-music": "npm run dev -w music",
+    "dev-blinkrate": "npm run dev -w blinkrate"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "packages/be",
     "packages/fe",
     "packages/interweave",
-    "packages/music"
+    "packages/music",
+    "packages/blinkrate"
   ]
 }

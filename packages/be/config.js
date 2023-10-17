@@ -45,11 +45,13 @@ module.exports = {
     { type: 'dir', path: 'tmp/uploads/instance-fe' },
     { type: 'dir', path: 'tmp/uploads/interweave' },
     { type: 'dir', path: 'tmp/uploads/music' },
+    { type: 'dir', path: 'tmp/uploads/blinkrate' },
     { type: 'dir', path: 'public' },
     { type: 'dir', path: 'public/uploads' },
     { type: 'dir', path: 'public/uploads/instance-fe' },
     { type: 'dir', path: 'public/uploads/interweave' },
-    { type: 'dir', path: 'public/uploads/music' }
+    { type: 'dir', path: 'public/uploads/music' },
+    { type: 'dir', path: 'public/uploads/blinkrate' }
   ],
   serveStaticDirectories: [
     '/public/uploads'
@@ -97,6 +99,20 @@ module.exports = {
       mongooseConnection: false,
       model: {},
       excludeModules: []
+    },
+    blinkrate: {
+      databaseUrl: process.env.DATABASE_URL_BLINKRATE,
+      databaseName: process.env.DATABASE_NAME_BLINKRATE,
+      mongoConnectionOptions: {
+        // ssl: true,
+        auth: {
+          username: process.env.DATABASE_USER,
+          password: process.env.DATABASE_PASSWORD
+        }
+      },
+      mongooseConnection: false,
+      model: {},
+      excludeModules: []
     }
   },
   // ================================================================= Socket.Io
@@ -126,8 +142,10 @@ module.exports = {
       'https://localhost:2001',
       'https://localhost:2004',
       'https://localhost:2007',
+      'https://localhost:2010',
       'https://interweave.fuit.es',
-      'https://music.fuit.es'
+      'https://music.fuit.es',
+      'https://blinkrate.fuit.es'
     ],
     methods: 'OPTIONS,GET,POST',
     allowedHeaders: 'Origin,Accept,Authorization,X-Requested-With,Content-Type,Cache-Control',
