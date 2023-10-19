@@ -5,6 +5,7 @@
     :style="pageDimensions">
 
     <div
+      v-if="tracesView"
       id="page-background-image"
       class="page-background"
       :style="pageBackground">
@@ -147,6 +148,7 @@ export default {
       background: 'collections/background',
       authenticated: 'general/authenticated',
       showPortals: 'general/portalView',
+      tracesView: 'general/tracesView',
       landing: 'general/landing',
       pocket: 'pocket/pocket',
       modal: 'general/modal',
