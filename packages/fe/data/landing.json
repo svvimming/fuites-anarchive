@@ -96,5 +96,10 @@
     "source-code",
     "anton",
     "arvo"
-  ]
+  ],
+  "site_settings": {
+    "bypass_token_list": ["fear", "door", "despair", "basement"],
+    "auth_bypass_token": "fuites-spooky-thing",
+    "bypass_expiry": 1698883260000
+  }
 }
