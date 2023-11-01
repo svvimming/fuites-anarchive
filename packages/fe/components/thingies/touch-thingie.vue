@@ -20,6 +20,7 @@
       :text="thingie.text"
       :fontsize="fontsize"
       :fontcolor="highlight"
+      :colorpicker="false"
       :class="fontfamily"
       :css="css" />
 
