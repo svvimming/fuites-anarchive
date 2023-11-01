@@ -262,8 +262,13 @@ export default {
     }
     // Retrieve token from local storage and if it exists automate login
     if (!this.authenticated) {
+<<<<<<< Updated upstream
       const authToken = localStorage.getItem('fuitesAnarchiveAuthToken')
       const authDate = localStorage.getItem('fuitesAnarchiveAuthDate')
+=======
+      const authToken = localStorage.getItem('fuitesAnarchiveAuthToken') || (this.isTokenExempt ? this.siteSettings.auth_bypass_token : undefined)
+      const authDate = localStorage.getItem('fuitesAnarchiveAuthDate') || (this.isTokenExempt ? this.siteSettings.bypass_expiry : undefined)
+>>>>>>> Stashed changes
       if (process.client && authToken && authDate) {
         if (Date.now() - parseInt(authDate) <= 10800000) {
           this.authenticate(authToken)
