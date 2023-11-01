@@ -55,7 +55,6 @@ import { mapGetters } from 'vuex'
 
 import Bingo from '@/components/bingo'
 import Auth from '@/components/auth'
-import LandingSiteData from '@/data/landing.json'
 
 // ====================================================================== Export
 export default {

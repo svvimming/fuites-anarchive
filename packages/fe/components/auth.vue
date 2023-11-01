@@ -43,10 +43,14 @@ export default {
   computed: {
     ...mapGetters({
       authenticated: 'general/authenticated',
-      touchmode: 'general/touchmode'
+      touchmode: 'general/touchmode',
+      landing: 'general/landing'
     }),
     isNotLandingPage () {
       return this.$route.path !== '/' && this.$route.path !== '/info'
+    },
+    bypassTokenList () {
+      return this.landing.data.site_settings.bypass_token_list
     }
   },
 
@@ -58,7 +62,8 @@ export default {
       const sanitized = token.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
       const joined = sanitized.join('-')
       const authenticated = await this.authenticate(joined)
-      if (process.client && authenticated) {
+      const pagename = this.$route.params.id
+      if (process.client && authenticated && !this.bypassTokenList.includes(pagename)) {
         localStorage.setItem('fuitesAnarchiveAuthToken', joined)
         localStorage.setItem('fuitesAnarchiveAuthDate', Date.now().toString())
       }
