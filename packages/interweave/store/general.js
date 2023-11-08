@@ -13,7 +13,7 @@ const state = () => ({
   loaders: [],
   portalView: true,
   modal: false,
-  touchmode: true,
+  touchmode: false,
   videoPlaying: false
 })
 
