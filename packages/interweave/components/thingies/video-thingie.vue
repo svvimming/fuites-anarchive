@@ -22,6 +22,7 @@
       <video
         ref="videoElement"
         crossorigin="anonymous"
+        :muted="!audioContext"
         :loop="true">
         <source
           :src="`${$config.backendUrl}/${$config.mongoInstance}/${video}.${filetype}`"
@@ -163,11 +164,6 @@ export default {
 
   watch: {
     videoPlaying(val) {
-      if (this.audioContext && this.playState === 'running') {
-        this.$refs.videoElement.muted = false
-      } else {
-        this.$refs.videoElement.muted = true
-      }
       if (val) {
         this.$refs.videoElement.play()
       } else {

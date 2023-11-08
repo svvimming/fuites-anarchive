@@ -2,7 +2,7 @@
   <UploadInput
     :prompt-to-upload="true"
     accepted-mimetypes="image/jpeg,image/png,image/gif,audio/mpeg,audio/x-m4a,video/mp4,video/quicktime,video/mpeg,video/ogg,video/webm"
-    :max-file-size-mb="maxFileSizeMB"
+    :max-file-size-mb="maxFileSizeMb"
     class="single-file-uploader"
     @statusChanged="statusChanged"
     @fileSelected="fileSelected"
@@ -71,6 +71,7 @@
       </div>
 
       <Bichos
+        v-if="file.size <= (maxFileSizeMb * 1000000)"
         @path-complete="(coords) => { initUpload(coords, uploadFile) }" />
 
       <Button
@@ -87,7 +88,6 @@
 
 <script>
 // ===================================================================== Imports
-          // v-if="filesize < (maxFileSizeMB * 1000000)"
 import { mapActions } from 'vuex'
 import Mime from 'mime'
 import Filesize from 'filesize'
@@ -135,10 +135,10 @@ export default {
       required: false,
       default: ''
     },
-    maxFileSizeMB: {
+    maxFileSizeMb: {
       type: Number,
       required: false,
-      default: 8
+      default: 50
     }
   },
 
@@ -160,8 +160,8 @@ export default {
     },
     finalizeUploadPrompt () {
       if (this.file) {
-        return this.file.size > (this.maxFileSizeMB * 1000000) ?
-          `compressed file size is too big! :-O<br>max is ${this.maxFileSizeMB}mb` :
+        return this.file.size > (this.maxFileSizeMb * 1000000) ?
+          `hihi, this file is too big! :-O<br>max is ${this.maxFileSizeMb}mb` :
           this.finalPrompt ?
             this.finalPrompt :
             'Draw a shape to upload selected file'
@@ -229,7 +229,7 @@ export default {
     },
     initUpload (coords, uploadFile) {
       this.pathData = coords
-      if (this.uploadOnDrawBicho) {
+      if (this.uploadOnDrawBicho && this.file.size <= (this.maxFileSizeMb * 1000000)) {
         uploadFile()
       } else {
         this.$emit('draw-bicho-complete')

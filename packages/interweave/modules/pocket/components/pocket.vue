@@ -16,7 +16,8 @@
 
         <!-- Uploader ****************************************************** -->
         <div class="uploader-wrapper">
-          <SingleFileUploader />
+          <SingleFileUploader
+            :max-file-size-mb="50" />
         </div>
 
         <template v-for="thingie in pocketThingies">

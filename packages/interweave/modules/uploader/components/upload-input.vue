@@ -115,10 +115,10 @@ export default {
       required: false,
       default: false
     },
-    maxFileSizeMB: {
+    maxFileSizeMb: {
       type: Number,
       required: false,
-      default: 8
+      default: 50
     }
   },
 
@@ -181,7 +181,7 @@ export default {
         this.$emit('fileSelected')
         if (['image/jpeg', 'image/png'].includes(file.type)) {
           await getImageData(this, file)
-          const compressedImageFile = await compressImage(file, true, this.maxFileSizeMB)
+          const compressedImageFile = await compressImage(file, true, this.maxFileSizeMb)
           this.file = compressedImageFile
         } else {
           this.file = file

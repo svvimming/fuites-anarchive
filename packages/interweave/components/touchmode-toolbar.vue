@@ -68,6 +68,11 @@
                 @click="$emit('toggle-audio-context')">
                 audio
               </button>
+              <button
+                :class="['toggle', { 'video-active': videoPlayState }, 'video-toggle']"
+                @click="$emit('toggle-video-playing')">
+                video
+              </button>
             </div>
 
         </div>
@@ -114,6 +119,11 @@ export default {
       type: [Boolean, String],
       required: true,
       default: 'paused'
+    },
+    videoPlayState: {
+      type: Boolean,
+      required: false,
+      default: false
     },
     editorOpen: {
       type: Boolean,
@@ -320,6 +330,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  flex-wrap: wrap;
   .toggle {
     display: block;
   }
@@ -357,6 +368,25 @@ export default {
     border-top: 1px solid #9e6c86;
   }
   &.audio-active {
+    &:before {
+      display: none;
+    }
+  }
+}
+
+.video-toggle {
+  color: #b88a37;
+  @include fontWeight_Bold;
+  @include linkHover(#b88a37);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #b88a37;
+  }
+  &.video-active {
     &:before {
       display: none;
     }

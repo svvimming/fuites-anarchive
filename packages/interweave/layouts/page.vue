@@ -83,12 +83,14 @@
       :pocket-is-open="pocketIsOpen"
       :portal-view="portalView"
       :audio-context-state="audioContextState"
+      :video-play-state="videoPlaying"
       :editor-open="editorExpanded"
       :current-page="currentPage"
       @toggle-thingie-editor="toggleThingieEditor"
       @toggle-pocket="togglePocket"
       @toggle-portal-view="togglePortals"
-      @toggle-audio-context="toggleAudioContext" />
+      @toggle-audio-context="toggleAudioContext"
+      @toggle-video-playing="toggleVideoPlayState" />
 
     <!-- =================================================== TOUCH EDITOR == -->
     <TouchEditor 
