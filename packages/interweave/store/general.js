@@ -13,7 +13,8 @@ const state = () => ({
   loaders: [],
   portalView: true,
   modal: false,
-  touchmode: false
+  touchmode: false,
+  videoPlaying: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -26,7 +27,8 @@ const getters = {
   loaders: state => state.loaders,
   portalView: state => state.portalView,
   modal: state => state.modal,
-  touchmode: state => state.touchmode
+  touchmode: state => state.touchmode,
+  videoPlaying: state => state.videoPlaying
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -94,6 +96,10 @@ const actions = {
   // ////////////////////////////////////////////////////////////// setTouchMode
   setTouchMode ({ commit }, value) {
     commit('SET_TOUCH_MODE', value)
+  },
+  // ///////////////////////////////////////////////////////// setVideoPlayState
+  setVideoPlayState ({ commit }, value) {
+    commit('SET_VIDEO_PLAYSTATE', value)
   }
 }
 
@@ -129,6 +135,9 @@ const mutations = {
   },
   SET_TOUCH_MODE (state, value) {
     state.touchmode = value
+  },
+  SET_VIDEO_PLAYSTATE (state, value) {
+    state.videoPlaying = value
   }
 }
 

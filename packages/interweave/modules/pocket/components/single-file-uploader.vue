@@ -1,7 +1,7 @@
 <template>
   <UploadInput
     :prompt-to-upload="true"
-    accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    accepted-mimetypes="image/jpeg,image/png,image/gif,audio/mpeg,audio/x-m4a,video/mp4,video/quicktime,video/mpeg,video/ogg,video/webm"
     :max-file-size-mb="maxFileSizeMB"
     class="single-file-uploader"
     @statusChanged="statusChanged"
@@ -206,7 +206,11 @@ export default {
       this.file = file
     },
     async finalizeUpload () {
-      const thingietype = ['audio/mpeg', 'audio/x-m4a'].includes(this.file.type) ? 'sound' : 'image'
+      const thingietype = ['video/mp4', 'video/quicktime', 'video/mpeg', 'video/ogg', 'video/webm'].includes(this.file.type) ?
+        'video' :
+          ['audio/mpeg', 'audio/x-m4a'].includes(this.file.type) ?
+            'sound' :
+              'image'
       const complete = await this.postCreateThingie({
         uploadedFileId: this.file.id,
         location: this.destination,
