@@ -28,6 +28,14 @@
       audio
     </button>
 
+    <!-- ========================================================== AUDIO == -->
+    <button
+      v-if="!touchmode"
+      :class="['toggle', { 'video-active': videoPlaying }, 'video-toggle']"
+      @click="toggleVideoPlayState">
+      video
+    </button>
+
     <!-- =================================================== LANDING SITE == -->
     <LandingSite
       v-if="!touchmode"
@@ -151,6 +159,7 @@ export default {
       compostPortalIsOpen: 'compost/compostPortalIsOpen',
       modal: 'general/modal',
       touchmode: 'general/touchmode',
+      videoPlaying: 'general/videoPlaying',
       editorThingie: 'collections/editorThingie',
       pages: 'collections/pages'
     }),
@@ -210,7 +219,8 @@ export default {
       setAudioContextPlayState: 'mixer/setAudioContextPlayState',
       setTouchMode: 'general/setTouchMode',
       clearEditorThingie: 'collections/clearEditorThingie',
-      postDeleteThingie: 'collections/postDeleteThingie'
+      postDeleteThingie: 'collections/postDeleteThingie',
+      setVideoPlayState: 'general/setVideoPlayState'
     }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
@@ -230,6 +240,9 @@ export default {
       } else {
         this.setAudioContextPlayState(this.audioContextState)
       }
+    },
+    toggleVideoPlayState () {
+      this.setVideoPlayState(!this.videoPlaying)
     },
     handleRefresh () {
       this.key++
@@ -361,6 +374,27 @@ export default {
     border-top: 1px solid #9e6c86;
   }
   &.audio-active {
+    &:before {
+      display: none;
+    }
+  }
+}
+
+.video-toggle {
+  top: 6rem;
+  right: 2.5rem;
+  color: #b88a37;
+  @include fontWeight_Bold;
+  @include linkHover(#b88a37);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #b88a37;
+  }
+  &.video-active {
     &:before {
       display: none;
     }

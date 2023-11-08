@@ -69,6 +69,20 @@
       @change-sound-level="changeSoundLevel"
       @change-opacity="changeOpacity" />
 
+    <VideoThingie
+      v-if="type === 'video'"
+      :video="thingie.file_ref._id"
+      :filetype="thingie.file_ref.file_ext"
+      :mimetype="thingie.file_ref.mimetype"
+      :clip="thingie.clip"
+      :clip-path="thingie.path_data"
+      :css="css"
+      :gain="gain"
+      :position="position"
+      :width="width"
+      @toggle-clip-path="toggleImageClip"
+      @change-opacity="changeOpacity" />
+
   </div>
 </template>
 
@@ -79,6 +93,7 @@ import { mapGetters, mapActions } from 'vuex'
 import TextThingie from '@/components/thingies/text-thingie'
 import ImageThingie from '@/components/thingies/image-thingie'
 import SoundThingie from '@/components/thingies/sound-thingie'
+import VideoThingie from '@/components/thingies/video-thingie'
 
 import EditableParams from '@/data/thingie-editable-params.json'
 
@@ -89,7 +104,8 @@ export default {
   components: {
     TextThingie,
     ImageThingie,
-    SoundThingie
+    SoundThingie,
+    VideoThingie
   },
 
   props: {

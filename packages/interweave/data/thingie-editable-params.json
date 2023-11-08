@@ -5,6 +5,12 @@
       "inner": "clip"
     }
   ],
+  "video": [
+    {
+      "directive": "toggleImageClip",
+      "inner": "clip"
+    }
+  ],
   "text": [
     {
       "directive": "changeFontSize",
