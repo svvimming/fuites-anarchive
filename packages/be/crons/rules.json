@@ -61,6 +61,9 @@
     "tunneler": {
       "prevent_connection_list": [],
       "max_portal_chain_length": 3
+    },
+    "cyanobot": {
+      "temperature_margin": 100
     }
   }
 }
