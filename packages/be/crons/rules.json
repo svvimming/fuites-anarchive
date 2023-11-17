@@ -28,7 +28,7 @@
       "temperature_margin": 100
     }
   },
-  "instance-music": {
+  "music": {
     "fuites": {
       "prevent_leak_list": [
         "compost",
@@ -55,6 +55,12 @@
     },
     "cyanobot": {
       "temperature_margin": 100
+    }
+  },
+  "interweave": {
+    "tunneler": {
+      "prevent_connection_list": [],
+      "max_portal_chain_length": 3
     }
   }
 }

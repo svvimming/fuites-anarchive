@@ -148,8 +148,8 @@ const updatePortalsBetweenPages = async () => {
   try {
     await checkPortalThingiesExist()
     const thingies = await MC.mongoInstances[instance].model.Thingie.find({})
-    const preventConnections = Rules[instance].tunneler.prevent_connection_list
-    const maxLinks = Rules[instance].tunneler.max_portal_chain_length
+    const preventConnections = Rules[instance]?.tunneler?.prevent_connection_list || []
+    const maxLinks = Rules[instance]?.tunneler?.max_portal_chain_length || 3
     for (let i = 0; i < thingies.length; i++) {
       const thingie = thingies[i]
       const locations = [...thingie.last_locations].reverse()
