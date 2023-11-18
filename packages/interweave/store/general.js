@@ -12,6 +12,7 @@ const state = () => ({
   filterValue: '',
   loaders: [],
   portalView: true,
+  tracesView: false,
   modal: false,
   touchmode: false,
   videoPlaying: false
@@ -26,6 +27,7 @@ const getters = {
   filterValue: state => state.filterValue,
   loaders: state => state.loaders,
   portalView: state => state.portalView,
+  tracesView: state => state.tracesView,
   modal: state => state.modal,
   touchmode: state => state.touchmode,
   videoPlaying: state => state.videoPlaying
@@ -50,6 +52,10 @@ const actions = {
   // ///////////////////////////////////////////////////////////// setPortalView
   setPortalView ({ commit }, value) {
     commit('SET_PORTAL_VIEW', value)
+  },
+  // ///////////////////////////////////////////////////////////// setTracesView
+  setTracesView ({ commit }, value) {
+    commit('SET_TRACES_VIEW', value)
   },
   // ////////////////////////////////////////////////////////////////// setModal
   setModal ({ commit }, value) {
@@ -120,6 +126,9 @@ const mutations = {
   },
   SET_PORTAL_VIEW (state, value) {
     state.portalView = value
+  },
+  SET_TRACES_VIEW (state, value) {
+    state.tracesView = value
   },
   SET_MODAL (state, value) {
     state.modal = value

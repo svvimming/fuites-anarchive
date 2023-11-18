@@ -12,7 +12,7 @@
       ref="page" 
       :key="`page-init-${key}`" />
 
-    <!-- ==================================================== PORTAL VIEW == -->
+    <!-- ======================================================== TOGGLES == -->
     <button
       v-if="notCompostPage && !touchmode"
       :class="['toggle', { portalView }, 'portals-toggle', 'no-select']"
@@ -20,7 +20,6 @@
       portals
     </button>
 
-    <!-- ========================================================== AUDIO == -->
     <button
       v-if="!touchmode"
       :class="['toggle', { 'audio-active': audioContextState === 'running' }, 'audio-toggle']"
@@ -28,12 +27,18 @@
       audio
     </button>
 
-    <!-- ========================================================== AUDIO == -->
     <button
       v-if="!touchmode"
       :class="['toggle', { 'video-active': videoPlaying }, 'video-toggle']"
       @click="toggleVideoPlayState">
       video
+    </button>
+
+    <button
+      v-if="!touchmode"
+      :class="['toggle', { tracesView }, 'traces-toggle']"
+      @click="toggleTraces">
+      traces
     </button>
 
     <!-- =================================================== LANDING SITE == -->
@@ -155,6 +160,7 @@ export default {
     ...mapGetters({
       authenticated: 'general/authenticated',
       portalView: 'general/portalView',
+      tracesView: 'general/tracesView',
       pocketIsOpen: 'pocket/pocketIsOpen',
       audioContext: 'mixer/audioContext',
       playState: 'mixer/playState',
@@ -215,6 +221,7 @@ export default {
   methods: {
     ...mapActions({
       setPortalView: 'general/setPortalView',
+      setTracesView: 'general/setTracesView',
       setPocketIsOpen: 'pocket/setPocketIsOpen',
       setCompostPortalIsOpen: 'compost/setCompostPortalIsOpen',
       createAudioContext: 'mixer/createAudioContext',
@@ -235,6 +242,9 @@ export default {
     },
     togglePortals () {
       this.setPortalView(!this.portalView)
+    },
+    toggleTraces () {
+      this.setTracesView(!this.tracesView)
     },
     toggleAudioContext () {
       if (!this.audioContext) {
@@ -397,6 +407,27 @@ export default {
     border-top: 1px solid #b88a37;
   }
   &.video-active {
+    &:before {
+      display: none;
+    }
+  }
+}
+
+.traces-toggle {
+  top: 8rem;
+  right: 2.5rem;
+  color: #a0addb;
+  @include fontWeight_Bold;
+  @include linkHover(#a0addb);
+  &:before {
+    content: '';
+    position: absolute;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+    top: calc(50% + 1px);
+    border-top: 1px solid #a0addb;
+  }
+  &.tracesView {
     &:before {
       display: none;
     }
