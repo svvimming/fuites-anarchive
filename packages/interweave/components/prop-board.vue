@@ -25,12 +25,20 @@
           :style="textStyles" />
       </div>
 
-      <button
-        type="submit"
-        class="add-button"
-        @click.prevent="createTextThingie">
-        add
-      </button>
+      <div class="controls">
+        <button
+          type="submit"
+          class="add-button"
+          @click.prevent="createPortal">
+          create portal
+        </button>
+        <button
+          type="submit"
+          class="add-button"
+          @click.prevent="createTextThingie">
+          add
+        </button>
+      </div>
 
     </form>
 
@@ -83,7 +91,8 @@ export default {
   computed: {
     ...mapGetters({
       landing: 'general/landing',
-      touchmode: 'general/touchmode'
+      touchmode: 'general/touchmode',
+      pageThingies: 'collections/thingies'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -99,19 +108,30 @@ export default {
         '--propboard-highlight-color': this.highlight
       }
     },
-    pageName () {
+    locationName () {
       return this.pagename ? this.pagename : this.$route.params.id
     },
     textStyles () {
       return {
         'font-size': this.fontsize + 'px'
       }
+    },
+    closestNeighbour () {
+      const neighbours = this.pageThingies
+        .filter(thingie => thingie.location === this.locationName && thingie.colors && thingie.colors.length)
+        .map(thingie => ({
+          data: thingie,
+          distance: this.getThingieDistance(this.location.x, this.location.y, thingie.at.x, thingie.at.y)
+        }))
+      const closest = neighbours.reduce((prev, curr) => prev.distance < curr.distance ? prev : curr)
+      return closest.data
     }
   },
 
   methods: {
     ...mapActions({
-      postCreateThingie: 'collections/postCreateThingie'
+      postCreateThingie: 'collections/postCreateThingie',
+      postCreatePortal: 'collections/postCreatePortal'
     }),
     openEditor () {
       if (!this.open) {
@@ -143,12 +163,23 @@ export default {
         this.highlight = this.color
       }
     },
+    getThingieDistance (x, y, tx, ty) {
+      return Math.sqrt((tx - x) * (tx - x) + (ty - y) * (ty - y))
+    },
+    clearPropBoard () {
+      this.status = 'upload-finalized'
+      this.closeEditor()
+      this.key++
+      this.text = ''
+      this.color = '#000000'
+      this.highlight = '#BDBBD7'
+    },
     async createTextThingie () {
       const width = this.$refs.textArea ? this.$refs.textArea.clientWidth : 80
       const x = this.touchmode ? window.scrollX + Math.floor(Math.random() * window.innerWidth) - 80 : this.location.x
       const y = this.touchmode ? window.scrollY + Math.floor(Math.random() * window.innerHeight) - 300 : this.location.y
       const complete = await this.postCreateThingie({
-        location: this.pageName,
+        location: this.locationName,
         type: 'text',
         text: this.text,
         fontsize: this.fontsize,
@@ -158,12 +189,21 @@ export default {
         at: { x, y, z: 1 }
       })
       if (complete) {
-        this.status = 'upload-finalized'
-        this.closeEditor()
-        this.key++
-        this.text = ''
-        this.color = '#000000'
-        this.highlight = '#BDBBD7'
+        this.clearPropBoard()
+      }
+    },
+    async createPortal () {
+      const complete = await this.postCreatePortal({
+        closestNeighbour: this.closestNeighbour._id,
+        location: this.locationName,
+        destination: this.$slugify(this.text.trim()),
+        at: {
+          x: this.location.x,
+          y: this.location.y
+        }
+      })
+      if (complete) {
+        this.clearPropBoard()
       }
     }
   }
@@ -178,7 +218,7 @@ export default {
   position: absolute;
   padding: 0.25rem;
   width: 20rem;
-  min-height: 8rem;
+  height: 8rem;
   // @include focusBoxShadowSmall;
   border-radius: 0.25rem;
   background-color: #ffffff;
@@ -225,6 +265,15 @@ export default {
 .text-area-wrapper {
   flex-grow: 1;
   width: 100%;
+  padding: 0.25rem;
+  border: solid 0.5px rgba($lavender, 0.5);
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.5rem;
 }
 
 .text-input {
@@ -236,7 +285,6 @@ export default {
 .add-button {
   width: fit-content;
   align-self: flex-end;
-  margin-right: 0.5rem;
   @include linkHover(#000000);
 }
 
