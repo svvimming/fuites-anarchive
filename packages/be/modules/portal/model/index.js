@@ -46,6 +46,10 @@ const PortalSchema = new Schema({
   enabled: {
     type: Boolean,
     required: false
+  },
+  manual: {
+    type: Boolean,
+    required: false
   }
 }, {
   timestamps: true,
