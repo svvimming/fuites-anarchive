@@ -106,6 +106,13 @@ export default {
       this.socket.on('module|update-thingie|payload', (thingie) => {
         this.updateThingie(thingie)
       })
+      // interweave sensor data updates
+      this.socket.on('module|interweave-sensor-data|payload', (updates) => {
+        console.log(updates)
+        // updates.forEach((update) => {
+        //   console.log(update)
+        // })
+      })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
         console.log(thingie)
         this.addThingie(thingie)
