@@ -105,16 +105,23 @@ export default {
   // /////////////////////////////////////////////////// [Module] Nuxt Socket.io
   // ---------------------------------- Doc: https://nuxt-socket-io.netlify.app/
   io: {
-    sockets: [{
-      url: (function () {
-        const env = process.env.SERVER_ENV
-        let uri = 'https://localhost:3001/' // development
-        switch (env) {
-          case 'stable': uri = 'https://stable.fuit.es/'; break
-          case 'production': uri = 'https://fuit.es/'; break
-        } return uri
-      }())
-    }]
+    sockets: [
+      {
+        default: true,
+        url: (function () {
+          const env = process.env.SERVER_ENV
+          let uri = 'https://localhost:3001/' // development
+          switch (env) {
+            case 'stable': uri = 'https://stable.fuit.es/'; break
+            case 'production': uri = 'https://fuit.es/'; break
+          } return uri
+        }())
+      },
+      {
+        name: 'local',
+        url: 'https://localhost:5001'
+      }
+    ]
   },
   // ////////////////////////////////////////////////////////// [Plugin] Toaster
   // ---------------------------------------------------------------------------

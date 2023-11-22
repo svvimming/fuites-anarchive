@@ -8,6 +8,8 @@
         :pulse="0.3"
         :exposure="0.3" />
 
+      <SensorDataRelay />
+
       <div
         class="pocket"
         @drop="onDrop($event)"
@@ -44,6 +46,7 @@ import { mapGetters, mapActions } from 'vuex'
 import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
 import Shader from '@/components/shader'
+import SensorDataRelay from '@/modules/pocket/components/sensor-data-relay'
 import SingleFileUploader from '@/modules/pocket/components/single-file-uploader'
 
 // =================================================================== Functions
@@ -64,6 +67,7 @@ export default {
     Thingie,
     TouchThingie,
     Shader,
+    SensorDataRelay,
     SingleFileUploader
   },
 
@@ -134,7 +138,8 @@ export default {
     ...mapActions({
       updateThingie: 'collections/updateThingie',
       addThingie: 'collections/addThingie',
-      removeThingie: 'collections/removeThingie'
+      removeThingie: 'collections/removeThingie',
+      initLocalWebsocket: 'sensors/initLocalWebsocket'
     }),
     initMousedown (thingie) {
       this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
