@@ -142,6 +142,10 @@ const ThingieSchema = new Schema({
   css: {
     type: [String],
     required: false
+  },
+  sensors_active: {
+    type: [String],
+    required: false
   }
 }, {
   timestamps: true,

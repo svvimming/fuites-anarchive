@@ -107,8 +107,10 @@ export default {
         this.updateThingie(thingie)
       })
       this.socket.on('module|post-create-thingie|payload', (thingie) => {
-        console.log(thingie)
         this.addThingie(thingie)
+      })
+      this.socket.on('module|sensor-data-update|payload', (updates) => {
+        updates.forEach((thingie) => { this.updateThingie(thingie) })
       })
       this.socket.on('module|fuites-migrate-thingie|payload', (migrated) => {
         this.updateThingie(migrated)

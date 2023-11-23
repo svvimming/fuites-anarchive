@@ -69,5 +69,10 @@
       "value": "1.0",
       "inner": "opacity"
     }
+  ],
+  "sensors_available": [
+    "s1",
+    "s2",
+    "s3"
   ]
 }

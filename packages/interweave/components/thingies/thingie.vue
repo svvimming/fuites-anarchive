@@ -27,6 +27,17 @@
         @click="changeOpacity">
         o
       </button>
+      <div
+        v-for="sensor in sensorsAvailable"
+        :key="`${thingie._id}-${sensor}`"
+        :class="['sensor-button', { active: sensorsEnabled.includes(sensor) }]">
+        <button
+          type="button"
+          class="editor-button"
+          @click="toggleSensor(sensor)">
+          {{ sensor }}
+        </button>
+      </div>
     </div>
 
     <TextThingie
@@ -209,6 +220,12 @@ export default {
     controls () {
       if (this.type) { return EditableParams[this.type] }
       return []
+    },
+    sensorsEnabled () {
+      return this.thingie.sensors_active ? this.thingie.sensors_active : []
+    },
+    sensorsAvailable () {
+      return EditableParams.sensors_available
     }
   },
 
@@ -423,6 +440,18 @@ export default {
           this.rotateThingie(-2)
         })
       }
+    },
+    toggleSensor (sensor) {
+      let update
+      if (this.sensorsEnabled.includes(sensor)) {
+        update = this.sensorsEnabled.filter(el => el !== sensor)
+      } else {
+        update = this.sensorsEnabled.concat([sensor])
+      }
+      this.$emit('initupdate', {
+        _id: this.thingie._id,
+        sensors_active: update
+      })
     }
   }
 }
@@ -503,5 +532,24 @@ export default {
   text-align: center;
   white-space: nowrap;
   font-size: 0.75rem;
+}
+
+.sensor-button {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-bottom: 2px;
+  &.active {
+    background-color: rgba(red, 0.9);
+    border-radius: 1px;
+    .editor-button {
+      text-shadow: 0px 0px 3px #FFF;
+    }
+  }
+  .editor-button {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 }
 </style>
