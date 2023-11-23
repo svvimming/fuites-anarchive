@@ -106,7 +106,6 @@ export default {
   // ---------------------------------- Doc: https://nuxt-socket-io.netlify.app/
   io: {
     sockets: [{
-      default: true,
       url: (function () {
         const env = process.env.SERVER_ENV
         let uri = 'https://localhost:3001/' // development
