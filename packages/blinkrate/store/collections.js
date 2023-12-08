@@ -254,6 +254,24 @@ const actions = {
   // //////////////////////////////////////////////////////// clearEditorThingie
   clearEditorThingie ({ commit }) {
     commit('CLEAR_EDITOR_THINGIE')
+  },
+  // ////////////////////////////////////////////////////////// postCreatePortal
+  async postCreatePortal ({ dispatch }, payload) {
+    try {
+      const vertices = [
+        { location: payload.location, at: payload.at },
+        { location: payload.destination, at: payload.at }
+      ]
+      const response = await this.$axiosAuth.post(`/${this.app.$config.mongoInstance}/post-create-portal`, {
+        thingieId: payload.closestNeighbour,
+        vertices
+      })
+      const portal = response.data.payload
+      return portal
+    } catch (e) {
+      console.log('============== [Store Action: collections/postCreatePortal]')
+      console.log(e)
+    }
   }
 }
 
