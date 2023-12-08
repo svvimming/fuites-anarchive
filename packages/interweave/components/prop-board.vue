@@ -28,7 +28,8 @@
       <div class="controls">
         <button
           type="submit"
-          class="add-button"
+          :class="['add-button', { disabled: !pageThingies.length }]"
+          :disabled="!pageThingies.length"
           @click.prevent="createPortal">
           create portal
         </button>
@@ -92,7 +93,7 @@ export default {
     ...mapGetters({
       landing: 'general/landing',
       touchmode: 'general/touchmode',
-      pageThingies: 'collections/thingies'
+      thingies: 'collections/thingies'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -116,15 +117,19 @@ export default {
         'font-size': this.fontsize + 'px'
       }
     },
+    pageThingies () {
+      return this.thingies.filter(thingie => thingie.location === this.locationName && thingie.colors && thingie.colors.length)
+    },
     closestNeighbour () {
-      const neighbours = this.pageThingies
-        .filter(thingie => thingie.location === this.locationName && thingie.colors && thingie.colors.length)
-        .map(thingie => ({
+      const neighbours = this.pageThingies.map(thingie => ({
           data: thingie,
           distance: this.getThingieDistance(this.location.x, this.location.y, thingie.at.x, thingie.at.y)
         }))
-      const closest = neighbours.reduce((prev, curr) => prev.distance < curr.distance ? prev : curr)
-      return closest.data
+      if (neighbours.length) {
+        const closest = neighbours.reduce((prev, curr) => prev.distance < curr.distance ? prev : curr)
+        return closest.data
+      }
+      return null
     }
   },
 
@@ -193,17 +198,19 @@ export default {
       }
     },
     async createPortal () {
-      const complete = await this.postCreatePortal({
-        closestNeighbour: this.closestNeighbour._id,
-        location: this.locationName,
-        destination: this.$slugify(this.text.trim()),
-        at: {
-          x: this.location.x,
-          y: this.location.y
+      if (this.closestNeighbour) {
+        const complete = await this.postCreatePortal({
+          closestNeighbour: this.closestNeighbour._id,
+          location: this.locationName,
+          destination: this.$slugify(this.text.trim()),
+          at: {
+            x: this.location.x,
+            y: this.location.y
+          }
+        })
+        if (complete) {
+          this.clearPropBoard()
         }
-      })
-      if (complete) {
-        this.clearPropBoard()
       }
     }
   }
@@ -286,6 +293,10 @@ export default {
   width: fit-content;
   align-self: flex-end;
   @include linkHover(#000000);
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 }
 
 :deep(.text-thingie) {
