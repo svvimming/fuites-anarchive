@@ -9,17 +9,36 @@ const MC = require('@Root/config')
 MC.socket.listeners.push({
   name: 'interweave|sensor-data',
   async handler (data) {
-    // console.log('ping received', sensor, data)
+    // console.log(data)
+    const sensors = await MC.mongoInstances.interweave.model.Sensor.find({})
+    const activePage = sensors[0].page
+    // console.log(sensors)
     // find thingies listening to sensor data
     const listening = await MC.mongoInstances.interweave.model.Thingie
-      .find({ location: data.page, sensors: { $gt: 0 } })
-    console.log(listening)
-    // update thingies and pack in updates array
+      .find({ location: activePage, sensors: { $gt: 0 } })
+    // update thingies and pack them in and updates array
     const updates = []
-    data.$inc = { update_count: 1 }
     for (let i = 0; i < listening.length; i++) {
+      const thingie = listening[i]
+      const active = thingie.sensors_active
+      const props = { $inc: { update_count: 1 } }
+      let css = []
+      active.forEach((sensor) => {
+        const settings = sensors.find(sr => sr.name === sensor)
+        const voltageDif = (settings.inputVoltage.max - settings.inputVoltage.min)
+        const outputDif = (settings.outputRange.max - settings.outputRange.min)
+        const val = (data[sensor] - settings.inputVoltage.min) * (outputDif / voltageDif) + settings.outputRange.min
+        if (settings.affecting === 'css') {
+          css = css.concat(settings.css?.map(str => str.split('?').join(`${val}`)))
+        } else {
+          props[settings.affecting] = val
+        }
+      })
+      if (css.length) {
+        props.css = css
+      }
       const update = await MC.mongoInstances.interweave.model.Thingie
-        .findOneAndUpdate({ _id: listening[i]._id }, data, { new: true })
+        .findOneAndUpdate({ _id: thingie._id }, props, { new: true })
         .populate({
           path: 'file_ref',
           select: 'filename file_ext aspect'

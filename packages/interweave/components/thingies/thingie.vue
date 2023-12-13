@@ -47,7 +47,7 @@
       :colorpicker="colorpicker"
       :fontsize="fontsize"
       :fontcolor="highlight"
-      :class="fontfamily"
+      :class="['fontfamily', { transition: css }]"
       :css="css"
       @change-font-size="changeFontSize"
       @change-font-family="changeFontFamily"
@@ -62,6 +62,7 @@
       :clip="thingie.clip"
       :clip-path="thingie.path_data"
       :css="css"
+      :class="{ transition: css }"
       @toggle-clip-path="toggleImageClip"
       @change-opacity="changeOpacity" />
 
@@ -76,6 +77,7 @@
       :width="width"
       :stroke-width="strokeWidth"
       :css="css"
+      :class="{ transition: css }"
       @change-stroke-width="changePathStrokeWidth"
       @change-sound-level="changeSoundLevel"
       @change-opacity="changeOpacity" />
@@ -91,6 +93,7 @@
       :gain="gain"
       :position="position"
       :width="width"
+      :class="{ transition: css }"
       @toggle-clip-path="toggleImageClip"
       @change-opacity="changeOpacity" />
 
@@ -500,6 +503,10 @@ export default {
       color: var(--highlight-color);
     }
   }
+}
+
+.transition {
+  transition: all 250ms linear;
 }
 
 // ////////////////////////////////////////////////////////////////////// Editor

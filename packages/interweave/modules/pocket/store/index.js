@@ -29,7 +29,7 @@ const actions = {
         throw 'pocket does not exist!'
       }
     } catch (e) {
-      console.log('===================== [Store Action: collections/getPocket]')
+      console.log('========================== [Store Action: pocket/getPocket]')
       console.log(e)
       return false
     }

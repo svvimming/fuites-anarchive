@@ -48,7 +48,7 @@
         :to="portal" />
 
       <div
-        v-if="authenticated"
+        v-if="authenticated && !touchmode"
         :class="['sensors-popout', { open: sensorsPanel }]">
         <button
           class="sensors-toggle"
@@ -72,7 +72,7 @@ import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
 import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
-import SensorsPopout from '@/components/sensors-popout'
+import SensorsPopout from '@/modules/sensor/components/sensors-popout'
 
 // =================================================================== Functions
 const initPageScrollPosition = (instance, next) => {
@@ -125,6 +125,7 @@ export default {
     await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getPages')
     await store.dispatch('collections/getThingies', { pagename: route.params.id })
+    await store.dispatch('sensor/getSensorSettings')
   },
 
   data () {
@@ -493,7 +494,7 @@ export default {
 // /////////////////////////////////////////////////////////////// Sensor Editor
 .sensors-popout {
   position: fixed;
-  padding: 11rem 1rem;
+  padding: 6rem 1rem;
   left: 100vw;
   height: 100%;
   width: 32rem;
