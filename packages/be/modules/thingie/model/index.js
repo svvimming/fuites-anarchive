@@ -143,6 +143,10 @@ const ThingieSchema = new Schema({
     type: [String],
     required: false
   },
+  sensors: {
+    type: Number,
+    required: false
+  },
   sensors_active: {
     type: [String],
     required: false

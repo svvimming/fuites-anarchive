@@ -8,11 +8,12 @@ const MC = require('@Root/config')
 // -----------------------------------------------------------------------------
 MC.socket.listeners.push({
   name: 'interweave|sensor-data',
-  async handler (sensor, data) {
-    console.log('ping received', sensor, data)
+  async handler (data) {
+    // console.log('ping received', sensor, data)
     // find thingies listening to sensor data
     const listening = await MC.mongoInstances.interweave.model.Thingie
-      .find({ sensors_active: { $in: [sensor] } })
+      .find({ location: data.page, sensors: { $gt: 0 } })
+    console.log(listening)
     // update thingies and pack in updates array
     const updates = []
     data.$inc = { update_count: 1 }

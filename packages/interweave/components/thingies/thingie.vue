@@ -222,7 +222,7 @@ export default {
       return []
     },
     sensorsEnabled () {
-      return this.thingie.sensors_active ? this.thingie.sensors_active : []
+      return this.thingie.sensors ? this.thingie.sensors_active : []
     },
     sensorsAvailable () {
       return EditableParams.sensors_available
@@ -450,6 +450,7 @@ export default {
       }
       this.$emit('initupdate', {
         _id: this.thingie._id,
+        sensors: update.length,
         sensors_active: update
       })
     }
