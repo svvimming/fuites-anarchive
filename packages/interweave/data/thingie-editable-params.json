@@ -74,5 +74,16 @@
     "s1",
     "s2",
     "s3"
+  ],
+  "sensor_affectable_properties": [
+    "at.x",
+    "at.y",
+    "width",
+    "angle",
+    "gain",
+    "fontsize",
+    "opacity",
+    "stroke_width",
+    "css"
   ]
 }

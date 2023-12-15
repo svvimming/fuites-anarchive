@@ -47,6 +47,17 @@
         :key="`${portal.name}_${i}`"
         :to="portal" />
 
+      <div
+        v-if="authenticated && !touchmode"
+        :class="['sensors-popout', { open: sensorsPanel }]">
+        <button
+          class="sensors-toggle"
+          @click="sensorsPanel = !sensorsPanel">
+          s
+        </button>
+        <SensorsPopout />
+      </div>
+
     </div>
   </section>
 </template>
@@ -61,6 +72,7 @@ import Thingie from '@/components/thingies/thingie'
 import TouchThingie from '@/components/thingies/touch-thingie'
 import Portal from '@/components/portal'
 import CssBreakoutBox from '@/components/css-breakout-box'
+import SensorsPopout from '@/modules/sensor/components/sensors-popout'
 
 // =================================================================== Functions
 const initPageScrollPosition = (instance, next) => {
@@ -105,13 +117,15 @@ export default {
     Thingie,
     TouchThingie,
     Portal,
-    CssBreakoutBox
+    CssBreakoutBox,
+    SensorsPopout
   },
 
   async fetch ({ app, store, route }) {
     await store.dispatch('general/setLandingData')
     await store.dispatch('collections/getPages')
     await store.dispatch('collections/getThingies', { pagename: route.params.id })
+    await store.dispatch('sensor/getSensorSettings')
   },
 
   data () {
@@ -131,7 +145,8 @@ export default {
       keydown: false,
       lastUpdate: false,
       updateInterval: false,
-      breakout: false
+      breakout: false,
+      sensorsPanel: false
     }
   },
 
@@ -474,6 +489,38 @@ export default {
   color: $lavender;
   @include fontWeight_Bold;
   @include linkHover($lavender);
+}
+
+// /////////////////////////////////////////////////////////////// Sensor Editor
+.sensors-popout {
+  position: fixed;
+  padding: 6rem 1rem;
+  left: 100vw;
+  height: 100%;
+  width: 32rem;
+  top: 0;
+  transform: translateX(0);
+  transition: 300ms ease;
+  background-color: white;
+  border-left: solid 1px $lavender;
+  z-index: 1000;
+  &.open {
+    transform: translateX(-100%);
+  }
+}
+
+.sensors-toggle {
+  position: absolute;
+  padding: 0.25rem 0.625rem;
+  top: 12rem;
+  left: 0;
+  color: #7e7c8f;
+  transform: translateX(-100%);
+  background-color: white;
+  border: solid 1px $lavender;
+  border-top-left-radius: 1.25rem;
+  border-bottom-left-radius: 1.25rem;
+  border-right: none;
 }
 
 </style>
