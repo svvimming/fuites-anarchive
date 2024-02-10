@@ -46,12 +46,14 @@ module.exports = {
     { type: 'dir', path: 'tmp/uploads/interweave' },
     { type: 'dir', path: 'tmp/uploads/music' },
     { type: 'dir', path: 'tmp/uploads/blinkrate' },
+    { type: 'dir', path: 'tmp/uploads/3e' },
     { type: 'dir', path: 'public' },
     { type: 'dir', path: 'public/uploads' },
     { type: 'dir', path: 'public/uploads/instance-fe' },
     { type: 'dir', path: 'public/uploads/interweave' },
     { type: 'dir', path: 'public/uploads/music' },
-    { type: 'dir', path: 'public/uploads/blinkrate' }
+    { type: 'dir', path: 'public/uploads/blinkrate' },
+    { type: 'dir', path: 'public/uploads/3e' }
   ],
   serveStaticDirectories: [
     '/public/uploads'
@@ -113,6 +115,20 @@ module.exports = {
       mongooseConnection: false,
       model: {},
       excludeModules: []
+    },
+    '3e': {
+      databaseUrl: process.env.DATABASE_URL_3E,
+      databaseName: process.env.DATABASE_NAME_3E,
+      mongoConnectionOptions: {
+        // ssl: true,
+        auth: {
+          username: process.env.DATABASE_USER,
+          password: process.env.DATABASE_PASSWORD
+        }
+      },
+      mongooseConnection: false,
+      model: {},
+      excludeModules: []
     }
   },
   // ================================================================= Socket.Io
@@ -143,9 +159,11 @@ module.exports = {
       'https://localhost:2004',
       'https://localhost:2007',
       'https://localhost:2010',
+      'https://localhost:2013',
       'https://interweave.fuit.es',
       'https://music.fuit.es',
-      'https://blinkrate.fuit.es'
+      'https://blinkrate.fuit.es',
+      'https://3e.fuit.es'
     ],
     methods: 'OPTIONS,GET,POST',
     allowedHeaders: 'Origin,Accept,Authorization,X-Requested-With,Content-Type,Cache-Control',
