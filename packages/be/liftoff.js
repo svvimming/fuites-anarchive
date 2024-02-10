@@ -59,27 +59,27 @@ try {
 
 // ///////////////////////////////////////////////////// Log Database Statistics
 // -----------------------------------------------------------------------------
-const logDatabaseStatistics = async () => {
-  try {
-    const mongoInstances = Object.keys(MC.mongoInstances)
-    for (let i = 0; i < mongoInstances.length; i++) {
-      const instance = mongoInstances[i]
-      console.log(`================= Instance: ${instance} ===================`)
-      const pages = await MC.mongoInstances[instance].model.Page.find({})
-      console.log(`${instance} total pages: ${pages.length}`)
-      const pockets = await MC.mongoInstances[instance].model.Pocket.find({})
-      console.log(`${instance} total pockets: ${pockets.length}`)
-      const portals = await MC.mongoInstances[instance].model.Portal.find({})
-      console.log(`${instance} total prints: ${portals.length}`)
-      const prints = await MC.mongoInstances[instance].model.Print.find({})
-      console.log(`${instance} total portals: ${prints.length}`)
-      const thingies = await MC.mongoInstances[instance].model.Thingie.find({})
-      console.log(`${instance} total thingies: ${thingies.length}`)
-      console.log('===========================================================')
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
+// const logDatabaseStatistics = async () => {
+//   try {
+//     const mongoInstances = Object.keys(MC.mongoInstances)
+//     for (let i = 0; i < mongoInstances.length; i++) {
+//       const instance = mongoInstances[i]
+//       console.log(`================= Instance: ${instance} ===================`)
+//       const pages = await MC.mongoInstances[instance].model.Page.find({})
+//       console.log(`${instance} total pages: ${pages.length}`)
+//       const pockets = await MC.mongoInstances[instance].model.Pocket.find({})
+//       console.log(`${instance} total pockets: ${pockets.length}`)
+//       const portals = await MC.mongoInstances[instance].model.Portal.find({})
+//       console.log(`${instance} total prints: ${portals.length}`)
+//       const prints = await MC.mongoInstances[instance].model.Print.find({})
+//       console.log(`${instance} total portals: ${prints.length}`)
+//       const thingies = await MC.mongoInstances[instance].model.Thingie.find({})
+//       console.log(`${instance} total thingies: ${thingies.length}`)
+//       console.log('===========================================================')
+//     }
+//   } catch (e) {
+//     console.log(e)
+//   }
+// }
 
-logDatabaseStatistics()
+// logDatabaseStatistics()
