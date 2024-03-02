@@ -67,25 +67,27 @@
     }
   },
   "3e": {
-    "prevent_leak_list": [
-      "compost"
-    ],
-    "prevent_deposit_list": [],
-    "milliseconds_since_updated_grace_period": 86400000
-  },
-  "tunneler": {
-    "prevent_connection_list": [
-      "pocket",
-      "compost"
-    ],
-    "max_portal_chain_length": 3
-  },
-  "goa": {
-    "ignore_list": [
-      "compost"
-    ]
-  },
-  "cyanobot": {
-    "temperature_margin": 100
+    "fuites": {
+      "prevent_leak_list": [
+        "compost"
+      ],
+      "prevent_deposit_list": [],
+      "milliseconds_since_updated_grace_period": 86400000
+    },
+    "tunneler": {
+      "prevent_connection_list": [
+        "pocket",
+        "compost"
+      ],
+      "max_portal_chain_length": 3
+    },
+    "goa": {
+      "ignore_list": [
+        "compost"
+      ]
+    },
+    "cyanobot": {
+      "temperature_margin": 100
+    }
   }
 }
