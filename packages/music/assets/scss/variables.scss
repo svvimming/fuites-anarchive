@@ -161,6 +161,13 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   }
 }
 
+/**
+ * Convert pixels to rems
+ */
+@function toRem($value) {
+  @return math.div($value, 16) + rem;
+}
+
 // --------------------------------------------------------------- Media Queries
 @mixin tiny { @media screen and (max-width: 25.9375rem) { @content; } }
 @mixin mini { @media screen and (max-width: 40rem) { @content; } }
