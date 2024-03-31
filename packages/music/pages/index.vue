@@ -113,8 +113,7 @@ $viewTransitionTime: 800ms;
   left: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  background-color: black;
+  // overflow: hidden;
   &.view-info {
     :deep(#fuites-title) {
       path {
@@ -141,32 +140,65 @@ $viewTransitionTime: 800ms;
 
 #page-background {
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('/landing/landing_page_p2_part2.png');
-  transition: 1200ms ease;
+  left: calc(50% - 60vh);
+  width: 120vh;
+  height: 100vh;
+  background-image: url('/landing/landing-page-main-bg.png');
+  transition: transform 1200ms ease;
+  @include containerMaxMQ {
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
   &.view-releases {
     transform: scaleX(1.15) translateX(6.5%);
   }
   &.view-info {
     transform: scaleX(1.05) translateX(-2%);
   }
+  &:before,
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: calc((100vw - 100vh) * 0.5);
+    height: 100vh;
+    background-image: url('/landing/landing-page-main-bg.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    transform: scaleX(-1);
+    z-index: 1;
+    @include containerMaxMQ {
+      display: none;
+    }
+  }
+  &:before {
+    right: calc(50% + 60vh);
+    background-position: left center;
+  }
+  &:after {
+    left: calc(50% + 60vh);
+    background-position: right center;
+  }
 }
 
 #info-panel-background {
-  top: -7vh;
+  top: toRem(-76);
   right: 100%;
   width: toRem(1053);
   height: toRem(1274);
-  background-image: url('/landing/landing_page_p2_part1.png');
-  transform: translateX(10.5vw) rotate(-35deg);
+  background-image: url('/landing/landing-page-info-bg.png');
+  transform: translateX(toRem(136)) rotate(-35deg);
   opacity: 1;
   transition: $viewTransitionTime ease;
+  @include containerMaxMQ {
+    right: calc(66.5% + toRem(296));
+    transform: translateX(0) rotate(-35deg);
+  }
   &.open {
-    right: 0%;
-    top: -27vh;
-    transform: translateX(-14vw) rotate(-24.5deg);
+    right: 50%;
+    top: toRem(-291);
+    transform: translateX(calc(50% - toRem(65))) rotate(-24.5deg);
   }
   &.hidden {
     transform: translateX(0) rotate(0deg);
@@ -178,7 +210,7 @@ $viewTransitionTime: 800ms;
   left: 100%;
   width: 45vw;
   height: 120vh;
-  background-image: url('/landing/landing_page_p2_v4.png');
+  background-image: url('/landing/landing-page-releases-bg.png');
   opacity: 1;
   transform: translate(1%, 5.5%) rotate(33.5deg);
   transition: $viewTransitionTime ease;
@@ -200,7 +232,7 @@ $viewTransitionTime: 800ms;
 
 :deep(#fuites-title) {
   position: absolute;
-  left: toRem(90);
+  left: 7%;
   top: toRem(70);
   width: 320px;
   path {
@@ -221,7 +253,7 @@ $viewTransitionTime: 800ms;
 
 #open-info {
   left: calc(33.5% - 1rem);
-  top: calc(59.5% - 1rem);
+  top: toRem(628);
   font-size: toRem(21);
   flex-direction: column;
   &.view-info {

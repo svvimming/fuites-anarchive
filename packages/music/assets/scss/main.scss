@@ -407,7 +407,7 @@ h6, .h6 {
   width: $containerWidth;
   margin: 0 auto;
   @include containerMaxMQ {
-    padding: 0 4.1665%;
+    padding: 0;
     width: 100%;
   }
   [class~="grid"],

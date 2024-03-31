@@ -46,7 +46,7 @@ export default {
 .info-content {
   position: absolute;
   padding-left: calc(33.5% + 1rem);
-  margin-top: calc(59.5vh - 14rem);
+  margin-top: min(toRem(419), calc(59.5vh - 14rem));
   z-index: 1;
   &.high-z {
     z-index: 10;
