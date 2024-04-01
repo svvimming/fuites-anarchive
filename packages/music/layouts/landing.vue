@@ -1,7 +1,13 @@
 <template>
   <div class="super-container viewport">
 
-    <Nuxt />
+    <div class="grid-noGutter-noBottom">
+      <div class="col">
+        
+        <Nuxt />
+
+      </div>
+    </div>
     
   </div>
 </template>
@@ -17,6 +23,18 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .super-container {
-  overflow: auto;
+  min-height: toRem(900);
+  overflow: hidden;
+  background-color: black;
+  @include small {
+    height: 100vh;
+    min-height: unset;
+  }
+  [class~="grid"],
+  [class*="grid-"],
+  [class*="grid_"] {
+    position: relative;
+    height: 100%;
+  }
 }
 </style>

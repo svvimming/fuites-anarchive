@@ -8,7 +8,8 @@
 @mixin fontFamily_Anton { font-family: 'Anton', sans-serif; }
 @mixin fontFamily_Arvo { font-family: 'Arvo', serif; }
 @mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
-
+@mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
+@mixin fontFamily_Roboto { font-family: 'Roboto', sans-serif; }
 // ---------------------------------------------------------------------- Sizing
 
 @mixin fontSize_teeny { font-size: 0.6875rem; } // fontSize_teeny | 11pt

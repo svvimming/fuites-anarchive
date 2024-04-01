@@ -37,6 +37,155 @@
         "text": "bandcamp",
         "url": "https://fuites.bandcamp.com/music"
       }
+    ],
+    "info": {
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+    },
+    "releases": [
+      {
+        "name": "Too Heavy To Fly",
+        "artist": "Leaking Ghosts",
+        "img": "/landing/releases/too-heavy-to-fly.jpeg",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/album/7uNSkUyEjlsiW7NltaxrFO?si=mcAhGwKGTbKsofxJ7hn2gQ",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/too-heavy-to-fly",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "name": "RollingUnrolling",
+        "artist": "rollingunrolling",
+        "img": "/landing/releases/rolling-unrolling.jpeg",
+        "description": "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/artist/1kVUbhL1E0pxUauZNIqnWu?si=omE3KTLRQKKuEr6WtQ2S5g",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/pratica",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "name": "Soon a Memory",
+        "artist": "Leaking Ghosts",
+        "img": "/landing/releases/soon-a-memory.jpg",
+        "description": "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/album/1MitxZhanJSJmjCRXcSfa9?si=3t5pedr-Tn2N5EJoYjp2ag",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/ocean-in-a-shell",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "name": "Too Heavy To Fly 1",
+        "artist": "Leaking Ghosts",
+        "img": "/landing/releases/too-heavy-to-fly.jpeg",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/album/7uNSkUyEjlsiW7NltaxrFO?si=mcAhGwKGTbKsofxJ7hn2gQ",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/too-heavy-to-fly",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "name": "RollingUnrolling 1",
+        "artist": "rollingunrolling",
+        "img": "/landing/releases/rolling-unrolling.jpeg",
+        "description": "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/artist/1kVUbhL1E0pxUauZNIqnWu?si=omE3KTLRQKKuEr6WtQ2S5g",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/pratica",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "name": "Soon a Memory 1",
+        "artist": "Leaking Ghosts",
+        "img": "/landing/releases/soon-a-memory.jpg",
+        "description": "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "links": [
+          {
+            "text": "streaming",
+            "to": "https://open.spotify.com/album/1MitxZhanJSJmjCRXcSfa9?si=3t5pedr-Tn2N5EJoYjp2ag",
+            "tag": "a"
+          },
+          {
+            "text": "buy",
+            "to": "https://fuites.bandcamp.com/album/ocean-in-a-shell",
+            "tag": "a"
+          },
+          {
+            "text": "portal",
+            "to": "/",
+            "tag": "nuxt-link",
+            "disabled": true
+          }
+        ]
+      }
     ]
   },
   "page": {

@@ -3,7 +3,7 @@
 @use 'sass:math';
 
 // --------------------------------------------------------------------- General
-$containerWidth: 61.25rem;
+$containerWidth: 80.875rem;
 $standardGutter: 0.75rem;
 $pageMaxFieldWidth: 170.75rem;
 $pageMaxFieldHeight: 125rem;
@@ -161,6 +161,13 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   }
 }
 
+/**
+ * Convert pixels to rems
+ */
+@function toRem($value) {
+  @return math.div($value, 16) + rem;
+}
+
 // --------------------------------------------------------------- Media Queries
 @mixin tiny { @media screen and (max-width: 25.9375rem) { @content; } }
 @mixin mini { @media screen and (max-width: 40rem) { @content; } }
@@ -170,8 +177,8 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 @mixin xlarge { @media screen and (max-width: 90rem) { @content; } }
 @mixin ultraLarge { @media screen and (max-width: 140.625rem) { @content; } }
 
-@mixin containerMaxMQ { @media screen and (max-width: 75rem) { @content; } }
-@mixin containerMinMQ { @media screen and (max-width: 75.0625rem) { @content; } }
+@mixin containerMaxMQ { @media screen and (max-width: $containerWidth) { @content; } }
+@mixin containerMinMQ { @media screen and (max-width: 81rem) { @content; } }
 @mixin customMaxMQ($width) { @media screen and (max-width: $width) { @content; } }
 @mixin customMinMQ($width) { @media screen and (min-width: $width) { @content; } }
 
