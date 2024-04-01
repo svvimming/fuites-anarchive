@@ -113,11 +113,25 @@ $viewTransitionTime: 800ms;
   left: 0;
   width: 100%;
   height: 100%;
+  min-height: toRem(1080);
   // overflow: hidden;
+  @include small {
+    height: 100vh;
+    min-height: unset;
+  }
   &.view-info {
     :deep(#fuites-title) {
       path {
         fill: black;
+      }
+    }
+  }
+  &.view-releases {
+    @include small {
+      :deep(#fuites-title) {
+        path {
+          fill: black;
+        }
       }
     }
   }
@@ -140,9 +154,9 @@ $viewTransitionTime: 800ms;
 
 #page-background {
   top: 0;
-  left: calc(50% - 60vh);
-  width: 120vh;
-  height: 100vh;
+  left: -10%;
+  width: 120%;
+  height: 100%;
   background-image: url('/landing/landing-page-main-bg.png');
   transition: transform 1200ms ease;
   @include containerMaxMQ {
@@ -161,8 +175,8 @@ $viewTransitionTime: 800ms;
     content: '';
     position: absolute;
     top: 0;
-    width: calc((100vw - 100vh) * 0.5);
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background-image: url('/landing/landing-page-main-bg.png');
     background-size: cover;
     background-repeat: no-repeat;
@@ -173,11 +187,11 @@ $viewTransitionTime: 800ms;
     }
   }
   &:before {
-    right: calc(50% + 60vh);
+    right: 100%;
     background-position: left center;
   }
   &:after {
-    left: calc(50% + 60vh);
+    left: 100%;
     background-position: right center;
   }
 }
@@ -195,31 +209,65 @@ $viewTransitionTime: 800ms;
     right: calc(66.5% + toRem(296));
     transform: translateX(0) rotate(-35deg);
   }
+  @include small {
+    top: calc(toRem(-76) + $panelOffsetTopMobile);
+  }
   &.open {
     right: 50%;
     top: toRem(-291);
     transform: translateX(calc(50% - toRem(65))) rotate(-24.5deg);
+    @include small {
+      top: calc(toRem(-291) + $panelOffsetTopMobile);
+    }
   }
   &.hidden {
     transform: translateX(0) rotate(0deg);
+    right: calc(50% + 50vw);
+    @include containerMaxMQ {
+      right: 100%;
+    }
   }
 }
 
 #releases-panel-background {
-  bottom: 0;
-  left: 100%;
-  width: 45vw;
-  height: 120vh;
+  top: 0;
+  right: toRem(55);
+  width: toRem(586);
+  height: toRem(1080);
   background-image: url('/landing/landing-page-releases-bg.png');
   opacity: 1;
-  transform: translate(1%, 5.5%) rotate(33.5deg);
+  transform: translate(100%, 5.5%) rotate(33.5deg);
   transition: $viewTransitionTime ease;
   background-position: left bottom;
+  @include containerMaxMQ {
+    right: calc(25.5% - 16.5rem);
+    transform: translate(100%, 3.5rem) rotate(33.5deg);
+  }
+  @include small {
+    top: $panelOffsetTopMobile;
+  }
   &.open {
-    transform: translate(-45vw, 10vh) rotate(0deg);
+    transform: translate(100%, 0) rotate(0deg);
+    height: max(100%, toRem(1080));
+    right: 45%;
+    width: 50vw;
+    @include containerMaxMQ {
+      width: 45%;
+      right: 45%;
+    }
+    @include medium {
+      width: 50%;
+      right: 50%;
+    }
+    @include small {
+      top: 0;
+      width: 100%;
+      right: 100%;
+    }
   }
   &.hidden {
-    transform: translate(30vw, 5.5%) rotate(33.5deg);
+    right: calc(50% - 50vw);
+    transform: translate(100%, 5.5%) rotate(0);
   }
 }
 
@@ -234,7 +282,12 @@ $viewTransitionTime: 800ms;
   position: absolute;
   left: 7%;
   top: toRem(70);
-  width: 320px;
+  width: toRem(320);
+  @include small {
+    width: toRem(160);
+    left: 4%;
+    top: toRem(45);
+  }
   path {
     transition: $viewTransitionTime ease-in-out;
     fill: white;
@@ -256,6 +309,9 @@ $viewTransitionTime: 800ms;
   top: toRem(628);
   font-size: toRem(21);
   flex-direction: column;
+  @include small {
+    top: calc(toRem(628) + $panelOffsetTopMobile);
+  }
   &.view-info {
     .letter {
       animation-name: climb;
@@ -273,12 +329,28 @@ $viewTransitionTime: 800ms;
 
 #open-releases {
   right: calc(25.5% - 1rem);
-  bottom: calc(17.75% - 1rem);
+  top: calc(toRem(874) - 1rem);
   transition: 1000ms ease;
   letter-spacing: 1px;
+  @include small {
+    top: calc(toRem(874) - 1rem + $panelOffsetTopMobile);
+  }
   &.view-releases {
     right: 1rem;
     letter-spacing: 10px;
+    @include large {
+      right: 0.5rem;
+      letter-spacing: 6px;
+    }
+    @include small {
+      transform: translateX(100%);
+      right: calc(100% - 1rem);
+      letter-spacing: 10px;
+    }
+    @include mini {
+      right: calc(100% - 0.5rem);
+      letter-spacing: 1px;
+    }
   }
   &.view-info {
     opacity: 0;

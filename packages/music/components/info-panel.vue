@@ -2,8 +2,8 @@
   <div :class="['info-content', { 'high-z': visible }]">
     <div class="grid full">
       <div
-        class="col-6"
-        data-push-left="off-1">
+        class="col-6_lg-7_md-8_sm-10"
+        data-push-left="off-1_sm-0">
         <div :class="['info-panel', { visible }]">
 
           <div class="text">
@@ -46,8 +46,11 @@ export default {
 .info-content {
   position: absolute;
   padding-left: calc(33.5% + 1rem);
-  margin-top: min(toRem(419), calc(59.5vh - 14rem));
+  margin-top: toRem(419);
   z-index: 1;
+  @include small {
+    margin-top: calc(toRem(419) + $panelOffsetTopMobile);
+  }
   &.high-z {
     z-index: 10;
   }
@@ -67,6 +70,12 @@ export default {
   visibility: hidden;
   transition: 500ms ease 300ms;
   opacity: 0;
+  @include small {
+    padding-left: 1rem;
+  }
+  @include mini {
+    padding-left: 0;
+  }
   &.visible {
     visibility: visible;
     opacity: 1;
