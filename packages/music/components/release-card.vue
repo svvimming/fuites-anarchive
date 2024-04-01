@@ -243,6 +243,7 @@ export default {
 .release-link {
   color: white;
   padding: 0;
+  letter-spacing: toRem(1);
   &:not(:last-child) {
     margin-right: 1rem;
   }
@@ -253,6 +254,10 @@ export default {
   }
   ::v-deep .tripe-dot-loader {
     display: none;
+  }
+  &:hover {
+    font-weight: 700;
+    letter-spacing: toRem(1.5);
   }
 }
 </style>

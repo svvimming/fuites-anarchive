@@ -352,7 +352,10 @@ $panelTopPercentageMobile: 40%;
   padding: 1rem;
   color: white;
   opacity: 1;
-  transition: 800ms ease;
+  transition: 800ms ease, font-weight 200ms ease;
+  &:hover {
+    font-weight: 700;
+  }
 }
 
 #open-info {

@@ -232,6 +232,9 @@ export default {
   @include tiny {
     right: 0rem;
   }
+  &:hover {
+    letter-spacing: 4px;
+  }
 }
 
 </style>

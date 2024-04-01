@@ -69,6 +69,10 @@ export default {
 
 #close-info {
   font-weight: 500;
+  transition: letter-spacing 200ms ease;
+  &:hover {
+    letter-spacing: 4px;
+  }
 }
 
 .info-panel {
