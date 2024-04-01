@@ -8,10 +8,6 @@
       <img :src="image" :alt="`${name}-album-artwork`" />
     </div>
 
-    <div class="name">
-      {{ name }}
-    </div>
-    
     <div
       v-if="mobile"
       class="info"
@@ -19,6 +15,9 @@
       <div
         ref="content"
         class="text-content">
+        <div class="name">
+          {{ name }}
+        </div>
         <div class="artist">
           {{ artist }}
         </div>
@@ -144,7 +143,6 @@ export default {
   margin-bottom: toRem(52);
   @include small {
     max-width: unset;
-    padding-right: 12vw;
     margin-bottom: toRem(152);
   }
   @include mini {
@@ -168,6 +166,9 @@ export default {
       @include small {
         transform: scale(1.1) translateY(-14px);
       }
+      @include tiny {
+        transform: none;
+      }
     }
     .links {
       opacity: 1;
@@ -185,12 +186,12 @@ export default {
     height: toRem(180);
   }
   @include small {
-    width: toRem(310);
-    height: toRem(310);
+    width: 100%;
+    height: unset;
+    margin-bottom: toRem(32);
   }
   @include mini {
-    width: toRem(210);
-    height: toRem(210);
+    margin-bottom: toRem(16);
   }
   img {
     width: 100%;

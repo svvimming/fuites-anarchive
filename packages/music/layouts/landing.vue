@@ -23,7 +23,7 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .super-container {
-  min-height: toRem(1080);
+  min-height: toRem(900);
   overflow: hidden;
   background-color: black;
   @include small {

@@ -12,7 +12,7 @@
       @click="view = 'info'">
       <span
         v-for="(letter, i) in ['i', 'n', 'f', 'o']"
-        :key="letter"
+        :key="`info-letter-${i}`"
         :class="['letter', { loaded }]"
         :style="{ 'animation-delay': `${view === 'index' ? (3 - i) * 100 : i * 100}ms` }">
         {{ letter }}
@@ -23,7 +23,13 @@
       id="open-releases"
       :class="['index-button', 'z2', `view-${view}`]"
       @click="view = 'releases'">
-      Releases
+      <span
+        v-for="(letter, i) in ['R', 'e', 'l', 'e', 'a', 's', 'e', 's']"
+        :key="`releases-letter-${i}`"
+        :class="['letter', 'releases', { loaded }]"
+        :style="{ 'transition-delay': `${(7 - i) * 100}ms`, '--transition-end': `translate(${(7 - i) * 8}px, ${i * 20}px)` }">
+        {{ letter }}
+      </span>
     </button>
 
     <div
@@ -106,6 +112,50 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 $viewTransitionTime: 800ms;
+$panelOffsetTopDesktop: -16rem;
+$panelTopPercentageDesktop: 24%;
+$panelOffsetTopMobile: -37.5rem;
+$panelTopPercentageMobile: 40%;
+
+@mixin climbAnimation($marginStart, $marginEnd, $startY, $endY) {
+  animation-name: climb;
+  @keyframes climb {
+    0% {
+      transform: translateY($startY);
+      margin-bottom: $marginStart;
+    }
+    100% {
+      transform: translateY($endY);
+      margin-bottom: $marginEnd;
+    }
+  }
+}
+
+@mixin fallAnimation($marginStart, $marginEnd) {
+  animation-name: fall;
+  @keyframes fall {
+    0% {
+      transform: translateY(-14rem);
+      margin-bottom: $marginStart;
+    }
+    100% {
+      transform: translateY(0);
+      margin-bottom: $marginEnd;
+    }
+  }
+}
+
+@mixin releasesAnimation($transitionEnd) {
+  animation-name: stretch;
+  @keyframes stretch {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: $transitionEnd;
+    }
+  }
+}
 
 .page-container {
   position: relative;
@@ -113,8 +163,7 @@ $viewTransitionTime: 800ms;
   left: 0;
   width: 100%;
   height: 100%;
-  min-height: toRem(1080);
-  // overflow: hidden;
+  min-height: toRem(900);
   @include small {
     height: 100vh;
     min-height: unset;
@@ -129,9 +178,7 @@ $viewTransitionTime: 800ms;
   &.view-releases {
     @include small {
       :deep(#fuites-title) {
-        path {
-          fill: black;
-        }
+        opacity: 0;
       }
     }
   }
@@ -197,7 +244,7 @@ $viewTransitionTime: 800ms;
 }
 
 #info-panel-background {
-  top: toRem(-76);
+  top: calc(toRem(-76) + $panelOffsetTopDesktop + $panelTopPercentageDesktop);
   right: 100%;
   width: toRem(1053);
   height: toRem(1274);
@@ -210,14 +257,15 @@ $viewTransitionTime: 800ms;
     transform: translateX(0) rotate(-35deg);
   }
   @include small {
-    top: calc(toRem(-76) + $panelOffsetTopMobile);
+    top: calc(toRem(-76) + $panelOffsetTopMobile + $panelTopPercentageMobile);
+    transform: translateX(toRem(-40)) rotate(-35deg);
   }
   &.open {
     right: 50%;
     top: toRem(-291);
     transform: translateX(calc(50% - toRem(65))) rotate(-24.5deg);
     @include small {
-      top: calc(toRem(-291) + $panelOffsetTopMobile);
+      top: calc(toRem(-291) + $panelOffsetTopMobile + $panelTopPercentageMobile);
     }
   }
   &.hidden {
@@ -230,7 +278,7 @@ $viewTransitionTime: 800ms;
 }
 
 #releases-panel-background {
-  top: 0;
+  top: calc($panelOffsetTopDesktop + $panelTopPercentageDesktop);
   right: toRem(55);
   width: toRem(586);
   height: toRem(1080);
@@ -244,11 +292,12 @@ $viewTransitionTime: 800ms;
     transform: translate(100%, 3.5rem) rotate(33.5deg);
   }
   @include small {
-    top: $panelOffsetTopMobile;
+    top: calc($panelOffsetTopMobile + $panelTopPercentageMobile);
   }
   &.open {
     transform: translate(100%, 0) rotate(0deg);
     height: max(100%, toRem(1080));
+    top: 0;
     right: 45%;
     width: 50vw;
     @include containerMaxMQ {
@@ -283,6 +332,8 @@ $viewTransitionTime: 800ms;
   left: 7%;
   top: toRem(70);
   width: toRem(320);
+  opacity: 1;
+  transition: opacity $viewTransitionTime ease-in-out;
   @include small {
     width: toRem(160);
     left: 4%;
@@ -306,20 +357,32 @@ $viewTransitionTime: 800ms;
 
 #open-info {
   left: calc(33.5% - 1rem);
-  top: toRem(628);
+  top: calc(toRem(628) + $panelOffsetTopDesktop + $panelTopPercentageDesktop);
   font-size: toRem(21);
   flex-direction: column;
   @include small {
-    top: calc(toRem(628) + $panelOffsetTopMobile);
+    top: calc(toRem(628) + $panelOffsetTopMobile + $panelTopPercentageMobile);
+    left: calc(33.5% - 1rem - toRem(52));
+    font-size: toRem(18);
   }
   &.view-info {
     .letter {
-      animation-name: climb;
+      @include climbAnimation(toRem(64), toRem(34), 0, -14rem);
+      @include small {
+        @include climbAnimation(toRem(34), toRem(24), 0, -8rem);
+      }
     }
   }
   &.view-index {
     .letter {
-      animation-name: fall;
+      transform: translateY(-14rem);
+      margin-bottom: toRem(34);
+      @include fallAnimation(toRem(34), toRem(64));
+      @include small {
+        transform: translateY(-8rem);
+        margin-bottom: toRem(24);
+        @include fallAnimation(toRem(24), toRem(34));
+      }
     }
   }
   &.view-releases {
@@ -329,11 +392,11 @@ $viewTransitionTime: 800ms;
 
 #open-releases {
   right: calc(25.5% - 1rem);
-  top: calc(toRem(874) - 1rem);
+  top: calc(toRem(874) - 1rem + $panelOffsetTopDesktop + $panelTopPercentageDesktop);
   transition: 1000ms ease;
   letter-spacing: 1px;
   @include small {
-    top: calc(toRem(874) - 1rem + $panelOffsetTopMobile);
+    top: calc(toRem(874) - 1rem + $panelOffsetTopMobile + $panelTopPercentageMobile);
   }
   &.view-releases {
     right: 1rem;
@@ -343,13 +406,13 @@ $viewTransitionTime: 800ms;
       letter-spacing: 6px;
     }
     @include small {
-      transform: translateX(100%);
-      right: calc(100% - 1rem);
-      letter-spacing: 10px;
-    }
-    @include mini {
-      right: calc(100% - 0.5rem);
+      transition: 1000ms ease;
+      right: 1rem;
       letter-spacing: 1px;
+      transform: translateY(-100%);
+      .letter {
+        transform: var(--transition-end);
+      }
     }
   }
   &.view-info {
@@ -358,7 +421,10 @@ $viewTransitionTime: 800ms;
 }
 
 .letter {
-  margin-bottom: toRem(70);
+  margin-bottom: toRem(64);
+  @include small {
+    margin-bottom: toRem(34);
+  }
   &.loaded {
     animation-fill-mode: forwards;
     animation-iteration-count: 1;
@@ -366,32 +432,15 @@ $viewTransitionTime: 800ms;
     animation-timing-function: ease;
     animation-delay: 300ms;
   }
+  &.releases {
+    --transition-end: translate(0, 0);
+    display: inline-block;
+    transition: transform 1000ms ease;
+  }
 }
 
 .button {
   color: white;
-}
-
-@keyframes climb {
-  0% {
-    transform: translateY(0);
-    margin-bottom: toRem(70);
-  }
-  100% {
-    transform: translateY(-14rem);
-    margin-bottom: toRem(34);
-  }
-}
-
-@keyframes fall {
-  0% {
-    transform: translateY(-14rem);
-    margin-bottom: toRem(34);
-  }
-  100% {
-    transform: translateY(0);
-    margin-bottom: toRem(70);
-  }
 }
 
 </style>

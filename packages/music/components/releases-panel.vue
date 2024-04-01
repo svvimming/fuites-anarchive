@@ -24,10 +24,10 @@
       </div>
 
       <div
-        class="col-5_sm-8_ti-9"
-        data-push-left="off-2_md-1_sm-4_ti-3">
+        class="col-5_md-6_sm-12"
+        data-push-left="off-2_md-1_sm-0">
         <div :class="['releases-panel', { visible }]">
-          
+
           <button
             id="close-releases"
             class="button"
@@ -35,14 +35,20 @@
             close
           </button>
 
-          <div class="release-list">
-            <ReleaseCard
-              v-for="release in releases"
-              :key="release.name"
-              :card="release"
-              :active="release.name === selectedName"
-              :mobile="mobile"
-              @over-release="setSelectedRelease" />
+          <div class="grid-noGutter-noBottom">
+            <div
+              class="col-6_mi-8"
+              data-push-left="off-2_md-3_mi-2">
+              <div class="release-list">
+                <ReleaseCard
+                  v-for="release in releases"
+                  :key="release.name"
+                  :card="release"
+                  :active="release.name === selectedName"
+                  :mobile="mobile"
+                  @over-release="setSelectedRelease" />
+              </div>
+            </div>
           </div>
 
         </div>
@@ -199,9 +205,13 @@ export default {
 .releases-panel {
   max-height: 100vh;
   overflow: scroll;
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+  &:-webkit-scrollbar { 
+      display: none;  /* Safari and Chrome */
+  }
   @include small {
     min-height: toRem(1080);
-    padding-left: 1rem;
   }
 }
 
@@ -215,27 +225,12 @@ export default {
     right: 1rem;
   }
   @include small {
-    transform: translateX(100%);
-    right: calc(100% - 1rem);
-  }
-  @include mini {
-    right: calc(100% - 0.5rem);
-  }
-}
-
-.release-list {
-  padding: 0 toRem(95);
-  @include large {
-    padding: 0 toRem(40);
-  }
-  @include medium {
-    padding: 0 toRem(75);
-  }
-  @include small {
-    padding: 0;
+    bottom: unset;
+    top: toRem(16);
+    right: 0.75rem;
   }
   @include tiny {
-    padding-right: 1rem;
+    right: 0rem;
   }
 }
 

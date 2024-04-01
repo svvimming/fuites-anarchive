@@ -2,7 +2,7 @@
   <div :class="['info-content', { 'high-z': visible }]">
     <div class="grid full">
       <div
-        class="col-6_lg-7_md-8_sm-10"
+        class="col-6_lg-7_md-8_sm-10_ti-12"
         data-push-left="off-1_sm-0">
         <div :class="['info-panel', { visible }]">
 
@@ -49,7 +49,8 @@ export default {
   margin-top: toRem(419);
   z-index: 1;
   @include small {
-    margin-top: calc(toRem(419) + $panelOffsetTopMobile);
+    margin-top: calc(toRem(160));
+    padding-left: calc(33.5% + 1rem - toRem(48));
   }
   &.high-z {
     z-index: 10;
@@ -60,6 +61,10 @@ export default {
   line-height: 1.7;
   font-weight: 400;
   margin-bottom: 2rem;
+  font-size: toRem(16);
+  @include small {
+    font-size: toRem(15);
+  }
 }
 
 #close-info {
