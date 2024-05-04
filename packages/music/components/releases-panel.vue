@@ -218,8 +218,8 @@ export default {
 #close-releases {
   position: absolute;
   font-weight: 500;
+  top: toRem(48);
   right: 1.5rem;
-  bottom: 12%;
   padding: 1rem;
   @include large {
     right: 1rem;
