@@ -409,14 +409,17 @@ $panelTopPercentageMobile: 40%;
       letter-spacing: 6px;
     }
     @include small {
-      transition: 1000ms ease;
-      right: 1rem;
-      letter-spacing: 1px;
-      transform: translateY(-100%);
-      .letter {
-        transform: var(--transition-end);
-      }
+      opacity: 0.5;
     }
+    // @include small {
+    //   transition: 1000ms ease;
+    //   right: 1rem;
+    //   letter-spacing: 1px;
+    //   transform: translateY(-100%);
+    //   .letter {
+    //     transform: var(--transition-end);
+    //   }
+    // }
   }
   &.view-info {
     opacity: 0;
