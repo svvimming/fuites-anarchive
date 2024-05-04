@@ -151,7 +151,7 @@ export default {
   &:first-child {
     margin-top: toRem(130);
     @include small {
-      margin-top: toRem(260);
+      margin-top: calc(50vh - 32.5vw);
     }
   }
   &:last-child {

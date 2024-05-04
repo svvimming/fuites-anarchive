@@ -25,7 +25,7 @@
           </p>
           <br>
           <p>
-            The website itself affords a space where traces - images, sounds, text - can be uploaded and worked with as a practice of transversal encounter with other traces from practices in motion within the collective: sculpture, rug-making, music, sound art, video and animation, to name a few. To faciliate such an encounter, is in important that the space give momentum to voices and propositions that don’t know that they are asking something yet.
+            The website itself affords a space where traces - images, sounds, text - can be uploaded and worked with as a practice of transversal encounter with other traces from practices in motion within the collective: sculpture, rug-making, music, sound art, video and animation, to name a few. To facilitate such an encounter, is in important that the space give momentum to voices and propositions that don’t know that they are asking something yet.
           </p>
           <br>
           ...
