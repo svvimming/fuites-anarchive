@@ -323,10 +323,12 @@ export default {
     onDrop (evt) {
       if (this.authenticated && this.page) {
         evt.preventDefault()
-        const rect = evt.target.getBoundingClientRect()
-        const x = evt.clientX - rect.left
-        const y = evt.clientY - rect.top
+        const rect = this.$refs.page.getBoundingClientRect()
         const thingieId = evt.dataTransfer.getData('_id')
+        const width = evt.dataTransfer.getData('thingie-width')
+        const height = evt.dataTransfer.getData('thingie-height')
+        const x = evt.clientX - rect.left - (width * 0.5)
+        const y = evt.clientY - rect.top - (height * 0.5)
         this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
           _id: thingieId,
           location: this.pageName,

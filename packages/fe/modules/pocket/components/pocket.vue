@@ -9,6 +9,7 @@
         :exposure="0.3" />
 
       <div
+        ref="pocket"
         class="pocket"
         @drop="onDrop($event)"
         @dragover.prevent
@@ -151,10 +152,12 @@ export default {
     onDrop (evt) {
       if (this.authenticated) {
         evt.preventDefault()
-        const rect = evt.target.getBoundingClientRect()
-        const x = Math.max(0, Math.min(640, evt.clientX - rect.left))
-        const y = Math.max(0, Math.min(400, evt.clientY - rect.top))
+        const rect = this.$refs.pocket.getBoundingClientRect()
         const thingieId = evt.dataTransfer.getData('_id')
+        const width = evt.dataTransfer.getData('thingie-width')
+        const height = evt.dataTransfer.getData('thingie-height')
+        const x = Math.max(0, Math.min(640, evt.clientX - rect.left - (width * 0.5)))
+        const y = Math.max(0, Math.min(400, evt.clientY - rect.top - (height * 0.5)))
         this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
           _id: thingieId,
           location: 'pocket',
