@@ -45,8 +45,6 @@ try {
 
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
-// require('@Module_Thingie')
-// require('@Module_Upload')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
 
@@ -60,6 +58,99 @@ const socket = GenerateWebsocketClient(instance)
 socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
 
 // /////////////////////////////////////////////////////////////////// Functions
+// -------------------------------------------------------------- cleanupUploads
+const cleanupUploads = async () => {
+  try {
+    const uploadFiles = Fs.readdirSync(UPLOADS_DIR)
+    const files = uploadFiles.length
+    const uploadDocuments = await MC.mongoInstances[instance].model.Upload.find({})
+    const deletedFiles = []
+    for (let i = 0; i < files; i++) {
+      const file = uploadFiles[i]
+      const uploadId = file.split('.')[0]
+      const uploadExists = uploadDocuments.find(doc => doc._id.toString() === uploadId)
+      if (!uploadExists) {
+        Fs.unlink(`${UPLOADS_DIR}/${file}`, (err) => {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log(`deleted file ${file} from the uploads directory.`)
+          }
+        })
+      }
+    }
+    if (deletedFiles.length) {
+      console.log('deleted the following files from uploads:')
+      console.log(deletedFiles)
+    }
+    const len = uploadDocuments.length
+    for (let i = 0; i < len; i++) {
+      const upload = uploadDocuments[i]
+      const uploadFileExists = Fs.existsSync(`${UPLOADS_DIR}/${upload._id.toString()}.${upload.file_ext}`)
+      if (!uploadFileExists) {
+        await MC.mongoInstances[instance].model.Upload.deleteOne({ _id: upload._id })
+        console.log(`deleted upload document ${upload._id}.`)
+      }
+    }
+  } catch (e) {
+    console.log('================================= [Scavenger: cleanupUploads]')
+    console.log(e)
+  }
+}
+
+// ------------------------------------------------------------- cleanupThingies
+const cleanupThingies = async () => {
+  try {
+    const pageBounds = { pocket: { x: 640, y: 400 } }
+    const pages = await MC.mongoInstances[instance].model.Page.find({})
+    pages.forEach((page) => {
+      pageBounds[page.name] = page.bounds
+    })
+    const thingies = await MC.mongoInstances[instance].model.Thingie.find({}).populate({
+      path: 'file_ref',
+      select: '_id file_ext filename'
+    })
+    const len = thingies.length
+    for (let i = 0; i < len; i++) {
+      const thingie = thingies[i]
+      if (thingie.thingie_type !== 'text') {
+        const upload = thingie.file_ref
+        const uploadPath = `${UPLOADS_DIR}/${upload?._id}.${upload?.file_ext}`
+        if (!upload || !Fs.existsSync(uploadPath) || !upload.filename) {
+          await deleteThingie(thingie._id)
+          continue
+        }
+      }
+      const bounds = pageBounds[thingie.location]
+      if (!thingie.location || !bounds) {
+        await deleteThingie(thingie._id)
+      }
+      if (
+        bounds && (
+          thingie.at.x < 0 ||
+          thingie.at.x > (bounds.x - thingie.width) ||
+          thingie.width > bounds.x ||
+          thingie.at.y < 0 ||
+          thingie.at.y > (bounds.y - 20)
+        )
+      ) {
+        console.log(`${thingie._id} moved inside the page bounds.`)
+        await MC.mongoInstances[instance].model.Thingie.findOneAndUpdate({ _id: thingie._id }, {
+          width: Math.min(thingie.width, bounds.x),
+          at: {
+            x: Math.max(0, Math.min(thingie.at.x, bounds.x - thingie.width)),
+            y: Math.max(0, Math.min(thingie.at.y, bounds.y - 20)),
+            z: thingie.at.z
+          }
+        })
+      }
+    }
+  } catch (e) {
+    console.log('==================================== [Scavenger: cleanupCron]')
+    console.log(e)
+  }
+}
+
 // --------------------------------------------------------------- deleteThingie
 const deleteThingie = async (thingieId) => {
   try {
@@ -110,7 +201,6 @@ const digestCompostThingies = async () => {
     const len = compostThingies.length
     for (let i = 0; i < len; i++) {
       const thingie = compostThingies[i]
-      console.log(thingie)
       await deleteThingie(thingie._id)
     }
   } catch (e) {
@@ -132,6 +222,8 @@ MC.app.on('mongoose-connected', async () => {
       throw new Error('The provided instance does not exist.')
     }
     await digestCompostThingies()
+    await cleanupThingies()
+    await cleanupUploads()
     console.log('🪱 Scavenger updates completed')
     socket.disconnect()
     process.exit(0)

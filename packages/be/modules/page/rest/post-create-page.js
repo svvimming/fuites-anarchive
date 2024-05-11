@@ -14,6 +14,10 @@ for (let i = 0; i < mongoInstances.length; i++) {
   MC.app.post(`/${instance}/post-create-page`, async (req, res) => {
     try {
       const body = req.body
+      if (body.page_name === 'pocket') {
+        SendData(res, 400, 'Error: cannot name a page \'pocket\'!', false)
+        return
+      }
       const created = await MC.mongoInstances[instance].model.Page.create({
         name: body.page_name,
         overflow_page: body.overflow_page ? body.overflow_page : '',

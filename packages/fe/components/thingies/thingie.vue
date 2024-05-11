@@ -267,9 +267,12 @@ export default {
     },
     startDrag (evt) {
       if (this.authenticated) {
+        const rect = evt.target.getBoundingClientRect()
         evt.dataTransfer.dropEffect = 'move'
         evt.dataTransfer.effectAllowed = 'move'
         evt.dataTransfer.setData('_id', this.thingie._id)
+        evt.dataTransfer.setData('thingie-width', rect.width)
+        evt.dataTransfer.setData('thingie-height', rect.height)
       }
     },
     wheel (evt) {
