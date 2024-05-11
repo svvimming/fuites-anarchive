@@ -101,7 +101,7 @@ const cleanupUploads = async () => {
 // ------------------------------------------------------------- cleanupThingies
 const cleanupThingies = async () => {
   try {
-    const pageBounds = {}
+    const pageBounds = { pocket: { x: 640, y: 400 } }
     const pages = await MC.mongoInstances[instance].model.Page.find({})
     pages.forEach((page) => {
       pageBounds[page.name] = page.bounds
@@ -134,6 +134,7 @@ const cleanupThingies = async () => {
           thingie.at.y > (bounds.y - 20)
         )
       ) {
+        console.log(`${thingie._id} moved inside the page bounds.`)
         await MC.mongoInstances[instance].model.Thingie.findOneAndUpdate({ _id: thingie._id }, {
           width: Math.min(thingie.width, bounds.x),
           at: {
