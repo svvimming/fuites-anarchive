@@ -221,11 +221,12 @@ $pocketHeight: 30rem;
 
 .pocket-container {
   position: relative;
+  padding: 2rem;
   overflow: hidden;
   border-radius: 50%;
   z-index: 1;
-  width: $pocketWidth;
-  height: $pocketHeight;
+  width: calc($pocketWidth + 4rem);
+  height: calc($pocketHeight + 4rem);
 }
 
 .pocket {
@@ -239,8 +240,8 @@ $pocketHeight: 30rem;
   position: absolute;
   z-index: -1;
   opacity: 0.9;
-  width: $pocketWidth;
-  height: $pocketHeight;
+  width: calc($pocketWidth + 4rem);
+  height: calc($pocketHeight + 4rem);
   :deep(.glCanvas) {
     width: calc($pocketWidth + 10rem);
     height: calc($pocketHeight + 10rem);

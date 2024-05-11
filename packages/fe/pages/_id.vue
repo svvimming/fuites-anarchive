@@ -321,8 +321,8 @@ export default {
       this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
+      evt.preventDefault()
       if (this.authenticated && this.page) {
-        evt.preventDefault()
         const rect = this.$refs.page.getBoundingClientRect()
         const thingieId = evt.dataTransfer.getData('_id')
         const width = evt.dataTransfer.getData('thingie-width')
