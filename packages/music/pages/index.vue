@@ -54,6 +54,7 @@
       <ReleasesPanel
         :visible="view === 'releases'"
         :releases="releases"
+        :default-release="featured"
         @close-releases="view = 'index'" />
 
     </main>
@@ -100,10 +101,18 @@ export default {
     },
     releases () {
       return this.landing.data.index.releases
+    },
+    featured () {
+      const query = this.$route.query
+      const routeRelease = this.releases.find(release => release.slug === query.release)
+      return routeRelease?.slug
     }
   },
 
   mounted () {
+    if (this.featured) {
+      this.view = 'releases'
+    }
     this.loaded = true
   }
 }
