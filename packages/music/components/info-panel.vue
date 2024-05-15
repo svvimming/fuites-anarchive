@@ -46,10 +46,10 @@ export default {
 .info-content {
   position: absolute;
   padding-left: calc(33.5% + 1rem);
-  margin-top: toRem(419);
+  margin-top: toRem(365);
   z-index: 1;
   @include small {
-    margin-top: calc(toRem(160));
+    margin-top: toRem(210);
     padding-left: calc(33.5% + 1rem - toRem(48));
   }
   &.high-z {

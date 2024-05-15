@@ -16,8 +16,9 @@
             {{ selected.artist }}
           </div>
 
-          <div class="description">
-            {{ selected.description }}
+          <div
+            class="description"
+            v-html="selected.description">
           </div>
 
         </div>
@@ -42,9 +43,9 @@
               <div class="release-list">
                 <ReleaseCard
                   v-for="release in releases"
-                  :key="release.name"
+                  :key="release.slug"
                   :card="release"
-                  :active="release.name === selectedName"
+                  :active="release.slug === selectedRelease"
                   :mobile="mobile"
                   @over-release="setSelectedRelease" />
               </div>
@@ -79,12 +80,17 @@ export default {
       type: Array,
       required: true,
       default: () => []
+    },
+    defaultRelease: {
+      type: String,
+      required: false,
+      default: ''
     }
   },
 
   data () {
     return {
-      selectedName: '',
+      selectedRelease: '',
       resize: false,
       mobile: false
     }
@@ -92,19 +98,28 @@ export default {
 
   computed: {
     selected () {
-      return this.releases.find(item => item.name === this.selectedName)
+      return this.releases.find(item => item.slug === this.selectedRelease)
     }
   },
 
   watch: {
     visible (val) {
-      if (!val && this.selectedName) {
-        this.selectedName = ''
+      if (val && this.defaultRelease) {
+        this.setSelectedRelease(this.defaultRelease)
+      } else {
+        if (this.$route.query.release) {
+          this.$router.push({ query: null })
+        }
       }
     }
   },
 
   mounted () {
+    if (this.defaultRelease) {
+      this.setSelectedRelease(this.defaultRelease)
+    } else {
+      this.selectedRelease = this.releases[0].slug
+    }
     this.resize = () => { this.checkSmallBreakpoint() }
     window.addEventListener('resize', this.resize)
     this.checkSmallBreakpoint()
@@ -118,12 +133,10 @@ export default {
 
   methods: {
     setSelectedRelease (incoming) {
-      this.selectedName = incoming
+      this.selectedRelease = incoming
+      this.$router.push({ query: { release: this.$slugify(incoming) } })
     },
     checkSmallBreakpoint () {
-      if (this.selectedName) {
-        this.selectedName = ''
-      }
       if (window.matchMedia('(max-width: 53.125rem)').matches) {
         if (!this.mobile) {
           this.mobile = true
@@ -154,11 +167,22 @@ export default {
   height: 100%;
 }
 
+.release-list {
+  @include small {
+    padding-top: toRem(150);
+    padding-bottom: toRem(150);
+  }
+  @include mini {
+    padding-top: 0;
+  }
+}
+
 .selected-release {
   margin-top: toRem(313);
   padding-left: calc(toRem(90) - 0.5rem);
-  padding-right: toRem(60);
+  padding-right: toRem(0);
   @include medium {
+    margin-top: toRem(253);
     padding-left: calc(toRem(60) - 0.5rem);
     padding-right: 0;
   }
@@ -189,6 +213,7 @@ export default {
 .description {
   line-height: 1.6;
   font-weight: 400;
+  font-size: toRem(13);
 }
 
 .selected-release,

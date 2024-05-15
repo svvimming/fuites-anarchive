@@ -3,9 +3,9 @@
 
     <div
       class="image"
-      @mouseover="$emit('over-release', name)"
-      @click="$emit('over-release', name)">
-      <img :src="image" :alt="`${name}-album-artwork`" />
+      @mouseover="$emit('over-release', slug)"
+      @click="$emit('over-release', slug)">
+      <img :src="image" :alt="`${slug}-album-artwork`" />
     </div>
 
     <div
@@ -15,18 +15,7 @@
       <div
         ref="content"
         class="text-content">
-        <div class="name">
-          {{ name }}
-        </div>
-        <div class="artist">
-          {{ artist }}
-        </div>
-        <div class="description">
-          {{ description }}
-        </div>
-        <div
-          v-if="mobile"
-          class="links mobile-only">
+        <div class="links mobile-only">
           <Button
             v-for="link in links"
             :key="link.text"
@@ -36,8 +25,17 @@
             :to="link.to"
             class="release-link" />
         </div>
+        <div class="name">
+          {{ name }}
+        </div>
+        <div class="artist">
+          {{ artist }}
+        </div>
+        <div
+          class="description"
+          v-html="description">
+        </div>
       </div>
-      
     </div>
 
     <div
@@ -50,6 +48,7 @@
         :tag="link.tag"
         :disabled="link.disabled"
         :to="link.to"
+        :target="link.target"
         class="release-link" />
     </div>
 
@@ -98,6 +97,9 @@ export default {
     links () {
       return this.card.links
     },
+    slug () {
+      return this.card.slug
+    },
     name () {
       return this.card.name
     },
@@ -114,15 +116,19 @@ export default {
 
   watch: {
     active () {
-      const height = this.getInfoHeight()
-      if (this.infoHeight !== height) {
-        this.infoHeight = height
-      }
+      this.$nextTick(() => {
+        const height = this.getInfoHeight()
+        if (this.infoHeight !== height) {
+          this.infoHeight = height
+        }
+      })
     }
   },
 
   mounted () {
-    this.infoHeight = this.getInfoHeight()
+    this.$nextTick(() => {
+      this.infoHeight = this.getInfoHeight()
+    })
   },
 
   methods: {
@@ -139,10 +145,10 @@ export default {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .release {
-  max-width: toRem(210);
+  width: toRem(200);
   margin-bottom: toRem(52);
   @include small {
-    max-width: unset;
+    width: unset;
     margin-bottom: toRem(152);
   }
   @include mini {
@@ -151,7 +157,7 @@ export default {
   &:first-child {
     margin-top: toRem(130);
     @include small {
-      margin-top: calc(50vh - 32.5vw);
+      margin-top: calc(50vh - 32.5vw - 5rem);
     }
   }
   &:last-child {
@@ -162,7 +168,7 @@ export default {
   }
   &.active {
     .image {
-      transform: scale(1.05);
+      transform: scale(1.66);
       @include small {
         transform: scale(1.1) translateY(-14px);
       }
@@ -177,21 +183,19 @@ export default {
 }
 
 .image {
-  width: toRem(210);
-  height: toRem(210);
-  margin-bottom: 0.75rem;
-  transition: transform 300ms ease;
-  @include medium {
-    width: toRem(180);
-    height: toRem(180);
-  }
+  width: toRem(120);
+  height: toRem(120);
+  margin: toRem(40);
+  transition: transform 400ms ease;
+  box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.5);
   @include small {
     width: 100%;
     height: unset;
-    margin-bottom: toRem(32);
+    margin: unset;
+    margin-bottom: toRem(48);
   }
   @include mini {
-    margin-bottom: toRem(16);
+    margin-bottom: toRem(32);
   }
   img {
     width: 100%;
@@ -227,16 +231,17 @@ export default {
 .description {
   line-height: 1.6;
   font-weight: 400;
+  font-size: toRem(13);
 }
 
 .links {
   display: flex;
   justify-content: center;
+  padding: 1.5rem 0;
   opacity: 0;
   transition: 350ms ease;
   &.mobile-only {
-    justify-content: flex-start;
-    padding: 1rem 0;
+    padding: 0 0 1.5rem 0;
   }
 }
 
