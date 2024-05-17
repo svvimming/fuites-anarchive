@@ -15,15 +15,15 @@
       ref="touchPropboard"
       :pagename="currentPage" />
 
+    <LandingSite
+      :tips-open="tipsOpen"
+      :mobile="true"
+      page="page"
+      :class="{ 'tips-open': tipsOpen }" />
+
     <div class="grid-noGutter">
       <div class="col">
         <div :class="['touchmode-toolbar', { authenticated }]">
-
-            <LandingSite
-              :tips-open="tipsOpen"
-              :mobile="true"
-              page="page"
-              :class="{ 'tips-open': tipsOpen }" />
 
             <button
               v-if="authenticated && thingie"
@@ -271,11 +271,14 @@ export default {
     width: unset;
     .inner-panel {
       position: fixed;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
       padding: 2rem 1rem;
       bottom: $touchmodeToolbarHeight;
       left: 0;
       width: 100%;
-      height: calc(100vh - $touchmodeToolbarHeight - 0.5px);
+      height: 2000px;
       overflow: scroll;
       background-color: rgba(white, 0.0);
       visibility: hidden;

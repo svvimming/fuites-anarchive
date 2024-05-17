@@ -437,8 +437,9 @@ export default {
   }
   &.locked {
     pointer-events: none;
+    touch-action: none;
     &:before {
-      opacity: 0;
+      opacity: 0 !important;
     }
   }
   &.editing {
