@@ -257,7 +257,8 @@ export default {
 
 :deep(.landing-site) {
   position: absolute;
-  top: unset;
+  top: unset !important;
+  bottom: $touchmodeToolbarHeight;
   left: unset;
   width: 100%;
   .inner-panel {
@@ -273,7 +274,7 @@ export default {
       flex-direction: column;
       justify-content: flex-end;
       padding: 2rem 1rem;
-      bottom: $touchmodeToolbarHeight;
+      bottom: 0;
       left: 0;
       width: 100%;
       height: 2000px;
