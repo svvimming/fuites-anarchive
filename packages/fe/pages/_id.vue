@@ -321,10 +321,11 @@ export default {
       this.saveLastUpdate(thingie)
     },
     onDrop (evt) {
-      evt.preventDefault()
       if (this.authenticated && this.page) {
+        evt.preventDefault()
         const rect = this.$refs.page.getBoundingClientRect()
         const thingieId = evt.dataTransfer.getData('_id')
+        const oldLocation = evt.dataTransfer.getData('thingie-location')
         const width = evt.dataTransfer.getData('thingie-width')
         const height = evt.dataTransfer.getData('thingie-height')
         const x = evt.clientX - rect.left - (width * 0.5)
@@ -335,9 +336,9 @@ export default {
           last_update_token: this.pocket.token,
           dragging: false,
           at: { x, y, z: 1 },
-          record_new_location: true
+          record_new_location: oldLocation !== this.pageName
         })
-        if (this.page.state === 'metastable') {
+        if (this.page.state === 'metastable' && oldLocation !== this.pageName) {
           this.createNewPageFromThingie(thingieId)
         }
       }

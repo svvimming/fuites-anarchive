@@ -318,10 +318,8 @@ export default {
   left: 0;
   width: 100%;
   background-color: white;
-  border-top: solid 0.5px rgba($salt, 0.3);
   z-index: 10001;
   &.active {
-    
     &.pocketIsOpen {
       .section-controls {
         height: 200px;
@@ -329,6 +327,7 @@ export default {
     }
   }
   &.expanded {
+    border-top: solid 0.5px rgba($salt, 0.3);
     .section-controls {
       height: 200px;
     }
