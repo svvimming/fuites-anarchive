@@ -2,7 +2,7 @@
   <div
     ref="thingieRef"
     draggable="true"
-    :class="['touch-thingie', { locked: !authenticated }, { editing }]"
+    :class="['touch-thingie', { locked: !authenticated || (touchmode && !touchToolbar) }, { editing }]"
     :style="styles"
     tabindex="1"
     :data-thingie-id="thingie._id"
@@ -96,6 +96,8 @@ export default {
   computed: {
     ...mapGetters({
       landing: 'general/landing',
+      touchmode: 'general/touchmode',
+      touchToolbar: 'general/touchToolbar',
       authenticated: 'general/authenticated',
       zindices: 'collections/zindices',
       editorThingie: 'collections/editorThingie'
@@ -323,6 +325,10 @@ export default {
   }
   &.locked {
     pointer-events: none;
+    touch-action: none;
+    &:before {
+      opacity: 0 !important;
+    }
   }
   &.editing {
     &:before {

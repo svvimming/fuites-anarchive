@@ -2,7 +2,7 @@
   <div
     ref="thingieRef"
     draggable="true"
-    :class="['thingie', { locked: !authenticated || (touchmode && !touchToolbar) }, { editing }]"
+    :class="['thingie', { locked: !authenticated }, { editing }]"
     :style="styles"
     tabindex="1"
     :data-thingie-id="thingie._id"
@@ -122,8 +122,7 @@ export default {
       authenticated: 'general/authenticated',
       zindices: 'collections/zindices',
       editorThingie: 'collections/editorThingie',
-      audioContext: 'mixer/audioContext',
-      touchToolbar: 'general/touchToolbar'
+      audioContext: 'mixer/audioContext'
     }),
     fonts () {
       return this.landing.data.font_families
@@ -437,10 +436,6 @@ export default {
   }
   &.locked {
     pointer-events: none;
-    touch-action: none;
-    &:before {
-      opacity: 0 !important;
-    }
   }
   &.editing {
     &:before {

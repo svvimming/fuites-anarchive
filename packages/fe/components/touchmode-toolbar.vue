@@ -256,7 +256,7 @@ export default {
 }
 
 :deep(.landing-site) {
-  position: relative;
+  position: absolute;
   top: unset;
   left: unset;
   width: 100%;
@@ -267,10 +267,8 @@ export default {
     align-items: center;
   }
   &.authenticated {
-    position: absolute;
-    width: unset;
     .inner-panel {
-      position: fixed;
+      position: absolute;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;

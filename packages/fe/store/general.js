@@ -13,7 +13,7 @@ const state = () => ({
   portalView: true,
   tracesView: false,
   modal: false,
-  touchmode: true,
+  touchmode: false,
   touchToolbar: false
 })
 
