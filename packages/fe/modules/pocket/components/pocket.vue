@@ -154,18 +154,21 @@ export default {
         evt.preventDefault()
         const rect = this.$refs.pocket.getBoundingClientRect()
         const thingieId = evt.dataTransfer.getData('_id')
+        const oldLocation = evt.dataTransfer.getData('thingie-location')
         const width = evt.dataTransfer.getData('thingie-width')
         const height = evt.dataTransfer.getData('thingie-height')
         const x = Math.max(0, Math.min(640, evt.clientX - rect.left - (width * 0.5)))
         const y = Math.max(0, Math.min(400, evt.clientY - rect.top - (height * 0.5)))
-        this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
-          _id: thingieId,
-          location: 'pocket',
-          last_update_token: this.pocket.token,
-          dragging: false,
-          at: { x, y, z: 1 },
-          record_new_location: true
-        })
+        if (oldLocation !== 'pocket') {
+          this.socket.emit(`${this.$config.mongoInstance}|update-thingie`, {
+            _id: thingieId,
+            location: 'pocket',
+            last_update_token: this.pocket.token,
+            dragging: false,
+            at: { x, y, z: 1 },
+            record_new_location: true
+          })
+        }
       }
     }
   }
@@ -207,6 +210,7 @@ $pocketHeight: 30rem;
       border-radius: 0;
     }
     #pocket-shader {
+      transform: translate(-2rem, -4rem);
       :deep(.glCanvas) {
         width: calc(100% + 10rem);
         height: calc(100% + 10rem);

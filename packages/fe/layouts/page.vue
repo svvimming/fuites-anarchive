@@ -75,7 +75,7 @@
     </button>
 
     <!-- ================================================== TOUCH TOOLBAR == -->
-    <TouchmodeToolbar 
+    <TouchmodeToolbar
       v-if="touchmode"
       :thingie="editorThingie"
       :pocket-is-open="pocketIsOpen"

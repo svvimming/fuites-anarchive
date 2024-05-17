@@ -1,5 +1,14 @@
 <template>
-  <div class="toolbar-container">
+  <div :class="['toolbar-container', { open: touchToolbar }]">
+
+    <button
+      class="toolbar-toggle"
+      @click="toggleToolbar">
+      <span class="text">
+        tools
+      </span>
+      <Chevron />
+    </button>
 
     <PropBoard
       v-if="authenticated && currentPage"
@@ -78,7 +87,7 @@
 
 <script>
 // ====================================================================== Import
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 import LandingSite from '@/components/landing-site'
 import PropBoard from '@/components/prop-board'
@@ -137,7 +146,8 @@ export default {
   computed: {
     ...mapGetters({
       authenticated: 'general/authenticated',
-      editorThingie: 'collections/editorThingie'
+      editorThingie: 'collections/editorThingie',
+      touchToolbar: 'general/touchToolbar'
     })
   },
 
@@ -154,6 +164,9 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      setTouchToolbar: 'general/setTouchToolbar'
+    }),
     toggleTips () {
       this.tipsOpen = !this.tipsOpen
     },
@@ -175,6 +188,12 @@ export default {
         propboard.closeEditor()
         this.propboardOpen = false
       }
+    },
+    toggleToolbar () {
+      this.setTouchToolbar(!this.touchToolbar)
+      if (this.pocketIsOpen) {
+        this.$emit('toggle-pocket')
+      }
     }
   }
 }
@@ -191,13 +210,49 @@ export default {
   border-top: solid 0.5px rgba($salt, 0.3);
   background-color: white;
   z-index: 10000;
+  transform: translateY(100%);
+  transition: 200ms ease;
+  &.open {
+    transform: translateY(0);
+    .toolbar-toggle {
+      :deep(.icon-chevron) {
+        transform: rotate(0deg);
+      }
+    }
+  }
 }
+
 .touchmode-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   height: $touchmodeToolbarHeight;
+}
+
+.toolbar-toggle {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.875rem 0.125rem 0.875rem;
+  top: 0;
+  left: 1rem;
+  color: #7e7c8f;
+  transform: translateY(-100%);
+  background-color: white;
+  border: solid 1px $lavender;
+  border-top-left-radius: 1.25rem;
+  border-top-right-radius: 1.25rem;
+  border-bottom: none;
+  span {
+    margin-right: 0.5rem;
+  }
+  :deep(.icon-chevron) {
+    width: 7px;
+    height: 6px;
+    transition: 200ms ease;
+    transform: rotate(180deg);
+  }
 }
 
 :deep(.landing-site) {
@@ -217,10 +272,10 @@ export default {
     .inner-panel {
       position: fixed;
       padding: 2rem 1rem;
-      top: 0;
+      bottom: $touchmodeToolbarHeight;
       left: 0;
       width: 100%;
-      height: calc(100% - $touchmodeToolbarHeight - 0.5px);
+      height: calc(100vh - $touchmodeToolbarHeight - 0.5px);
       overflow: scroll;
       background-color: rgba(white, 0.0);
       visibility: hidden;
