@@ -438,7 +438,7 @@ export default {
   &.locked {
     pointer-events: none;
     &:before {
-      display: none;
+      opacity: 0;
     }
   }
   &.editing {

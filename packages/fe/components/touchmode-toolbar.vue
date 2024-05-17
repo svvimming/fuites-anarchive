@@ -191,6 +191,9 @@ export default {
     },
     toggleToolbar () {
       this.setTouchToolbar(!this.touchToolbar)
+      if (this.pocketIsOpen) {
+        this.$emit('toggle-pocket')
+      }
     }
   }
 }
@@ -269,10 +272,10 @@ export default {
     .inner-panel {
       position: fixed;
       padding: 2rem 1rem;
-      top: 0;
+      bottom: $touchmodeToolbarHeight;
       left: 0;
       width: 100%;
-      height: calc(100% - $touchmodeToolbarHeight - 0.5px);
+      height: calc(100vh - $touchmodeToolbarHeight - 0.5px);
       overflow: scroll;
       background-color: rgba(white, 0.0);
       visibility: hidden;
