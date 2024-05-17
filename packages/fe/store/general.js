@@ -1,6 +1,5 @@
 // ///////////////////////////////////////////////////////// Imports & Variables
 // -----------------------------------------------------------------------------
-import CloneDeep from 'lodash/cloneDeep'
 import LandingData from '@/data/landing.json'
 
 // /////////////////////////////////////////////////////////////////////// State
@@ -14,7 +13,8 @@ const state = () => ({
   portalView: true,
   tracesView: false,
   modal: false,
-  touchmode: false
+  touchmode: true,
+  touchToolbar: false
 })
 
 // ///////////////////////////////////////////////////////////////////// Getters
@@ -28,7 +28,8 @@ const getters = {
   portalView: state => state.portalView,
   tracesView: state => state.tracesView,
   modal: state => state.modal,
-  touchmode: state => state.touchmode
+  touchmode: state => state.touchmode,
+  touchToolbar: state => state.touchToolbar
 }
 
 // ///////////////////////////////////////////////////////////////////// Actions
@@ -100,6 +101,10 @@ const actions = {
   // ////////////////////////////////////////////////////////////// setTouchMode
   setTouchMode ({ commit }, value) {
     commit('SET_TOUCH_MODE', value)
+  },
+  // //////////////////////////////////////////////////////////// setTouchToolbar
+  setTouchToolbar ({ commit }, value) {
+    commit('SET_TOUCH_EDITOR', value)
   }
 }
 
@@ -138,6 +143,9 @@ const mutations = {
   },
   SET_TOUCH_MODE (state, value) {
     state.touchmode = value
+  },
+  SET_TOUCH_EDITOR (state, value) {
+    state.touchToolbar = value
   }
 }
 
