@@ -146,7 +146,7 @@ const pagePreaccelerator = async () => {
             populate: { path: 'thingie_ref', select: 'colors' }
           })
         socket.emit(`${instance}|cron|page-state-update|initialize`, updated)
-      } else if (totalBytes <= 30000000 && pageThingies.length <= 32 && page.state === 'leaking') { // change page state to clumping
+      } else if (totalBytes <= 36000000 && pageThingies.length <= 36 && page.state === 'leaking') { // change page state to clumping
         const updated = await MC.mongoInstances[instance].model.Page
           .findOneAndUpdate({ _id: page._id }, { state: 'clumping' }, { new: true })
           .populate({

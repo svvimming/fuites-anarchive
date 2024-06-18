@@ -98,6 +98,10 @@ const ThingieSchema = new Schema({
     type: String,
     required: true
   },
+  last_update: {
+    type: Date,
+    required: false
+  },
   consistencies: {
     type: [String],
     required: false

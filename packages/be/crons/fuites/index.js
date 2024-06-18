@@ -80,16 +80,16 @@ const thingieMigrator = async () => {
         const thingies = await MC.mongoInstances[instance].model.Thingie
           .find({ location: page.name })
           .sort({ preacceleration: 'desc' })
-        // GOA is updating all thingies every day so this block always returns a recently updated true value
-        // and doesn't result in migrations. Need to add a new updated key to thingies which only records token updates
-        // const now = Date.now()
-        // const gracePeriod = Rules[instance].fuites.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
-        // console.log('grace period', gracePeriod)
-        // const recentlyUpdated = thingies.some((thingie) => {
-        //   const lastUpdated = new Date(thingie.updatedAt)
-        //   return lastUpdated.getTime() > now - gracePeriod
-        // })
-        if (thingies.length) { // && !recentlyUpdated) {
+        const now = Date.now()
+        const gracePeriod = Rules[instance].fuites.milliseconds_since_updated_grace_period || 1000 * 60 * 60 * 24 // one day in milliseconds
+        const recentlyUpdated = thingies.some((thingie) => {
+          if (thingie.last_update) {
+            const lastUpdated = new Date(thingie.last_update)
+            return lastUpdated.getTime() > now - gracePeriod
+          }
+          return false
+        })
+        if (thingies.length && !recentlyUpdated) {
           const overflow = await MC.mongoInstances[instance].model.Page.findOne({ overflow_page: page.name })
           let newPageLocation = ''
           if (overflow && !preventDepositList.includes(overflow.name)) {

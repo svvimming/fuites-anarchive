@@ -33,6 +33,7 @@ for (let i = 0; i < mongoInstances.length; i++) {
         clip: false,
         creator_token: body.creator_token,
         last_update_token: body.last_update_token ? body.last_update_token : body.creator_token,
+        last_update: Date.now(),
         thingie_type: body.thingie_type,
         text: body.text,
         fontsize: body.fontsize ? body.fontsize : 13,

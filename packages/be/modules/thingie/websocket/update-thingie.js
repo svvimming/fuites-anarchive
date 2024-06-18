@@ -50,7 +50,7 @@ for (let i = 0; i < mongoInstances.length; i++) {
         }
         updated = await thingieWithLocationHistory(instance, incoming)
       } else {
-        incoming.$inc = { update_count: 1 }
+        incoming.$inc = { update_count: 1, last_update: Date.now() }
         updated = await MC.mongoInstances[instance].model.Thingie
           .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
           .populate({
