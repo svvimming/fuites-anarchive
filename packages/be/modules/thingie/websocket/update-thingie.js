@@ -43,6 +43,7 @@ for (let i = 0; i < mongoInstances.length; i++) {
     name: `${instance}|update-thingie`,
     async handler (incoming) {
       let updated
+      incoming.last_update = Date.now()
       if (incoming.record_new_location) {
         delete incoming.record_new_location
         if (incoming.location === 'compost') {
@@ -50,7 +51,7 @@ for (let i = 0; i < mongoInstances.length; i++) {
         }
         updated = await thingieWithLocationHistory(instance, incoming)
       } else {
-        incoming.$inc = { update_count: 1, last_update: Date.now() }
+        incoming.$inc = { update_count: 1 }
         updated = await MC.mongoInstances[instance].model.Thingie
           .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
           .populate({
