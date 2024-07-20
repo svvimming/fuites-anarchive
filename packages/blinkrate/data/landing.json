@@ -3,7 +3,7 @@
     "links": [
       {
         "component": "Bingo",
-        "text": "blinkrate",
+        "text": "tunnel.help",
         "route": "/",
         "bingo": {
           "lsx": 20,
@@ -25,7 +25,7 @@
     "links": [
       {
         "component": "Bingo",
-        "text": "blinkrate",
+        "text": "tunnel.help",
         "route": "/",
         "bingo": {
           "lsx": 20,
