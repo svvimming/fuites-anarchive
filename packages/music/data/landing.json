@@ -51,13 +51,13 @@
         "links": [
           {
             "text": "streaming",
-            "to": "https://open.spotify.com/artist/1kVUbhL1E0pxUauZNIqnWu?si=omE3KTLRQKKuEr6WtQ2S5g",
+            "to": "https://open.spotify.com/album/5ia3N7EbJM4FjIpG07Gxgz?si=3HNBJRh_TXqFa89mwq9LHw",
             "tag": "a",
             "target": "_blank"
           },
           {
             "text": "buy",
-            "to": "https://fuites.bandcamp.com/album/pratica",
+            "to": "https://fuites.bandcamp.com/album/rolling-unrolling",
             "tag": "a",
             "target": "_blank"
           },
