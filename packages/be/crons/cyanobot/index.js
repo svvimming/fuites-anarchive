@@ -93,7 +93,7 @@ const pageTemperatureCheck = async () => {
     // check temperature fluctuation and decide if the page should generate a
     // screencap. Also update page temperature to new calculation.
     // push results to an array
-    const margin = Rules[instance]?.cyanobot?.temperature_margin || 100 
+    const margin = Rules[instance]?.cyanobot?.temperature_margin || 100
     const results = []
     for (let i = 0; i < len; i++) {
       const page = pageTemperatures[i]
