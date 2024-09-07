@@ -7,19 +7,19 @@
     "email": "benmunozj@gmail.com"
   },
   "scripts": {
-    "dev-be": "npm run dev -w be",
-    "dev-fe": "npm run dev -w fe",
-    "dev-interweave": "npm run dev -w interweave",
-    "dev-music": "npm run dev -w music",
-    "dev-blinkrate": "npm run dev -w blinkrate",
-    "dev-3e": "npm run dev -w 3e"
+    "be:dev": "npm run dev -w be",
+    "fe:dev": "npm run dev -w fe",
+    "interweave:dev": "npm run dev -w interweave",
+    "music:dev": "npm run dev -w music",
+    "blinkrate:dev": "npm run dev -w blinkrate",
+    "3e:dev": "npm run dev -w 3e"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/svvimming/fuites-anarchive.git"
   },
   "engines": {
-    "node": ">=16.18.0"
+    "node": ">=20.9.0"
   },
   "homepage": "https://github.com/svvimming/fuites-anarchive#readme",
   "workspaces": [

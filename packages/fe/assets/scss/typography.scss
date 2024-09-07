@@ -1,5 +1,82 @@
 // ////////////////////////////////////////////////////////////////// Typography
 // =============================================================================
+$fontAssetPath: '~assets/fonts';
+
+// -------------------------------------------------------------- Nanum Myeongjo
+@font-face {
+  font-family: 'Nanum Myeongjo';
+  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Nanum Myeongjo';
+  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+// ---------------------------------------------------------------- Merriweather
+@font-face {
+  font-family: 'Merriweather';
+  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Merriweather';
+  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Italic.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Merriweather';
+  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+// --------------------------------------------------------------- Courier Prime
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('#{$fontAssetPath}/CourierPrime/CourierPrime-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// --------------------------------------------------------------------- Cousine
+@font-face {
+  font-family: 'Cousine';
+  src: url('#{$fontAssetPath}/Cousine/Cousine-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ------------------------------------------------------------------------ Arvo
+@font-face {
+  font-family: 'Arvo';
+  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ------------------------------------------------------------------------ Arvo
+@font-face {
+  font-family: 'Arvo';
+  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ----------------------------------------------------------------------- Anton
+@font-face {
+  font-family: 'Anton';
+  src: url('#{$fontAssetPath}/Anton/Anton-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ------------------------------------------------------------- Source Code Pro
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('#{$fontAssetPath}/SourceCodePro/SourceCodePro-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
@@ -19,3 +96,82 @@
 @mixin fontWeight_Medium { font-weight: 500; }
 @mixin fontWeight_Semibold { font-weight: 600; }
 @mixin fontWeight_Bold { font-weight: 700; }
+
+//------------------------------------------------------------------------ Fonts
+.anton {
+  @include fontFamily_Anton;
+}
+.arvo {
+  @include fontFamily_Arvo;
+}
+.courier {
+  @include fontFamily_CourierPrime;
+}
+.merriweather {
+  @include fontFamily_Merriweather;
+}
+.nanum {
+  @include fontFamily_NanumMyeongjo;
+}
+.source-code {
+  @include fontFamily_SourceCodePro;
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6,
+p,
+div,
+button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+p,
+div,
+button {
+  line-height: 1.7;
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6 {
+  display: block;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: none;
+}
+
+h1, .h1 {
+  font-size: 3rem;
+  @include small {
+    font-size: 2rem;
+  }
+}
+
+h2, .h2 {
+  font-size: 1.8rem;
+}
+
+h3, .h3 {
+  font-size: 1.6rem;
+}
+
+h4, .h4 {
+  font-size: 1rem;
+}
+
+h5, .h5 {
+  font-size: 0.9rem;
+}
+
+h6, .h6 {
+  font-size: 0.8rem;
+}

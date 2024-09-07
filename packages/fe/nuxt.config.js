@@ -1,144 +1,109 @@
-export default {
-  // ///////////////////////////////////////////////////// Runtime Configuration
-  // ---------------------------------------------------------------------------
-  // ---------------------------------------------------------- [Runtime] Public
-  publicRuntimeConfig: {
-    frontendUrl: (function () {
-      const env = process.env.SERVER_ENV
-      let uri = 'https://localhost:2001'
-      switch (env) {
-        case 'stable': uri = 'https://stable.fuit.es'; break
-        case 'production': uri = 'https://fuit.es'; break
-      } return uri
-    }()),
-    backendUrl: (function () {
-      const env = process.env.SERVER_ENV
-      let uri = 'https://localhost:3001'
-      switch (env) {
-        case 'stable': uri = 'https://stable.fuit.es/api'; break
-        case 'production': uri = 'https://fuit.es/api'; break
-      } return uri
-    }()),
-    serverFlag: process.env.SERVER_ENV,
-    socketOptions: {
-      withCredentials: true,
-      channel: 'instance-fe'
-    },
-    mongoInstance: 'instance-fe'
+// ///////////////////////////////////////////////////////////////////// Imports
+// -----------------------------------------------------------------------------
+import { defineNuxtConfig } from 'nuxt/config'
+import Path from 'path'
+
+// /////////////////////////////////////////////////////////// Variables & Setup
+// -----------------------------------------------------------------------------
+const env = process.env.SERVER_ENV
+
+const baseUrls = {
+  backend: process.env.DOMAIN__BACKEND,
+  client: process.env.DOMAIN__CLIENT,
+  websocket: process.env.DOMAIN__WEBSOCKET
+}
+
+const sitePort = (function () {
+  if (env === 'development') { return 2001 }
+  return env === 'stable' ? 2002 : 2003
+}())
+
+// ////////////////////////////////////////////////////////////////////// Export
+// -----------------------------------------------------------------------------
+export default defineNuxtConfig({
+  // =================================================================== General
+  compatibilityDate: '2024-07-30',
+  devtools: { enabled: false },
+  site: {
+    url: baseUrls.client
   },
-  // --------------------------------------------------------- [Runtime] Private
-  privateRuntimeConfig: {},
-  // /////////////////////////////////////////////////////////// Server & Render
-  // ---------------------------------------------------------------------------
-  server: {
-    port: (function () {
-      const env = process.env.SERVER_ENV
-      let port = 2001 // development
-      switch (env) {
-        case 'stable': port = 2002; break
-        case 'production': port = 2003; break
-      } return port
-    }()),
-    host: process.env.NODE_ENV !== 'development' ? '0.0.0.0' : 'localhost'
+  extends: [],
+  // ===================================================== Runtime Configuration
+  runtimeConfig: {
+    public: {
+      serverEnv: env,
+      siteUrl: baseUrls.client,
+      backendUrl: baseUrls.backend,
+      websocketUrl: baseUrls.websocket
+    }
   },
-  // /////////////////////////////////////////////////////// Headers of the Page
-  // ---------------------------------------------------------------------------
-  head: {
-    title: 'f u i t e s',
-    meta: [
-      { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { name: 'msapplication-TileColor', content: '#ffffff' },
-      { name: 'msapplication-TileImage', content: '/favicon/ms-icon-144x144.png' },
-      { name: 'theme-color', content: '#ffffff' }
-    ],
-    link: [
-      { rel: 'apple-touch-icon', sizes: '57x57', href: '/favicon/apple-icon-57x57.png' },
-      { rel: 'apple-touch-icon', sizes: '60x60', href: '/favicon/apple-icon-60x60.png' },
-      { rel: 'apple-touch-icon', sizes: '72x72', href: '/favicon/apple-icon-72x72.png' },
-      { rel: 'apple-touch-icon', sizes: '76x76', href: '/favicon/apple-icon-76x76.png' },
-      { rel: 'apple-touch-icon', sizes: '114x114', href: '/favicon/apple-icon-114x114.png' },
-      { rel: 'apple-touch-icon', sizes: '120x120', href: '/favicon/apple-icon-120x120.png' },
-      { rel: 'apple-touch-icon', sizes: '144x144', href: '/favicon/apple-icon-144x144.png' },
-      { rel: 'apple-touch-icon', sizes: '152x152', href: '/favicon/apple-icon-152x152.png' },
-      { rel: 'apple-touch-icon', sizes: '180x180', href: '/favicon/apple-icon-180x180.png' },
-      { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon/android-icon-192x192.png' },
-      { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon/favicon-32x32.png' },
-      { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/favicon/favicon-96x96.png' },
-      { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon/favicon-16x16.png' },
-      { rel: 'manifest', href: '/favicon/manifest.json' }
-    ]
+  // ======================================================== Development Server
+  devServer: {
+    port: sitePort,
+    host: 'localhost',
+    https: {
+      key: '../../localhost_key.pem',
+      cert: '../../localhost_cert.pem'
+    }
   },
-  // /////////////////////////////////////////////////////////// Global CSS/SCSS
-  // ---------------------------------------------------------------------------
-  css: [
-    '~/assets/scss/main.scss'
-  ],
-  styleResources: {
-    scss: [
-      '~/assets/scss/variables.scss'
-    ]
+  // ======================================================================= App
+  app: {
+    head: {
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'msapplication-config', content: '/favicon/light/browserconfig.xml' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon/light/favicon-96x96.png' },
+        { rel: 'manifest', href: '/favicon/light/manifest.json' }
+      ]
+    }
   },
-  // /////////////////////////////////////////////////////////////////// Modules
-  // ---------------------------------------------------------------------------
-  modules: [
-    '@nuxtjs/style-resources',
-    '@nuxtjs/axios', // Doc: https://axios.nuxtjs.org/usage
-    'nuxt-socket-io', // Doc: https://nuxt-socket-io.netlify.app/
-    '~/modules/https',
-    '~/modules/pocket',
-    '~/modules/compost',
-    '~/modules/toaster',
-    '~/modules/mixer'
-  ],
-  // /////////////////////////////////////////////////////////////////// Plugins
-  // ---------------------------------------------------------------------------
-  plugins: [
-    '~/plugins/axios-auth',
-    '~/plugins/helpers',
-    '~/plugins/directives',
-    '~/plugins/scroll-to',
-    '~/plugins/simplify-svg-path',
-    '~/plugins/nuxt-hammer.js',
-    '~/plugins/sharpen-canvas'
-  ],
-  // /////////////////////////////////////////////////// [Module] Nuxt Socket.io
-  // ---------------------------------- Doc: https://nuxt-socket-io.netlify.app/
-  io: {
-    sockets: [{
-      url: (function () {
-        const env = process.env.SERVER_ENV
-        let uri = 'https://localhost:3001/' // development
-        switch (env) {
-          case 'stable': uri = 'https://stable.fuit.es/'; break
-          case 'production': uri = 'https://fuit.es/'; break
-        } return uri
-      }())
-    }]
-  },
-  // ////////////////////////////////////////////////////////// [Plugin] Toaster
-  // ---------------------------------------------------------------------------
-  toaster: {
-    display: 10,
-    timeout: 5000
-  },
-  // /////////////////////////////////////////////////////// Build configuration
-  // ------------------------------------------------ Extend webpack config here
-  build: {
-    transpile: [({ isLegacy }) => isLegacy && 'axios'],
-    // -------------------------------------------------------------- Extensions
-    extend (config, ctx) {
-      config.module.rules.push(
-        {
-          test: /\.(frag|vert|glsl)$/,
-          use: [
-            {
-              loader: 'glsl-shader-loader',
-              options: {}
-            }
-          ]
+  // ================================================================== Compiler
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: { // make SCSS variables, functions and mixins globally accessible
+          additionalData: `
+            @use "sass:math";
+            @import "@/assets/scss/variables.scss";
+          `
         }
-      )
+      }
+    }
+  },
+  // ============================================================= Global Styles
+  css: [
+    '@/assets/scss/main.scss'
+  ],
+  // =================================================================== Modules
+  modules: [
+    '@nuxt/eslint',
+    '@pinia/nuxt',
+    '@nuxt/content'
+  ],
+  // ============================================================ [Module] Pinia
+  pinia: {
+    storesDirs: [
+      './stores/**'
+    ]
+  },
+  // ==================================================== [Module] @nuxt/content
+  content: {
+    watch: false,
+    markdown: {
+      toc: {
+        depth: 2,
+        searcthDepth: 2
+      }
+    },
+    sources: {
+      data: {
+        driver: 'fs',
+        prefix: '/data',
+        base: Path.resolve(__dirname, 'data')
+      }
     }
   }
-}
+})

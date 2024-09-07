@@ -1,0 +1,14 @@
+{
+  "logoLink": {
+    "tag": "nuxt-link",
+    "to": "/"
+  },
+  "links": [
+    {
+      "tag": "nuxt-link",
+      "to": "/",
+      "type": "clear",
+      "text": "This is a CTA"
+    }
+  ]
+}
