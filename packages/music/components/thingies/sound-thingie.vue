@@ -187,7 +187,7 @@ export default {
       if (this.$refs.audioElement) {
         this.player = this.$refs.audioElement
         this.player.crossOrigin = 'anonymous'
-        this.player.src = `${$config.backendUrl}/${$config.mongoInstance}/${audio}.${filetype}`
+        this.player.src = `${this.$config.backendUrl}/${this.$config.mongoInstance}/${audio}.${filetype}`
         this.source = this.audioContext.createMediaElementSource(this.player)
         this.gainNode = this.audioContext.createGain()
         this.gainNode.gain.value = 0
