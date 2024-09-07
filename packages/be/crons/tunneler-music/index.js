@@ -166,7 +166,7 @@ const updatePortalsBetweenPages = async () => {
             const portalExists = portals.some(portal => portal.edge === portalName)
             const notOnPreventList = !preventConnections.includes(vA.location) && !preventConnections.includes(vB.location)
             if (!portalExists && notOnPreventList) {
-              createNewPortal(thingie._id, portalName, [vA, vB])
+              await createNewPortal(thingie._id, portalName, [vA, vB])
             }
           }
         }
@@ -174,7 +174,7 @@ const updatePortalsBetweenPages = async () => {
       if (portals.length > maxLinks) {
         const outdatedPortals = portals.slice(maxLinks)
         for (let k = 0; k < outdatedPortals.length; k++) {
-          closePortal(outdatedPortals[k]._id)
+          await closePortal(outdatedPortals[k]._id)
         }
       }
     }
@@ -238,7 +238,7 @@ MC.app.on('mongoose-connected', async () => {
     socket.disconnect()
     process.exit(0)
   } catch (e) {
-    console.log('===================================== [Cron: GodessOfAnarchy]')
+    console.log('============================================ [Cron: Tunneler]')
     console.log(e)
     process.exit(0)
   }
