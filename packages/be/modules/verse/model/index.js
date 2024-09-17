@@ -1,4 +1,4 @@
-console.log('💿 [model] sensor')
+console.log('💿 [model] verse')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -7,47 +7,10 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
-const SensorSchema = new Schema({
+const VerseSchema = new Schema({
   name: {
     type: String,
     required: true
-  },
-  page: {
-    type: String,
-    required: true
-  },
-  inputVoltage: {
-    min: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    max: {
-      type: Number,
-      required: true,
-      default: 1
-    }
-  },
-  outputRange: {
-    min: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    max: {
-      type: Number,
-      required: true,
-      default: 1
-    }
-  },
-  affecting: {
-    type: String,
-    required: true,
-    default: ''
-  },
-  css: {
-    type: [String],
-    required: false
   }
 }, {
   timestamps: true,
@@ -56,4 +19,4 @@ const SensorSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = SensorSchema
+module.exports = Mongoose.model('verses', VerseSchema)

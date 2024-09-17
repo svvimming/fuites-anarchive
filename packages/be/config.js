@@ -42,31 +42,25 @@ module.exports = {
     { type: 'dir', path: 'static' },
     { type: 'dir', path: 'tmp' },
     { type: 'dir', path: 'tmp/uploads' },
-    { type: 'dir', path: 'tmp/uploads/instance-fe' },
     { type: 'dir', path: 'public' },
-    { type: 'dir', path: 'public/uploads' },
-    { type: 'dir', path: 'public/uploads/instance-fe' }
+    { type: 'dir', path: 'public/uploads' }
   ],
   serveStaticDirectories: [
     '/public/uploads'
   ],
   // ================================================================== Database
-  mongoInstances: {
-    'instance-fe': {
-      databaseUrl: process.env.DATABASE_URL_INSTANCE_FE,
-      databaseName: process.env.DATABASE_NAME_INSTANCE_FE,
-      mongoConnectionOptions: {
-        // ssl: true,
-        auth: {
-          username: process.env.DATABASE_USER,
-          password: process.env.DATABASE_PASSWORD
-        }
-      },
-      mongooseConnection: false,
-      model: {},
-      excludeModules: []
+  databaseUrl: process.env.DATABASE_URL_INSTANCE_FE,
+  databaseName: process.env.DATABASE_NAME_INSTANCE_FE,
+  mongoConnectionOptions: {
+    // ssl: true,
+    auth: {
+      username: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASSWORD
     }
   },
+  mongooseConnection: false,
+  model: {},
+  excludeModules: [],
   // ================================================================= Socket.Io
   socket: {
     io: false,
@@ -87,7 +81,7 @@ module.exports = {
       unset: 'destroy'
     }
   },
-  expressSession: {},
+  expressSession: false,
   // ====================================================================== CORS
   cors: {
     origin: [

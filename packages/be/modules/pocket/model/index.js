@@ -12,6 +12,10 @@ const PocketSchema = new Schema({
     type: String,
     required: true
   },
+  verse: {
+    type: String,
+    required: true
+  },
   thingies: {
     type: [String],
     required: true,
@@ -24,4 +28,4 @@ const PocketSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PocketSchema // Mongoose.model('pockets', PocketSchema)
+module.exports = Mongoose.model('pockets', PocketSchema)

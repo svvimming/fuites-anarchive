@@ -8,6 +8,10 @@ const Schema = Mongoose.Schema
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
 const PrintSchema = new Schema({
+  verse: {
+    type: String,
+    required: true
+  },
   page: {
     type: String,
     required: true
@@ -23,4 +27,4 @@ const PrintSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PrintSchema // Mongoose.model('prints', PrintSchema)
+module.exports = Mongoose.model('prints', PrintSchema)

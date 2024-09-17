@@ -13,11 +13,6 @@ const baseUrls = {
   websocket: process.env.DOMAIN__WEBSOCKET
 }
 
-const sitePort = (function () {
-  if (env === 'development') { return 2001 }
-  return env === 'stable' ? 2002 : 2003
-}())
-
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export default defineNuxtConfig({
@@ -35,11 +30,15 @@ export default defineNuxtConfig({
       siteUrl: baseUrls.client,
       backendUrl: baseUrls.backend,
       websocketUrl: baseUrls.websocket
+      // serverFlag: process.env.SERVER_ENV,
+      // socketOptions: {
+      //   withCredentials: true
+      // }
     }
   },
   // ======================================================== Development Server
   devServer: {
-    port: sitePort,
+    port: process.env.DOMAIN__CLIENT_PORT,
     host: 'localhost',
     https: {
       key: '../../localhost_key.pem',

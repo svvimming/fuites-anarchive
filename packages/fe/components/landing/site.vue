@@ -1,30 +1,26 @@
 <template>
-  <header id="site-header">
-    <div class="grid">
-      <div class="col">
+  <header id="landing-site">
 
-        Site Header
+      Landing Site
 
-      </div>
-    </div>
   </header>
 </template>
 
 <script setup>
 // ======================================================================== Data
-const { data: navigation } = await useAsyncData('navigation', async () => {
-  const content = await queryContent({
-    where: {
-      _file: { $contains: 'data/navigation.json' }
-    }
-  }).find()
-  return content[0]
-})
+// const { data: navigation } = await useAsyncData('navigation', async () => {
+//   const content = await queryContent({
+//     where: {
+//       _file: { $contains: 'data/navigation.json' }
+//     }
+//   }).find()
+//   return content[0]
+// })
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-#site-header {
+#landing-site {
   display: flex;
   flex-direction: row;
   justify-content: space-between;

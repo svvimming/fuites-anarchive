@@ -1,8 +1,6 @@
 <template>
   <div class="page error">
 
-    <SiteHeader />
-
     <div class="grid">
       <div class="col-6" data-push-left="off-2">
         <div class="content">
@@ -20,8 +18,6 @@
         </div>
       </div>
     </div>
-
-    <SiteFooter />
 
   </div>
 </template>

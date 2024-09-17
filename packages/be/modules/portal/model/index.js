@@ -28,8 +28,12 @@ const VertexSchema = new Schema({
 const PortalSchema = new Schema({
   thingie_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Thingie',
+    ref: 'thingies',
     required: false
+  },
+  verse: {
+    type: String,
+    required: true
   },
   edge: {
     type: String,
@@ -58,4 +62,4 @@ const PortalSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PortalSchema // Mongoose.model('portals', PortalSchema)
+module.exports = Mongoose.model('portals', PortalSchema)

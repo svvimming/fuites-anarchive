@@ -1,4 +1,4 @@
-console.log('💿 [model] uploads')
+console.log('💿 [model] upload')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -50,4 +50,4 @@ const UploadSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = UploadSchema // Mongoose.model('uploads', UploadSchema)
+module.exports = Mongoose.model('uploads', UploadSchema)

@@ -28,8 +28,12 @@ const VertexSchema = new Schema({
 const ThingieSchema = new Schema({
   file_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Upload',
+    ref: 'uploads',
     required: false
+  },
+  verse: {
+    type: String,
+    required: true
   },
   location: {
     type: String,
@@ -162,4 +166,4 @@ const ThingieSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = ThingieSchema // Mongoose.model('thingies', ThingieSchema)
+module.exports = Mongoose.model('thingies', ThingieSchema)

@@ -6,19 +6,17 @@
 // -----------------------------------------------------------------------------
 export const useGeneralStore = defineStore('general', () => {
   // ===================================================================== state
-  // add a variable
+  const config = useRuntimeConfig()
+
+  // ================================================================== computed
+  const baseUrl = computed(() => config.public.backendUrl)
 
   // =================================================================== actions
-
-  /**
-   * @method doSomething
-   */
-
-  // const doSomething = () => {}
 
   // ==================================================================== return
   return {
     // ----- state
+    baseUrl
     // ----- actions
   }
 })
