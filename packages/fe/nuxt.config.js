@@ -80,7 +80,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@pinia/nuxt',
-    '@nuxt/content'
+    '@nuxt/content',
+    '@/modules/websocket'
   ],
   // ============================================================ [Module] Pinia
   pinia: {

@@ -44,12 +44,26 @@ export const useCollectorStore = defineStore('collector', () => {
     }
   }
 
+  /**
+   * @method updateThingie
+   */
+
+  const updateThingie = incoming => {
+    const collection = thingies.value.data
+    const index = collection.findIndex(item => item._id === incoming._id)
+    if (index >= 0) {
+      // const thingie = collection[index]
+      collection.splice(index, 1, incoming)
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     thingies,
     // ----- actions
-    getThingies
+    getThingies,
+    updateThingie
   }
 })
 

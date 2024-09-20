@@ -1,0 +1,105 @@
+{
+  "index": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        }
+      },
+      {
+        "component": "div",
+        "text": "info",
+        "route": "/info"
+      },
+      {
+        "component": "div",
+        "text": "portal",
+        "route": "/portal"
+      }
+    ],
+    "contact": [
+      {
+        "text": "contact@fuit.es",
+        "url": "mailto:contact@fuit.es"
+      },
+      {
+        "text": "instagram",
+        "url": "https://www.instagram.com/fuit_es/"
+      },
+      {
+        "text": "bandcamp",
+        "url": "https://fuites.bandcamp.com/music"
+      }
+    ]
+  },
+  "page": {
+    "links": [
+      {
+        "component": "Bingo",
+        "text": "fuites",
+        "route": "/",
+        "bingo": {
+          "lsx": 20,
+          "lsy": 20,
+          "jx": 4,
+          "jy": 4,
+          "fsj": 6
+        },
+        "bingo_touchmode": {
+          "lsx": 10,
+          "lsy": 12,
+          "jx": 3,
+          "jy": 3,
+          "fsj": 4
+        }
+      }
+    ],
+    "tips": [
+      "to upload a thingie, open the pocket and click upload",
+      "to move a thingie, click and drag it",
+      "to drag and drop a thingie into your pocket, the compost or a page,<br>click and drag while holding shift (chrome, firefox), or holding command (safari)",
+      "to add a text thingie, hold option and click anywhere on the white background",
+      "br",
+      "to remove a thingie from the page, drag and drop it into the open compost",
+      "to <i><b>delete</b></i> a thingie from the site, once it has been composted, navigate to<a href='https://fuit.es/compost' class='text-link'><b> the compost</b></a>. There, you'll be able to delete it by option-clicking it: When it's highlighted, click the 'delete' button in the bottom left corner.",
+      "br",
+      "to edit a thingie, click on it while holding option",
+      "in edit mode, a thingie can be rotated with ← and →, brought forward or sent backward with ↑ and ↓,<br>or resized by making a pinch gesture while hovering over it",
+      "while editing, other options will appear to the right depending on the type of thingie",
+      "br",
+      "when audio is on, sound thingies can be heard by hovering over them with the mouse"
+    ],
+    "tips_touchdevice": [
+      "to upload a thingie, open the pocket and click upload",
+      "to move a thingie, tap it. Once it's highlighted you'll be able to drag it with one finger",
+      "while it's highlighted, you can also rotate or resize a thingie by pinching it with two fingers",
+      "br",
+      "to edit a thingie, while it's highlighted, open the editor in the bottom left corner",
+      "in the editor, you can move it to the page, the pocket or the compost",
+      "other options appear in the editor depending on what type of thingie you are editing",
+      "to <i><b>delete</b></i> a thingie from the site, once it has been composted, navigate to<a href='https://fuit.es/compost' class='text-link'><b> the compost</b></a>. There, you'll be able to delete it in the editor panel.",
+      "br",
+      "when audio is on, sound thingies can be heard by taping on them"
+    ]
+  },
+  "font_families": [
+    "nanum",
+    "courier",
+    "merriweather",
+    "source-code",
+    "anton",
+    "arvo"
+  ],
+  "site_settings": {
+    "bypass_token_list": [],
+    "auth_bypass_token": "",
+    "bypass_expiry": null
+  }
+}
