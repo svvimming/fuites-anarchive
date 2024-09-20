@@ -77,6 +77,64 @@ $fontAssetPath: '~assets/fonts';
   font-weight: 400;
 }
 
+// --------------------------------------------------------------------- PT Sans
+@font-face {
+  font-family: 'PT Sans';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/PTSans/PTSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/PTSans/PTSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/PTSans/PTSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/PTSans/PTSans-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+}
+
+// -------------------------------------------------------------------- PT Serif
+@font-face {
+  font-family: 'PT Serif';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'PT Serif';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Italic.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'PT Serif';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'PT Serif';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/PTSerif/PTSerif-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
@@ -115,6 +173,30 @@ $fontAssetPath: '~assets/fonts';
 }
 .source-code {
   @include fontFamily_SourceCodePro;
+}
+
+.pt-sans {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'PT Sans';
+  &.bold {
+    font-weight: 700;
+  }
+  &.italic {
+    font-style: italic;
+  }
+}
+
+.pt-serif {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'PT Serif';
+  &.bold {
+    font-weight: 700;
+  }
+  &.italic {
+    font-style: italic;
+  }
 }
 
 h1, .h1,

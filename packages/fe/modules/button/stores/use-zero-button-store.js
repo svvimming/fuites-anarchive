@@ -1,32 +1,37 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
-// import { ref } from '#imports'
+import { defineStore } from 'pinia'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-export const usePocketStore = defineStore('pocket', () => {
+export const useZeroButtonStore = defineStore('zero-button', () => {
   // ===================================================================== state
-  const pocketOpen = ref(false)
+  const buttons = ref({})
 
   // =================================================================== actions
 
   /**
-   * @method setPocketOpen
+   * @method setButton
    */
 
-  const setPocketOpen = val => {
-    pocketOpen.value = val
+  const setButton = (payload) => {
+    buttons.value[payload.id] = payload
+  }
+
+  /**
+   * @method removeButton
+   */
+
+  const removeButton = (id) => {
+    delete buttons.value[id]
   }
 
   // ==================================================================== return
   return {
     // ----- state
-    pocketOpen,
+    buttons,
     // ----- actions
-    setPocketOpen
+    setButton,
+    removeButton
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(usePocketStore, import.meta.hot))
-}

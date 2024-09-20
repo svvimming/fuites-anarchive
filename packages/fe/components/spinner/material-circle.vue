@@ -1,5 +1,5 @@
 <template>
-  <svg class="loader" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+  <svg class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
 
     <circle
       class="path"
@@ -36,7 +36,7 @@ $duration: 1.5s;
 }
 
 // ///////////////////////////////////////////////////////////////////// General
-.loader {
+.spinner {
   width: toRem(12);
   height: toRem(12);
   animation: rotator $duration linear infinite;
