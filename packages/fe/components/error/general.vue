@@ -36,37 +36,37 @@ defineProps({
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: toRem(20);
+  padding: torem(20);
 }
 
 .status-message {
-  margin-bottom: toRem(8);
+  margin-bottom: torem(8);
 }
 
 .message {
-  margin-top: toRem(16);
+  margin-top: torem(16);
   font-weight: 500;
-  padding: toRem(6) toRem(12);
+  padding: torem(6) torem(12);
 }
 
 .container {
   position: relative;
   margin-top: 3rem;
   border: 2px solid tomato;
-  border-radius: toRem(12);
+  border-radius: torem(12);
 }
 
 .code {
   position: absolute;
   top: 0;
-  left: toRem(12);
-  padding: toRem(6) toRem(12);
+  left: torem(12);
+  padding: torem(6) torem(12);
   background-color: teal;
   border: 2px solid tomato;
-  font-size: toRem(22);
+  font-size: torem(22);
   font-weight: 700;
   transform: translateY(-50%);
-  border-radius: toRem(8);
+  border-radius: torem(8);
 }
 
 .stack {
@@ -74,7 +74,7 @@ defineProps({
     font-family: monospace;
     margin: 0;
     padding-top: 2rem;
-    font-size: toRem(14);
+    font-size: torem(14);
   }
 }
 </style>

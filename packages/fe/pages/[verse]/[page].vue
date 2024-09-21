@@ -1,5 +1,5 @@
 <template>
-  <div ref="page" class="page-container">
+  <div class="page-container">
     <div class="page">
       <ClientOnly>
         <v-stage :config="{ width: 1000, height: 700 }">
@@ -27,6 +27,7 @@ const page = route.params.page
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
+const { sessionId } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 
@@ -51,12 +52,24 @@ watch(data, async () => {
  */
 
 const initUpdate = update => {
-  // console.log(update)
-  socket.value.emit('update-thingie', update)
+  // If updating the at property, record the session id into the update
+  // Manipulate the thingie directly in the store rather than wait for the network
+  if (update.hasOwnProperty('at')) {
+    const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
+    socket.value.emit('update-thingie', updateAt)
+    collectorStore.updateThingie(updateAt)
+  } else {
+    socket.value.emit('update-thingie', update)
+  }
 }
 </script>
 
 <style lang="scss" scoped>
+.page-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
 .page {
   position: relative;
   z-index: 1;

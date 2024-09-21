@@ -1,6 +1,6 @@
 <template>
   <div class="turbulence">
-    <svg width="250" height="250">
+    <svg class="svg" width="250" height="250">
       <filter id='noise' x='0%' y='0%' width='100%' height='100%'>
         <feTurbulence :baseFrequency="`${freqX} ${freqY}`" result="NOISE" /> 
       </filter>
@@ -18,8 +18,8 @@ const requestId = ref(false)
 
 // ===================================================================== Methods
 const animate = () => {
-  freqX.value = Math.sin(Math.PI * 0.55 * inc.value) * 0.0005 + 0.0075
-  freqY.value = Math.sin(Math.PI * 0.45 * inc.value - 1) * 0.0006 + 0.007
+  freqX.value = Math.sin(Math.PI * 0.38 * inc.value) * 0.00025 + 0.0045
+  freqY.value = Math.sin(Math.PI * 0.35 * inc.value - 1) * 0.0003 + 0.004
   inc.value = inc.value + 0.01
   requestId.value = requestAnimationFrame(animate)
 }
@@ -37,6 +37,11 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.svg {
   width: 100%;
   height: 100%;
 }

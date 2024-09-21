@@ -59,7 +59,7 @@ const displayMessage = computed(() => {
 // ///////////////////////////////////////////////////////////////////// General
 .heading {
   @include h1;
-  font-size: toRem(100);
+  font-size: torem(100);
   line-height: 1;
   color: var(--link-color);
   margin-bottom: 2rem;

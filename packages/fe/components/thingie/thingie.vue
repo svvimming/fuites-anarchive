@@ -13,6 +13,9 @@
 </template>
 
 <script setup>
+// ====================================================================== Import
+import { useThrottleFn } from '@vueuse/core'
+
 // ======================================================================= Props
 const props = defineProps({
   thingie: {
@@ -42,7 +45,7 @@ const drag = e => {
 /**
  * @method update
  */
-const update = data => {
+const update = useThrottleFn(data => {
   emit('initUpdate', Object.assign(data, { _id: id.value }))
-}
+}, 5)
 </script>

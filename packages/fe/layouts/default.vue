@@ -26,6 +26,8 @@ const { $io, $bus } = useNuxtApp()
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
+const generalStore = useGeneralStore()
+const { sessionId } = storeToRefs(generalStore)
 
 // ===================================================================== Methods
 /**
@@ -34,7 +36,12 @@ const collectorStore = useCollectorStore()
 
  const handleWebsocketConnected = socket => {
   socket.emit('join-room', 'thingies')
-  socket.on('module|update-thingie|payload', (thingie) => { collectorStore.updateThingie(thingie) })
+  socket.on('module|update-thingie|payload', (data) => {
+    // If the update originated from this session and was updating a thingie 'at'
+    // property, don't update in the store - it was already done by the page
+    if (data.omit_session_id === sessionId.value) { return }
+    collectorStore.updateThingie(data.thingie)
+  })
 }
 
 // ======================================================================= Hooks

@@ -1,6 +1,7 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 // import { ref } from '#imports'
+import { v4 } from 'uuid'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -8,9 +9,13 @@ export const useGeneralStore = defineStore('general', () => {
   // ===================================================================== state
   const config = useRuntimeConfig()
   const siteData = ref({})
+  const sessionId = ref('')
 
   // ================================================================== computed
   const baseUrl = computed(() => config.public.backendUrl)
+
+  // ===================================================================== Hooks
+  onMounted(() => { sessionId.value = v4() })
 
   // =================================================================== actions
   /**
@@ -26,6 +31,7 @@ export const useGeneralStore = defineStore('general', () => {
     // ----- state
     baseUrl,
     siteData,
+    sessionId,
     // ----- actions
     setSiteData
   }

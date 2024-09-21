@@ -52,7 +52,13 @@ export const useCollectorStore = defineStore('collector', () => {
     const collection = thingies.value.data
     const index = collection.findIndex(item => item._id === incoming._id)
     if (index >= 0) {
-      // const thingie = collection[index]
+      const thingie = collection[index]
+      // if the update has an omit_session_id key, it is bc the update originated
+      // from this session - use the existing client thingie for update
+      if (incoming.hasOwnProperty('omit_session_id')) {
+        delete incoming.omit_session_id
+        incoming = Object.assign(thingie, incoming)
+      }
       collection.splice(index, 1, incoming)
     }
   }

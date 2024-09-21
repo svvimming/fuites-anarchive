@@ -37,8 +37,8 @@ $duration: 1.5s;
 
 // ///////////////////////////////////////////////////////////////////// General
 .spinner {
-  width: toRem(12);
-  height: toRem(12);
+  width: torem(12);
+  height: torem(12);
   animation: rotator $duration linear infinite;
 }
 

@@ -57,7 +57,10 @@ MC.socket.listeners.push({
           select: 'filename file_ext aspect'
         })
     }
-    MC.socket.io.to('thingies')
-      .emit('module|update-thingie|payload', updated)
+    const data = { thingie: updated }
+    if (incoming.hasOwnProperty('omit_session_id')) {
+      data.omit_session_id = incoming.omit_session_id
+    }
+    MC.socket.io.to('thingies').emit('module|update-thingie|payload', data)
   }
 })

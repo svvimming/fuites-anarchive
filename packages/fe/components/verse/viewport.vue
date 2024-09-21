@@ -30,6 +30,8 @@
 
 .viewport-dock {
   position: absolute;
+  display: flex;
+  padding: torem(25);
   width: 100%;
   z-index: 2;
 }
