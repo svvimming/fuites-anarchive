@@ -31,10 +31,10 @@ const { sessionId } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 
-const { data } = await useAsyncData('thingie-params', async () => {
+const { data } = await useAsyncData('settings', async () => {
   const content = await queryContent({
     where: {
-      _file: { $contains: 'thingie-editable-params.json' }
+      _file: { $contains: 'settings.json' }
     }
   }).find()
   return content[0]
@@ -43,7 +43,7 @@ const { data } = await useAsyncData('thingie-params', async () => {
 // ==================================================================== Watchers
 watch(data, async () => {
   await collectorStore.getThingies({ verse, page })
-  await generalStore.setSiteData({ key: 'thingie-params', value: data.value })
+  await generalStore.setSiteData({ key: 'settings', value: data.value })
 }, { immediate: true })
 
 // ===================================================================== Methods

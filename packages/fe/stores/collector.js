@@ -33,8 +33,7 @@ export const useCollectorStore = defineStore('collector', () => {
       })
       return thingies.value
     } catch (e) {
-      console.log(e)
-      // useHandleFetchError(e, [], [403])
+      useHandleFetchError(e)
       useSetStoreData(thingies, {
         loading: false,
         refresh: false,
@@ -46,6 +45,7 @@ export const useCollectorStore = defineStore('collector', () => {
 
   /**
    * @method updateThingie
+   * @desc Updates a thingie on the current page. If the incoming update has has an omit_session_id key, it is because the update originated from this session. In this case the thingie will be updated and not outright replaced.
    */
 
   const updateThingie = incoming => {
@@ -53,8 +53,6 @@ export const useCollectorStore = defineStore('collector', () => {
     const index = collection.findIndex(item => item._id === incoming._id)
     if (index >= 0) {
       const thingie = collection[index]
-      // if the update has an omit_session_id key, it is bc the update originated
-      // from this session - use the existing client thingie for update
       if (incoming.hasOwnProperty('omit_session_id')) {
         delete incoming.omit_session_id
         incoming = Object.assign(thingie, incoming)

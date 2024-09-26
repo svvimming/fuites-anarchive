@@ -2,7 +2,7 @@ console.log('⚡️ [websocket] module|file-upload-initialize|payload')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
-const Mime = (...args) => import('mime').then(({ default: Mime }) => Mime(...args))
+const Mime = require('mime')
 
 const { GetSocket } = require('@Module_Utilities')
 

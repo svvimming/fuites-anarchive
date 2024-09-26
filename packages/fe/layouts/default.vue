@@ -5,6 +5,8 @@
 
     <VerseViewport />
 
+    <Toaster />
+
   </div>
 </template>
 

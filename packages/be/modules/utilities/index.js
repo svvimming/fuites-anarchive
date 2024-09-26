@@ -156,8 +156,8 @@ const GenerateWebsocketClient = (namespace) => {
 }
 
 // /////////////////////////////////////////////////////////////////// GetSocket
-const GetSocket = (socketId, namespace) => {
-  return MC.socket.io.of(`/${namespace}`).sockets.get(socketId)
+const GetSocket = (socketId) => {
+  return MC.socket.io.sockets.sockets.get(socketId)
 }
 
 // ///////////////////////////////////////////////////////////// IsValidObjectId

@@ -14,6 +14,8 @@
 
       <!-- ========================================================== Pocket -->
       <div class="pocket">
+        <!-- ------------------------------------------------------ uploader -->
+        <PocketSingleFileUploader :active="uploaderOpen" />
         <!-- -------------------------------------------- full screen toggle -->
         <ButtonIcon
           class="fullscreen-toggle"
@@ -22,7 +24,8 @@
         </ButtonIcon>
         <!-- ----------------------------------------------- uploader toggle -->
         <ButtonIcon
-          class="uploader-toggle">
+          class="uploader-toggle"
+          @clicked="uploaderOpen = !uploaderOpen">
           <IconPlus />
         </ButtonIcon>
 
@@ -34,13 +37,16 @@
 </template>
 
 <script setup>
+// ======================================================================== Data
 const pocketStore = usePocketStore()
 const { pocketOpen } = storeToRefs(pocketStore)
 const fullscreen = ref(false)
-const helpOpen = ref(false)
+const uploaderOpen = ref(false)
+// const helpOpen = ref(false)
 </script>
 
 <style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
 .pocket-anchor {
   position: relative;
   margin-left: auto;

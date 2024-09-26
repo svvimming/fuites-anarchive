@@ -30,10 +30,6 @@ export default defineNuxtConfig({
       siteUrl: baseUrls.client,
       backendUrl: baseUrls.backend,
       websocketUrl: baseUrls.websocket
-      // serverFlag: process.env.SERVER_ENV,
-      // socketOptions: {
-      //   withCredentials: true
-      // }
     }
   },
   // ======================================================== Development Server
