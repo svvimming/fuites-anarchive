@@ -8,18 +8,6 @@
   </svg>
 </template>
 
-<script setup>
-const props = defineProps({
-  active: {
-    type: Boolean,
-    required: false,
-    default: false
-  }
-})
-
-// const dashArray = computed(() => props.active ? '3 3' : '4 8 12 16 5 4 8 3')
-</script>
-
 <style lang="scss" scoped>
 .svg {
   position: absolute;

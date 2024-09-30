@@ -31,13 +31,18 @@ const ThingieSchema = new Schema({
     ref: 'uploads',
     required: false
   },
+  pocket_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pockets',
+    required: false
+  },
   verse: {
     type: String,
     required: true
   },
   location: {
     type: String,
-    required: true
+    required: false
   },
   last_locations: {
     type: [VertexSchema],

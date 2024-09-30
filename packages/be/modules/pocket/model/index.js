@@ -12,8 +12,8 @@ const PocketSchema = new Schema({
     type: String,
     required: true
   },
-  verse: {
-    type: String,
+  verses: {
+    type: [String],
     required: true
   },
   thingies: {

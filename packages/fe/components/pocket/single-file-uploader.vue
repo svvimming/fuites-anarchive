@@ -68,12 +68,8 @@
           class="upload-prompt"
           v-html="finalizeUploadPrompt">
         </div>
-        <button
-          class="upload-button"
-          @click="initUpload([], uploadFile)">
-          Upload
-        </button>
-        <!-- <Bichos @path-complete="(coords) => { initUpload(coords, uploadFile) }" /> -->
+        <PocketBichos
+          @path-completed="(path) => { bicho = path; uploadFile() }" />
         <button
           class="cancel-button uploader-button"
           @click="clearFileInput">
@@ -97,11 +93,6 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
-  },
-  uploadOnDrawBicho: {
-    type: Boolean,
-    required: false,
-    default: true
   },
   initPrompt: {
     type: String,
@@ -130,13 +121,13 @@ const emit = defineEmits(['upload-finalized', 'draw-bicho-complete'])
 // ======================================================================== Data
 const status = ref(false)
 const file = ref(false)
-const pathData = ref([])
+const bicho = ref([])
 const processingFile = ref(false)
-const pocketStore = usePocketStore()
+const collectorStore = useCollectorStore()
+// const buttonStore = useButtonStore()
 
 // ==================================================================== Computed
 const initializeUploadPrompt = computed(() => props.initPrompt || 'Upload a file')
-const destination = computed(() => props.uploadToPage || 'pocket')
 const finalizeUploadPrompt = computed(() => {
   if (file.value) {
     return file.value.size > (props.maxFileSizeMB * 1000000) ?
@@ -147,10 +138,6 @@ const finalizeUploadPrompt = computed(() => {
 
 // ==================================================================== Watchers
 watch(status, (stat) => {
-  if (stat === 'uploading') {
-    // remove file upload button loader here
-    // this.removeLoader('upload-file-button')
-  }
   if (stat === 'upload-complete') {
     finalizeUpload()
   }
@@ -167,11 +154,11 @@ const fileChanged = data => {
 }
 
 const finalizeUpload = async () => {
-  const complete = await pocketStore.postCreateThingie({
+  const complete = await collectorStore.postCreateThingie({
     file_id: file.value.id,
-    location: destination.value,
+    ...(!!props.uploadToPage && { location: props.uploadToPage }),
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
-    pathData: pathData.value,
+    path_data: bicho.value,
     at: {
       x: Math.random() * 650,
       y: Math.random() * 400,
@@ -183,15 +170,6 @@ const finalizeUpload = async () => {
   if (complete) {
     status.value = 'upload-finalized'
     emit('upload-finalized')
-  }
-}
-
-const initUpload = (coords, uploadFile) => {
-  pathData.value = coords
-  if (props.uploadOnDrawBicho) {
-    uploadFile()
-  } else {
-    emit('draw-bicho-complete')
   }
 }
 </script>
@@ -231,8 +209,8 @@ const initUpload = (coords, uploadFile) => {
   padding: 0 0.5rem;
   margin: 0.25rem 0;
   line-height: 1.2;
-  @include fontFamily_Cousine;
-  @include fontSize_teeny;
+  font-family: 'Cousine', monospace;
+  font-size: 0.6875rem;
   text-align: center;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -242,8 +220,8 @@ const initUpload = (coords, uploadFile) => {
 
 :deep(.filesize),
 :deep(.mimetype) {
-  @include fontFamily_Cousine;
-  @include fontSize_teeny;
+  font-family: 'Cousine', monospace;
+  font-size: 0.6875rem;
   text-align: center;
   line-height: 1.2;
   .text {

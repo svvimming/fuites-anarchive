@@ -1,26 +1,18 @@
 <template>
   <div class="verse-viewport">
 
-    <div class="viewport-dock dock-before">
+    <VerseModal />
 
-      <LandingSite />
+    <VerseHelpMenu />
 
-    </div>
+    <VerseLandingSite />
 
-    <div class="viewport-dock dock-after">
+    <CompostPortal />
 
-      <CompostPortal />
-
-      <Pocket />
-
-    </div>
+    <Pocket />
 
   </div>
 </template>
-
-<script setup>
-
-</script>
 
 <style lang="scss" scoped>
 .verse-viewport {
@@ -28,19 +20,24 @@
   height: 100%;
 }
 
-.viewport-dock {
+:deep(#modal) {
   position: absolute;
-  display: flex;
-  padding: torem(25);
-  width: 100%;
+  top: 50%;
+  left: 50%;
   z-index: 2;
 }
 
-.dock-before {
-  top: 0;
+:deep(#landing-site) {
+  position: absolute;
+  top: torem(25);
+  right: torem(25);
+  z-index: 2;
 }
 
-.dock-after {
-  bottom: 0;
+:deep(#pocket-anchor) {
+  position: absolute;
+  bottom: torem(25);
+  right: torem(25);
+  z-index: 2;
 }
 </style>

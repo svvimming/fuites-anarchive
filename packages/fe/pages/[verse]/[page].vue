@@ -6,7 +6,7 @@
           <v-layer>
 
             <Thingie
-              v-for="thingie in thingies.data"
+              v-for="thingie in pageThingies"
               :key="thingie._id"
               :thingie="thingie"
               @init-update="initUpdate" />
@@ -21,9 +21,8 @@
 <script setup>
 // ======================================================================== Data
 const route = useRoute()
-const verse = route.params.verse
-const page = route.params.page
-
+const verseStore = useVerseStore()
+// const { verse } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
@@ -40,20 +39,26 @@ const { data } = await useAsyncData('settings', async () => {
   return content[0]
 })
 
+// ==================================================================== Computed
+const verseName = computed(() => route.params.verse)
+const pageName = computed(() => route.params.page)
+const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value))
+
 // ==================================================================== Watchers
 watch(data, async () => {
-  await collectorStore.getThingies({ verse, page })
+  await verseStore.getVerse({ verse: verseName.value })
+  await verseStore.getPage({ page: pageName.value })
   await generalStore.setSiteData({ key: 'settings', value: data.value })
+  await collectorStore.getThingies()
 }, { immediate: true })
 
 // ===================================================================== Methods
 /**
  * @method initUpdate
+ * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
  */
 
 const initUpdate = update => {
-  // If updating the at property, record the session id into the update
-  // Manipulate the thingie directly in the store rather than wait for the network
   if (update.hasOwnProperty('at')) {
     const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
     socket.value.emit('update-thingie', updateAt)
@@ -70,6 +75,7 @@ const initUpdate = update => {
   top: 0;
   left: 0;
 }
+
 .page {
   position: relative;
   z-index: 1;

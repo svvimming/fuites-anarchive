@@ -24,6 +24,7 @@ $gray900: #212121;
 $lavender: #BDBBD7;
 $salt: #6c6575;
 $cove: #7794C5;
+$contessa: #D67272;
 
 // ----------------------------------------------------------------- Breakpoints
 $breakpoint_Tiny: 25.9375rem; // 415px
@@ -51,10 +52,10 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 }
 
 @mixin link {
-	@include fontSize_Main;
-  @include fontWeight_Bold;
+	font-size: 0.8125rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
-  @include fontFamily_NanumMyeongjo;
+  font-family: 'Nanum Myeongjo', serif;
 }
 
 @mixin linkShadow {
@@ -292,4 +293,4 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // =============================================================================
-@import 'typography';
+// @import 'typography';

@@ -21,11 +21,9 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     const created = await MC.model.Thingie.create({
       file_ref: body.file_id,
       location: body.location,
-      at: {
-        x: body.at ? body.at.x : 60 + Math.random() * 500,
-        y: body.at ? body.at.y : 200 + Math.random() * 200,
-        z: 1
-      },
+      pocket_ref: body.pocket_ref,
+      verse: body.verse,
+      at: body.at,
       width: body.width ? body.width : 80,
       angle: 0,
       clip: false,
@@ -38,16 +36,13 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       fontfamily: body.fontfamily ? body.fontfamily : '',
       consistencies: [],
       colors: body.colors ? body.colors : [],
-      path_data: body.pathData
+      path_data: body.path_data
     })
     await created.populate({
       path: 'file_ref',
       select: 'filename file_ext aspect'
     })
-    MC.socket.io
-      .of(`${verse}`)
-      .to(`${verse}|thingies`)
-      .emit('module|post-create-thingie|payload', created)
+    MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)
     GetThingieConsistencies(verse, created, upload)
   } catch (e) {

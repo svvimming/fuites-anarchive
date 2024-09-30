@@ -57,6 +57,10 @@ export default defineNuxtConfig({
   },
   // ================================================================== Compiler
   vite: {
+    vue: {
+      config: { silent: true },
+      silent: true
+    },
     css: {
       preprocessorOptions: {
         scss: { // make SCSS variables, functions and mixins globally accessible
@@ -70,7 +74,8 @@ export default defineNuxtConfig({
   },
   // ============================================================= Global Styles
   css: [
-    '@/assets/scss/main.scss'
+    '@/assets/scss/main.scss',
+    '@/assets/scss/typography.scss'
   ],
   // =================================================================== Modules
   modules: [

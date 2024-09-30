@@ -48,6 +48,11 @@ defineProps({
     border-radius: 50%;
     opacity: 0.95;
   }
+  &:hover {
+    :deep(circle) {
+      stroke-dashoffset: 20%;
+    }
+  }
 }
 
 .spinner {
@@ -68,7 +73,7 @@ defineProps({
 }
 
 .svg-border {
-  :deep(path) {
+  :deep(circle) {
     transition: 200ms ease;
   }
 }

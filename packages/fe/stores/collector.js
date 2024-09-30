@@ -6,6 +6,12 @@ import { useFetchAuth } from '../composables/use-fetch-auth'
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useCollectorStore = defineStore('collector', () => {
+  // =================================================================== imports
+  const verseStore = useVerseStore()
+  const { verse, page } = storeToRefs(verseStore)
+  const pocketStore = usePocketStore()
+  const { pocket, token } = storeToRefs(pocketStore)
+
   // ===================================================================== state
   const thingies = ref({
     loading: true,
@@ -19,11 +25,12 @@ export const useCollectorStore = defineStore('collector', () => {
    * @method getThingies
    */
 
-  const getThingies = async incoming => {
+  const getThingies = async () => {
     try {
       const response = await useFetchAuth('/get-thingies', {
-        locations: ['pocket', incoming.page],
-        verse: incoming.verse,
+        location: page.value.data.name,
+        verse: verse.value.data.name,
+        pocketId: pocket.value.data._id,
         method: 'get'
       })
       useSetStoreData(thingies, {
@@ -31,7 +38,6 @@ export const useCollectorStore = defineStore('collector', () => {
         refresh: false,
         data: response
       })
-      return thingies.value
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(thingies, {
@@ -39,7 +45,30 @@ export const useCollectorStore = defineStore('collector', () => {
         refresh: false,
         data: []
       })
-      return thingies.value
+    }
+  }
+
+  /**
+   * @method postCreateThingie
+   */
+
+  const postCreateThingie = async incoming => {
+    try {
+      const thingie = await useFetchAuth('/post-create-thingie', Object.assign({}, incoming, {
+        ...(!incoming.location && { pocket_ref: pocket.value.data._id }),
+        creator_token: token.value,
+        verse: verse.value.data.name,
+        method: 'post'
+      }))
+      if (thingie) {
+        thingies.value.data.push(thingie)
+        console.log('collector store post create thignie response:', thingies.value)
+        return thingie
+      }
+      return false
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
     }
   }
 
@@ -61,12 +90,15 @@ export const useCollectorStore = defineStore('collector', () => {
     }
   }
 
+  
+
   // ==================================================================== return
   return {
     // ----- state
     thingies,
     // ----- actions
     getThingies,
+    postCreateThingie,
     updateThingie
   }
 })

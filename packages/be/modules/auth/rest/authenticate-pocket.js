@@ -8,21 +8,21 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.get('/authenticate', async (req, res) => {
+MC.app.get('/authenticate-pocket', async (req, res) => {
   try {
     const verse = req.query.verse
-    const verseTokens = `${verse.toUpperCase().replaceAll('-', '_')}_AUTH_TOKENS`
     const token = req.query.token
-    const tokensString = process.env[verseTokens]
+    const tokensString = process.env.REFACTOR_AUTH_TOKENS
     const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
-      SendData(res, 200, '💫 💫 💫', true)
+      const pocket = await MC.model.Pocket.findOne({ verses: { $in: verse }, token }).exec()
+      SendData(res, 200, 'Pocket retrieved successfully', pocket)
     } else {
       SendData(res, 200, 'oops, try another token', false)
     }
   } catch (e) {
-    console.log('===================== [Endpoint: /authenticate]')
+    console.log('============================ [Endpoint: /authenticate-pocket]')
     console.log(e)
-    SendData(res, 200, 'ooops', false)
+    SendData(res, 200, 'oops, something went wrong...', false)
   }
 })

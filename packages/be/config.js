@@ -49,8 +49,8 @@ module.exports = {
     '/public/uploads'
   ],
   // ================================================================== Database
-  databaseUrl: process.env.DATABASE_URL_INSTANCE_FE,
-  databaseName: process.env.DATABASE_NAME_INSTANCE_FE,
+  databaseUrl: process.env.DATABASE_URL_REFACTOR,
+  databaseName: process.env.DATABASE_NAME_REFACTOR,
   mongoConnectionOptions: {
     // ssl: true,
     auth: {

@@ -4,7 +4,7 @@ import Chalk from 'chalk'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-export const useHandleFetchError = (e) => {
+export const useHandleFetchError = (e, func) => {
   const serverEnv = useRuntimeConfig().public.serverEnv
   let message = e.statusMessage
   /**
@@ -19,5 +19,7 @@ export const useHandleFetchError = (e) => {
     }
     console.log(e.stack)
     console.log('\n')
+    console.log(e)
+    console.log(func)
   }
 }

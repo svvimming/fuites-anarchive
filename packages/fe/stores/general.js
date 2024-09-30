@@ -5,15 +5,14 @@ import { v4 } from 'uuid'
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useGeneralStore = defineStore('general', () => {
-  // =================================================================== imports
-  const toasterStore = useToasterStore()
-  const pocketStore = usePocketStore()
-
   // ===================================================================== state
   const config = useRuntimeConfig()
   const siteData = ref({})
-  const authenticated = ref(true) /** @TODO set default to false */
   const sessionId = ref('')
+  const modal = ref({
+    active: false,
+    action: ''
+  })
 
   // ================================================================== computed
   const baseUrl = computed(() => config.public.backendUrl)
@@ -22,27 +21,6 @@ export const useGeneralStore = defineStore('general', () => {
   onMounted(() => { sessionId.value = v4() })
 
   // =================================================================== actions
-
-  /**
-   * @method authenticate
-   */
-
-  const authenticate = async token => {
-    try {
-      const response = await useFetchAuth('/authenticate', { method: 'get', token })
-      const authenticated = response.data.payload
-      toasterStore.addMessage({
-        type: authenticated ? 'success' : 'error',
-        text: response.data.message
-      })
-      if (authenticated) {
-        pocketStore.getPocket(token)
-        authenticated.value = authenticated
-      }
-    } catch (e) {
-      useHandleFetchError(e)
-    }
-  }
   
   /**
    * @method setSiteData
@@ -52,15 +30,33 @@ export const useGeneralStore = defineStore('general', () => {
     siteData.value[incoming.key] = incoming.value
   }
 
+  /**
+   * @method setModal
+   */
+
+  const setModal = incoming => {
+    modal.value = incoming
+  }
+
+  /**
+   * @method closeModal
+   */
+
+  const closeModal = () => {
+    modal.value.active = false
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     baseUrl,
     siteData,
-    authenticated,
     sessionId,
+    modal,
     // ----- actions
-    setSiteData
+    setSiteData,
+    setModal,
+    closeModal
   }
 })
 

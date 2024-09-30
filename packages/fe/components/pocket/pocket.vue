@@ -1,5 +1,5 @@
 <template>
-  <div class="pocket-anchor">
+  <div id="pocket-anchor">
     <!-- ===================================================== Pocket Toggle -->
     <ButtonText
       :active="pocketOpen"
@@ -11,9 +11,8 @@
       <!-- ============================================= Background Elements -->
       <Turbulence />
       <DashedBorderRectangle class="pocket-border" />
-
       <!-- ========================================================== Pocket -->
-      <div class="pocket">
+      <div id="pocket">
         <!-- ------------------------------------------------------ uploader -->
         <PocketSingleFileUploader :active="uploaderOpen" />
         <!-- -------------------------------------------- full screen toggle -->
@@ -28,6 +27,18 @@
           @clicked="uploaderOpen = !uploaderOpen">
           <IconPlus />
         </ButtonIcon>
+        <!-- -------------------------------------------------------- canvas -->
+        <ClientOnly>
+          <v-stage :config="{ width: 650, height: 400 }">
+            <v-layer>
+              <Thingie
+                v-for="thingie in pocketThingies"
+                :key="thingie._id"
+                :thingie="thingie"
+                @init-update="initUpdate" />
+            </v-layer>
+          </v-stage>
+        </ClientOnly>
 
       </div>
 
@@ -39,19 +50,39 @@
 <script setup>
 // ======================================================================== Data
 const pocketStore = usePocketStore()
-const { pocketOpen } = storeToRefs(pocketStore)
+const { pocket, pocketOpen } = storeToRefs(pocketStore)
+const collectorStore = useCollectorStore()
+const { thingies } = storeToRefs(collectorStore)
+const generalStore = useGeneralStore()
+const { sessionId } = storeToRefs(generalStore)
+const websocketStore = useWebsocketStore()
+const { socket } = storeToRefs(websocketStore)
 const fullscreen = ref(false)
 const uploaderOpen = ref(false)
 // const helpOpen = ref(false)
+
+// ==================================================================== Computed
+const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.pocket_ref === pocket.value.data._id))
+
+// ===================================================================== Methods
+/**
+ * @method initUpdate
+ * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
+ */
+
+ const initUpdate = update => {
+  if (update.hasOwnProperty('at')) {
+    const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
+    socket.value.emit('update-thingie', updateAt)
+    collectorStore.updateThingie(updateAt)
+  } else {
+    socket.value.emit('update-thingie', update)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.pocket-anchor {
-  position: relative;
-  margin-left: auto;
-}
-
 :deep(.button.stamp) {
   position: relative;
   z-index: 10;
@@ -107,7 +138,7 @@ const uploaderOpen = ref(false)
   background-color: white;
 }
 
-.pocket {
+#pocket {
   position: relative;
   @include modalShadow;
   width: 100%;

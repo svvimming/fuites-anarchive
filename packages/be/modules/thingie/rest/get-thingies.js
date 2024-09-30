@@ -10,12 +10,14 @@ const MC = require('@Root/config')
 // -----------------------------------------------------------------------------
 MC.app.get('/get-thingies', async (req, res) => {
   try {
-    const locations = req.query.locations
+    const location = req.query.location
     const verse = req.query.verse
-    const thingies = await MC.model.Thingie.find({
-      verse,
-      location: locations
-    }).populate({
+    const pocketId = req.query.pocketId
+    const query = {
+      $or: pocketId ? [{ location }, { pocket_ref: pocketId }] : [{ location }],
+      verse
+    }
+    const thingies = await MC.model.Thingie.find(query).populate({
       path: 'file_ref',
       select: 'filename file_ext aspect'
     })

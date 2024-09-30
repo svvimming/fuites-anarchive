@@ -20,7 +20,7 @@ html {
 
 body {
   @include selection-light;
-  @include fontFamily_NanumMyeongjo;
+  font-family: 'PT Sans', sans-serif;
   padding: 0;
   margin: 0;
   height: auto;

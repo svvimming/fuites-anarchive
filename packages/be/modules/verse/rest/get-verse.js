@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /get-pocket')
+console.log('💡 [endpoint] /get-verse')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -8,14 +8,14 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.get('/get-pocket', async (req, res) => {
+MC.app.get('/get-verse', async (req, res) => {
   try {
-    const token = req.query.token
-    const pocket = await MC.model.Pocket.findOne({ token }).exec()
-    SendData(res, 200, 'Dataset retrieved successfully', pocket)
+    const name = req.query.verse
+    const verse = await MC.model.Verse.findOne({ name }).exec()
+    SendData(res, 200, 'Pocket retrieved successfully', verse)
   } catch (e) {
-    console.log('===================================== [Endpoint: /get-pocket]')
+    console.log('====================================== [Endpoint: /get-verse]')
     console.log(e)
-    SendData(res, 500, 'Something went wrong. Please try again.')
+    SendData(res, 200, 'This Verse doesn\'t exist yet', false)
   }
 })

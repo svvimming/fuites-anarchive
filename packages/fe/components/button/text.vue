@@ -3,9 +3,7 @@
     v-slot="{ loading }"
     class="stamp">
 
-    <DashedBorderButtonPath
-      :active="active"
-      :class="['svg-border', { active }]" />
+    <DashedBorderButtonPath :class="['svg-border', { active }]" />
 
     <SpinnerMaterialCircle v-if="loading && !disableLoader" />
 
