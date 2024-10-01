@@ -56,7 +56,7 @@ const props = defineProps({
 
 // ======================================================================= Setup
 const emit = defineEmits(['clicked'])
-const buttonStore = useZeroButtonStore()
+const buttonStore = useButtonStore()
 if (props.id) {
   buttonStore.setButton({ id: props.id, loading: false })
 }

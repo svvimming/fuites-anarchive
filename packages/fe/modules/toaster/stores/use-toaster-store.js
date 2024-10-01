@@ -11,7 +11,7 @@ export const useToasterStore = defineStore('toaster', () => {
   const { siteData } = storeToRefs(generalStore)
 
   // ================================================================== computed
-  const settings = computed(() => siteData.value?.settings.toaster || {})
+  const settings = computed(() => siteData.value?.settings?.toaster || {})
 
   // ===================================================================== state
   const toasts = ref([])
@@ -23,7 +23,7 @@ export const useToasterStore = defineStore('toaster', () => {
    */
 
   const addMessage = payload => {
-    const from = payload.from || settings.value.from || 'top'
+    const from = payload.from || settings.value?.from || 'top'
     const entry = Object.assign(payload, {
       id: v4(),
       jingle: 0

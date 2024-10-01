@@ -1,4 +1,7 @@
 {
+  "uploader": {
+    "maxFileSizeMb": 8
+  },
   "toaster": {
     "display": 3,
     "timeout": 5000,

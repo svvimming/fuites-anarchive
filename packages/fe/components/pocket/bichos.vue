@@ -1,11 +1,13 @@
 <template>
-  <div class="bicho-canvas-wrapper">
+  <div ref="ctn" class="bicho-canvas-wrapper">
+
     <canvas
       ref="canvas"
-      width="200"
-      height="200"
+      :width="canvasWidth"
+      :height="canvasHeight"
       class="bicho-canvas">
     </canvas>
+
   </div>
 </template>
 
@@ -25,12 +27,19 @@ const props = defineProps({
 const emit = defineEmits(['path-completed']) 
 
 // ======================================================================== Data
+const ctn = ref(null)
 const canvas = ref(null)
 const coords = ref([])
+const canvasWidth = ref(200)
+const canvasHeight = ref(200)
 
 // ======================================================================= Hooks
 onMounted(() => {
   nextTick(() => {
+    const rect = ctn.value.getBoundingClientRect()
+    canvasWidth.value = rect.height
+    canvasHeight.value = rect.height
+    // canvas.value.width = 
     const ctx = canvas.value.getContext('2d')
     ctx.lineWidth = 1
     canvas.value.addEventListener('mousedown', mousedown)
@@ -104,12 +113,15 @@ const touchend = () => {
 // ///////////////////////////////////////////////////////////////////// General
 .bicho-canvas-wrapper {
   position: relative;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
 }
 
 .bicho-canvas {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.8);
   @include focusBoxShadowSmall;
   border-radius: 0.25rem;
   padding: 0.625rem;
+  
 }
 </style>

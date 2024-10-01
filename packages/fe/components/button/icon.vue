@@ -1,6 +1,8 @@
 <template>
   <ZeroButton
     v-slot="{ loading }"
+    :force-loading="forceLoading"
+    :force-disabled="forceDisabled"
     class="icon-button">
 
     <DashedBorderCircle
@@ -20,6 +22,16 @@
 // ======================================================================= Setup
 defineProps({
   disableLoader: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  forceLoading: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  forceDisabled: {
     type: Boolean,
     required: false,
     default: false
@@ -77,18 +89,5 @@ defineProps({
     transition: 200ms ease;
   }
 }
-
-// .color-cove {
-//   &.active {
-//     .svg-border {
-//       width: calc(100% + torem(4));
-//       height: calc(100% + torem(4));
-//       :deep(path) {
-//         fill: $cove;
-//         stroke-width: 6;
-//       }
-//     }
-//   }
-// }
 </style>
 

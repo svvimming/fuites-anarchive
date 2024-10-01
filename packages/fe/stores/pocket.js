@@ -17,8 +17,15 @@ export const usePocketStore = defineStore('pocket', () => {
       verses: []
     }
   })
-  const pocketOpen = ref(false)
 
+  const uploader = ref({
+    status: 'idle', // 'idle', 'initializing', 'ready', 'uploading', 'upload-complete'
+    file: false
+  })
+
+  const pocketOpen = ref(false)
+  const uploaderOpen = ref(false)
+  
   // ================================================================== Computed
   const thingies = computed(() => pocket.value?.data.thingies || [])
   const token = computed(() => pocket.value?.data.token)
@@ -32,6 +39,32 @@ export const usePocketStore = defineStore('pocket', () => {
 
   const setPocketOpen = val => {
     pocketOpen.value = val
+  }
+
+  /**
+   * @method setUploaderOpen
+   */
+
+  const setUploaderOpen = val => {
+    uploaderOpen.value = val
+  }
+
+  /**
+   * @method setUploader
+   */
+
+  const setUploader = incoming => {
+    useSetStoreData(uploader, Object.assign({}, incoming))
+  }
+
+  /**
+   * @method setUploadingFileId
+   */
+
+  const setUploadingFileId = id => {
+    if (uploader.value.file) {
+      uploader.value.file.id = id
+    }
   }
 
   /**
@@ -102,15 +135,19 @@ export const usePocketStore = defineStore('pocket', () => {
   return {
     // ----- state
     pocket,
+    uploader,
     pocketOpen,
+    uploaderOpen,
     // ----- computed
     token,
     thingies,
     authenticated,
     // ----- actions
     setPocketOpen,
+    setUploaderOpen,
+    setUploader,
+    setUploadingFileId,
     getAuthPocket
-    // postUpdatePocket
   }
 })
 

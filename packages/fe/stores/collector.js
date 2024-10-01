@@ -14,7 +14,7 @@ export const useCollectorStore = defineStore('collector', () => {
 
   // ===================================================================== state
   const thingies = ref({
-    loading: true,
+    loading: false,
     refresh: false,
     data: []
   })
@@ -27,10 +27,11 @@ export const useCollectorStore = defineStore('collector', () => {
 
   const getThingies = async () => {
     try {
+      useSetStoreData(thingies, { loading: true })
       const response = await useFetchAuth('/get-thingies', {
         location: page.value.data.name,
         verse: verse.value.data.name,
-        pocketId: pocket.value.data._id,
+        pocketId: pocket.value.data?._id,
         method: 'get'
       })
       useSetStoreData(thingies, {
@@ -54,6 +55,7 @@ export const useCollectorStore = defineStore('collector', () => {
 
   const postCreateThingie = async incoming => {
     try {
+      useSetStoreData(thingies, { refresh: true })
       const thingie = await useFetchAuth('/post-create-thingie', Object.assign({}, incoming, {
         ...(!incoming.location && { pocket_ref: pocket.value.data._id }),
         creator_token: token.value,
@@ -62,13 +64,11 @@ export const useCollectorStore = defineStore('collector', () => {
       }))
       if (thingie) {
         thingies.value.data.push(thingie)
-        console.log('collector store post create thignie response:', thingies.value)
-        return thingie
       }
-      return false
+      useSetStoreData(thingies, { refresh: false })
     } catch (e) {
       useHandleFetchError(e)
-      return false
+      useSetStoreData(thingies, { refresh: false })
     }
   }
 
@@ -89,8 +89,6 @@ export const useCollectorStore = defineStore('collector', () => {
       collection.splice(index, 1, incoming)
     }
   }
-
-  
 
   // ==================================================================== return
   return {

@@ -1,85 +1,53 @@
 <template>
-  <div :class="['uploader-modal', { active }]">
+  <PocketUploadInput
+    accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    :max-file-size-mb="maxFileSizeMB"
+    :class="[
+      'single-file-uploader',
+      { 'active': status !== 'idle' },
+      { 'upload-input': (status === 'ready' || status === 'uploading') && uploaderOpen }
+    ]">
 
-    <PocketUploadInput
-      :prompt-to-upload="true"
-      accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
-      :max-file-size-mb="maxFileSizeMB"
-      class="single-file-uploader"
-      @statusChanged="statusChanged"
-      @fileSelected="fileSelected"
-      @fileChanged="fileChanged">
-
-      <template #metadata="{ filename, filesize, mimetype }">
-        <div class="metadata">
-          <div class="filename">
-            {{ filename }}
+    <template #metadata="{ filename, filesize, mimetype }">
+      <div class="metadata">
+        <div class="filename">
+          {{ filename }}
+        </div>
+        <div class="row">
+          <div class="tag filesize">
+            {{ getFilesize(filesize) }}
           </div>
-          <div class="row">
-            <div class="tag filesize">
-              {{ getFilesize(filesize) }}
-            </div>
-            <div class="tag mimetype">
-              {{ getExtension(mimetype) }}
-            </div>
+          <div class="tag mimetype">
+            {{ getExtension(mimetype) }}
           </div>
         </div>
-      </template>
+      </div>
+    </template>
 
-      <template #progress="{ progress }">
-        <div v-if="status === 'uploading' || status === 'upload-complete' || status === 'upload-finalized'" class="progress">
-          <div
-            v-if="progress >= 100"
-            class="finalizing-container">
-            <span v-if="status === 'upload-finalized'">upload complete</span>
-            <span v-else>finalizing</span>
-          </div>
-          <div class="progress-bar-container">
-            <div :style="{ width: `${progress}%` }" class="progress-bar" />
-          </div>
-          <div v-if="status !== 'upload-finalized'" class="percentage">
-            <SpinnerMaterialCircle v-if="progress >= 100" />
-            <span v-else>{{ progress }}%</span>
-          </div>
-          <span v-else>✅</span>
-        </div>
-      </template>
-
-      <template #file-upload-button="{ clickFileInput }">
-        <button
-          v-if="!file && status !== 'upload-complete' && !processingFile"
-          class="select-file-button uploader-button"
-          @click="clickFileInput">
-          {{ initializeUploadPrompt }}
-        </button>
-        <button
-          v-if="status === 'upload-finalized' && !processingFile"
-          class="upload-another-file-button uploader-button"
-          @click="clickFileInput">
-          Upload another file
-        </button>
-        <SpinnerTripleDot
-          v-if="processingFile"
-          class="file-processing-loader theme-dark" />
-      </template>
-
-      <template #prompt-to-upload="{ uploadFile, clearFileInput }">
+    <template #progress="{ progress }">
+      <div class="progress">
         <div
-          class="upload-prompt"
-          v-html="finalizeUploadPrompt">
+          v-if="progress >= 100"
+          class="finalizing-container">
+          <span>upload complete</span>
         </div>
-        <PocketBichos
-          @path-completed="(path) => { bicho = path; uploadFile() }" />
-        <button
-          class="cancel-button uploader-button"
-          @click="clearFileInput">
-          Cancel
-        </button>
-      </template>
+        <div class="progress-bar-container">
+          <div :style="{ width: `${progress}%` }" class="progress-bar" />
+        </div>
+        <div v-if="status !== 'upload-complete'" class="percentage">
+          <SpinnerMaterialCircle v-if="progress >= 100" />
+          <span v-else>{{ progress }}%</span>
+        </div>
+        <span v-else>✅</span>
+      </div>
+    </template>
 
-    </PocketUploadInput>
+    <template #prompt-to-upload="{ uploadFile }">
+      <div class="upload-prompt" v-html="finalizeUploadPrompt"></div>
+      <PocketBichos @path-completed="(path) => { bicho = path; uploadFile() }" />
+    </template>
 
-  </div>
+  </PocketUploadInput>
 </template>
 
 <script setup>
@@ -89,16 +57,6 @@ import { filesize } from 'filesize'
 
 // ======================================================================= Setup
 const props = defineProps({
-  active: {
-    type: Boolean,
-    required: false,
-    default: false
-  },
-  initPrompt: {
-    type: String,
-    required: false,
-    default: ''
-  },
   finalPrompt: {
     type: String,
     required: false,
@@ -116,29 +74,25 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['upload-finalized', 'draw-bicho-complete'])
-
 // ======================================================================== Data
-const status = ref(false)
-const file = ref(false)
 const bicho = ref([])
-const processingFile = ref(false)
 const collectorStore = useCollectorStore()
-// const buttonStore = useButtonStore()
+const pocketStore = usePocketStore()
+const { uploaderOpen, uploader } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
-const initializeUploadPrompt = computed(() => props.initPrompt || 'Upload a file')
+const file = computed(() => uploader.value.file)
+const status = computed(() => uploader.value.status)
 const finalizeUploadPrompt = computed(() => {
-  if (file.value) {
-    return file.value.size > (props.maxFileSizeMB * 1000000) ?
-      `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : props.finalPrompt || 'Draw a shape to upload selected file'
-  }
-  return ''
+  return file.value.size > (props.maxFileSizeMB * 1000000) ?
+    `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : props.finalPrompt || 'Draw a shape to upload selected file:'
 })
 
 // ==================================================================== Watchers
 watch(status, (stat) => {
+  console.log(stat)
   if (stat === 'upload-complete') {
+    pocketStore.setUploaderOpen(false)
     finalizeUpload()
   }
 })
@@ -146,15 +100,16 @@ watch(status, (stat) => {
 // ===================================================================== Methods
 const getFilesize = size => { return filesize(size, { standard: 'iec' }) }
 const getExtension = data => { return Mime.getExtension(data) }
-const statusChanged = stat => { status.value = stat }
-const fileSelected = () => { processingFile.value = true }
-const fileChanged = data => {
-  processingFile.value = false
-  file.value = data
-}
 
+/**
+ * @method finalizeUpload
+ * @desc Calls the pockets [postCreateThingie()] method passing the 'bicho' path data to the new thingie.
+ */
 const finalizeUpload = async () => {
-  const complete = await collectorStore.postCreateThingie({
+  /** @TODO post thingie create should add a loader to the pocket
+   * while new thing is being created
+   * */
+  await collectorStore.postCreateThingie({
     file_id: file.value.id,
     ...(!!props.uploadToPage && { location: props.uploadToPage }),
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
@@ -167,51 +122,68 @@ const finalizeUpload = async () => {
       rotation: 0
     }
   })
-  if (complete) {
-    status.value = 'upload-finalized'
-    emit('upload-finalized')
-  }
 }
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.uploader-modal {
+.single-file-uploader {
   position: absolute;
   left: 0;
-  top: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  z-index: 0;
+  border-radius: torem(25);
+  overflow: hidden;
+  &.active {
+    z-index: 100;
+    :deep(.upload-input-container) {
+      visibility: visible;
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+  &.upload-input {
+    :deep(.upload-input-container) {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
-.single-file-uploader {
-  position: relative;
-  // padding: 1rem;
-  z-index: 10;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+:deep(.upload-input-container) {
+  position: absolute;
+  padding: 0.75rem;
+  left: torem(3);
+  top: torem(3);
+  width: calc(100% - torem(6));
+  height: calc(100% - torem(6));
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: torem(25);
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: 200ms ease;
 }
 
 // //////////////////////////////////////////////////////////////////// Metadata
 :deep(.metadata) {
-  border: 1px solid rgba(black, 0.5);
-  border-radius: 0.25rem;
+  position: absolute;
   padding: 0.125rem 0.25rem;
-  max-width: toRem(220);
+  top: 50%;
+  left: torem(24);
+  max-width: torem(220);
+  transform: translate(0, -50%);
 }
 
 :deep(.filename) {
   padding: 0 0.5rem;
   margin: 0.25rem 0;
+  margin-right: 0.5rem;
   line-height: 1.2;
   font-family: 'Cousine', monospace;
   font-size: 0.6875rem;
-  text-align: center;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -222,19 +194,10 @@ const finalizeUpload = async () => {
 :deep(.mimetype) {
   font-family: 'Cousine', monospace;
   font-size: 0.6875rem;
-  text-align: center;
   line-height: 1.2;
   .text {
     line-height: 1;
   }
-}
-
-:deep(.filesize) {
-  margin-right: 0.5rem;
-}
-
-:deep(.mimetype) {
-  text-transform: uppercase;
 }
 
 // //////////////////////////////////////////////////////////////// Progress bar
@@ -284,37 +247,4 @@ const finalizeUpload = async () => {
   }
 }
 
-// ///////////////////////////////////////////////////////////////////// Buttons
-.uploader-button {
-  @include linkHover(#000000);
-  padding: 0.5rem 1rem;
-  text-align: center;
-}
-.upload-file-button,
-.upload-another-file-button {
-  margin: 0.375rem 0;
-}
-
-.cancel-button {
-  margin-top: 0.5rem;
-}
-
-:deep(.button) {
-  @include link;
-}
-
-.upload-prompt {
-  padding: 0.5rem 1rem;
-  text-align: center;
-  margin: 0.375rem 0;
-  white-space: nowrap;
-}
-
-.file-processing-loader {
-  position: relative;
-  padding: 0.875rem 1rem;
-  // width: 100%;
-  // height: 100%;
-  opacity: 1;
-}
 </style>

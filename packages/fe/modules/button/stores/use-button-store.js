@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-export const useZeroButtonStore = defineStore('zero-button', () => {
+export const useButtonStore = defineStore('button', () => {
   // ===================================================================== state
   const buttons = ref({})
 

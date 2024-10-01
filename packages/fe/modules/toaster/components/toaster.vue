@@ -42,8 +42,8 @@ const toasterStore = useToasterStore()
 const { toasts } = storeToRefs(toasterStore)
 
 const settings = computed(() => siteData.value?.settings?.toaster || {})
-const from = computed(() => props.from || settings.value.from || 'top')
-const timeout = computed(() => settings.value.timeout || 5000)
+const from = computed(() => props.from || settings.value?.from || 'top')
+const timeout = computed(() => settings.value?.timeout || 5000)
 
 </script>
 

@@ -13,20 +13,10 @@
       <DashedBorderRectangle class="pocket-border" />
       <!-- ========================================================== Pocket -->
       <div id="pocket">
+        <!-- ------------------------------------------------------- spinner -->
+        <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" />
         <!-- ------------------------------------------------------ uploader -->
-        <PocketSingleFileUploader :active="uploaderOpen" />
-        <!-- -------------------------------------------- full screen toggle -->
-        <ButtonIcon
-          class="fullscreen-toggle"
-          @clicked="fullscreen = !fullscreen">
-          <IconExpand />
-        </ButtonIcon>
-        <!-- ----------------------------------------------- uploader toggle -->
-        <ButtonIcon
-          class="uploader-toggle"
-          @clicked="uploaderOpen = !uploaderOpen">
-          <IconPlus />
-        </ButtonIcon>
+        <PocketSingleFileUploader />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
           <v-stage :config="{ width: 650, height: 400 }">
@@ -39,7 +29,21 @@
             </v-layer>
           </v-stage>
         </ClientOnly>
-
+        <!-- -------------------------------------------- full screen toggle -->
+        <ButtonIcon
+          class="fullscreen-toggle"
+          @clicked="fullscreen = !fullscreen">
+          <IconExpand />
+        </ButtonIcon>
+        <!-- ----------------------------------------------- uploader toggle -->
+        <ButtonIcon
+          :class="['uploader-toggle', { 'upload-ready': uploader.status === 'ready' }]"
+          :force-loading="uploader.status === 'initialized'"
+          :force-disabled="uploader.status === 'uploading'"
+          @clicked="pocketStore.setUploaderOpen(!uploaderOpen)">
+          <IconPlus class="icon" />
+        </ButtonIcon>
+    
       </div>
 
     </div>
@@ -49,17 +53,20 @@
 
 <script setup>
 // ======================================================================== Data
-const pocketStore = usePocketStore()
-const { pocket, pocketOpen } = storeToRefs(pocketStore)
+const fullscreen = ref(false)
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { sessionId } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
-const fullscreen = ref(false)
-const uploaderOpen = ref(false)
-// const helpOpen = ref(false)
+const pocketStore = usePocketStore()
+const {
+  pocket,
+  uploader,
+  pocketOpen,
+  uploaderOpen,
+} = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.pocket_ref === pocket.value.data._id))
@@ -138,6 +145,7 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   background-color: white;
 }
 
+// ---------------------------------------------------------------------- Pocket
 #pocket {
   position: relative;
   @include modalShadow;
@@ -145,10 +153,38 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   height: 100%;
 }
 
+:deep(.triple-dot-loader) {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 99;
+  transform: translate(-50%, 2rem);
+  .dot {
+    background-color: $cove !important;
+  }
+}
+
 .uploader-toggle {
   position: absolute !important;
   left: torem(12);
   bottom: torem(12);
+  width: torem(41);
+  height: torem(41);
+  z-index: 101;
+  .icon {
+    transition: 150ms ease;
+  }
+  :deep(.spinner) {
+    circle {
+      stroke-width: 10;
+      stroke: $cove;
+    }
+  }
+  &.upload-ready {
+    .icon {
+      transform: rotate(45deg);
+    }
+  }
 }
 
 .fullscreen-toggle {
