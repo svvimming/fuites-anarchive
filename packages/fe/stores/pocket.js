@@ -25,6 +25,7 @@ export const usePocketStore = defineStore('pocket', () => {
 
   const pocketOpen = ref(false)
   const uploaderOpen = ref(false)
+  const fullscreen = ref(false)
   
   // ================================================================== Computed
   const thingies = computed(() => pocket.value?.data.thingies || [])
@@ -65,6 +66,14 @@ export const usePocketStore = defineStore('pocket', () => {
     if (uploader.value.file) {
       uploader.value.file.id = id
     }
+  }
+
+  /**
+   * @method togglePocketFullscreen
+   */
+
+  const togglePocketFullscreen = () => {
+    fullscreen.value = !fullscreen.value
   }
 
   /**
@@ -138,6 +147,7 @@ export const usePocketStore = defineStore('pocket', () => {
     uploader,
     pocketOpen,
     uploaderOpen,
+    fullscreen,
     // ----- computed
     token,
     thingies,
@@ -147,6 +157,7 @@ export const usePocketStore = defineStore('pocket', () => {
     setUploaderOpen,
     setUploader,
     setUploadingFileId,
+    togglePocketFullscreen,
     getAuthPocket
   }
 })

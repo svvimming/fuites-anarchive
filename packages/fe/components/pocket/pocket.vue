@@ -2,6 +2,7 @@
   <div id="pocket-anchor">
     <!-- ===================================================== Pocket Toggle -->
     <ButtonText
+      v-if="authenticated"
       :active="pocketOpen"
       text="pocket"
       :class="['text-content color-cove rounded-border-left', { active: pocketOpen }]"
@@ -10,11 +11,11 @@
     <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
       <Turbulence />
-      <DashedBorderRectangle class="pocket-border" />
+      <!-- <DashedBorderRectangle class="pocket-border" /> -->
       <!-- ========================================================== Pocket -->
       <div id="pocket">
         <!-- ------------------------------------------------------- spinner -->
-        <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" />
+        <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
         <PocketSingleFileUploader />
         <!-- -------------------------------------------------------- canvas -->
@@ -32,7 +33,7 @@
         <!-- -------------------------------------------- full screen toggle -->
         <ButtonIcon
           class="fullscreen-toggle"
-          @clicked="fullscreen = !fullscreen">
+          @clicked="pocketStore.togglePocketFullscreen()">
           <IconExpand />
         </ButtonIcon>
         <!-- ----------------------------------------------- uploader toggle -->
@@ -53,7 +54,6 @@
 
 <script setup>
 // ======================================================================== Data
-const fullscreen = ref(false)
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
@@ -64,6 +64,8 @@ const pocketStore = usePocketStore()
 const {
   pocket,
   uploader,
+  fullscreen,
+  authenticated,
   pocketOpen,
   uploaderOpen,
 } = storeToRefs(pocketStore)
@@ -115,7 +117,7 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
   @include modalShadow;
   &.open {
-    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
+    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
     opacity: 1;
     visibility: visible;
     transform: scale(1);
@@ -159,9 +161,6 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   left: 50%;
   z-index: 99;
   transform: translate(-50%, 2rem);
-  .dot {
-    background-color: $cove !important;
-  }
 }
 
 .uploader-toggle {
@@ -191,5 +190,6 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   position: absolute !important;
   left: torem(12);
   top: torem(12);
+  z-index: 101;
 }
 </style>

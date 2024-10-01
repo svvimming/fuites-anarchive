@@ -43,7 +43,7 @@
     </template>
 
     <template #prompt-to-upload="{ uploadFile }">
-      <div class="upload-prompt" v-html="finalizeUploadPrompt"></div>
+      <div :class="['upload-prompt', { 'margin-large': fullscreen }]" v-html="finalizeUploadPrompt"></div>
       <PocketBichos @path-completed="(path) => { bicho = path; uploadFile() }" />
     </template>
 
@@ -78,7 +78,7 @@ const props = defineProps({
 const bicho = ref([])
 const collectorStore = useCollectorStore()
 const pocketStore = usePocketStore()
-const { uploaderOpen, uploader } = storeToRefs(pocketStore)
+const { uploaderOpen, uploader, fullscreen } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const file = computed(() => uploader.value.file)
@@ -164,20 +164,30 @@ const finalizeUpload = async () => {
   transition: 200ms ease;
 }
 
+.upload-prompt {
+  margin-bottom: 0.75rem;
+  &.margin-large {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
 // //////////////////////////////////////////////////////////////////// Metadata
 :deep(.metadata) {
   position: absolute;
   padding: 0.125rem 0.25rem;
   top: 50%;
   left: torem(24);
-  max-width: torem(220);
+  max-width: torem(140);
   transform: translate(0, -50%);
 }
 
 :deep(.filename) {
   padding: 0 0.5rem;
+  padding-left: 0;
   margin: 0.25rem 0;
   margin-right: 0.5rem;
+  width: 100%;
   line-height: 1.2;
   font-family: 'Cousine', monospace;
   font-size: 0.6875rem;
@@ -192,8 +202,20 @@ const finalizeUpload = async () => {
   font-family: 'Cousine', monospace;
   font-size: 0.6875rem;
   line-height: 1.2;
+  overflow-wrap: break-word;
   .text {
     line-height: 1;
+  }
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  .tag {
+    &:not(:last-child) {
+      margin-right: 0.375rem;
+    }
   }
 }
 

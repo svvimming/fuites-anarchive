@@ -47,9 +47,9 @@ export default {
       background-color: black;
     }
   }
-  &.theme-purple {
+  &.theme-cove {
     .dot {
-      background-color: black;
+      background-color: $cove;
     }
   }
 }

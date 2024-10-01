@@ -21,7 +21,8 @@
             type="file"
             class="input"
             :accept="acceptedMimetypes"
-            @change="handleInputChange" />
+            @change="handleInputChange"
+            @cancel="pocketStore.setUploaderOpen(false)" />
         </div>
         <!-- ===================================== [button] prompt to upload -->
         <slot
@@ -189,6 +190,7 @@ const uploadFile = () => {
       const value = file.value[key]
       typeof value !== 'function' && (formMetadata[key] = value)
     }
+    console.log('hit')
     pocketStore.setUploader({ status: 'uploading' })
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
@@ -242,13 +244,13 @@ const fileUploadComplete = () => {
  * @method handleWebsocketConnected
  */
 
-const handleWebsocketConnected = socket => {
+const handleWebsocketConnected = websocket => {
   fileReader.value = new FileReader()
   fileReader.value.onload = (e) => {
-    socket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
+    websocket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
   }
-  socket.on('module|file-upload-chunk|payload', uploadNextChunk)
-  socket.on('module|file-upload-complete|payload', fileUploadComplete)
+  websocket.on('module|file-upload-chunk|payload', uploadNextChunk)
+  websocket.on('module|file-upload-complete|payload', fileUploadComplete)
 }
 
 // ======================================================================= Hooks
