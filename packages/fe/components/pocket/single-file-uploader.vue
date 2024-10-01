@@ -90,7 +90,6 @@ const finalizeUploadPrompt = computed(() => {
 
 // ==================================================================== Watchers
 watch(status, (stat) => {
-  console.log(stat)
   if (stat === 'upload-complete') {
     pocketStore.setUploaderOpen(false)
     finalizeUpload()
@@ -105,10 +104,8 @@ const getExtension = data => { return Mime.getExtension(data) }
  * @method finalizeUpload
  * @desc Calls the pockets [postCreateThingie()] method passing the 'bicho' path data to the new thingie.
  */
+
 const finalizeUpload = async () => {
-  /** @TODO post thingie create should add a loader to the pocket
-   * while new thing is being created
-   * */
   await collectorStore.postCreateThingie({
     file_id: file.value.id,
     ...(!!props.uploadToPage && { location: props.uploadToPage }),

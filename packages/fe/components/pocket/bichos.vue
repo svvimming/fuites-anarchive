@@ -39,7 +39,9 @@ onMounted(() => {
     const rect = ctn.value.getBoundingClientRect()
     canvasWidth.value = rect.height
     canvasHeight.value = rect.height
-    // canvas.value.width = 
+    /** @TODO
+     * NEED TO RESIZE CANVAS TO MATCH CONTAINER DIMENSIONS
+     * */
     const ctx = canvas.value.getContext('2d')
     ctx.lineWidth = 1
     canvas.value.addEventListener('mousedown', mousedown)
