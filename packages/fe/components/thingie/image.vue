@@ -24,9 +24,10 @@ const { baseUrl } = storeToRefs(generalStore)
 
 // ==================================================================== Computed
 const config = computed(() => ({
-  image: image.value,
+  thingie_id: props.parentConfig.thingie_id,
   width: props.parentConfig.width,
-  height: props.parentConfig.height
+  height: props.parentConfig.height,
+  image: image.value,
 }))
 
 // ===================================================================== Methods

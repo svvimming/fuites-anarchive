@@ -30,6 +30,8 @@ const { $io, $bus } = useNuxtApp()
 const collectorStore = useCollectorStore()
 const generalStore = useGeneralStore()
 const { sessionId } = storeToRefs(generalStore)
+const keydownEventListener = ref(false)
+const keyupEventListener = ref(false)
 
 // ===================================================================== Methods
 /**
@@ -46,6 +48,15 @@ const { sessionId } = storeToRefs(generalStore)
   })
 }
 
+/**
+ * @method setDragndropOnShift
+ */
+
+const setDragndropOnShift = (e, val) => {
+  const meta = e.key === 'Meta' || e.code === 'MetaLeft' || e.code === 'MetaRight' || e.keyCode === 91 || e.keyCode === 93
+  if (meta) { generalStore.setDragndrop(val) }
+}
+
 // ======================================================================= Hooks
 // The following is emitted in websocket plugin in websocket zero-core module
 $bus.$on('socket.io-connected', handleWebsocketConnected)
@@ -54,11 +65,20 @@ onMounted(async () => {
   /**
    * Initialize websocket connection to backend
    */
-   await $io.connect()
+  await $io.connect()
+  /**
+   * Add keydown/up event listeners
+   */
+  keydownEventListener.value = e => { setDragndropOnShift(e, true) }
+  keyupEventListener.value = e => { setDragndropOnShift(e, false) }
+  window.addEventListener('keydown', keydownEventListener.value) 
+  window.addEventListener('keyup', keyupEventListener.value)   
 })
 
 onBeforeUnmount(() => {
   $bus.$off('socket.io-connected', handleWebsocketConnected)
+  window.removeEventListener('keydown', keydownEventListener.value) 
+  window.removeEventListener('keyup', keyupEventListener.value)  
 })
 
 </script>

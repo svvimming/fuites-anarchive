@@ -9,6 +9,8 @@ export const useGeneralStore = defineStore('general', () => {
   const config = useRuntimeConfig()
   const siteData = ref({})
   const sessionId = ref('')
+  const dragndrop = ref(false)
+  const draggingThingie = ref(false)
   const modal = ref({
     active: false,
     action: ''
@@ -46,17 +48,37 @@ export const useGeneralStore = defineStore('general', () => {
     modal.value.active = false
   }
 
+  /**
+   * @method setDragndrop
+   */
+
+  const setDragndrop = incoming => {
+    dragndrop.value = incoming
+  }
+
+  /**
+   * @method setDraggingThingie
+   */
+
+  const setDraggingThingie = incoming => {
+    draggingThingie.value = incoming
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     baseUrl,
     siteData,
     sessionId,
+    dragndrop,
+    draggingThingie,
     modal,
     // ----- actions
     setSiteData,
     setModal,
-    closeModal
+    closeModal,
+    setDragndrop,
+    setDraggingThingie
   }
 })
 

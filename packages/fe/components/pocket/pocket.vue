@@ -13,14 +13,14 @@
       <Turbulence />
       <!-- <DashedBorderRectangle class="pocket-border" /> -->
       <!-- ========================================================== Pocket -->
-      <div id="pocket">
+      <div id="pocket" ref="pocketRef" :draggable="dragndrop">
         <!-- ------------------------------------------------------- spinner -->
         <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
         <PocketSingleFileUploader />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
-          <v-stage :config="{ width: 650, height: 400 }">
+          <v-stage ref="stageRef" :config="{ width: 650, height: 400 }">
             <v-layer>
               <Thingie
                 v-for="thingie in pocketThingies"
@@ -56,10 +56,10 @@
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
-const generalStore = useGeneralStore()
-const { sessionId } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
+const generalStore = useGeneralStore()
+const { sessionId, dragndrop } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const {
   pocket,
@@ -69,6 +69,11 @@ const {
   pocketOpen,
   uploaderOpen,
 } = storeToRefs(pocketStore)
+
+const pocketRef = ref(null)
+const stageRef = ref(null)
+
+useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.pocket_ref === pocket.value.data._id))
@@ -191,5 +196,11 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   left: torem(12);
   top: torem(12);
   z-index: 101;
+}
+
+.ghost-image {
+  position: fixed;
+  left: -9999px;
+  overflow: hidden;
 }
 </style>

@@ -1,20 +1,20 @@
 <template>
   <div class="page-container">
-    <div class="page">
+    <!-- ============================================================== Page -->
+    <div ref="pageRef" :draggable="dragndrop" class="page">
       <ClientOnly>
-        <v-stage :config="{ width: 1000, height: 700 }">
+        <v-stage ref="stageRef" :config="{ width: 1000, height: 700 }">
           <v-layer>
-
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
               :thingie="thingie"
               @init-update="initUpdate" />
-
           </v-layer>
         </v-stage>
       </ClientOnly>
     </div>
+
   </div>
 </template>
 
@@ -26,7 +26,7 @@ const verseStore = useVerseStore()
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { sessionId } = storeToRefs(generalStore)
+const { sessionId, dragndrop } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 
@@ -38,6 +38,11 @@ const { data } = await useAsyncData('settings', async () => {
   }).find()
   return content[0]
 })
+
+const pageRef = ref(false)
+const stageRef = ref(false)
+
+useHandleThingieDragEvents(pageRef, stageRef)
 
 // ==================================================================== Computed
 const verseName = computed(() => route.params.verse)

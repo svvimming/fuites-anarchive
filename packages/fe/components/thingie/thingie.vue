@@ -15,6 +15,8 @@
 <script setup>
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
+const generalStore = useGeneralStore()
+const { dragndrop } = storeToRefs(generalStore)
 
 // ======================================================================= Props
 const props = defineProps({
@@ -29,7 +31,16 @@ const emit = defineEmits(['initUpdate'])
 // ==================================================================== Computed
 const id = computed(() => props.thingie._id)
 const type = computed(() => props.thingie.thingie_type)
-const config = computed(() => ({ ...props.thingie.at, draggable: true }))
+const at = computed(() => props.thingie.at)
+const config = computed(() => ({
+  ...at.value,
+  thingie_id: id.value,
+  draggable: !dragndrop.value,
+  dragBoundFunc: pos => ({
+    x: Math.max(0, pos.x),
+    y: Math.max(0, pos.y)
+  })
+}))
 
 // ===================================================================== Methods
 /**
