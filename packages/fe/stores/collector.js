@@ -59,6 +59,7 @@ export const useCollectorStore = defineStore('collector', () => {
       const thingie = await useFetchAuth('/post-create-thingie', Object.assign({}, incoming, {
         ...(!incoming.location && { pocket_ref: pocket.value.data._id }),
         creator_token: token.value,
+        pocket_ref: pocket.value.data._id,
         verse: verse.value.data.name,
         method: 'post'
       }))

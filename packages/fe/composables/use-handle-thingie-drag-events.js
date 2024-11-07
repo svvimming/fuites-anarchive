@@ -1,3 +1,7 @@
+// ////////////////////////////////////////////////////////////////////// Import
+// -----------------------------------------------------------------------------
+import { useElementByPoint, useMouse } from '@vueuse/core'
+
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useHandleThingieDragEvents = (element, stageRef) => {
@@ -8,8 +12,16 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const dropEventListener = ref(false)
   const generalStore = useGeneralStore()
   const { baseUrl, draggingThingie } = storeToRefs(generalStore)
+  const websocketStore = useWebsocketStore()
+  const { socket } = storeToRefs(websocketStore)
+  const verseStore = useVerseStore()
+  const { page } = storeToRefs(verseStore)
   const collectorStore = useCollectorStore()
   const { thingies } = storeToRefs(collectorStore)
+
+  const handleOffset = ref({ x: 0, y: 0 })
+  const { x, y } = useMouse({ type: 'client' })
+  const { element: target } = useElementByPoint({ x, y })
 
   // =================================================================== Methods
   /**
@@ -17,8 +29,8 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
    */
 
   const handleDragStart = e => {
-    const target = e.target.getBoundingClientRect()
-    const coords = { x: e.clientX - target.x, y: e.clientY - target.y }
+    const origin = e.target.getBoundingClientRect()
+    const coords = { x: e.clientX - origin.x, y: e.clientY - origin.y }
     const stage = stageRef.value.getStage()
     const hit = stage.getIntersection(coords)
     const id = hit?.attrs.thingie_id || hit?.parent?.attrs.thingie_id
@@ -31,7 +43,8 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
       ghost.src = `${baseUrl.value}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`
       ghost.style = `width: ${thingie.at.width}px; height: ${thingie.at.height}px; padding-top: unset;`
       document.body.appendChild(ghost)
-      e.dataTransfer.setDragImage(ghost, e.clientX - target.x - thingie.at.x, e.clientY - target.y - thingie.at.y)
+      handleOffset.value = ({ x: e.clientX - origin.x - thingie.at.x, y: e.clientY - origin.y - thingie.at.y })
+      e.dataTransfer.setDragImage(ghost, handleOffset.value.x, handleOffset.value.y)
       generalStore.setDraggingThingie(thingie)
     } else {
       e.preventDefault()
@@ -45,6 +58,28 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const handleDragEnd = e => {
     e.preventDefault()
     generalStore.setDragndrop(false)
+    const targetLocation = target.value.parentNode.parentNode.parentNode.dataset.location || target.value.parentNode.parentNode.dataset.location
+    const dropLocations = ['pocket', 'compost', page.value.data?.name]
+    const thingie = draggingThingie.value
+    if (
+      targetLocation &&
+      dropLocations.includes(targetLocation) &&
+      targetLocation !== thingie.location
+    ) {
+      const coords = { x: e.clientX - handleOffset.value.x, y: e.clientY - handleOffset.value.y }
+      if (targetLocation === 'pocket') {
+        const pocket = document.getElementById('pocket')
+        const rect = pocket.getBoundingClientRect()
+        coords.x = coords.x - rect.x
+        coords.y = coords.y - rect.y
+      }
+      const at = Object.assign({}, thingie.at, coords)
+      socket.value.emit('update-thingie', {
+        _id: thingie._id,
+        location: targetLocation,
+        at
+      })
+    }
     // Remove custom ghost image
     const ghost = document.querySelector(`.ghost-image[data-thingie-id="${draggingThingie.value?._id}"]`)
     document.body.removeChild(ghost)

@@ -1,7 +1,11 @@
 <template>
   <div class="page-container">
     <!-- ============================================================== Page -->
-    <div ref="pageRef" :draggable="dragndrop" class="page">
+    <div
+      ref="pageRef"
+      :draggable="dragndrop"
+      :data-location="pageName"
+      class="page">
       <ClientOnly>
         <v-stage ref="stageRef" :config="{ width: 1000, height: 700 }">
           <v-layer>

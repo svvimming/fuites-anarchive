@@ -13,7 +13,11 @@
       <Turbulence />
       <!-- <DashedBorderRectangle class="pocket-border" /> -->
       <!-- ========================================================== Pocket -->
-      <div id="pocket" ref="pocketRef" :draggable="dragndrop">
+      <div
+        id="pocket"
+        ref="pocketRef"
+        :draggable="dragndrop"
+        data-location="pocket">
         <!-- ------------------------------------------------------- spinner -->
         <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
@@ -76,7 +80,7 @@ const stageRef = ref(null)
 useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
-const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.pocket_ref === pocket.value.data._id))
+const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id))
 
 // ===================================================================== Methods
 /**

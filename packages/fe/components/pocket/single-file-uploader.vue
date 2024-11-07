@@ -111,6 +111,7 @@ const finalizeUpload = async () => {
     ...(!!props.uploadToPage && { location: props.uploadToPage }),
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
     path_data: bicho.value,
+    location: 'pocket',
     at: {
       x: Math.random() * 650,
       y: Math.random() * 400,
