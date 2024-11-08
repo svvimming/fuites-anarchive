@@ -53,12 +53,12 @@ const PageSchema = new Schema({
   bounds: {
     x: {
       type: Number,
-      required: false,
+      required: true,
       default: 2732
     },
     y: {
       type: Number,
-      required: false,
+      required: true,
       default: 2000
     }
   },

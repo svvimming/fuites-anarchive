@@ -193,8 +193,8 @@ const finalizeUpload = async () => {
   font-family: 'Cousine', monospace;
   font-size: 0.6875rem;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
   overflow: hidden;
 }
 

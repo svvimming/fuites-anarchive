@@ -11,7 +11,7 @@
 
 html {
   &.no-scroll {
-    overflow-y: hidden;
+    overflow: hidden;
   }
   &.no-cursor {
     cursor: none;
@@ -32,6 +32,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
+  &.no-scroll {
+    overflow: hidden;
+  }
 }
 
 button::-moz-focus-inner,
