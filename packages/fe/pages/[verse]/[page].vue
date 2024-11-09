@@ -7,26 +7,25 @@
       :data-location="pageName"
       class="page">
       <ClientOnly>
-        <v-stage ref="stageRef" :config="canvasConfig">
-          <v-layer>
-            <v-group :config="sceneConfig" __use-strict-mode>
+        <v-stage ref="stageRef" :config="canvasConfig" @wheel="handleMouseWheel">
+          <v-layer ref="layerRef">
 
-              <v-rect
-                :config="{
-                  width: bounds.x, height: bounds.y, x: 0, y: 0, fillRadialGradientStartPoint: { x: bounds.x / 2, y: bounds.x / 2 },
-                  fillRadialGradientStartRadius: bounds.x / 2,
-                  fillRadialGradientEndPoint: { x: 0, y: 0 },
-                  fillRadialGradientEndRadius: 0,
-                  fillRadialGradientColorStops: [0, 'red', 0.5, 'yellow', 1, 'blue'] }"
-                @wheel="handleMouseWheel" />
+            <v-rect :config="{
+              width: bounds.x,
+              height: bounds.y,
+              fillLinearGradientStartPoint: { x: 0, y: 0 },
+              fillLinearGradientEndPoint: { x: bounds.x, y: bounds.y },
+              fillLinearGradientColorStops: [0, 'yellow', 0.5, 'blue', 0.6, 'red']
+            }" />
 
-              <Thingie
-                v-for="thingie in pageThingies"
-                :key="thingie._id"
-                :thingie="thingie"
-                @init-update="initUpdate" />
+            <v-circle :config="{ radius: 50, fill: 'green', x: 0, y: 0 }"/>
 
-            </v-group>
+            <Thingie
+              v-for="thingie in pageThingies"
+              :key="thingie._id"
+              :thingie="thingie"
+              @init-update="initUpdate" />
+
           </v-layer>
         </v-stage>
       </ClientOnly>
@@ -59,10 +58,10 @@ const { data } = await useAsyncData('settings', async () => {
   return content[0]
 })
 
-const pageRef = ref(false)
-const stageRef = ref(false)
+const pageRef = ref(null)
+const stageRef = ref(null)
+const layerRef = ref(null)
 const canvasConfig = ref({})
-const sceneConfig = ref({})
 const resizeEventListener = ref(false)
 
 useHandleThingieDragEvents(pageRef, stageRef)
@@ -81,14 +80,17 @@ watch(data, async () => {
   await collectorStore.getThingies()
 }, { immediate: true })
 
-watch(zoom, (val) => {
-  console.log(val)
-  sceneConfig.value = Object.assign(sceneConfig.value, {
-    scale: {
-      x: val,
-      y: val
-    }
-  })
+// watch(bounds, (val) => {
+//   const layer = layerRef.value.getNode()
+//   layer.position({ x: val.x * 0.5, y: val.y * 0.5 })
+// })
+
+watch(zoom, (newVal, oldVal) => {
+  let dir = 1
+  if (oldVal > newVal) {
+    dir = -1
+  }
+  scaleScene(dir)
 })
 
 // ===================================================================== Methods
@@ -113,11 +115,42 @@ const initUpdate = update => {
  */
 
 const handleMouseWheel = e => {
-  const position = e.target.absolutePosition()
-  sceneConfig.value = Object.assign(sceneConfig.value, {
-    x: Math.max(canvasConfig.value.width - bounds.value.x, Math.min(position.x - e.evt.deltaX, 0)),
-    y: Math.max(canvasConfig.value.height - bounds.value.y, Math.min(position.y - e.evt.deltaY, 0))
-  })
+  e.evt.preventDefault()
+  const dx = e.evt.deltaX
+  const dy = e.evt.deltaY
+  const stage = stageRef.value.getNode()
+  const layer = layerRef.value.getNode()
+  const width = bounds.value.x
+  const height = bounds.value.y
+  const minX = -1 * (width - stage.width())
+  const x = Math.max(minX, Math.min(layer.x() - dx, 0)) // 0 = maxX
+  const minY = -1 * (height - stage.height())
+  const y = Math.max(minY, Math.min(layer.y() - dy, 0)) // 0 = maxY
+  layer.position({ x, y })
+}
+
+const scaleScene = amt => {
+  const stage = stageRef.value.getNode()
+  const oldScale = stage.scaleX()
+  const scaleBy = 1.01
+  const pointer = stage.getPointerPosition()
+
+  const mousePointTo = {
+    x: (pointer.x - stage.x()) / oldScale,
+    y: (pointer.y - stage.y()) / oldScale
+  }
+
+  const newScale = amt > 0 ? oldScale * scaleBy : oldScale / scaleBy
+
+  stage.scale({ x: newScale, y: newScale })
+
+  const newPos = {
+    x: pointer.x - mousePointTo.x * newScale,
+    y: pointer.y - mousePointTo.y * newScale
+  }
+  
+  stage.position(newPos)
+  console.log(stage.position())
 }
 
 /**

@@ -14,7 +14,7 @@ export const useVerseStore = defineStore('verse', () => {
     data: {}
   })
 
-  const zoom = ref(1)
+  const zoom = ref(2)
 
   // =================================================================== actions
 
