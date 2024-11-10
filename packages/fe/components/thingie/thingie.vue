@@ -17,6 +17,8 @@
 import { useThrottleFn } from '@vueuse/core'
 const generalStore = useGeneralStore()
 const { dragndrop } = storeToRefs(generalStore)
+const verseStore = useVerseStore()
+const { page } = storeToRefs(verseStore)
 
 // ======================================================================= Props
 const props = defineProps({
@@ -29,6 +31,7 @@ const props = defineProps({
 const emit = defineEmits(['initUpdate'])
 
 // ==================================================================== Computed
+const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 const id = computed(() => props.thingie._id)
 const type = computed(() => props.thingie.thingie_type)
 const at = computed(() => props.thingie.at)
@@ -46,16 +49,24 @@ const config = computed(() => ({
 /**
  * @method drag
  */
+
 const drag = e => {
   const attrs = e.target.attrs
   update({
-    at: { x: attrs.x, y: attrs.y, width: attrs.width, height: attrs.height, rotation: attrs.rotation }
+    at: {
+      x: Math.max(0, Math.min(attrs.x, bounds.value.x - attrs.width)),
+      y: Math.max(0, Math.min(attrs.y, bounds.value.y - attrs.height)),
+      width: attrs.width,
+      height: attrs.height,
+      rotation: attrs.rotation
+    }
   })
 }
 
 /**
  * @method update
  */
+
 const update = useThrottleFn(data => {
   emit('initUpdate', Object.assign(data, { _id: id.value }))
 }, 5)
