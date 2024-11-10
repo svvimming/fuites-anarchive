@@ -64,6 +64,7 @@ const stageRef = ref(null)
 const layerRef = ref(null)
 const canvasConfig = ref({})
 const resizeEventListener = ref(false)
+const keydownEventListener = ref(false)
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -80,14 +81,6 @@ watch(data, async () => {
   await generalStore.setSiteData({ key: 'settings', value: data.value })
   await collectorStore.getThingies()
 }, { immediate: true })
-
-watch(zoom, (newval, oldval) => {
-  if (newval > oldval) {
-    scaleScene(1)
-  } else {
-    scaleScene(-1)
-  }
-})
 
 // ===================================================================== Methods
 /**
@@ -107,34 +100,34 @@ const initUpdate = update => {
 
 /**
  * @method handleMouseWheel
- * @desc Forward mouse wheel event deltas to translateScene
+ * @desc Forward mouse wheel event deltas to positionScene
  */
 
 const handleMouseWheel = e => {
   e.evt.preventDefault()
-  translateScene({ x: e.evt.deltaX, y: e.evt.deltaY })
+  const layer = layerRef.value.getNode()
+  positionScene({
+    x: layer.x() - e.evt.deltaX,
+    y: layer.y() - e.evt.deltaY
+  })
 }
 
 /**
- * @method translateScene
+ * @method positionScene
  * @desc Moves the current scene around on the 2d plane of the page
  */
 
-const translateScene = delta => {
+const positionScene = position => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
   const limit = bounds.value
   const scale = stage.scaleX()
-  // console.log(scale)
-  // const dx = (scale - 1) * limit.x * 0.5
-  // const dy = (scale - 1) * limit.y * 0.5 
-  const width = (limit.x * scale)
-  const height = (limit.y * scale)
+  const width = limit.x
+  const height = limit.y
   const minX = -1 * (width - stage.width())
-  const x = Math.max(minX, Math.min(layer.x() - delta.x, 0)) // 0 = maxX
-  const minY = -1 * (height - stage.height())
-  const y = Math.max(minY, Math.min(layer.y() - delta.y, 0)) // 0 = maxY
-  // console.log(dx, dy, minX, minY)
+  const x = Math.max(minX * scale, Math.min(position.x, 0)) // 0 = maxX
+  const minY = -1 * (height - stage.height()) 
+  const y = Math.max(minY * scale, Math.min(position.y, 0)) // 0 = maxY
   layer.position({ x, y })
 }
 
@@ -143,8 +136,9 @@ const translateScene = delta => {
  * @desc Zoom the page in and out
  */
 
-const scaleScene = amt => {
+const scaleScene = dir => {
   const stage = stageRef.value.getNode()
+  const layer = layerRef.value.getNode()
   const oldScale = stage.scaleX()
   const scaleBy = 1.01
   const canvasCenter = {
@@ -155,15 +149,11 @@ const scaleScene = amt => {
     x: (canvasCenter.x - stage.x()) / oldScale,
     y: (canvasCenter.y - stage.y()) / oldScale
   }
-  const newScale = amt > 0 ? oldScale * scaleBy : oldScale / scaleBy
+  const newScale = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy
   stage.scale({ x: newScale, y: newScale })
-  stage.position({
-    x: canvasCenter.x - zoomCenter.x * newScale,
-    y: canvasCenter.y - zoomCenter.y * newScale
-  })
-  nextTick(() => {
-    // translateScene({ x: 0, y: 0 })
-    console.log(stage.position())
+  positionScene({
+    x: canvasCenter.x - (zoomCenter.x * newScale) + layer.x(),
+    y: canvasCenter.y - (zoomCenter.y * newScale) + layer.y()
   })
 }
 
@@ -182,15 +172,33 @@ onMounted(() => {
   setCanvasDimensions()
   resizeEventListener.value = useThrottleFn(() => { setCanvasDimensions() }, 25)
   window.addEventListener('resize', resizeEventListener.value)
+  keydownEventListener.value = e => {
+    const key = e.key
+    const code = e.code
+    const keyCode = e.keyCode
+    const minus = key === '-' || code === 'Minus' || keyCode === 189
+    const plus = key === '+' || code === 'Equal' || keyCode === 187
+    if (minus && e.metaKey) {
+      e.preventDefault()
+      scaleScene(-1)
+    }
+    if (plus && e.metaKey) {
+      e.preventDefault()
+      scaleScene(1)
+    }
+  }
+  window.addEventListener('keydown', keydownEventListener.value)
 })
 
 onBeforeUnmount(() => {
   document.body.classList.remove('no-scroll')
   window.removeEventListener('resize', resizeEventListener.value)
+  window.removeEventListener('keydown', keydownEventListener.value)
 })
 </script>
 
 <style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
 .page-container {
   position: absolute;
   top: 0;

@@ -14,8 +14,6 @@ export const useVerseStore = defineStore('verse', () => {
     data: {}
   })
 
-  const zoom = ref(2)
-
   // =================================================================== actions
 
   /**
@@ -62,24 +60,14 @@ export const useVerseStore = defineStore('verse', () => {
     }
   }
 
-  /**
-   * @method setZoom
-   */
-
-  const setZoom = val => {
-    zoom.value = val
-  }
-
   // ==================================================================== return
   return {
     // ----- state
     verse,
     page,
-    zoom,
     // ----- actions
     getVerse,
-    getPage,
-    setZoom
+    getPage
   }
 })
 

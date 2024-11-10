@@ -2,16 +2,6 @@
   <div id="landing-site">
 
     <ButtonIcon
-      @clicked="zoomIn">
-      +
-    </ButtonIcon>
-
-    <ButtonIcon
-      @clicked="zoomOut">
-      -
-    </ButtonIcon>
-
-    <ButtonIcon
       class="landing-site-toggle"
       @clicked="handleClick">
       <Hamburger :open="dropdownOpen" />
@@ -24,8 +14,6 @@
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { modal } = storeToRefs(generalStore)
-const verseStore = useVerseStore()
-const { zoom } = storeToRefs(verseStore)
 
 const dropdownOpen = ref(false)
 
@@ -34,14 +22,6 @@ const handleClick = () => {
     active: !modal.value.active,
     action: 'auth'
   })
-}
-
-const zoomIn = () => {
-  verseStore.setZoom(Math.min(zoom.value + 0.1, 2))
-}
-
-const zoomOut = () => {
-  verseStore.setZoom(Math.max(zoom.value - 0.1, 0.5))
 }
 </script>
 
