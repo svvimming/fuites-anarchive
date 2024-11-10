@@ -13,14 +13,6 @@
           @wheel="handleMouseWheel">
           <v-layer ref="layerRef">
 
-            <v-rect :config="{
-              width: bounds.x,
-              height: bounds.y,
-              fillLinearGradientStartPoint: { x: 0, y: 0 },
-              fillLinearGradientEndPoint: { x: bounds.x, y: bounds.y },
-              fillLinearGradientColorStops: [0, 'yellow', 0.5, 'blue', 0.6, 'red']
-            }" />
-
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
@@ -42,7 +34,7 @@ import { useThrottleFn } from '@vueuse/core'
 // ======================================================================== Data
 const route = useRoute()
 const verseStore = useVerseStore()
-const { page, zoom } = storeToRefs(verseStore)
+const { page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
