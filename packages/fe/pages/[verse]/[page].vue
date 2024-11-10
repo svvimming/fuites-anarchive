@@ -7,7 +7,10 @@
       :data-location="pageName"
       class="page">
       <ClientOnly>
-        <v-stage ref="stageRef" :config="canvasConfig" @wheel="handleMouseWheel">
+        <v-stage
+          ref="stageRef"
+          :config="canvasConfig"
+          @wheel="handleMouseWheel">
           <v-layer ref="layerRef">
 
             <v-rect :config="{
@@ -17,8 +20,6 @@
               fillLinearGradientEndPoint: { x: bounds.x, y: bounds.y },
               fillLinearGradientColorStops: [0, 'yellow', 0.5, 'blue', 0.6, 'red']
             }" />
-
-            <v-circle :config="{ radius: 50, fill: 'green', x: 0, y: 0 }"/>
 
             <Thingie
               v-for="thingie in pageThingies"
@@ -80,17 +81,12 @@ watch(data, async () => {
   await collectorStore.getThingies()
 }, { immediate: true })
 
-// watch(bounds, (val) => {
-//   const layer = layerRef.value.getNode()
-//   layer.position({ x: val.x * 0.5, y: val.y * 0.5 })
-// })
-
-watch(zoom, (newVal, oldVal) => {
-  let dir = 1
-  if (oldVal > newVal) {
-    dir = -1
+watch(zoom, (newval, oldval) => {
+  if (newval > oldval) {
+    scaleScene(1)
+  } else {
+    scaleScene(-1)
   }
-  scaleScene(dir)
 })
 
 // ===================================================================== Methods
@@ -111,46 +107,64 @@ const initUpdate = update => {
 
 /**
  * @method handleMouseWheel
- * @desc Moves the current scene around on the 2d plane of the page
+ * @desc Forward mouse wheel event deltas to translateScene
  */
 
 const handleMouseWheel = e => {
   e.evt.preventDefault()
-  const dx = e.evt.deltaX
-  const dy = e.evt.deltaY
+  translateScene({ x: e.evt.deltaX, y: e.evt.deltaY })
+}
+
+/**
+ * @method translateScene
+ * @desc Moves the current scene around on the 2d plane of the page
+ */
+
+const translateScene = delta => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
-  const width = bounds.value.x
-  const height = bounds.value.y
+  const limit = bounds.value
+  const scale = stage.scaleX()
+  // console.log(scale)
+  // const dx = (scale - 1) * limit.x * 0.5
+  // const dy = (scale - 1) * limit.y * 0.5 
+  const width = (limit.x * scale)
+  const height = (limit.y * scale)
   const minX = -1 * (width - stage.width())
-  const x = Math.max(minX, Math.min(layer.x() - dx, 0)) // 0 = maxX
+  const x = Math.max(minX, Math.min(layer.x() - delta.x, 0)) // 0 = maxX
   const minY = -1 * (height - stage.height())
-  const y = Math.max(minY, Math.min(layer.y() - dy, 0)) // 0 = maxY
+  const y = Math.max(minY, Math.min(layer.y() - delta.y, 0)) // 0 = maxY
+  // console.log(dx, dy, minX, minY)
   layer.position({ x, y })
 }
+
+/**
+ * @method scaleScene
+ * @desc Zoom the page in and out
+ */
 
 const scaleScene = amt => {
   const stage = stageRef.value.getNode()
   const oldScale = stage.scaleX()
   const scaleBy = 1.01
-  const pointer = stage.getPointerPosition()
-
-  const mousePointTo = {
-    x: (pointer.x - stage.x()) / oldScale,
-    y: (pointer.y - stage.y()) / oldScale
+  const canvasCenter = {
+    x: canvasConfig.value.width * 0.5,
+    y: canvasConfig.value.height * 0.5
   }
-
+  const zoomCenter = {
+    x: (canvasCenter.x - stage.x()) / oldScale,
+    y: (canvasCenter.y - stage.y()) / oldScale
+  }
   const newScale = amt > 0 ? oldScale * scaleBy : oldScale / scaleBy
-
   stage.scale({ x: newScale, y: newScale })
-
-  const newPos = {
-    x: pointer.x - mousePointTo.x * newScale,
-    y: pointer.y - mousePointTo.y * newScale
-  }
-  
-  stage.position(newPos)
-  console.log(stage.position())
+  stage.position({
+    x: canvasCenter.x - zoomCenter.x * newScale,
+    y: canvasCenter.y - zoomCenter.y * newScale
+  })
+  nextTick(() => {
+    // translateScene({ x: 0, y: 0 })
+    console.log(stage.position())
+  })
 }
 
 /**

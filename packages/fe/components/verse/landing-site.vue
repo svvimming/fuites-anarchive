@@ -37,11 +37,11 @@ const handleClick = () => {
 }
 
 const zoomIn = () => {
-  verseStore.setZoom(Math.min(zoom.value + 0.125, 2))
+  verseStore.setZoom(Math.min(zoom.value + 0.1, 2))
 }
 
 const zoomOut = () => {
-  verseStore.setZoom(Math.max(zoom.value - 0.125, 0.5))
+  verseStore.setZoom(Math.max(zoom.value - 0.1, 0.5))
 }
 </script>
 
