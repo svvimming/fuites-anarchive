@@ -2,7 +2,6 @@
   <div id="pocket-anchor">
     <!-- ===================================================== Pocket Toggle -->
     <ButtonText
-      v-if="authenticated"
       :active="pocketOpen"
       text="pocket"
       :class="['text-content color-cove rounded-border-left', { active: pocketOpen }]"
@@ -12,8 +11,11 @@
       <!-- ============================================= Background Elements -->
       <Turbulence />
       <!-- <DashedBorderRectangle class="pocket-border" /> -->
+       <!-- ===================================================== Token Auth -->
+      <VerseAuth :class="['auth-modal', { open: !authenticated || tokenInputOpen }]" />
       <!-- ========================================================== Pocket -->
       <div
+        v-show="authenticated"
         id="pocket"
         ref="pocketRef"
         :draggable="dragndrop"
@@ -34,6 +36,12 @@
             </v-layer>
           </v-stage>
         </ClientOnly>
+        <!-- --------------------------------------------------- token input -->
+        <ButtonIcon
+          class="token-input-toggle"
+          @clicked="tokenInputOpen = !tokenInputOpen">
+          🔑
+        </ButtonIcon>
         <!-- -------------------------------------------- full screen toggle -->
         <ButtonIcon
           class="fullscreen-toggle"
@@ -43,7 +51,7 @@
         <!-- ----------------------------------------------- uploader toggle -->
         <ButtonIcon
           :class="['uploader-toggle', { 'upload-ready': uploader.status === 'ready' }]"
-          :force-loading="uploader.status === 'initialized'"
+          :force-loading="uploader.status === 'initializing'"
           :force-disabled="uploader.status === 'uploading'"
           @clicked="pocketStore.setUploaderOpen(!uploaderOpen)">
           <IconPlus class="icon" />
@@ -57,6 +65,8 @@
 </template>
 
 <script setup>
+import { watch } from 'vue';
+
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
@@ -76,11 +86,17 @@ const {
 
 const pocketRef = ref(null)
 const stageRef = ref(null)
+const tokenInputOpen = ref(false)
 
 useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id))
+
+// ==================================================================== Watchers
+watch(uploaderOpen, (val) => {
+  if (val) { tokenInputOpen.value = false }
+})
 
 // ===================================================================== Methods
 /**
@@ -134,6 +150,25 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   &.fullscreen {
     width: calc(100vw - torem(50));
     height: calc(100vh - torem(50));
+  }
+}
+
+.auth-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  padding: 2rem;
+  border: solid 1px black;
+  border-radius: torem(20);
+  visibility: hidden;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+  transition: 300ms ease;
+  z-index: 2;
+  &.open {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -200,6 +235,20 @@ const pocketThingies = computed(() => thingies.value.data.filter(thingie => thin
   left: torem(12);
   top: torem(12);
   z-index: 101;
+}
+
+.token-input-toggle {
+  position: absolute !important;
+  right: torem(12);
+  top: torem(12);
+  width: torem(41);
+  height: torem(41);
+  z-index: 99;
+  :deep(.slot) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .ghost-image {

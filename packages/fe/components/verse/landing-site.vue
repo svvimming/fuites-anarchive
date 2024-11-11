@@ -12,16 +12,17 @@
 
 <script setup>
 // ======================================================================== Data
-const generalStore = useGeneralStore()
-const { modal } = storeToRefs(generalStore)
+// const generalStore = useGeneralStore()
+// const { modal } = storeToRefs(generalStore)
 
 const dropdownOpen = ref(false)
 
 const handleClick = () => {
-  generalStore.setModal({
-    active: !modal.value.active,
-    action: 'auth'
-  })
+  console.log('click')
+  // generalStore.setModal({
+  //   active: !modal.value.active,
+  //   action: 'auth'
+  // })
 }
 </script>
 

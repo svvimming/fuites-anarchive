@@ -190,7 +190,6 @@ const uploadFile = () => {
       const value = file.value[key]
       typeof value !== 'function' && (formMetadata[key] = value)
     }
-    console.log('hit')
     pocketStore.setUploader({ status: 'uploading' })
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
