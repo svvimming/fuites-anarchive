@@ -1,5 +1,7 @@
 <template>
-  <v-image :config="config"></v-image>
+  <v-group :config="container">
+    <v-image :config="config"></v-image>
+  </v-group>
 </template>
 
 <script setup>
@@ -12,6 +14,10 @@ const props = defineProps({
   parentConfig: {
     type: Object,
     required: true
+  },
+  path: {
+    type: String,
+    required: ''
   }
 })
 
@@ -21,6 +27,7 @@ const imageLoading = ref(false)
 const image = ref(false)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
+const { $simplifySvgPath } = useNuxtApp()
 
 // ==================================================================== Computed
 const config = computed(() => ({
@@ -28,6 +35,25 @@ const config = computed(() => ({
   width: props.parentConfig.width,
   height: props.parentConfig.height,
   image: image.value,
+}))
+
+const clipPath = computed(() => {
+  const data = []
+  const coords = props.path.split(' ').map(num => parseInt(num) / 200)
+  const w = config.value.width
+  const h = config.value.height
+  const len = coords.length
+  for (let i = 0; i < len - 1; i += 2) {
+    data.push([coords[i] * w, coords[i + 1] * h])
+  }
+  if (data.length) {
+    return $simplifySvgPath(data, { tolerance: 0.001 }) + ' Z'
+  }
+  return false
+})
+
+const container = computed(() => Object.assign({}, {
+  ...(clipPath.value && { clipFunc: () => [new Path2D(clipPath.value), 'evenodd'] })
 }))
 
 // ===================================================================== Methods
@@ -51,7 +77,6 @@ const config = computed(() => ({
 }
 
 // ======================================================================= Hooks
-onMounted(() => {
-  loadImage()
-})
+onMounted(() => { loadImage() })
+
 </script>

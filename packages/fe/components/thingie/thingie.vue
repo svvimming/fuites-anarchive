@@ -7,7 +7,8 @@
     <ThingieImage
       v-if="type === 'image'"
       :file-ref="thingie.file_ref"
-      :parent-config="config" />
+      :parent-config="config"
+      :path="thingie.clip ? thingie.path_data : ''" />
 
   </v-group>
 </template>
@@ -38,11 +39,7 @@ const at = computed(() => props.thingie.at)
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
-  draggable: !dragndrop.value,
-  dragBoundFunc: pos => ({
-    x: Math.max(0, pos.x),
-    y: Math.max(0, pos.y)
-  })
+  draggable: !dragndrop.value
 }))
 
 // ===================================================================== Methods
