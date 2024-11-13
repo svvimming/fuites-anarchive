@@ -1,5 +1,16 @@
 <template>
-  <v-image :config="config" :key="key"></v-image>
+  <v-group>
+
+    <v-group
+      v-if="clipActive"
+      ref="clipGroup"
+      :config="groupConfig">
+      <v-image :config="clipConfig" />
+    </v-group>
+    
+    <v-image :config="imageConfig" :key="key" />
+
+  </v-group>
 </template>
 
 <script setup>
@@ -18,6 +29,11 @@ const props = defineProps({
     required: false,
     default: () => ({})
   },
+  clipActive: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
   path: {
     type: String,
     required: false,
@@ -29,58 +45,91 @@ const props = defineProps({
 const imageLoadError = ref(false)
 const imageLoading = ref(false)
 const image = ref(false)
+const canvas = ref(false)
+const clipPath = ref(false)
+const clipGroup = ref(null)
+const clipGroupVisible = ref(false)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
 const { $simplifySvgPath } = useNuxtApp()
 const key = ref(0)
 
 // ==================================================================== Computed
-const config = computed(() => ({
+const imageConfig = computed(() => ({
   thingie_id: props.parentConfig.thingie_id,
   width: props.parentConfig.width,
   height: props.parentConfig.height,
-  image: image.value,
+  image: props.clipActive && canvas.value ? canvas.value : image.value,
   ...props.options
 }))
 
-const clipPath = computed(() => {
-  const data = []
-  const coords = props.path.split(' ').map(num => parseInt(num) / 200)
-  const w = config.value.width
-  const h = config.value.height
-  const len = coords.length
-  for (let i = 0; i < len - 1; i += 2) {
-    data.push([coords[i] * w, coords[i + 1] * h])
-  }
-  if (data.length) {
-    return $simplifySvgPath(data, { tolerance: 0.001 }) + ' Z'
-  }
-  return false
-})
+const clipConfig = computed(() => ({
+  width: 200,
+  height: 200,
+  image: image.value
+}))
 
-const container = computed(() => Object.assign({}, {
-  ...(clipPath.value && { clipFunc: () => [new Path2D(clipPath.value), 'evenodd'] })
+const groupConfig = computed(() => ({
+  ...(clipPath.value && { clipFunc: () => [new Path2D(clipPath.value), 'evenodd'] }),
+  visible: clipGroupVisible.value
 }))
 
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
 
+watch(() => props.clipActive, (val) => {
+  if (val && !canvas.value) {
+    nextTick(() => { applyClipPath() })
+  }
+})
+
 // ===================================================================== Methods
 /**
- * @method  
+ * @method calculateClipPath
  */
+
+const calculateClipPath = () => {
+  const data = []
+  const coords = props.path.split(' ').map(num => parseInt(num) / 200)
+  const w = clipConfig.value.width
+  const h = clipConfig.value.height
+  const len = coords.length
+  for (let i = 0; i < len - 1; i += 2) {
+    data.push([coords[i] * w, coords[i + 1] * h])
+  }
+  return data.length ? $simplifySvgPath(data, { tolerance: 0.001 }) + ' Z' : false
+}
+
+/**
+ * @method applyClipPath
+ */
+
+const applyClipPath = () => {
+  clipPath.value = calculateClipPath()
+  if (clipPath.value && clipGroup.value) {
+    clipGroupVisible.value = true
+    nextTick(() => {
+      const group = clipGroup.value.getNode()
+      canvas.value = group.toCanvas()
+      clipGroupVisible.value = false
+    })
+  }
+}
 
 /**
  * @method loadImage
  */
 
- const loadImage = () => {
+const loadImage = () => {
   imageLoading.value = true
   const img = document.createElement('img')
   img.onload = function () {
     imageLoadError.value = false
     imageLoading.value = false
     image.value = img
+    if (props.clipActive) {
+      nextTick(() => { applyClipPath() })
+    }
   }
   img.onerror = function () {
     imageLoadError.value = true

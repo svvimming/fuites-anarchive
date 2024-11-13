@@ -10,7 +10,8 @@
       :file-ref="thingie.file_ref"
       :parent-config="config"
       :options="highlight"
-      :path="thingie.clip ? thingie.path_data : ''" />
+      :clip-active="thingie.clip"
+      :path="thingie.path_data" />
 
   </v-group>
 </template>

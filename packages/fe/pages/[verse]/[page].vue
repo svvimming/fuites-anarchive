@@ -98,8 +98,16 @@ const initUpdate = update => {
 const handleClick = e => {
   const target = e.target
   const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
-  if (editing.value && (!targetIsThingie || target.attrs.thingie_id !== editing.value)) {
-    collectorStore.setEditing(false)
+  if (editing.value) {
+    if (targetIsThingie) {
+      setTimeout(() => {
+        if (target.attrs.thingie_id !== editing.value) {
+          collectorStore.setEditing(false)
+        }
+      }, 250)
+    } else {
+      collectorStore.setEditing(false)
+    }
   }
 }
 
