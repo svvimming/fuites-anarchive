@@ -3,7 +3,8 @@
     :config="config"
     __use-strict-mode
     @dragmove="drag($event)"
-    @dblclick="doubleClick">
+    @dblclick="doubleClick"
+    @wheel="wheel($event)">
     
     <ThingieImage
       v-if="type === 'image'"
@@ -45,17 +46,13 @@ const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 const id = computed(() => props.thingie._id)
 const type = computed(() => props.thingie.thingie_type)
 const at = computed(() => props.thingie.at)
+const editMode = computed(() => editing.value === props.thingie._id)
+const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {} )
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
   draggable: !dragndrop.value
 }))
-const highlight = computed(() => {
-  return editing.value === props.thingie._id ? {
-    shadowColor: selectionColor,
-    shadowBlur: 10
-  } : {}
-})
 
 // ===================================================================== Methods
 /**
@@ -82,6 +79,33 @@ const drag = e => {
 const doubleClick = () => {
   if (editing.value !== props.thingie._id) {
     collectorStore.setEditing(props.thingie._id)
+  }
+}
+
+/**
+ * @method wheel
+ */
+
+const wheel = e => {
+  e.evt.preventDefault()
+  if (editMode.value) {
+    e.cancelBubble = true
+    const attrs = e.target.attrs
+    const width = attrs.width
+    const height = attrs.height
+    const newWidth = Math.max(width - e.evt.deltaY, 1)
+    const newHeight = Math.max(height - (e.evt.deltaY * (height / width)), 1)
+    const offsetX = (width - newWidth) * 0.5
+    const offsetY = (height - newHeight) * 0.5
+    update({
+      at: {
+        x: Math.max(0, Math.min(at.value.x + offsetX, bounds.value.x - newWidth)),
+        y: Math.max(0, Math.min(at.value.y + offsetY, bounds.value.y - newHeight)),
+        width: newWidth,
+        height: newHeight,
+        rotation: attrs.rotation
+      }
+    })
   }
 }
 
