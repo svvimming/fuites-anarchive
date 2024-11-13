@@ -1,7 +1,5 @@
 <template>
-  <v-group :config="container">
-    <v-image :config="config"></v-image>
-  </v-group>
+  <v-image :config="config" :key="key"></v-image>
 </template>
 
 <script setup>
@@ -15,9 +13,15 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  options: {
+    type: Object,
+    required: false,
+    default: () => ({})
+  },
   path: {
     type: String,
-    required: ''
+    required: false,
+    default: ''
   }
 })
 
@@ -28,6 +32,7 @@ const image = ref(false)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
 const { $simplifySvgPath } = useNuxtApp()
+const key = ref(0)
 
 // ==================================================================== Computed
 const config = computed(() => ({
@@ -35,6 +40,7 @@ const config = computed(() => ({
   width: props.parentConfig.width,
   height: props.parentConfig.height,
   image: image.value,
+  ...props.options
 }))
 
 const clipPath = computed(() => {
@@ -56,7 +62,14 @@ const container = computed(() => Object.assign({}, {
   ...(clipPath.value && { clipFunc: () => [new Path2D(clipPath.value), 'evenodd'] })
 }))
 
+// ==================================================================== Watchers
+watch(() => props.options, () => { key.value++ }, { deep: true })
+
 // ===================================================================== Methods
+/**
+ * @method  
+ */
+
 /**
  * @method loadImage
  */

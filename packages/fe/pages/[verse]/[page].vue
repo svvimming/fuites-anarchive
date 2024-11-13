@@ -10,7 +10,8 @@
         <v-stage
           ref="stageRef"
           :config="canvasConfig"
-          @wheel="handleMouseWheel">
+          @wheel="handleMouseWheel($event)"
+          @click="handleClick($event)">
           <v-layer ref="layerRef">
 
             <Thingie
@@ -36,7 +37,7 @@ const route = useRoute()
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
-const { thingies } = storeToRefs(collectorStore)
+const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { sessionId, dragndrop } = storeToRefs(generalStore)
 const websocketStore = useWebsocketStore()
@@ -87,6 +88,18 @@ const initUpdate = update => {
     collectorStore.updateThingie(updateAt)
   } else {
     socket.value.emit('update-thingie', update)
+  }
+}
+
+/**
+ * @method handleClick
+ */
+
+const handleClick = e => {
+  const target = e.target
+  const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
+  if (editing.value && (!targetIsThingie || target.attrs.thingie_id !== editing.value)) {
+    collectorStore.setEditing(false)
   }
 }
 

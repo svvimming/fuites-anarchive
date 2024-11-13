@@ -2,12 +2,14 @@
   <v-group
     :config="config"
     __use-strict-mode
-    @dragmove="drag($event)">
+    @dragmove="drag($event)"
+    @dblclick="doubleClick">
     
     <ThingieImage
       v-if="type === 'image'"
       :file-ref="thingie.file_ref"
       :parent-config="config"
+      :options="highlight"
       :path="thingie.clip ? thingie.path_data : ''" />
 
   </v-group>
@@ -16,10 +18,6 @@
 <script setup>
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
-const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
-const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
 
 // ======================================================================= Props
 const props = defineProps({
@@ -31,6 +29,16 @@ const props = defineProps({
 
 const emit = defineEmits(['initUpdate'])
 
+// ======================================================================== Data
+const generalStore = useGeneralStore()
+const { dragndrop } = storeToRefs(generalStore)
+const verseStore = useVerseStore()
+const { page } = storeToRefs(verseStore)
+const collectorStore = useCollectorStore()
+const { editing } = storeToRefs(collectorStore)
+
+const selectionColor = useGetSelectionColor(props.thingie.colors)
+
 // ==================================================================== Computed
 const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 const id = computed(() => props.thingie._id)
@@ -41,6 +49,12 @@ const config = computed(() => ({
   thingie_id: id.value,
   draggable: !dragndrop.value
 }))
+const highlight = computed(() => {
+  return editing.value === props.thingie._id ? {
+    shadowColor: selectionColor,
+    shadowBlur: 10
+  } : {}
+})
 
 // ===================================================================== Methods
 /**
@@ -58,6 +72,16 @@ const drag = e => {
       rotation: attrs.rotation
     }
   })
+}
+
+/**
+ * @method doubleClick
+ */
+
+const doubleClick = () => {
+  if (editing.value !== props.thingie._id) {
+    collectorStore.setEditing(props.thingie._id)
+  }
 }
 
 /**

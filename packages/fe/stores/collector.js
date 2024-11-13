@@ -19,6 +19,8 @@ export const useCollectorStore = defineStore('collector', () => {
     data: []
   })
 
+  const editing = ref(false)
+
   // =================================================================== actions
 
   /**
@@ -91,14 +93,24 @@ export const useCollectorStore = defineStore('collector', () => {
     }
   }
 
+  /**
+   * @method setEditing
+   */
+
+  const setEditing = incoming => {
+    editing.value = incoming
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     thingies,
+    editing,
     // ----- actions
     getThingies,
     postCreateThingie,
-    updateThingie
+    updateThingie,
+    setEditing
   }
 })
 
