@@ -1,5 +1,5 @@
 <template>
-  <div class="verse-viewport">
+  <div ref="viewport" class="verse-viewport">
 
     <VerseModal />
 
@@ -11,12 +11,18 @@
 
     <Pocket />
 
-    <VerseCaddy />
+    <VerseCaddy :container="viewport" />
 
   </div>
 </template>
 
+<script setup>
+// ======================================================================== Data
+const viewport = ref(null)
+</script>
+
 <style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
 .verse-viewport {
   width: 100%;
   height: 100%;

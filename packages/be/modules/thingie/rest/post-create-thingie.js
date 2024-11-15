@@ -40,7 +40,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     })
     await created.populate({
       path: 'file_ref',
-      select: 'filename file_ext aspect'
+      select: 'filename file_ext'
     })
     MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)

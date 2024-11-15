@@ -25,7 +25,6 @@ MC.socket.listeners.push({
         mimetype,
         filesize,
         file_ext: fileExt,
-        aspect: data.aspect,
         palette: data.palette,
         upload_status: 0,
         form_metadata: data.form_metadata

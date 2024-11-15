@@ -14,6 +14,17 @@
       :clip-active="thingie.clip"
       :path="thingie.path_data" />
 
+    <ThingieSound
+      v-if="type === 'sound'"
+      :file-ref="thingie.file_ref"
+      :parent-config="config"
+      :options="highlight"
+      :gain="thingie.gain || 1"
+      :path="thingie.path_data"
+      :colors="thingie.colors"
+      :position="thingie.at"
+      :stoke-width="thingie.stroke_width" />
+
   </v-group>
 </template>
 
@@ -91,8 +102,8 @@ const wheel = e => {
   if (editMode.value) {
     e.cancelBubble = true
     const attrs = e.target.attrs
-    const width = attrs.width
-    const height = attrs.height
+    const width = attrs.width || at.value.width
+    const height = attrs.height || at.value.height
     const newWidth = Math.max(width - e.evt.deltaY, 1)
     const newHeight = Math.max(height - (e.evt.deltaY * (height / width)), 1)
     update({

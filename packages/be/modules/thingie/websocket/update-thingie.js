@@ -19,7 +19,7 @@ const thingieWithLocationHistory = async (incoming) => {
   const updated = await thingie.save()
   await updated.populate({
     path: 'file_ref',
-    select: 'filename file_ext aspect'
+    select: 'filename file_ext'
   })
   return updated
 }
@@ -54,7 +54,7 @@ MC.socket.listeners.push({
         .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
         .populate({
           path: 'file_ref',
-          select: 'filename file_ext aspect'
+          select: 'filename file_ext'
         })
     }
     const data = { thingie: updated }

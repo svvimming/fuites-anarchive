@@ -51,7 +51,6 @@ const clipGroup = ref(null)
 const clipGroupVisible = ref(false)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
-const { $simplifySvgPath } = useNuxtApp()
 const key = ref(0)
 
 // ==================================================================== Computed
@@ -85,27 +84,11 @@ watch(() => props.clipActive, (val) => {
 
 // ===================================================================== Methods
 /**
- * @method calculateClipPath
- */
-
-const calculateClipPath = () => {
-  const data = []
-  const coords = props.path.split(' ').map(num => parseInt(num) / 200)
-  const w = clipConfig.value.width
-  const h = clipConfig.value.height
-  const len = coords.length
-  for (let i = 0; i < len - 1; i += 2) {
-    data.push([coords[i] * w, coords[i + 1] * h])
-  }
-  return data.length ? $simplifySvgPath(data, { tolerance: 0.001 }) + ' Z' : false
-}
-
-/**
  * @method applyClipPath
  */
 
 const applyClipPath = () => {
-  clipPath.value = calculateClipPath()
+  clipPath.value = useGetSvgPath(props.path, clipConfig.value.width, clipConfig.value.height)
   if (clipPath.value && clipGroup.value) {
     clipGroupVisible.value = true
     nextTick(() => {

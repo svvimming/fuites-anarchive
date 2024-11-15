@@ -1,26 +1,46 @@
 <template>
-  <div id="caddy">
-    
-    <template v-for="param in params" :key="param.directive">
+  <UseDraggable
+    :initial-value="{ x: 40, y: 40 }"
+    :prevent-default="true"
+    :handle="handle"
+    :container-element="container"
+    class="caddy-wrapper">
+    <div id="caddy">
 
-      <ButtonRetrigger
-        v-if="param.button === 'retrigger'"
-        @retrigger="handleClick(param.directive)">
-        {{ param.inner }}
-      </ButtonRetrigger>
+      <div ref="handle" class="handle">
+        handle
+      </div>
+      
+      <template v-for="param in params" :key="param.directive">
 
-      <button @click="handleClick(param.directive)">
-        {{ param.inner }}
-      </button>
+        <ButtonRetrigger
+          v-if="param.button === 'retrigger'"
+          @retrigger="handleClick(param.directive)">
+          {{ param.inner }}
+        </ButtonRetrigger>
 
-    </template>
+        <button v-else @click="handleClick(param.directive)">
+          {{ param.inner }}
+        </button>
 
-  </div>
+      </template>
+
+    </div>
+  </UseDraggable>
 </template>
 
 <script setup>
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
+import { UseDraggable } from '@vueuse/components'
+
+// ======================================================================= Setup
+defineProps({
+  container: {
+    type: [Object, null],
+    required: true
+  }
+})
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
@@ -31,6 +51,8 @@ const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
+
+const handle = ref(null)
 
 // ==================================================================== Computed
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
@@ -110,11 +132,13 @@ const sendThingieBack = () => {
 </script>
 
 <style lang="scss" scoped>
-#caddy {
+// ///////////////////////////////////////////////////////////////////// General
+.caddy-wrapper {
   position: absolute;
   z-index: 1;
-  top: torem(50);
-  left: torem(50);
+}
+
+#caddy {
   padding: 1rem;
   background-color: red;
   color: white;

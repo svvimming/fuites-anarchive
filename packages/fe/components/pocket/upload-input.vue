@@ -103,7 +103,7 @@ watch(uploaderOpen, (val) => {
 // ===================================================================== Methods
 /**
  * @method computeImageData
- * @desc - Calculates the image aspect ratio and three most prominent colours.
+ * @desc - Calculates the three most prominent colours.
  */
 
 const computeImageData = async imgFile => {
@@ -115,7 +115,7 @@ const computeImageData = async imgFile => {
     image.src = e.target.result
     image.onload = async () => {
       const colorPalette = await colorThief.getPalette(image, 3)
-      imageData.value = { width: image.width, height: image.height, colorPalette }
+      imageData.value = { colorPalette }
     }
   }
 }
@@ -196,7 +196,6 @@ const uploadFile = () => {
       filename: filename.value,
       filesize: filesize.value,
       mimetype: mimetype.value,
-      aspect: imageData.value.width / imageData.value.height,
       palette: imageData.value.colorPalette,
       form_metadata: formMetadata
     })

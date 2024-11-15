@@ -12,17 +12,26 @@
 
 <script setup>
 // ======================================================================== Data
-// const generalStore = useGeneralStore()
-// const { modal } = storeToRefs(generalStore)
+const mixerStore = useMixerStore()
+const { audioContext } = storeToRefs(mixerStore)
 
 const dropdownOpen = ref(false)
 
 const handleClick = () => {
+  toggleAudioContext()
   console.log('click')
   // generalStore.setModal({
   //   active: !modal.value.active,
   //   action: 'auth'
   // })
+}
+
+const toggleAudioContext = () => {
+  if (!audioContext.value) {
+    mixerStore.createAudioContext()
+  } else {
+    mixerStore.toggleAudioContextPlayState()
+  }
 }
 </script>
 
