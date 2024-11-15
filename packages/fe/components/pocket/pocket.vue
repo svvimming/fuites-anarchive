@@ -65,8 +65,6 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
-
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
@@ -91,7 +89,7 @@ const tokenInputOpen = ref(false)
 useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
-const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id))
+const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id).sort((a, b) => a.zIndex - b.zIndex))
 
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {

@@ -29,8 +29,6 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['initUpdate'])
-
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { dragndrop } = storeToRefs(generalStore)
@@ -51,7 +49,9 @@ const highlight = computed(() => editMode.value ? { shadowColor: selectionColor,
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
-  draggable: !dragndrop.value
+  draggable: !dragndrop.value,
+  offsetX: at.value.width * 0.5,
+  offsetY: at.value.height * 0.5 
 }))
 
 // ===================================================================== Methods
@@ -63,8 +63,8 @@ const drag = e => {
   const attrs = e.target.attrs
   update({
     at: {
-      x: Math.max(0, Math.min(attrs.x, bounds.value.x - attrs.width)),
-      y: Math.max(0, Math.min(attrs.y, bounds.value.y - attrs.height)),
+      x: Math.max(0, Math.min(attrs.x, bounds.value.x)),
+      y: Math.max(0, Math.min(attrs.y, bounds.value.y)),
       width: attrs.width,
       height: attrs.height,
       rotation: attrs.rotation
@@ -95,15 +95,13 @@ const wheel = e => {
     const height = attrs.height
     const newWidth = Math.max(width - e.evt.deltaY, 1)
     const newHeight = Math.max(height - (e.evt.deltaY * (height / width)), 1)
-    const offsetX = (width - newWidth) * 0.5
-    const offsetY = (height - newHeight) * 0.5
     update({
       at: {
-        x: Math.max(0, Math.min(at.value.x + offsetX, bounds.value.x - newWidth)),
-        y: Math.max(0, Math.min(at.value.y + offsetY, bounds.value.y - newHeight)),
+        x: Math.max(0, Math.min(at.value.x, bounds.value.x)),
+        y: Math.max(0, Math.min(at.value.y, bounds.value.y)),
         width: newWidth,
         height: newHeight,
-        rotation: attrs.rotation
+        rotation: at.value.rotation
       }
     })
   }
@@ -114,6 +112,6 @@ const wheel = e => {
  */
 
 const update = useThrottleFn(data => {
-  emit('initUpdate', Object.assign(data, { _id: id.value }))
+  collectorStore.initThingieUpdate(Object.assign(data, { _id: id.value }))
 }, 5)
 </script>

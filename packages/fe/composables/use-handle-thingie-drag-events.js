@@ -43,8 +43,11 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
       ghost.src = `${baseUrl.value}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`
       ghost.style = `width: ${thingie.at.width}px; height: ${thingie.at.height}px; padding-top: unset;`
       document.body.appendChild(ghost)
-      handleOffset.value = ({ x: e.clientX - origin.x - thingie.at.x, y: e.clientY - origin.y - thingie.at.y })
-      e.dataTransfer.setDragImage(ghost, handleOffset.value.x, handleOffset.value.y)
+      handleOffset.value = ({
+        x: e.clientX - origin.x - thingie.at.x,
+        y: e.clientY - origin.y - thingie.at.y,
+      })
+      e.dataTransfer.setDragImage(ghost, handleOffset.value.x + thingie.at.width * 0.5, handleOffset.value.y + thingie.at.height * 0.5)
       generalStore.setDraggingThingie(thingie)
     } else {
       e.preventDefault()

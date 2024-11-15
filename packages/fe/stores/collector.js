@@ -7,11 +7,15 @@ import { useFetchAuth } from '../composables/use-fetch-auth'
 // -----------------------------------------------------------------------------
 export const useCollectorStore = defineStore('collector', () => {
   // =================================================================== imports
+  const generalStore = useGeneralStore()
+  const { sessionId } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
   const { verse, page } = storeToRefs(verseStore)
   const pocketStore = usePocketStore()
   const { pocket, token } = storeToRefs(pocketStore)
-
+  const websocketStore = useWebsocketStore()
+  const { socket } = storeToRefs(websocketStore)
+  
   // ===================================================================== state
   const thingies = ref({
     loading: false,
@@ -76,6 +80,21 @@ export const useCollectorStore = defineStore('collector', () => {
   }
 
   /**
+   * @method initThingieUpdate
+   * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
+   */
+
+  const initThingieUpdate = update => {
+    if (update.hasOwnProperty('at')) {
+      const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
+      socket.value.emit('update-thingie', updateAt)
+      updateThingie(updateAt)
+    } else {
+      socket.value.emit('update-thingie', update)
+    }
+  }
+
+  /**
    * @method updateThingie
    * @desc Updates a thingie on the current page. If the incoming update has has an omit_session_id key, it is because the update originated from this session. In this case the thingie will be updated and not outright replaced.
    */
@@ -109,6 +128,7 @@ export const useCollectorStore = defineStore('collector', () => {
     // ----- actions
     getThingies,
     postCreateThingie,
+    initThingieUpdate,
     updateThingie,
     setEditing
   }

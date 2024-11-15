@@ -65,7 +65,7 @@ useHandleThingieDragEvents(pageRef, stageRef)
 const verseName = computed(() => route.params.verse)
 const pageName = computed(() => route.params.page)
 const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
-const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value))
+const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 
 // ==================================================================== Watchers
 watch(data, async () => {

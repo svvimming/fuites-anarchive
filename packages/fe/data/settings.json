@@ -58,19 +58,22 @@
     ],
     "shared": [
       {
-        "directive": "changeZindex",
-        "value": "front",
-        "inner": "forward"
+        "directive": "rotateCW",
+        "button": "retrigger",
+        "inner": "CW"
       },
       {
-        "directive": "changeZindex",
-        "value": "back",
-        "inner": "back"
+        "directive": "rotateCCW",
+        "button": "retrigger",
+        "inner": "CCW"
       },
       {
-        "directive": "changeOpacity",
-        "value": "1.0",
-        "inner": "opacity"
+        "directive": "bringForward",
+        "inner": "Forward"
+      },
+      {
+        "directive": "sendBack",
+        "inner": "Back"
       }
     ]
   }  

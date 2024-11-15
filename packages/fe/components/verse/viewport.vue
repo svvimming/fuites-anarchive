@@ -11,6 +11,8 @@
 
     <Pocket />
 
+    <VerseCaddy />
+
   </div>
 </template>
 
