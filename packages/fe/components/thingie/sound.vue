@@ -132,4 +132,3 @@ onBeforeUnmount(() => {
   if (mousemoveEventListener.value) { window.removeEventListener('mousemove', mousemoveEventListener.value) }
 })
 </script>
-

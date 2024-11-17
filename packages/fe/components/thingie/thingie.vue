@@ -25,6 +25,12 @@
       :position="thingie.at"
       :stoke-width="thingie.stroke_width" />
 
+    <ThingieText
+      v-if="type === 'text'"
+      :text="thingie.text"
+      :parent-config="config"
+      :options="highlight" />
+
   </v-group>
 </template>
 
