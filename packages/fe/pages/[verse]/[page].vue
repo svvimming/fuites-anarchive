@@ -14,6 +14,14 @@
           @click="handleClick($event)">
           <v-layer ref="layerRef">
 
+            <v-line :config="{
+              points: [0, 0, bounds.x, 0, bounds.x, bounds.y, 0, bounds.y],
+              stroke: 'blue',
+              strokeWidth: 10,
+              dash: [29, 20, 0.001, 20],
+              closed: true
+            }" />
+
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
@@ -152,17 +160,20 @@ const positionScene = position => {
 const scaleScene = dir => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
+  const limits = bounds.value
   const oldScale = stage.scaleX()
   const scaleBy = 1.01
   const canvasCenter = {
-    x: canvasConfig.value.width * 0.5,
-    y: canvasConfig.value.height * 0.5
+    x: stage.width() * 0.5,
+    y: stage.height() * 0.5
   }
   const zoomCenter = {
     x: (canvasCenter.x - stage.x()) / oldScale,
     y: (canvasCenter.y - stage.y()) / oldScale
   }
-  const newScale = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy
+  const ratio = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy
+  // Calculate the new scale. Limit it to be no less that the larger of the two ratios; view width / page width, or, view height / page height
+  const newScale = Math.max(ratio, Math.max(stage.width() / limits.x, stage.height() / limits.y))
   stage.scale({ x: newScale, y: newScale })
   positionScene({
     x: canvasCenter.x - (zoomCenter.x * newScale) + layer.x(),
