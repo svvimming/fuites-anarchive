@@ -25,8 +25,7 @@
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
-              :thingie="thingie"
-              @init-update="initUpdate" />
+              :thingie="thingie" />
 
           </v-layer>
         </v-stage>
@@ -84,21 +83,6 @@ watch(data, async () => {
 }, { immediate: true })
 
 // ===================================================================== Methods
-/**
- * @method initUpdate
- * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
- */
-
-const initUpdate = update => {
-  if (update.hasOwnProperty('at')) {
-    const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
-    socket.value.emit('update-thingie', updateAt)
-    collectorStore.updateThingie(updateAt)
-  } else {
-    socket.value.emit('update-thingie', update)
-  }
-}
-
 /**
  * @method handleClick
  */

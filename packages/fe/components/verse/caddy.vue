@@ -5,7 +5,7 @@
     :handle="handle"
     :container-element="container"
     class="caddy-wrapper">
-    <div id="caddy">
+    <div id="caddy" :class="{ active: thingie }">
 
       <div ref="handle" class="handle">
         handle
@@ -126,7 +126,7 @@ const sendThingieBack = () => {
  * @method update
  */
 
- const update = useThrottleFn(data => {
+const update = useThrottleFn(data => {
   collectorStore.initThingieUpdate(Object.assign(data, { _id: thingie.value._id }))
 }, 5)
 </script>
@@ -142,5 +142,14 @@ const sendThingieBack = () => {
   padding: 1rem;
   background-color: red;
   color: white;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  transition: 200ms ease;
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+  }
 }
 </style>

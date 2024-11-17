@@ -11,6 +11,8 @@
 
     <Pocket />
 
+    <VerseTextEditor />
+
     <VerseCaddy :container="viewport" />
 
   </div>
