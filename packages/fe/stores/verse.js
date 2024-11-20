@@ -14,6 +14,12 @@ export const useVerseStore = defineStore('verse', () => {
     data: {}
   })
 
+  const sceneData = ref({
+    x: 0,
+    y: 0,
+    scale: 1
+  })
+
   // =================================================================== actions
 
   /**
@@ -60,14 +66,24 @@ export const useVerseStore = defineStore('verse', () => {
     }
   }
 
+  /**
+   * @method updateSceneData
+   */
+
+  const updateSceneData = incoming => {
+    sceneData.value = Object.assign({}, sceneData.value, incoming)
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     verse,
     page,
+    sceneData,
     // ----- actions
     getVerse,
-    getPage
+    getPage,
+    updateSceneData
   }
 })
 

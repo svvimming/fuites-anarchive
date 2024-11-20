@@ -98,14 +98,20 @@ const ThingieSchema = new Schema({
       required: false,
       default: ''
     },
-    fontfamily: {
+    family: {
       type: String,
-      required: false
+      required: true,
+      default: 'nanum'
     },
-    lineheight: {
+    fontsize: {
       type: Number,
       required: false,
-      default: 1
+      default: 13
+    },
+    color: {
+      type: String,
+      required: false,
+      default: '#000000'
     }
   },
   creator_token: {

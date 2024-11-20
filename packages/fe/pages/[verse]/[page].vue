@@ -46,9 +46,7 @@ const { page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { sessionId, dragndrop } = storeToRefs(generalStore)
-const websocketStore = useWebsocketStore()
-const { socket } = storeToRefs(websocketStore)
+const { dragndrop } = storeToRefs(generalStore)
 
 const { data } = await useAsyncData('settings', async () => {
   const content = await queryContent({
@@ -134,6 +132,7 @@ const positionScene = position => {
   const minY = -1 * (height - stage.height()) 
   const y = Math.max(minY * scale, Math.min(position.y, 0)) // 0 = maxY
   layer.position({ x, y })
+  verseStore.updateSceneData({ x, y })
 }
 
 /**
@@ -159,6 +158,7 @@ const scaleScene = dir => {
   // Calculate the new scale. Limit it to be no less that the larger of the two ratios; view width / page width, or, view height / page height
   const newScale = Math.max(ratio, Math.max(stage.width() / limits.x, stage.height() / limits.y))
   stage.scale({ x: newScale, y: newScale })
+  verseStore.updateSceneData({ scale: newScale })
   positionScene({
     x: canvasCenter.x - (zoomCenter.x * newScale) + layer.x(),
     y: canvasCenter.y - (zoomCenter.y * newScale) + layer.y()

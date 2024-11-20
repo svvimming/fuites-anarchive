@@ -67,10 +67,8 @@
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
-const websocketStore = useWebsocketStore()
-const { socket } = storeToRefs(websocketStore)
 const generalStore = useGeneralStore()
-const { sessionId, dragndrop } = storeToRefs(generalStore)
+const { dragndrop } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const {
   pocket,

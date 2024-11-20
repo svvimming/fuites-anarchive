@@ -29,7 +29,8 @@
       v-if="type === 'text'"
       :text="thingie.text"
       :parent-config="config"
-      :options="highlight" />
+      :options="highlight"
+      :hidden="editMode" />
 
   </v-group>
 </template>
@@ -105,7 +106,7 @@ const doubleClick = () => {
 
 const wheel = e => {
   e.evt.preventDefault()
-  if (editMode.value) {
+  if (editMode.value && type.value !== 'text') {
     e.cancelBubble = true
     const attrs = e.target.attrs
     const width = attrs.width || at.value.width

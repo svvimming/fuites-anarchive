@@ -7,6 +7,32 @@
     "timeout": 5000,
     "from": "top"
   },
+  "fonts": [
+    {
+      "class": "nanum",
+      "fontFaceDeclaration": "Nanum Myeongjo"
+    },
+    {
+      "class": "courier",
+      "fontFaceDeclaration": "Courier Prime"
+    },
+    {
+      "class": "merriweather",
+      "fontFaceDeclaration": "Merriweather"
+    },
+    {
+      "class": "source-code",
+      "fontFaceDeclaration": "Source Code Pro"
+    },
+    {
+      "class": "anton",
+      "fontFaceDeclaration": "Anton"
+    },
+    {
+      "class": "arvo",
+      "fontFaceDeclaration": "Arvo"
+    }
+  ],
   "thingieEditableParams": {
     "image": [
       {

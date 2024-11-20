@@ -1,45 +1,74 @@
 <template>
   <div
     id="text-editor"
-    :class="{ active }"
+    :class="{ active: id }"
     :style="{
-      left: `${at.x - at.width * 0.5 - 4}px`,
-      top: `${at.y - at.height * 0.5 - 4}px`
+      left: `${(rect.x + sceneData.x - 6) * sceneData.scale - rect.width * 0.5}px`,
+      top: `${(rect.y + sceneData.y + 5) * sceneData.scale - rect.height * 0.5}px`,
+      transform: `scale(${sceneData.scale}) rotate(${rect.rotation}deg)`,
+      '--text-color': color,
+      '--text-font-size': `${fontsize}px`
     }">
 
-    <textarea
-      ref="textarea"
-      v-model="text"
-      :class="['textarea']"
-      :style="textStyles"
-      @keydown.enter="handleSubmit" />
+    <div ref="sizer" class="input-sizer">
+      <textarea
+        v-model="content"
+        :no-trim="true"
+        :class="['textarea', family]" />
+    </div>
 
   </div>
 </template>
 
 <script setup>
-import { nextTick } from 'vue';
+// ====================================================================== Import
+import { useResizeObserver } from '@vueuse/core'
 
 // ======================================================================== Data
+const verseStore = useVerseStore()
+const { sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 
-const text = ref('')
-const thingieId = ref('')
-const textarea = ref(null)
+const sizer = ref(null)
+const id = ref('')
+const content = ref('')
+const textdata = ref({})
+const rect = ref({ x: 0, y: 0, width: 100, height: 100, rotation: 0 })
+
+useResizeObserver(sizer, (entries) => {
+  const entry = entries[0]
+  const { width, height } = entry.contentRect
+  Object.assign(rect.value, { width, height })
+})
 
 // ==================================================================== Computed
-const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
-const active = computed(() => thingie.value && thingie.value.thingie_type === 'text')
-const at = computed(() => thingie.value?.at || {})
-const textStyles = computed(() => ({}))
+const color = computed(() => textdata.value.color || '#000000')
+const fontsize = computed(() => textdata.value.fontsize || 13)
+const family = computed(() => textdata.value.family)
 
 // ==================================================================== Watchers
-watch(thingie, (item) => {
-  if (item && item.thingie_type === 'text') {
-    thingieId.value = item._id
-    text.value = item.text || ''
+watch(editing, (newId, oldId) => {
+  if (oldId && oldId === id.value) {
+    handleSubmit({
+      _id: id.value,
+      at: Object.assign({}, rect.value),
+      text: Object.assign({}, textdata.value, {
+        content: content.value
+      })
+    })
   }
+  const editingThingie = thingies.value.data.find(item => item._id === newId)
+  if (editingThingie && editingThingie.thingie_type === 'text') {
+    rect.value = { ...editingThingie.at }
+    textdata.value = { ...editingThingie.text }
+    content.value = editingThingie.text.content
+    id.value = editingThingie._id
+  }
+})
+
+watch(content, (val) => {
+  sizer.value.dataset.value = val
 })
 
 // ===================================================================== Methods
@@ -47,49 +76,81 @@ watch(thingie, (item) => {
  * @method handleSubmit
  */
 
-const handleSubmit = () => {
-  const width = textarea.value.clientWidth - 8 // minus padding
-  const height = textarea.value.clientHeight - 8 // minus padding
-  const newAtData = Object.assign({}, at.value, { width, height })
-  collectorStore.setEditing(false)
-  nextTick(() => {
-    update({ text: text.value, at: newAtData })
-  })
+const handleSubmit = update => {
+  collectorStore.initThingieUpdate(update)
+  id.value = ''
+  content.value = ''
+  textdata.value = {}
+  rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
 }
 
-/**
- * @method update
- */
-
-const update = data => {
-  collectorStore.initThingieUpdate(Object.assign(data, { _id: thingieId.value }))
-}
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 #text-editor {
+  --text-color: #000000;
+  --text-font-size: 13;
   position: absolute;
   display: flex;
   z-index: 1;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.8);
-  transition: opacity, 200ms ease, visibility 200ms ease, transform 200ms ease;
-  // box-shadow: 0px 0px 10px 2px red;
-  border-radius: torem(4);
   &.active {
     opacity: 1;
     visibility: visible;
-    transform: scale(1);
+    transition: opacity 10ms linear, visibility 10ms linear;
+    transition-delay: 10ms;
+  }
+  .input-sizer {
+    &:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: torem(4);
+      box-shadow: 0px 0px 3px 1px var(--text-color);
+      opacity: 0.5;
+      z-index: -1;
+    }
+  }
+  .textarea {
+    color: var(--text-color);
+    font-size: var(--text-font-size);
   }
 }
 
-.textarea {
-  padding: torem(4);
-  resize: both;
-  transition: none;
-  background-color: white;
+.input-sizer {
+  display: inline-grid;
+  vertical-align: top;
+  align-items: center;
+  position: relative;
   border-radius: torem(4);
+  // background-color: white;
+  transform: translate(0);
+  transition: transform 200ms ease;
+  &:after,
+  .textarea {
+    width: auto;
+    min-width: 1em;
+    grid-area: 2 / 1;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+    padding: torem(4) torem(6);
+    line-height: 1.5;
+  }
+  .textarea {
+    height: 100%;
+    white-space: pre-wrap;
+  }
+  &:after {
+    content: attr(data-value) ' ';
+    visibility: hidden;
+    white-space: pre-wrap;
+  }
 }
 </style>
