@@ -69,6 +69,7 @@ const rasterizeText = () => {
   pre.style.fontSize = props.text.fontsize + 'px'
   pre.style.fontFamily = fontface.value
   pre.style.lineHeight = 1.5
+  pre.style.textWrap = 'nowrap'
   // pre.style.left = '0px'
   // pre.style.top = '0px'
   document.body.appendChild(pre)

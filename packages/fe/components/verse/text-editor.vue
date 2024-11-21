@@ -14,7 +14,8 @@
       <textarea
         v-model="content"
         :no-trim="true"
-        :class="['textarea', family]" />
+        :class="['textarea', family]"
+        :style="{ width: rect.width + 'px', height: rect.height + 'px' }" />
     </div>
 
   </div>
@@ -104,16 +105,7 @@ const handleSubmit = update => {
   }
   .input-sizer {
     &:before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: torem(4);
       box-shadow: 0px 0px 3px 1px var(--text-color);
-      opacity: 0.5;
-      z-index: -1;
     }
   }
   .textarea {
@@ -123,34 +115,41 @@ const handleSubmit = update => {
 }
 
 .input-sizer {
-  display: inline-grid;
-  vertical-align: top;
-  align-items: center;
   position: relative;
+  display: flex;
   border-radius: torem(4);
-  // background-color: white;
   transform: translate(0);
   transition: transform 200ms ease;
-  &:after,
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: torem(4);
+    opacity: 0.5;
+    z-index: -1;
+  }
   .textarea {
-    width: auto;
-    min-width: 1em;
-    grid-area: 2 / 1;
-    resize: none;
+    // width: auto;
+    // min-width: 1em;
+    // grid-area: 2 / 1;
+    // resize: none;
+    height: 100%;
+    text-wrap: nowrap;
+    resize: both;
+    transition: none;
     background: none;
     appearance: none;
     border: none;
     padding: torem(4) torem(6);
     line-height: 1.5;
   }
-  .textarea {
-    height: 100%;
-    white-space: pre-wrap;
-  }
-  &:after {
-    content: attr(data-value) ' ';
-    visibility: hidden;
-    white-space: pre-wrap;
-  }
+  // &:after {
+  //   content: attr(data-value) ' ';
+  //   visibility: hidden;
+  //   white-space: pre-wrap;
+  // }
 }
 </style>
