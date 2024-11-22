@@ -34,72 +34,58 @@
     }
   ],
   "thingieEditableParams": {
-    "image": [
-      {
-        "directive": "toggleImageClip",
-        "inner": "clip"
-      }
-    ],
+    "image": [],
     "text": [
       {
-        "directive": "changeFontSize",
-        "value": "up",
-        "inner": "+size"
-      },
-      {
-        "directive": "changeFontSize",
-        "value": "down",
-        "inner": "-size"
-      },
-      {
-        "directive": "changeFontFamily",
-        "inner": "font"
-      },
-      {
-        "directive": "openColorEditor",
-        "inner": "color"
+        "type": "expandable",
+        "name": "fontsize",
+        "content": "fs",
+        "params": [
+          {
+            "directive": "increaseFontSize",
+            "content": "+size"
+          },
+          {
+            "directive": "decreaseFontSize",
+            "content": "-size"
+          }
+        ]
       }
     ],
-    "sound": [
-      {
-        "directive": "changePathStrokeWidth",
-        "value": "up",
-        "inner": "+width"
-      },
-      {
-        "directive": "changePathStrokeWidth",
-        "value": "down",
-        "inner": "-width"
-      },
-      {
-        "directive": "changeSoundLevel",
-        "value": "up",
-        "inner": "🔊"
-      },
-      {
-        "directive": "changeSoundLevel",
-        "value": "down",
-        "inner": "🔉"
-      }
-    ],
+    "sound": [],
     "shared": [
       {
-        "directive": "rotateCW",
-        "button": "retrigger",
-        "inner": "CW"
+        "type": "static",
+        "name": "rotation",
+        "content": "θ",
+        "params": [
+          {
+            "directive": "rotateCW",
+            "button": "retrigger",
+            "content": "CW"
+          },
+          {
+            "directive": "rotateCCW",
+            "button": "retrigger",
+            "content": "CCW"
+          }
+        ]
       },
       {
-        "directive": "rotateCCW",
-        "button": "retrigger",
-        "inner": "CCW"
-      },
-      {
-        "directive": "bringForward",
-        "inner": "Forward"
-      },
-      {
-        "directive": "sendBack",
-        "inner": "Back"
+        "type": "static",
+        "name": "z-index",
+        "content": "z",
+        "params": [
+          {
+            "directive": "bringForward",
+            "content": "Forward"
+          },
+          {
+            "directive": "sendBack",
+            "content": "Back",
+            "closeOnSelect": true
+          }
+        ]
       }
     ]
   }  

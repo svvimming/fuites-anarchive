@@ -11,19 +11,29 @@
         handle
       </div>
       
-      <template v-for="param in params" :key="param.directive">
+      <div
+        v-for="(tool, i) in tools"
+        :key="`tool-${i}`"
+        :class="['tool', tool.name, tool.type]">
+        <template v-for="param in tool.params" :key="param.directive">
 
-        <ButtonRetrigger
-          v-if="param.button === 'retrigger'"
-          @retrigger="handleClick(param.directive)">
-          {{ param.inner }}
-        </ButtonRetrigger>
+          <ButtonRetrigger
+            v-if="param.button === 'retrigger'"
+            :class="['param-button', { pair: tool.params.length === 2 }]"
+            @retrigger="handleClick(param.directive, param.closeOnSelect)">
+            {{ param.content }}
+          </ButtonRetrigger>
 
-        <button v-else @click="handleClick(param.directive)">
-          {{ param.inner }}
-        </button>
+          <button
+            v-else
+            :class="['param-button', { pair: tool.params.length === 2 }]"
+            @click="handleClick(param.directive, param.closeOnSelect)">
+            {{ param.content }}
+          </button>
 
-      </template>
+        </template>
+      </div>
+
 
     </div>
   </UseDraggable>
@@ -55,24 +65,30 @@ const { page } = storeToRefs(verseStore)
 const handle = ref(null)
 
 // ==================================================================== Computed
-const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
-const shared = computed(() => editableParams.value?.shared || [])
-const params = computed(() => shared.value.concat([]))
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data._id))
+const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
+const exclusive = computed(() => editableParams.value[thingie.value?.thingie_type] || [])
+const shared = computed(() => editableParams.value?.shared || [])
+const tools = computed(() => shared.value.concat(exclusive.value))
 
 // ===================================================================== Methods
 /**
  * @method handleClick
  */
 
-const handleClick = directive => {
+const handleClick = (directive, closeOnSelect) => {
   switch (directive) {
     case 'rotateCW' : rotateThingie(1); break
     case 'rotateCCW' : rotateThingie(-1); break
     case 'bringForward' : bringThingieForward(); break
     case 'sendBack' : sendThingieBack(); break
+    case 'increaseFontSize' : changeFontSize(1); break
+    case 'decreaseFontSize' : changeFontSize(-1); break
+  }
+  if (closeOnSelect) {
+    nextTick(() => { collectorStore.setEditing(false) })
   }
 }
 
@@ -123,6 +139,18 @@ const sendThingieBack = () => {
 }
 
 /**
+ * @method changeFontSize
+ */
+
+const changeFontSize = amt => {
+  update({
+    text: Object.assign({}, thingie.value.text, {
+      fontsize: thingie.value.text.fontsize + amt
+    })
+  })
+}
+
+/**
  * @method update
  */
 
@@ -150,6 +178,41 @@ const update = useThrottleFn(data => {
     opacity: 1;
     visibility: visible;
     transform: scale(1);
+  }
+}
+
+.handle {
+  &:hover {
+    cursor: grab;
+  }
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// /////////////////////////////////////////////////////////////////////// Tools
+.tool {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: solid 0.5px black;
+  background-color: white;
+  overflow: hidden;
+  width: torem(40);
+  height: torem(40);
+}
+
+.param-button {
+  color: black;
+  font-size: torem(8);
+  &.pair {
+    width: 50%;
+    height: 100%;
+    &:first-child {
+      border-right: solid 0.5px black;
+    }
   }
 }
 </style>

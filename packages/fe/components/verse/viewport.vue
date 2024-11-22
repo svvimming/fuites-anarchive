@@ -13,7 +13,7 @@
 
     <VerseTextEditor />
 
-    <VerseCaddy :container="viewport" />
+    <Caddy :container="viewport" />
 
   </div>
 </template>

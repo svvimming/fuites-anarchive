@@ -5,7 +5,7 @@
     :style="{
       left: `${(rect.x + sceneData.x - 6) * sceneData.scale - rect.width * 0.5}px`,
       top: `${(rect.y + sceneData.y + 5) * sceneData.scale - rect.height * 0.5}px`,
-      transform: `scale(${sceneData.scale}) rotate(${rect.rotation}deg)`,
+      transform: `scale(${sceneData.scale}) rotate(${rotation}deg)`,
       '--text-color': color,
       '--text-font-size': `${fontsize}px`
     }">
@@ -34,8 +34,7 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const sizer = ref(null)
 const id = ref('')
 const content = ref('')
-const textdata = ref({})
-const rect = ref({ x: 0, y: 0, width: 100, height: 100, rotation: 0 })
+const rect = ref({ x: 0, y: 0, width: 100, height: 100 })
 
 useResizeObserver(sizer, (entries) => {
   const entry = entries[0]
@@ -44,17 +43,19 @@ useResizeObserver(sizer, (entries) => {
 })
 
 // ==================================================================== Computed
-const color = computed(() => textdata.value.color || '#000000')
-const fontsize = computed(() => textdata.value.fontsize || 13)
-const family = computed(() => textdata.value.family)
+const active = computed(() => thingies.value.data.find(item => item._id === id.value))
+const rotation = computed(() => active.value?.at.rotation)
+const color = computed(() => active.value?.text.color || '#000000')
+const fontsize = computed(() => active.value?.text.fontsize || 13)
+const family = computed(() => active.value?.text.family || 'nanum')
 
 // ==================================================================== Watchers
 watch(editing, (newId, oldId) => {
   if (oldId && oldId === id.value) {
     handleSubmit({
       _id: id.value,
-      at: Object.assign({}, rect.value),
-      text: Object.assign({}, textdata.value, {
+      at: Object.assign({}, rect.value, { rotation: rotation.value }),
+      text: Object.assign({}, active.value.text, {
         content: content.value
       })
     })
@@ -62,7 +63,6 @@ watch(editing, (newId, oldId) => {
   const editingThingie = thingies.value.data.find(item => item._id === newId)
   if (editingThingie && editingThingie.thingie_type === 'text') {
     rect.value = { ...editingThingie.at }
-    textdata.value = { ...editingThingie.text }
     content.value = editingThingie.text.content
     id.value = editingThingie._id
   }
@@ -81,7 +81,6 @@ const handleSubmit = update => {
   collectorStore.initThingieUpdate(update)
   id.value = ''
   content.value = ''
-  textdata.value = {}
   rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
 }
 
