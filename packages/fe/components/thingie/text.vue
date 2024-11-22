@@ -59,23 +59,23 @@ onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
-  const pre = document.createElement('div')
-  pre.innerHTML = props.text.content
-  pre.style.width = `${textConfig.value.width}px`
-  pre.style.height = `${textConfig.value.height}px`
-  pre.style.position = 'absolute'
-  // pre.style.display = 'flex'
-  pre.style.color = props.text.color
-  pre.style.fontSize = props.text.fontsize + 'px'
-  pre.style.fontFamily = fontface.value
-  pre.style.lineHeight = 1.5
-  pre.style.whiteSpace= 'break-spaces'
-  pre.style.wordWrap = 'break-word'
-  // pre.style.textWrap = 'nowrap'
-  // pre.style.left = '0px'
-  // pre.style.top = '0px'
-  document.body.appendChild(pre)
-  html2canvas(pre, {
+  const div = document.createElement('div')
+  div.innerHTML = props.text.content
+  div.style.width = `${textConfig.value.width}px`
+  div.style.height = `${textConfig.value.height}px`
+  div.style.position = 'absolute'
+  // div.style.display = 'flex'
+  // div.style.color = props.text.color
+  div.style.fontSize = props.text.fontsize + 'px'
+  // div.style.fontFamily = fontface.value
+  div.style.lineHeight = 1.5
+  div.style.whiteSpace= 'break-spaces'
+  div.style.wordWrap = 'break-word'
+  // div.style.textWrap = 'nowrap'
+  // div.style.left = '0px'
+  // div.style.top = '0px'
+  document.body.appendChild(div)
+  html2canvas(div, {
     width: textConfig.value.width,
     height: textConfig.value.height,
     scale: 4,
@@ -83,7 +83,7 @@ const rasterizeText = () => {
   }).then((cnv) => {
     raster.value = cnv
     key.value++
-    pre.remove()
+    div.remove()
   })
 }
 </script>

@@ -9,7 +9,6 @@
       '--text-color': color,
       '--text-font-size': `${fontsize}px`
     }">
-
     <div ref="sizer" class="input-sizer">
       <div  
         class="editor-wrapper"
@@ -24,7 +23,6 @@
 
       </div>
     </div>
-
   </div>
 </template>
 
@@ -37,6 +35,10 @@ import {
   EditorContent,
   Extension
 } from '@tiptap/vue-3'
+import Underline from '@tiptap/extension-underline'
+// import Strike from '@tiptap/extension-strike'
+import TextStyle from '@tiptap/extension-text-style'
+import FontFamily from '@tiptap/extension-font-family'
 
 // ======================================================================== Data
 const verseStore = useVerseStore()
@@ -108,7 +110,11 @@ onMounted(async () => {
     content: '',
     editable: true,
     extensions: [
-      StarterKit.configure({ codeBlock: false })
+      StarterKit.configure({ codeBlock: false }),
+      Underline,
+      // Strike,
+      TextStyle,
+      FontFamily
     ],
     parseOptions: {
       preserveWhitespace: 'full'

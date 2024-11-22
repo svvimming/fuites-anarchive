@@ -50,6 +50,44 @@
             "content": "-size"
           }
         ]
+      },
+      {
+        "type": "static",
+        "name": "fontstyle",
+        "content": "IUB",
+        "params": [
+          {
+            "directive": "toggleSelectionBold",
+            "content": "B"
+          },
+          {
+            "directive": "toggleSelectionItalic",
+            "content": "I"
+          },
+          {
+            "directive": "toggleSelectionUnderline",
+            "content": "U"
+          }
+        ]
+      },
+      {
+        "type": "expandable",
+        "name": "fontfamily",
+        "content": "f",
+        "params": [
+          {
+            "directive": "setSelectionFontFamily",
+            "button": "selector",
+            "options": [
+              "nanum",
+              "courier",
+              "merriweather",
+              "arvo",
+              "anton",
+              "source-code"
+            ]
+          }
+        ]
       }
     ],
     "sound": [],

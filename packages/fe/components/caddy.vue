@@ -24,6 +24,11 @@
             {{ param.content }}
           </ButtonRetrigger>
 
+          <ButtonSelector
+            v-else-if="param.button === 'selector'"
+            :options="param.options"
+            @selected="(selection) => { handleClick(param.directive, param.closeOnSelect, selection) }" />
+
           <button
             v-else
             :class="['param-button', { pair: tool.params.length === 2 }]"
@@ -60,11 +65,12 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
+const { page, textEditor } = storeToRefs(verseStore)
 
 const handle = ref(null)
 
 // ==================================================================== Computed
+const fonts = computed(() => siteData.value?.settings?.fonts || [])
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data._id))
@@ -78,7 +84,7 @@ const tools = computed(() => shared.value.concat(exclusive.value))
  * @method handleClick
  */
 
-const handleClick = (directive, closeOnSelect) => {
+const handleClick = (directive, closeOnSelect, val) => {
   switch (directive) {
     case 'rotateCW' : rotateThingie(1); break
     case 'rotateCCW' : rotateThingie(-1); break
@@ -86,6 +92,11 @@ const handleClick = (directive, closeOnSelect) => {
     case 'sendBack' : sendThingieBack(); break
     case 'increaseFontSize' : changeFontSize(1); break
     case 'decreaseFontSize' : changeFontSize(-1); break
+    case 'toggleSelectionBold' : textEditor.value.chain().focus().toggleBold().run(); break
+    case 'toggleSelectionItalic' : textEditor.value.chain().focus().toggleItalic().run(); break
+    case 'toggleSelectionUnderline' : textEditor.value.chain().focus().toggleUnderline().run(); break
+    case 'toggleSelectionStrike' : textEditor.value.chain().focus().toggleStrike().run(); break
+    case 'setSelectionFontFamily' : setSelectionFontFamily(val) ; break
   }
   if (closeOnSelect) {
     nextTick(() => { collectorStore.setEditing(false) })
@@ -151,6 +162,15 @@ const changeFontSize = amt => {
 }
 
 /**
+ * @method setSelectionFontFamily
+ */
+
+const setSelectionFontFamily = family => {
+  const font = fonts.value.find(item => item.class === family)
+  textEditor.value.chain().focus().setFontFamily(font.fontFaceDeclaration).run()
+}
+
+/**
  * @method update
  */
 
@@ -194,7 +214,7 @@ const update = useThrottleFn(data => {
 .tool {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   border-radius: 50%;
   border: solid 0.5px black;
@@ -202,6 +222,10 @@ const update = useThrottleFn(data => {
   overflow: hidden;
   width: torem(40);
   height: torem(40);
+  &.fontfamily {
+    width: unset;
+    height: unset;
+  }
 }
 
 .param-button {
