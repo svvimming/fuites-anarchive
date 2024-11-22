@@ -59,17 +59,19 @@ onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
-  const pre = document.createElement('pre')
+  const pre = document.createElement('div')
   pre.innerHTML = props.text.content
   pre.style.width = `${textConfig.value.width}px`
   pre.style.height = `${textConfig.value.height}px`
   pre.style.position = 'absolute'
-  pre.style.display = 'flex'
+  // pre.style.display = 'flex'
   pre.style.color = props.text.color
   pre.style.fontSize = props.text.fontsize + 'px'
   pre.style.fontFamily = fontface.value
   pre.style.lineHeight = 1.5
-  pre.style.textWrap = 'nowrap'
+  pre.style.whiteSpace= 'break-spaces'
+  pre.style.wordWrap = 'break-word'
+  // pre.style.textWrap = 'nowrap'
   // pre.style.left = '0px'
   // pre.style.top = '0px'
   document.body.appendChild(pre)

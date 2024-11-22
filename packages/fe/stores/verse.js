@@ -20,6 +20,8 @@ export const useVerseStore = defineStore('verse', () => {
     scale: 1
   })
 
+  const textEditor = ref(false)
+
   // =================================================================== actions
 
   /**
@@ -74,16 +76,26 @@ export const useVerseStore = defineStore('verse', () => {
     sceneData.value = Object.assign({}, sceneData.value, incoming)
   }
 
+  /**
+   * @method setTextEditor
+   */
+
+  const setTextEditor = incoming => {
+    textEditor.value = incoming
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     verse,
     page,
     sceneData,
+    textEditor,
     // ----- actions
     getVerse,
     getPage,
-    updateSceneData
+    updateSceneData,
+    setTextEditor
   }
 })
 
