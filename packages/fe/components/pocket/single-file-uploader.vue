@@ -190,7 +190,7 @@ const finalizeUpload = async () => {
   margin-right: 0.5rem;
   width: 100%;
   line-height: 1.2;
-  font-family: 'Cousine', monospace;
+  font-family: 'Source Code Pro', monospace;
   font-size: 0.6875rem;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -200,7 +200,7 @@ const finalizeUpload = async () => {
 
 :deep(.filesize),
 :deep(.mimetype) {
-  font-family: 'Cousine', monospace;
+  font-family: 'Source Code Pro', monospace;
   font-size: 0.6875rem;
   line-height: 1.2;
   overflow-wrap: break-word;

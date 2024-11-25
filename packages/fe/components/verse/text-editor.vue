@@ -10,7 +10,7 @@
       '--text-font-size': `${fontsize}px`
     }">
     <div ref="sizer" class="input-sizer">
-      <div  
+      <div
         class="editor-wrapper"
         :style="{ width: rect.width + 'px', height: rect.height + 'px' }"
         @click="textEditor?.view.focus()">
@@ -39,6 +39,7 @@ import Underline from '@tiptap/extension-underline'
 // import Strike from '@tiptap/extension-strike'
 import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
+import FontSize from 'tiptap-extension-font-size'
 
 // ======================================================================== Data
 const verseStore = useVerseStore()
@@ -114,7 +115,8 @@ onMounted(async () => {
       Underline,
       // Strike,
       TextStyle,
-      FontFamily
+      FontFamily,
+      FontSize
     ],
     parseOptions: {
       preserveWhitespace: 'full'

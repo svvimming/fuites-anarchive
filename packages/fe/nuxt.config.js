@@ -74,8 +74,8 @@ export default defineNuxtConfig({
   },
   // ============================================================= Global Styles
   css: [
-    '@/assets/scss/main.scss',
-    '@/assets/scss/typography.scss'
+    '@/assets/scss/typography.scss',
+    '@/assets/scss/main.scss'
   ],
   // =================================================================== Modules
   modules: [

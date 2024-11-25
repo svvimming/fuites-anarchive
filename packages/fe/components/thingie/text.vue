@@ -31,8 +31,6 @@ const props = defineProps({
 // ======================================================================== Data
 const key = ref(0)
 const raster = ref(false)
-const generalStore = useGeneralStore()
-const { siteData } = storeToRefs(generalStore)
 
 // ==================================================================== Computed
 const textConfig = computed(() => ({
@@ -43,12 +41,6 @@ const textConfig = computed(() => ({
   visible: !props.hidden,
   ...props.options
 }))
-
-const fontface = computed(() => {
-  const font = siteData.value?.settings?.fonts.find(item => item.class === props.text.family)
-  if (font) { return font.fontFaceDeclaration }
-  return 'Nanum Myeongjo'
-})
 
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
@@ -71,6 +63,7 @@ const rasterizeText = () => {
   div.style.lineHeight = 1.5
   div.style.whiteSpace= 'break-spaces'
   div.style.wordWrap = 'break-word'
+  // div.classList.add()
   // div.style.textWrap = 'nowrap'
   // div.style.left = '0px'
   // div.style.top = '0px'

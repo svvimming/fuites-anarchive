@@ -4,6 +4,7 @@
     <button
       v-for="option in options"
       :key="option"
+      :class="[option]"
       @click="emit('selected', option)">
       {{ option }}
     </button>

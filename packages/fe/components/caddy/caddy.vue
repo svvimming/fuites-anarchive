@@ -5,42 +5,51 @@
     :handle="handle"
     :container-element="container"
     class="caddy-wrapper">
-    <div id="caddy" :class="{ active: thingie }">
 
+    <div id="caddy" :class="{ active: thingie }">
+      <!-- ---------------------------------------------------------- Handle -->
       <div ref="handle" class="handle">
         handle
       </div>
       
+      <!-- ========================================================== Shared -->
       <div
-        v-for="(tool, i) in tools"
+        v-for="(tool, i) in shared"
         :key="`tool-${i}`"
         :class="['tool', tool.name, tool.type]">
         <template v-for="param in tool.params" :key="param.directive">
-
           <ButtonRetrigger
             v-if="param.button === 'retrigger'"
             :class="['param-button', { pair: tool.params.length === 2 }]"
-            @retrigger="handleClick(param.directive, param.closeOnSelect)">
+            @retrigger="handleShared(param.directive, param.closeOnSelect)">
             {{ param.content }}
           </ButtonRetrigger>
-
-          <ButtonSelector
-            v-else-if="param.button === 'selector'"
-            :options="param.options"
-            @selected="(selection) => { handleClick(param.directive, param.closeOnSelect, selection) }" />
-
           <button
             v-else
             :class="['param-button', { pair: tool.params.length === 2 }]"
-            @click="handleClick(param.directive, param.closeOnSelect)">
+            @click="handleShared(param.directive, param.closeOnSelect)">
             {{ param.content }}
           </button>
-
         </template>
       </div>
 
+      <!-- ============================================================ Text -->
+      <template v-if="type === 'text'">
+
+        <CaddyFontFamilySelector
+          :expanded="expanded === 'font-family-selector'"
+          @click.native="setExpanded('font-family-selector')" />
+
+        <CaddyFontSizeSelector
+          :expanded="expanded === 'font-size-selector'"
+          @click.native="setExpanded('font-size-selector')" />
+
+        <CaddyFontStyleSelector />
+        
+      </template>
 
     </div>
+
   </UseDraggable>
 </template>
 
@@ -65,41 +74,43 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const { page, textEditor } = storeToRefs(verseStore)
+const { page } = storeToRefs(verseStore)
 
 const handle = ref(null)
+const expanded = ref('')
 
 // ==================================================================== Computed
-const fonts = computed(() => siteData.value?.settings?.fonts || [])
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data._id))
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
-const exclusive = computed(() => editableParams.value[thingie.value?.thingie_type] || [])
+const type = computed(() => thingie.value?.thingie_type)
 const shared = computed(() => editableParams.value?.shared || [])
-const tools = computed(() => shared.value.concat(exclusive.value))
 
 // ===================================================================== Methods
 /**
- * @method handleClick
+ * @method handleShared
  */
 
-const handleClick = (directive, closeOnSelect, val) => {
+const handleShared = (directive, closeOnSelect) => {
   switch (directive) {
     case 'rotateCW' : rotateThingie(1); break
     case 'rotateCCW' : rotateThingie(-1); break
     case 'bringForward' : bringThingieForward(); break
     case 'sendBack' : sendThingieBack(); break
-    case 'increaseFontSize' : changeFontSize(1); break
-    case 'decreaseFontSize' : changeFontSize(-1); break
-    case 'toggleSelectionBold' : textEditor.value.chain().focus().toggleBold().run(); break
-    case 'toggleSelectionItalic' : textEditor.value.chain().focus().toggleItalic().run(); break
-    case 'toggleSelectionUnderline' : textEditor.value.chain().focus().toggleUnderline().run(); break
-    case 'toggleSelectionStrike' : textEditor.value.chain().focus().toggleStrike().run(); break
-    case 'setSelectionFontFamily' : setSelectionFontFamily(val) ; break
   }
   if (closeOnSelect) {
     nextTick(() => { collectorStore.setEditing(false) })
+  }
+}
+
+/**
+ * @method setExpanded
+ */
+
+const setExpanded = val => {
+  if (expanded.value !== val) {
+    expanded.value = val
   }
 }
 
@@ -147,27 +158,6 @@ const sendThingieBack = () => {
     }
     update({ zIndex: min - 1 })
   }
-}
-
-/**
- * @method changeFontSize
- */
-
-const changeFontSize = amt => {
-  update({
-    text: Object.assign({}, thingie.value.text, {
-      fontsize: thingie.value.text.fontsize + amt
-    })
-  })
-}
-
-/**
- * @method setSelectionFontFamily
- */
-
-const setSelectionFontFamily = family => {
-  const font = fonts.value.find(item => item.class === family)
-  textEditor.value.chain().focus().setFontFamily(font.fontFaceDeclaration).run()
 }
 
 /**

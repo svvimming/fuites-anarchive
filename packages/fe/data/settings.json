@@ -10,86 +10,47 @@
   "fonts": [
     {
       "class": "nanum",
-      "fontFaceDeclaration": "Nanum Myeongjo"
+      "display": "Nanum Myeongjo",
+      "fontFaceDeclaration": "\"Nanum Myeongjo\", serif"
     },
     {
       "class": "courier",
-      "fontFaceDeclaration": "Courier Prime"
+      "display": "Courier Prime",
+      "fontFaceDeclaration": "\"Courier Prime\", monospace"
     },
     {
       "class": "merriweather",
-      "fontFaceDeclaration": "Merriweather"
+      "display": "Merriweather",
+      "fontFaceDeclaration": "\"Merriweather\", serif"
     },
     {
       "class": "source-code",
-      "fontFaceDeclaration": "Source Code Pro"
+      "display": "Source Code Pro",
+      "fontFaceDeclaration": "\"Source Code Pro\", monospace"
     },
     {
       "class": "anton",
-      "fontFaceDeclaration": "Anton"
+      "display": "Anton",
+      "fontFaceDeclaration": "\"Anton\", sans-serif"
     },
     {
       "class": "arvo",
-      "fontFaceDeclaration": "Arvo"
+      "display": "Arvo",
+      "fontFaceDeclaration": "\"Arvo\", serif"
+    },
+    {
+      "class": "pt-sans",
+      "display": "PT Sans",
+      "fontFaceDeclaration": "\"PT Sans\", sans-serif"
+    },
+    {
+      "class": "pt-serif",
+      "display": "PT Serif",
+      "fontFaceDeclaration": "\"PT Serif\", serif"
     }
   ],
   "thingieEditableParams": {
     "image": [],
-    "text": [
-      {
-        "type": "expandable",
-        "name": "fontsize",
-        "content": "fs",
-        "params": [
-          {
-            "directive": "increaseFontSize",
-            "content": "+size"
-          },
-          {
-            "directive": "decreaseFontSize",
-            "content": "-size"
-          }
-        ]
-      },
-      {
-        "type": "static",
-        "name": "fontstyle",
-        "content": "IUB",
-        "params": [
-          {
-            "directive": "toggleSelectionBold",
-            "content": "B"
-          },
-          {
-            "directive": "toggleSelectionItalic",
-            "content": "I"
-          },
-          {
-            "directive": "toggleSelectionUnderline",
-            "content": "U"
-          }
-        ]
-      },
-      {
-        "type": "expandable",
-        "name": "fontfamily",
-        "content": "f",
-        "params": [
-          {
-            "directive": "setSelectionFontFamily",
-            "button": "selector",
-            "options": [
-              "nanum",
-              "courier",
-              "merriweather",
-              "arvo",
-              "anton",
-              "source-code"
-            ]
-          }
-        ]
-      }
-    ],
     "sound": [],
     "shared": [
       {
