@@ -6,8 +6,7 @@
       left: `${(rect.x + sceneData.x - 6) * sceneData.scale - rect.width * 0.5}px`,
       top: `${(rect.y + sceneData.y + 6) * sceneData.scale - rect.height * 0.5}px`,
       transform: `scale(${sceneData.scale}) rotate(${rotation}deg)`,
-      '--text-color': color,
-      '--text-font-size': `${fontsize}px`
+      '--highlight-color': highlight
     }">
     <div ref="sizer" class="input-sizer">
       <div
@@ -40,12 +39,17 @@ import Underline from '@tiptap/extension-underline'
 import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
 import FontSize from 'tiptap-extension-font-size'
+import { Color } from '@tiptap/extension-color'
 
 // ======================================================================== Data
-const verseStore = useVerseStore()
-const { sceneData, textEditor } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
+const verseStore = useVerseStore()
+const {
+  sceneData,
+  textEditor,
+  colorSelectorHex
+} = storeToRefs(verseStore)
 
 const sizer = ref(null)
 const id = ref('')
@@ -60,18 +64,21 @@ useResizeObserver(sizer, (entries) => {
 // ==================================================================== Computed
 const active = computed(() => thingies.value.data.find(item => item._id === id.value))
 const rotation = computed(() => active.value?.at.rotation)
-const color = computed(() => active.value?.text.color || '#000000')
-const fontsize = computed(() => active.value?.text.fontsize || 13)
-// const family = computed(() => active.value?.text.family || 'nanum')
+const colors = computed(() => active.value?.colors || [])
+const highlight = computed(() => colors.value[colors.value.length - 1] || '#6c6575')
 
 // ==================================================================== Watchers
 watch(editing, (newId, oldId) => {
   if (oldId && oldId === id.value) {
+    const pushColor = !!colorSelectorHex.value && colors.value[colors.value.length - 1] !== colorSelectorHex.value
     handleSubmit({
       _id: id.value,
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
       text: Object.assign({}, active.value.text, {
         content: textEditor.value.getHTML().replaceAll('<p></p>', '<p><br></p>')
+      }),
+      ...(pushColor && {
+        colors: colors.value.concat([colorSelectorHex.value])
       })
     })
   }
@@ -99,6 +106,7 @@ const handleEditorKeydown = e => {
 
 const handleSubmit = update => {
   collectorStore.initThingieUpdate(update)
+  verseStore.setColorSelectorHex('')
   id.value = ''
   rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
   textEditor.value.commands.setContent('', false, { preserveWhitespace: 'full' })
@@ -116,7 +124,8 @@ onMounted(async () => {
       // Strike,
       TextStyle,
       FontFamily,
-      FontSize
+      FontSize,
+      Color
     ],
     parseOptions: {
       preserveWhitespace: 'full'
@@ -136,8 +145,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 #text-editor {
-  --text-color: #000000;
-  --text-font-size: 13;
+  --highlight-color: #000000;
   position: absolute;
   display: flex;
   z-index: 1;
@@ -151,7 +159,7 @@ onBeforeUnmount(() => {
   }
   .input-sizer {
     &:before {
-      box-shadow: 0px 0px 3px 1px var(--text-color);
+      box-shadow: 0px 0px 3px 1px var(--highlight-color);
     }
   }
 }
@@ -185,6 +193,8 @@ onBeforeUnmount(() => {
 :deep(.tiptap) {
   padding: torem(4) torem(6);
   line-height: 1.5;
+  ::-moz-selection { background: rgba(black, 0.05); }
+  ::selection { background: rgba(black, 0.05); }
 }
 
 // :deep(.ProseMirror-trailingBreak) {

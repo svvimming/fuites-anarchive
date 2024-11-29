@@ -122,15 +122,15 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   }
 }
 
-@mixin selection-dark {
-  ::-moz-selection { background: black; color: white; }
-  ::selection { background: black; color: white; }
-}
+// @mixin selection-dark {
+//   ::-moz-selection { background: black; color: white; }
+//   ::selection { background: black; color: white; }
+// }
 
-@mixin selection-light {
-  ::-moz-selection { background: white; color: black; }
-  ::selection { background: white; color: black; }
-}
+// @mixin selection-light {
+//   ::-moz-selection { background: white; color: black; }
+//   ::selection { background: white; color: black; }
+// }
 
 // --------------------------------------------------------------------- General
 /**

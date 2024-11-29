@@ -21,6 +21,7 @@ export const useVerseStore = defineStore('verse', () => {
   })
 
   const textEditor = ref(false)
+  const colorSelectorHex = ref('')
 
   // =================================================================== actions
 
@@ -84,6 +85,14 @@ export const useVerseStore = defineStore('verse', () => {
     textEditor.value = incoming
   }
 
+  /**
+   * @method setColorSelectorHex
+   */
+
+  const setColorSelectorHex = incoming => {
+    colorSelectorHex.value = incoming
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -91,11 +100,13 @@ export const useVerseStore = defineStore('verse', () => {
     page,
     sceneData,
     textEditor,
+    colorSelectorHex,
     // ----- actions
     getVerse,
     getPage,
     updateSceneData,
-    setTextEditor
+    setTextEditor,
+    setColorSelectorHex
   }
 })
 

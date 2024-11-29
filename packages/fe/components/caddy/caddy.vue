@@ -45,6 +45,12 @@
           @click.native="setExpanded('font-size-selector')" />
 
         <CaddyFontStyleSelector />
+
+        <CaddyColorSelector
+          :init-color="thingieColor || '#000000'"
+          :expanded="expanded === 'color-selector'"
+          @click.native="setExpanded('color-selector')"
+          @color-change="handleColorSelection" />
         
       </template>
 
@@ -74,7 +80,7 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
+const { page, textEditor } = storeToRefs(verseStore)
 
 const handle = ref(null)
 const expanded = ref('')
@@ -86,6 +92,8 @@ const pocketThingies = computed(() => thingies.value.data.filter(item => item.lo
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
 const type = computed(() => thingie.value?.thingie_type)
 const shared = computed(() => editableParams.value?.shared || [])
+const colors = computed(() => thingie.value.colors)
+const thingieColor = computed(() => colors.value[colors.value.length - 1])
 
 // ===================================================================== Methods
 /**
@@ -158,6 +166,17 @@ const sendThingieBack = () => {
     }
     update({ zIndex: min - 1 })
   }
+}
+
+/**
+ * @method handleColorSelection
+ */
+
+const handleColorSelection = val => {
+  if (type.value === 'text') {
+    textEditor.value.chain().focus().setColor(val).run()
+  }
+  verseStore.setColorSelectorHex(val)
 }
 
 /**

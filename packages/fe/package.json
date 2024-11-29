@@ -57,6 +57,7 @@
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
     "uuid": "^10.0.0",
+    "vue-color-picker-wheel": "^0.4.3",
     "vue-konva": "^3.1.2",
     "vue3-google-login": "^2.0.33"
   }
