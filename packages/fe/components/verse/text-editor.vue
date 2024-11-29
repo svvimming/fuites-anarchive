@@ -11,7 +11,7 @@
     <div ref="sizer" class="input-sizer">
       <div
         class="editor-wrapper"
-        :style="{ width: rect.width + 'px', height: rect.height + 'px' }"
+        :style="{ width: rect.width + 'px', height: rect.height + 'px', opacity }"
         @click="textEditor?.view.focus()">
 
         <EditorContent
@@ -64,6 +64,7 @@ useResizeObserver(sizer, (entries) => {
 // ==================================================================== Computed
 const active = computed(() => thingies.value.data.find(item => item._id === id.value))
 const rotation = computed(() => active.value?.at.rotation)
+const opacity = computed(() => active.value?.opacity || 1)
 const colors = computed(() => active.value?.colors || [])
 const highlight = computed(() => colors.value[colors.value.length - 1] || '#6c6575')
 
@@ -74,9 +75,7 @@ watch(editing, (newId, oldId) => {
     handleSubmit({
       _id: id.value,
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
-      text: Object.assign({}, active.value.text, {
-        content: textEditor.value.getHTML().replaceAll('<p></p>', '<p><br></p>')
-      }),
+      text: textEditor.value.getHTML().replaceAll('<p></p>', '<p><br></p>'),
       ...(pushColor && {
         colors: colors.value.concat([colorSelectorHex.value])
       })
@@ -86,7 +85,7 @@ watch(editing, (newId, oldId) => {
   if (editingThingie && editingThingie.thingie_type === 'text') {
     rect.value = { ...editingThingie.at }
     id.value = editingThingie._id
-    const content = editingThingie.text.content.replaceAll('<p><br></p>', '<p></p>')
+    const content = editingThingie.text.replaceAll('<p><br></p>', '<p></p>')
     textEditor.value.commands.setContent(content, false, { preserveWhitespace: 'full' })
   }
 })

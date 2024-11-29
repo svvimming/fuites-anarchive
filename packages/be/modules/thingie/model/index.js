@@ -93,26 +93,9 @@ const ThingieSchema = new Schema({
     enum: ['image', 'text', 'sound', 'video']
   },
   text: {
-    content: {
-      type: String,
-      required: false,
-      default: ''
-    },
-    family: {
-      type: String,
-      required: true,
-      default: 'nanum'
-    },
-    fontsize: {
-      type: Number,
-      required: false,
-      default: 13
-    },
-    color: {
-      type: String,
-      required: false,
-      default: '#000000'
-    }
+    type: String,
+    required: false,
+    default: ''
   },
   creator_token: {
     type: String,

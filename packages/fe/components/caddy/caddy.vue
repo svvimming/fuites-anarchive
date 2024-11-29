@@ -20,13 +20,13 @@
         <template v-for="param in tool.params" :key="param.directive">
           <ButtonRetrigger
             v-if="param.button === 'retrigger'"
-            :class="['param-button', { pair: tool.params.length === 2 }]"
+            :class="['param-button', { pair: tool.params.length === 2 }, param.directive]"
             @retrigger="handleShared(param.directive, param.closeOnSelect)">
             {{ param.content }}
           </ButtonRetrigger>
           <button
             v-else
-            :class="['param-button', { pair: tool.params.length === 2 }]"
+            :class="['param-button', { pair: tool.params.length === 2 }, param.directive]"
             @click="handleShared(param.directive, param.closeOnSelect)">
             {{ param.content }}
           </button>
@@ -106,6 +106,8 @@ const handleShared = (directive, closeOnSelect) => {
     case 'rotateCCW' : rotateThingie(-1); break
     case 'bringForward' : bringThingieForward(); break
     case 'sendBack' : sendThingieBack(); break
+    case 'increaseOpacity' : changeOpacity(0.1); break
+    case 'decreaseOpacity' : changeOpacity(-0.1); break
   }
   if (closeOnSelect) {
     nextTick(() => { collectorStore.setEditing(false) })
@@ -177,6 +179,18 @@ const handleColorSelection = val => {
     textEditor.value.chain().focus().setColor(val).run()
   }
   verseStore.setColorSelectorHex(val)
+}
+
+/**
+ * @method changeOpacity
+ */
+
+const changeOpacity = amt => {
+  if (thingie.value) {
+    update({
+      opacity: Math.max(0.1, Math.min(1, thingie.value.opacity + amt))
+    })
+  }
 }
 
 /**

@@ -85,6 +85,21 @@
             "closeOnSelect": true
           }
         ]
+      },
+      {
+        "type": "static",
+        "name": "opacity",
+        "content": "O",
+        "params": [
+          {
+            "directive": "increaseOpacity",
+            "content": "O+"
+          },
+          {
+            "directive": "decreaseOpacity",
+            "content": "O-"
+          }
+        ]
       }
     ]
   }  

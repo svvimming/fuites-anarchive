@@ -62,12 +62,14 @@ const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 const id = computed(() => props.thingie._id)
 const type = computed(() => props.thingie.thingie_type)
 const at = computed(() => props.thingie.at)
+const opacity = computed(() => props.thingie.opacity || 1)
 const editMode = computed(() => editing.value === props.thingie._id)
 const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {} )
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
   draggable: !dragndrop.value,
+  opacity: opacity.value,
   offsetX: at.value.width * 0.5,
   offsetY: at.value.height * 0.5 
 }))

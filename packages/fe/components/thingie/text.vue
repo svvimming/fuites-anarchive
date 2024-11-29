@@ -18,7 +18,7 @@ const props = defineProps({
     default: () => ({})
   },
   text: {
-    type: Object,
+    type: String,
     required: true
   },
   hidden: {
@@ -52,19 +52,14 @@ onMounted(() => { rasterizeText() })
 // ===================================================================== Methods
 const rasterizeText = () => {
   const div = document.createElement('div')
-  div.innerHTML = props.text.content
+  div.innerHTML = props.text
   div.style.width = `${textConfig.value.width}px`
   div.style.height = `${textConfig.value.height}px`
   div.style.position = 'absolute'
-  // div.style.display = 'flex'
-  // div.style.color = props.text.color
   div.style.fontSize = props.text.fontsize + 'px'
-  // div.style.fontFamily = fontface.value
   div.style.lineHeight = 1.5
   div.style.whiteSpace= 'break-spaces'
   div.style.wordWrap = 'break-word'
-  // div.classList.add()
-  // div.style.textWrap = 'nowrap'
   // div.style.left = '0px'
   // div.style.top = '0px'
   document.body.appendChild(div)
