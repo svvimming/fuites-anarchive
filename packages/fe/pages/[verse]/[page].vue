@@ -14,14 +14,6 @@
           @click="handleClick($event)">
           <v-layer ref="layerRef">
 
-            <v-line :config="{
-              points: [0, 0, bounds.x, 0, bounds.x, bounds.y, 0, bounds.y],
-              stroke: 'blue',
-              strokeWidth: 10,
-              dash: [29, 20, 0.001, 20],
-              closed: true
-            }" />
-
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
@@ -127,10 +119,10 @@ const positionScene = position => {
   const scale = stage.scaleX()
   const width = limit.x
   const height = limit.y
-  const minX = -1 * (width - stage.width())
-  const x = Math.max(minX * scale, Math.min(position.x, 0)) // 0 = maxX
-  const minY = -1 * (height - stage.height()) 
-  const y = Math.max(minY * scale, Math.min(position.y, 0)) // 0 = maxY
+  const minX = -1 * (width - (stage.width() / scale))
+  const x = Math.max(minX, Math.min(position.x, 0))
+  const minY = -1 * (height - (stage.height() / scale)) 
+  const y = Math.max(minY, Math.min(position.y, 0))
   layer.position({ x, y })
   verseStore.updateSceneData({ x, y })
 }
@@ -140,12 +132,12 @@ const positionScene = position => {
  * @desc Zoom the page in and out
  */
 
-const scaleScene = dir => {
+const scaleScene = (dir, noScale = false) => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
   const limits = bounds.value
   const oldScale = stage.scaleX()
-  const scaleBy = 1.01
+  const scaleBy = noScale ? 1 : 1.01
   const canvasCenter = {
     x: stage.width() * 0.5,
     y: stage.height() * 0.5
@@ -178,7 +170,10 @@ const setCanvasDimensions = () => {
 onMounted(() => {
   document.body.classList.add('no-scroll')
   setCanvasDimensions()
-  resizeEventListener.value = useThrottleFn(() => { setCanvasDimensions() }, 25)
+  resizeEventListener.value = useThrottleFn(() => {
+    setCanvasDimensions()
+    nextTick(() => { scaleScene(1, true) })
+  }, 25)
   window.addEventListener('resize', resizeEventListener.value)
   keydownEventListener.value = e => {
     const key = e.key
