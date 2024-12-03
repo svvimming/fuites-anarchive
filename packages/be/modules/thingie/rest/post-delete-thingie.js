@@ -45,7 +45,6 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
     }
     console.log(`deleted file ${thingieId}`)
     MC.socket.io
-      .of(`${verse}`)
       .to(`${verse}|thingies`)
       .emit('module|post-delete-thingie|payload', thingieId)
     SendData(res, 200, 'Thingie successfully deleted', 'deleted thingie')

@@ -22,6 +22,8 @@ const VertexSchema = new Schema({
       required: false
     }
   }
+}, {
+  _id: false
 })
 
 // --------------------------------------------------------------------- Thingie
@@ -44,10 +46,9 @@ const ThingieSchema = new Schema({
     type: String,
     required: false
   },
-  last_locations: {
+  location_history: {
     type: [VertexSchema],
     required: false,
-    validate: [(val) => { return val.length < 6 }, 'recorded locations should not exceed 5'],
     default: []
   },
   dragging: {
@@ -101,13 +102,15 @@ const ThingieSchema = new Schema({
     type: String,
     required: true
   },
-  last_update_token: {
-    type: String,
-    required: true
-  },
   last_update: {
-    type: Date,
-    required: false
+    token: {
+      type: String,
+      required: false
+    },
+    timestamp: {
+      type: String,
+      required: false
+    }
   },
   consistencies: {
     type: [String],

@@ -11,6 +11,15 @@ const VerseSchema = new Schema({
   name: {
     type: String,
     required: true
+  },
+  settings: {
+    tunneler: {
+      portalChainLength: {
+        type: Number,
+        required: false,
+        default: 3
+      }
+    }
   }
 }, {
   timestamps: true,

@@ -26,7 +26,6 @@ MC.app.post('/post-update-page', async (req, res) => {
         populate: { path: 'thingie_ref', select: 'colors' }
       })
     MC.socket.io
-      .of(`/${verse}`)
       .to(`${verse}|pages`)
       .emit('module|post-update-page|payload', updated)
     SendData(res, 200, 'Page succesfully updated', updated)

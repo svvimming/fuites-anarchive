@@ -70,6 +70,16 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method updatePage
+   */
+
+  const updatePage = incoming => {
+    if (incoming.name === page.value.data.name) {
+      page.value.data = incoming
+    }
+  }
+
+  /**
    * @method updateSceneData
    */
 
@@ -104,6 +114,7 @@ export const useVerseStore = defineStore('verse', () => {
     // ----- actions
     getVerse,
     getPage,
+    updatePage,
     updateSceneData,
     setTextEditor,
     setColorSelectorHex

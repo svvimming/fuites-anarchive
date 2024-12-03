@@ -31,25 +31,19 @@ const PortalSchema = new Schema({
     ref: 'thingies',
     required: false
   },
+  verse_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'verses',
+    required: false
+  },
   verse: {
     type: String,
     required: true
   },
-  edge: {
-    type: String,
-    required: true
-  },
   vertices: {
-    a: {
-      type: VertexSchema
-    },
-    b: {
-      type: VertexSchema
-    }
-  },
-  enabled: {
-    type: Boolean,
-    required: false
+    type: [VertexSchema],
+    required: true,
+    validate: [(val) => { return val.length === 2 }, 'Portal does not have the correct number of vertices (2).']
   },
   manual: {
     type: Boolean,

@@ -84,13 +84,22 @@ export const useCollectorStore = defineStore('collector', () => {
    * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
    */
 
-  const initThingieUpdate = update => {
-    if (update.hasOwnProperty('at')) {
-      const updateAt = Object.assign({}, update, { omit_session_id: sessionId.value })
+  const initThingieUpdate = (update, forceViaServer = false) => {
+    if (update.hasOwnProperty('at') && !forceViaServer) {
+      const updateAt = Object.assign({}, update, {
+        omit_session_id: sessionId.value,
+        last_update: {
+          token: token.value
+        }
+      })
       socket.value.emit('update-thingie', updateAt)
       updateThingie(updateAt)
     } else {
-      socket.value.emit('update-thingie', update)
+      socket.value.emit('update-thingie', Object.assign({}, update, {
+        last_update: {
+          token: token.value
+        }
+      }))
     }
   }
 

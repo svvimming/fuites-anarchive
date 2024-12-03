@@ -77,12 +77,12 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
         coords.y = coords.y - rect.y
       }
       const at = Object.assign({}, thingie.at, coords)
-      socket.value.emit('update-thingie', {
+      collectorStore.initThingieUpdate({
         _id: thingie._id,
         location: targetLocation,
         record_new_location: true,
         at
-      })
+      }, true)
     }
     // Remove custom ghost image
     const ghost = document.querySelector(`.ghost-image[data-thingie-id="${draggingThingie.value?._id}"]`)

@@ -42,7 +42,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       path: 'file_ref',
       select: 'filename file_ext'
     })
-    MC.socket.io.to('thingies').emit('module|post-create-thingie|payload', created)
+    MC.socket.io.to(`${created.verse}/thingies`).emit('module|post-create-thingie|payload', created)
     SendData(res, 200, 'Thingie successfully created', created)
     GetThingieConsistencies(verse, created, upload)
   } catch (e) {

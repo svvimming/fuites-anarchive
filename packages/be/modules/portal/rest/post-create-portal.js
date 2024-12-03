@@ -34,7 +34,6 @@ MC.app.post('/post-create-portal', async (req, res) => {
         populate: { path: 'thingie_ref', select: 'colors' }
       })
       MC.socket.io
-        .of(`${verse}`)
         .to(`${verse}|pages`)
         .emit('module|post-update-page|payload', updated)
     }

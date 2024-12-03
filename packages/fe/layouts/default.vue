@@ -27,11 +27,29 @@ if (process.client && window.matchMedia('(prefers-color-scheme: dark)').matches)
 const { $io, $bus } = useNuxtApp()
 
 // ======================================================================== Data
-const collectorStore = useCollectorStore()
+
 const generalStore = useGeneralStore()
 const { sessionId } = storeToRefs(generalStore)
+const verseStore = useVerseStore()
+const { verse } = storeToRefs(verseStore)
+const collectorStore = useCollectorStore()
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
+
+// ==================================================================== Watchers
+watch(() => verse.value.data.name, async () => {
+  /**
+   * Initialize websocket connection to backend
+   */
+  await $io.connect()
+  /**
+   * Add keydown/up event listeners
+   */
+  keydownEventListener.value = e => { setDragndropOnShift(e, true) }
+  keyupEventListener.value = e => { setDragndropOnShift(e, false) }
+  window.addEventListener('keydown', keydownEventListener.value) 
+  window.addEventListener('keyup', keyupEventListener.value)   
+})
 
 // ===================================================================== Methods
 /**
@@ -39,12 +57,17 @@ const keyupEventListener = ref(false)
  */
 
  const handleWebsocketConnected = socket => {
-  socket.emit('join-room', 'thingies')
+  const namespace = verse.value.data.name
+  socket.emit('join-room', `${namespace}|thingies`)
+  socket.emit('join-room', `${namespace}|pages`)
   socket.on('module|update-thingie|payload', (data) => {
     // If the update originated from this session and was updating a thingie 'at'
     // property, don't update in the store - it was already done by the page
     if (data.omit_session_id === sessionId.value) { return }
     collectorStore.updateThingie(data.thingie)
+  })
+  socket.on('module|post-update-page|payload', (data) => {
+    verseStore.updatePage(data.page)
   })
 }
 
@@ -60,20 +83,6 @@ const setDragndropOnShift = (e, val) => {
 // ======================================================================= Hooks
 // The following is emitted in websocket plugin in websocket zero-core module
 $bus.$on('socket.io-connected', handleWebsocketConnected)
-
-onMounted(async () => {
-  /**
-   * Initialize websocket connection to backend
-   */
-  await $io.connect()
-  /**
-   * Add keydown/up event listeners
-   */
-  keydownEventListener.value = e => { setDragndropOnShift(e, true) }
-  keyupEventListener.value = e => { setDragndropOnShift(e, false) }
-  window.addEventListener('keydown', keydownEventListener.value) 
-  window.addEventListener('keyup', keyupEventListener.value)   
-})
 
 onBeforeUnmount(() => {
   $bus.$off('socket.io-connected', handleWebsocketConnected)

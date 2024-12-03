@@ -19,6 +19,11 @@
               :key="thingie._id"
               :thingie="thingie" />
 
+            <Portal
+              v-for="portal in pagePortals"
+              :key="portal._id"
+              :portal="portal" />
+
           </v-layer>
         </v-stage>
       </ClientOnly>
@@ -63,6 +68,7 @@ const verseName = computed(() => route.params.verse)
 const pageName = computed(() => route.params.page)
 const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
+const pagePortals = computed(() => page.value.data?.portal_refs || [])
 
 // ==================================================================== Watchers
 watch(data, async () => {
