@@ -80,6 +80,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
       socket.value.emit('update-thingie', {
         _id: thingie._id,
         location: targetLocation,
+        record_new_location: true,
         at
       })
     }

@@ -1,93 +1,29 @@
 {
-  "instance-fe": {
-    "fuites": {
-      "prevent_leak_list": [
-        "compost",
-        "pool"
-      ],
-      "prevent_deposit_list": [
-        "pool"
-      ],
-      "milliseconds_since_updated_grace_period": 86400000
-    },
-    "tunneler": {
-      "prevent_connection_list": [
-        "pocket",
-        "compost",
-        "pool"
-      ],
-      "max_portal_chain_length": 3
-    },
-    "goa": {
-      "ignore_list": [
-        "compost",
-        "pool"
-      ]
-    },
-    "cyanobot": {
-      "temperature_margin": 100
-    }
+  "fuites": {
+    "prevent_leak_list": [
+      "compost",
+      "pool"
+    ],
+    "prevent_deposit_list": [
+      "pool"
+    ],
+    "milliseconds_since_updated_grace_period": 86400000
   },
-  "music": {
-    "fuites": {
-      "prevent_leak_list": [
-        "compost",
-        "pool"
-      ],
-      "prevent_deposit_list": [
-        "pool"
-      ],
-      "milliseconds_since_updated_grace_period": 86400000
-    },
-    "tunneler": {
-      "prevent_connection_list": [
-        "pocket",
-        "compost",
-        "pool"
-      ],
-      "max_portal_chain_length": 3
-    },
-    "goa": {
-      "ignore_list": [
-        "compost",
-        "pool"
-      ]
-    },
-    "cyanobot": {
-      "temperature_margin": 100
-    }
+  "tunneler": {
+    "prevent_connection_list": [
+      "pocket",
+      "compost",
+      "pool"
+    ],
+    "max_portal_chain_length": 3
   },
-  "interweave": {
-    "tunneler": {
-      "prevent_connection_list": [],
-      "max_portal_chain_length": 3
-    },
-    "cyanobot": {
-      "temperature_margin": 100
-    }
+  "goa": {
+    "ignore_list": [
+      "compost",
+      "pool"
+    ]
   },
-  "3e": {
-    "fuites": {
-      "prevent_leak_list": [
-        "compost"
-      ],
-      "prevent_deposit_list": [],
-      "milliseconds_since_updated_grace_period": 86400000
-    },
-    "tunneler": {
-      "prevent_connection_list": [
-        "pocket",
-        "compost"
-      ],
-      "max_portal_chain_length": 3
-    },
-    "goa": {
-      "ignore_list": [
-        "compost"
-      ]
-    },
-    "cyanobot": {
-      "temperature_margin": 100
-    }
+  "cyanobot": {
+    "temperature_margin": 100
   }
 }
