@@ -12,8 +12,6 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const dropEventListener = ref(false)
   const generalStore = useGeneralStore()
   const { baseUrl, draggingThingie } = storeToRefs(generalStore)
-  const websocketStore = useWebsocketStore()
-  const { socket } = storeToRefs(websocketStore)
   const verseStore = useVerseStore()
   const { page } = storeToRefs(verseStore)
   const collectorStore = useCollectorStore()

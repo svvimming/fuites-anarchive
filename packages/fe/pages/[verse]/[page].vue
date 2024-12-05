@@ -14,10 +14,10 @@
           @click="handleClick($event)">
           <v-layer ref="layerRef">
 
-            <Thingie
+            <!-- <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
-              :thingie="thingie" />
+              :thingie="thingie" /> -->
 
             <Portal
               v-for="portal in pagePortals"
@@ -62,6 +62,7 @@ const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
 
 useHandleThingieDragEvents(pageRef, stageRef)
+useSaveCanvasExport(stageRef)
 
 // ==================================================================== Computed
 const verseName = computed(() => route.params.verse)
