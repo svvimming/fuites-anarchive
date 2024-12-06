@@ -12,6 +12,11 @@ const VertexSchema = new Schema({
     type: String,
     required: true
   },
+  page_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pages',
+    required: false
+  },
   at: {
     x: {
       type: Number,
@@ -22,6 +27,8 @@ const VertexSchema = new Schema({
       required: false
     }
   }
+}, {
+  _id: false
 })
 
 // ---------------------------------------------------------------------- Portal

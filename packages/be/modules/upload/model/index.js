@@ -30,11 +30,6 @@ const UploadSchema = new Schema({
     enum: [0, 1, 2],
     default: 0
   },
-  form_metadata: {
-    type: Schema.Types.Mixed,
-    required: false,
-    default: null
-  },
   palette: {
     type: [[]],
     required: false

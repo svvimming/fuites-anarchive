@@ -185,19 +185,13 @@ const clearFileInput = reset => {
 
 const uploadFile = () => {
   if (authenticated.value && file.value && uploaderOpen.value) {
-    const formMetadata = {}
-    for (const key in file.value) {
-      const value = file.value[key]
-      typeof value !== 'function' && (formMetadata[key] = value)
-    }
     pocketStore.setUploader({ status: 'uploading' })
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
       filename: filename.value,
       filesize: filesize.value,
       mimetype: mimetype.value,
-      palette: imageData.value.colorPalette,
-      form_metadata: formMetadata
+      palette: imageData.value.colorPalette
     })
   }
 }

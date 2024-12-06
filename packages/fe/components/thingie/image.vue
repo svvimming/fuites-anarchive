@@ -118,7 +118,7 @@ const loadImage = () => {
     imageLoadError.value = true
     imageLoading.value = false
   }
-  img.src = `${baseUrl.value}/${props.fileRef._id}.${props.fileRef.file_ext}`
+  img.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
 }
 
 // ======================================================================= Hooks

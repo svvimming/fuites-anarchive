@@ -16,7 +16,16 @@ MC.app.get('/get-page', async (req, res) => {
       .findOne({ name, verse })
       .populate({
         path: 'portal_refs',
-        populate: { path: 'thingie_ref', select: 'colors' }
+        populate: [
+          {
+            path: 'thingie_ref',
+            select: 'colors'
+          },
+          {
+            path: 'vertices.page_ref',
+            select: 'print_refs'
+          }
+        ]
       })
     SendData(res, 200, 'Dataset retrieved successfully', page)
   } catch (e) {

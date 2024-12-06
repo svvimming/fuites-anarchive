@@ -128,20 +128,25 @@ const createNewPortal = async (verse, thingie, vertices) => {
       // Console log the new connection
       console.log(`New portal opened between ${vertices[0].location} and ${vertices[1].location}.`)
       // Update the two Pages connected by the new Portal with portal refs.
-      for (let i = 0; i < vertices.length; i++) {
+      for (let i = 0; i < created.vertices.length; i++) {
         const updated = await MC.model.Page.findOneAndUpdate(
-          { name: vertices[i].location },
+          {
+            name: created.vertices[i].location,
+            verse: verse.name
+          },
           { $push: { portal_refs: created._id } },
           { new: true }
         ).populate({
           path: 'portal_refs',
           populate: { path: 'thingie_ref', select: 'colors' }
         })
+        // Add page refs to each vertex
+        created.vertices[i].page_ref = updated._id
         // Broadcast the updated page to the socket
-        if (updated) {
-          socket.emit('cron|page-portals-changed|initialize', updated)
-        }
+        socket.emit('cron|page-portals-changed|initialize', updated)
       }
+      // Save the Portal with updated vertex page refs
+      await created.save()
     }
     // Now that a new Portal is associated with this Thingie, fetch them and
     // make sure there aren't more than the max chain limit for this Verse

@@ -42,11 +42,13 @@ module.exports = {
     { type: 'dir', path: 'static' },
     { type: 'dir', path: 'tmp' },
     { type: 'dir', path: 'tmp/uploads' },
+    { type: 'dir', path: 'tmp/prints' },
     { type: 'dir', path: 'public' },
-    { type: 'dir', path: 'public/uploads' }
+    { type: 'dir', path: 'public/uploads' },
+    { type: 'dir', path: 'public/prints' }
   ],
   serveStaticDirectories: [
-    '/public/uploads'
+    '/public'
   ],
   // ================================================================== Database
   databaseUrl: process.env.DATABASE_URL_REFACTOR,

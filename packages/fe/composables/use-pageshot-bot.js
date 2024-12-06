@@ -1,6 +1,6 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-export const useSaveCanvasExport = stageRef => {
+export const usePageshotBot = stageRef => {
   // ====================================================================== Data
   const websocketStore = useWebsocketStore()
   const { socket } = storeToRefs(websocketStore)
@@ -9,37 +9,38 @@ export const useSaveCanvasExport = stageRef => {
 
   const fileReader = ref(false)
   const blob = ref(false)
-  const blobId = ref('')
+  const printId = ref('')
   const place = ref(0)
   const goal = ref(0)
+  const cloned = ref(null)
   const nextChunkPayload = ref(false)
-
   const { $bus } = useNuxtApp()
-  // const progress = ref(0)
 
   // ================================================================== Computed
   const stage = computed(() => stageRef.value?.getNode())
-  const exportReady = computed(() => stage.value && socket.value)
   const blobsize = computed(() => blob.value?.size)
   const mimetype = computed(() => blob.value?.type)
 
-  // ================================================================== Watchers
-  watch(exportReady, (val) => {
-    if (val) {
-      setTimeout(() => {
-        stage.value.toBlob({
-          callback: (data) => {
-            blob.value = data
-            uploadPrint()
-          },
-          type: 'image/png',
-          quality: 1.0
-        })
-      }, 2000)
-    }
-  })
-
   // =================================================================== Methods
+  /**
+   * @method initPageshot
+   */
+
+  const initPageshot = () => {
+    const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
+    cloned.value = stage.value.clone()
+    cloned.value.width(bounds.x || 2732)
+    cloned.value.height(bounds.y || 2000)
+    cloned.value.toBlob({
+      callback: (data) => {
+        blob.value = data
+        uploadPrint()
+      },
+      type: 'image/png',
+      quality: 1.0
+    })
+  }
+
   /**
    * @method uploadPrint
    */
@@ -48,7 +49,6 @@ export const useSaveCanvasExport = stageRef => {
     if (blob.value) {
       socket.value.emit('module|print-upload-initialize|payload', {
         socket_id: socket.value.id,
-        page: page.value.data.name,
         page_ref: page.value.data._id,
         filename: `${verse.value.data.name}_${page.value.data.name}_${Date.now()}`,
         filesize: blobsize.value,
@@ -62,24 +62,36 @@ export const useSaveCanvasExport = stageRef => {
    */
 
   const uploadNextChunk = data => {
-    console.log('upload next chunk')
-    if (!blobId.value) {
-      blobId.value = data.file_id
+    if (!printId.value) {
+      printId.value = data.file_id
     }
     place.value = data.place
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
     const chunk = blob.value.slice(index, index + Math.min(chunksize, (blobsize.value - index)), mimetype.value)
-    // progress.value = ((place.value / goal.value) * 100).toFixed(0)
     nextChunkPayload.value = {
       socket_id: socket.value.id,
-      file_id: blobId.value,
+      file_id: printId.value,
       file_ext: data.file_ext,
       place: place.value,
       goal: goal.value
     }
     fileReader.value.readAsArrayBuffer(chunk)
+  }
+
+  /**
+   * @method fileUploadComplete
+   */
+
+  const fileUploadComplete = () => {
+    place.value = 0
+    nextChunkPayload.value = false
+    printId.value = ''
+    if (cloned.value) {
+      cloned.value.destroy()
+      cloned.value = null
+    }
   }
 
   /**
@@ -92,7 +104,7 @@ export const useSaveCanvasExport = stageRef => {
       websocket.emit('module|print-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
     }
     websocket.on('module|print-upload-chunk|payload', uploadNextChunk)
-    // websocket.on('module|print-upload-complete|payload', fileUploadComplete)
+    websocket.on('module|print-upload-complete|payload', fileUploadComplete)
   }
 
   // ===================================================================== Hooks
@@ -101,4 +113,6 @@ export const useSaveCanvasExport = stageRef => {
   onBeforeUnmount(() => {
     $bus.$off('socket.io-connected', handleWebsocketConnected)
   })
+
+  return { initPageshot }
 }

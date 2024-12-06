@@ -26,10 +26,14 @@ const PageSchema = new Schema({
     ],
     required: false
   },
-  print_ref: {
-    type: Schema.Types.ObjectId,
-    ref: 'prints',
-    required: false
+  print_refs: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'prints',
+        required: false
+      }
+    ]
   },
   initiator_token: {
     type: String,

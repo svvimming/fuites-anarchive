@@ -14,10 +14,10 @@
           @click="handleClick($event)">
           <v-layer ref="layerRef">
 
-            <!-- <Thingie
+            <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
-              :thingie="thingie" /> -->
+              :thingie="thingie" />
 
             <Portal
               v-for="portal in pagePortals"
@@ -60,14 +60,14 @@ const layerRef = ref(null)
 const canvasConfig = ref({})
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
+const { initPageshot } = usePageshotBot(stageRef)
 
 useHandleThingieDragEvents(pageRef, stageRef)
-useSaveCanvasExport(stageRef)
 
 // ==================================================================== Computed
 const verseName = computed(() => route.params.verse)
 const pageName = computed(() => route.params.page)
-const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
+const bounds = computed(() => page.value.data.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.portal_refs || [])
 
@@ -198,6 +198,12 @@ onMounted(() => {
     }
   }
   window.addEventListener('keydown', keydownEventListener.value)
+  // Initialize canvas screencap
+  setTimeout(() => {
+    if (page.value?.data.init_screencap) {
+      initPageshot()
+    }
+  }, 2000)
 })
 
 onBeforeUnmount(() => {
