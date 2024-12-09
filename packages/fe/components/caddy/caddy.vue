@@ -4,9 +4,9 @@
     :prevent-default="true"
     :handle="handle"
     :container-element="container"
-    class="caddy-wrapper">
+    :class="['caddy-wrapper', { active: thingie }]">
 
-    <div id="caddy" :class="{ active: thingie }">
+    <div id="caddy" class="caddy">
       <!-- ---------------------------------------------------------- Handle -->
       <div ref="handle" class="handle">
         handle
@@ -207,21 +207,25 @@ const update = useThrottleFn(data => {
 .caddy-wrapper {
   position: absolute;
   z-index: 1;
+  visibility: hidden;
+  .caddy {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  &.active {
+    visibility: visible;
+    .caddy {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 #caddy {
   padding: 1rem;
   background-color: red;
   color: white;
-  opacity: 0;
-  visibility: hidden;
-  transform: scale(0.8);
   transition: 200ms ease;
-  &.active {
-    opacity: 1;
-    visibility: visible;
-    transform: scale(1);
-  }
 }
 
 .handle {

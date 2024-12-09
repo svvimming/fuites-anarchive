@@ -13,7 +13,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const generalStore = useGeneralStore()
   const { baseUrl, draggingThingie } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
-  const { page } = storeToRefs(verseStore)
+  const { page, sceneData } = storeToRefs(verseStore)
   const collectorStore = useCollectorStore()
   const { thingies } = storeToRefs(collectorStore)
 
@@ -33,6 +33,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
     const hit = stage.getIntersection(coords)
     const id = hit?.attrs.thingie_id || hit?.parent?.attrs.thingie_id
     const thingie = thingies.value.data.find(item => item._id === id)
+    const from = e.target.dataset.location
     if (thingie) {
       // Set a custom ghost image
       const ghost = document.createElement('img')
@@ -41,10 +42,13 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
       ghost.src = `${baseUrl.value}/${thingie.file_ref._id}.${thingie.file_ref.file_ext}`
       ghost.style = `width: ${thingie.at.width}px; height: ${thingie.at.height}px; padding-top: unset;`
       document.body.appendChild(ghost)
-      handleOffset.value = ({
-        x: e.clientX - origin.x - thingie.at.x,
-        y: e.clientY - origin.y - thingie.at.y,
-      })
+      if (from !== 'pocket') {
+        handleOffset.value.x = e.clientX - origin.x - (thingie.at.x * sceneData.value.scale) - (sceneData.value.x * sceneData.value.scale)
+        handleOffset.value.y = e.clientY - origin.y - (thingie.at.y * sceneData.value.scale) - (sceneData.value.y * sceneData.value.scale)
+      } else {
+        handleOffset.value.x = e.clientX - origin.x - thingie.at.x
+        handleOffset.value.y = e.clientY - origin.y - thingie.at.y
+      }
       e.dataTransfer.setDragImage(ghost, handleOffset.value.x + thingie.at.width * 0.5, handleOffset.value.y + thingie.at.height * 0.5)
       generalStore.setDraggingThingie(thingie)
     } else {
@@ -67,12 +71,13 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
       dropLocations.includes(targetLocation) &&
       targetLocation !== thingie.location
     ) {
-      const coords = { x: e.clientX - handleOffset.value.x, y: e.clientY - handleOffset.value.y }
+      let coords
       if (targetLocation === 'pocket') {
         const pocket = document.getElementById('pocket')
         const rect = pocket.getBoundingClientRect()
-        coords.x = coords.x - rect.x
-        coords.y = coords.y - rect.y
+        coords = { x: e.clientX - handleOffset.value.x - rect.x, y: e.clientY - handleOffset.value.y - rect.y }
+      } else {
+        coords = { x: (e.clientX / sceneData.value.scale) - sceneData.value.x, y: (e.clientY / sceneData.value.scale) - sceneData.value.y }
       }
       const at = Object.assign({}, thingie.at, coords)
       collectorStore.initThingieUpdate({
@@ -81,6 +86,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
         record_new_location: true,
         at
       }, true)
+      handleOffset.value = { x: 0, y: 0 }
     }
     // Remove custom ghost image
     const ghost = document.querySelector(`.ghost-image[data-thingie-id="${draggingThingie.value?._id}"]`)
