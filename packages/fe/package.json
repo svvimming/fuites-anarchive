@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "nuxi dev --no-clear",
     "build": "nuxi build",
-    "generate": "nuxi generate",
-    "serve": "npx serve .output/public --ssl-cert=../../localhost_cert.pem --ssl-key=../../localhost_key.pem",
+    "start": "node .output/server/index.mjs",
+    "launch:stable": "nuxi build && pm2 restart v2-stable-fe",
+    "launch:production": "nuxi build && pm2 restart v2-fe",
+    "preview": "nuxi preview",
     "upgrade-nuxt": "nuxi upgrade --force"
   },
   "dependencies": {
