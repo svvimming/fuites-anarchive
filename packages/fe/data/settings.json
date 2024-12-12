@@ -102,5 +102,10 @@
         ]
       }
     ]
-  }  
+  },
+  "tooltips": {
+    "mode-menu-toggle-button": "Settings that affect the app as a whole.",
+    "token-input-toggle-button": "Click here to submit a token.<br>A token gives access to create within a Verse.",
+    "uploader-toggle-button": "Click to toggle the file uploader where you can add new image and sound thingies."
+  }
 }

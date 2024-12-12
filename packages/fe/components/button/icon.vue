@@ -7,11 +7,14 @@
 
     <DashedBorderCircle
       :active="active"
-      :class="['svg-border', { active }]" />
+      :class="['svg-border', { active }]"
+      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }" />
 
-    <SpinnerMaterialCircle v-if="loading && !disableLoader" />
+    <SpinnerMaterialCircle
+      v-if="loading && !disableLoader"
+      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }" />
 
-    <div v-else class="slot">
+    <div v-else class="slot" v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }">
       <slot :loading="loading" />
     </div>
 

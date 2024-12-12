@@ -15,6 +15,12 @@ export const useGeneralStore = defineStore('general', () => {
     active: false,
     action: ''
   })
+  const activeModes = ref({
+    'portals': true,
+    'sounds': false,
+    'traces': false,
+    'drippy': true
+  })
 
   // ================================================================== computed
   const baseUrl = computed(() => config.public.backendUrl)
@@ -64,6 +70,14 @@ export const useGeneralStore = defineStore('general', () => {
     draggingThingie.value = incoming
   }
 
+  /**
+   * @method toggleMode
+   */
+
+  const toggleMode = key => {
+    activeModes.value[key] = !activeModes.value[key]
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -73,12 +87,14 @@ export const useGeneralStore = defineStore('general', () => {
     dragndrop,
     draggingThingie,
     modal,
+    activeModes,
     // ----- actions
     setSiteData,
     setModal,
     closeModal,
     setDragndrop,
-    setDraggingThingie
+    setDraggingThingie,
+    toggleMode
   }
 })
 

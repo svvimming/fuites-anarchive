@@ -3,8 +3,11 @@
 
     <ButtonIcon
       class="landing-site-toggle"
+      :data-tooltip="tooltip"
       @clicked="handleClick">
-      <Hamburger :open="dropdownOpen" />
+      <Hamburger
+        :open="dropdownOpen"
+        :data-tooltip="tooltip" />
     </ButtonIcon>
 
   </div>
@@ -14,8 +17,12 @@
 // ======================================================================== Data
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
+const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
 
 const dropdownOpen = ref(false)
+
+const tooltip = computed(() => siteData.value?.settings?.tooltips['mode-menu-toggle-button'])
 
 const handleClick = () => {
   toggleAudioContext()

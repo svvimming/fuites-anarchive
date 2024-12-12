@@ -38,6 +38,7 @@
         <!-- --------------------------------------------------- token input -->
         <ButtonIcon
           class="token-input-toggle"
+          :data-tooltip="tokenInputToggleTooltip"
           @clicked="tokenInputOpen = !tokenInputOpen">
           🔑
         </ButtonIcon>
@@ -52,8 +53,9 @@
           :class="['uploader-toggle', { 'upload-ready': uploader.status === 'ready' }]"
           :force-loading="uploader.status === 'initializing'"
           :force-disabled="uploader.status === 'uploading'"
+          :data-tooltip="uploaderToggleTooltip"
           @clicked="pocketStore.setUploaderOpen(!uploaderOpen)">
-          <IconPlus class="icon" />
+          <IconPlus :data-tooltip="uploaderToggleTooltip" class="icon" />
         </ButtonIcon>
     
       </div>
@@ -68,7 +70,7 @@
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { siteData, dragndrop } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const {
   pocket,
@@ -87,6 +89,8 @@ useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id).sort((a, b) => a.zIndex - b.zIndex))
+const tokenInputToggleTooltip = computed(() => siteData.value?.settings?.tooltips['token-input-toggle-button'])
+const uploaderToggleTooltip = computed(() => siteData.value?.settings?.tooltips['uploader-toggle-button'])
 
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {

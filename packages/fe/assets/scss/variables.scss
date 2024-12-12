@@ -91,36 +91,36 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.125));
 }
 
-@mixin tooltipMobilePosition {
-  &:hover {
-    &:before,
-    &:after {
-      transform: translate(0, 0);
-    }
-  }
-  &:before,
-  &:after {
-    transform: translate(0, 0.5rem);
-  }
-  &:before {
-    left: 1rem;
-  }
-  &:after {
-    left: 0.5rem;
-  }
-  &[data-tooltip-mobile-position="right"] {
-    &:before,
-    &:after {
-      left: auto;
-    }
-    &:before {
-      right: 1rem;
-    }
-    &:after {
-      right: 0.5rem;
-    }
-  }
-}
+// @mixin tooltipMobilePosition {
+//   &:hover {
+//     &:before,
+//     &:after {
+//       transform: translate(0, 0);
+//     }
+//   }
+//   &:before,
+//   &:after {
+//     transform: translate(0, 0.5rem);
+//   }
+//   &:before {
+//     left: 1rem;
+//   }
+//   &:after {
+//     left: 0.5rem;
+//   }
+//   &[data-tooltip-mobile-position="right"] {
+//     &:before,
+//     &:after {
+//       left: auto;
+//     }
+//     &:before {
+//       right: 1rem;
+//     }
+//     &:after {
+//       right: 0.5rem;
+//     }
+//   }
+// }
 
 // @mixin selection-dark {
 //   ::-moz-selection { background: black; color: white; }

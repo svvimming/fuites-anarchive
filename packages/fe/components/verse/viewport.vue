@@ -15,12 +15,18 @@
 
     <Caddy :container="viewport" />
 
+    <Drippy v-if="activeModes.drippy" />
+
   </div>
 </template>
 
 <script setup>
 // ======================================================================== Data
+const generalStore = useGeneralStore()
+const { activeModes } = storeToRefs(generalStore)
+
 const viewport = ref(null)
+
 </script>
 
 <style lang="scss" scoped>
