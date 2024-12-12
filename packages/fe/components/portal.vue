@@ -21,6 +21,8 @@
 </template>
 
 <script setup>
+import { onBeforeMount } from 'vue';
+
 // ======================================================================= Setup
 const props = defineProps({
   portal: {
@@ -123,6 +125,14 @@ watch(hovering, (val) => {
   }
 })
 
+watch(destPrintId, id => {
+  if (id) {
+    loadImage()
+  } else {
+    clearImage()
+  }
+})
+
 // ===================================================================== Methods
 /**
  * @method handlePortalClick
@@ -154,6 +164,17 @@ const loadImage = () => {
   img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
 }
 
+/**
+ * @method clearImage
+ */
+
+const clearImage = () => {
+  if (image.value) {
+    image.value.remove()
+    image.value = false
+  }
+}
+
 // ======================================================================= Hooks
 onMounted(() => {
   // Initialize hover animation
@@ -162,8 +183,8 @@ onMounted(() => {
     pulse.opacity(0.5 * Math.sin((frame.time * 2 * Math.PI - (Math.PI / 2)) / 2000) + 0.5)
   }, pulse.getLayer())
   // Load portal preview image
-  if (destPrintId.value) {
-    loadImage()
-  }
+  if (destPrintId.value) { loadImage() }
 })
+
+onBeforeMount(() => { clearImage() })
 </script>
