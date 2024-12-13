@@ -3,13 +3,13 @@
     <!-- ===================================================== Pocket Toggle -->
     <ButtonText
       :active="pocketOpen"
-      text="pocket"
-      :class="['text-content color-cove rounded-border-left', { active: pocketOpen }]"
+      :stylized="buttonText"
+      :class="['text-content color-cove', { active: pocketOpen }]"
       @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
 
     <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
-      <Turbulence />
+      <Turbulence instance-id="pocket-turbulence-bg" />
       <!-- <DashedBorderRectangle class="pocket-border" /> -->
        <!-- ===================================================== Token Auth -->
       <VerseAuth :class="['auth-modal', { open: !authenticated || tokenInputOpen }]" />
@@ -84,6 +84,14 @@ const {
 const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
+const buttonText = [
+  { letter: 'p', classes: 'pt-serif italic' },
+  { letter: 'o', classes: 'pt-sans bold' },
+  { letter: 'c', classes: 'pt-serif italic' },
+  { letter: 'k', classes: 'pt-sans bold italic' },
+  { letter: 'e', classes: 'pt-serif' },
+  { letter: 't', classes: 'pt-serif bold italic' }
+]
 
 useHandleThingieDragEvents(pocketRef, stageRef)
 
@@ -156,13 +164,13 @@ watch(uploaderOpen, (val) => {
   }
 }
 
-.pocket-border {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
+// .pocket-border {
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   width: 100%;
+//   height: 100%;
+// }
 
 :deep(.turbulence) {
   width: calc(100% - torem(6));

@@ -8,12 +8,16 @@
     <SpinnerMaterialCircle v-if="loading && !disableLoader" />
 
     <div v-if="text" class="text">
+      {{ text }}
+    </div>
+
+    <div v-else class="stylized text">
       <ClientOnly>
         <span
-          v-for="i in text.length"
+          v-for="(item, i) in stylized"
           :key="`letter-${i}`"
-          :class="getTextClasses()">
-          {{ text.charAt(i - 1) }}
+          :class="item.classes">
+          {{ item.letter }}
         </span>
       </ClientOnly>
     </div>
@@ -38,20 +42,13 @@ defineProps({
     type: Boolean,
     required: false,
     default: false
+  },
+  stylized: {
+    type: Array,
+    required: false,
+    default: () => []
   }
 })
-
-// ===================================================================== Methods
-const getTextClasses = () => {
-  let classes = Math.random() > 0.5 ? 'pt-sans' : 'pt-serif'
-  if (Math.random() > 0.5) {
-    classes = classes + ' italic'
-  }
-  if (Math.random() > 0.5) {
-    classes = classes + ' bold'
-  }
-  return classes
-}
 </script>
 
 <style lang="scss" scoped>
@@ -61,18 +58,6 @@ const getTextClasses = () => {
   top: calc(50% - #{torem(6)}); // minus half dimension of loader
   left: calc(50% - #{torem(6)}); // minus half dimension of loader
   transform: translate(-50%, -50%);
-}
-
-.rounded-border-left {
-  &:before {
-    border-top-left-radius: torem(20);
-    border-bottom-right-radius: torem(20);
-  }
-}
-
-.rounded-border-right {
-  border-top-right-radius: torem(26);
-  border-bottom-left-radius: torem(26);
 }
 
 .text {
@@ -97,6 +82,8 @@ const getTextClasses = () => {
     top: torem(2);
     width: calc(100% - torem(4));
     height: calc(100% - torem(4));
+    border-top-left-radius: torem(20);
+    border-bottom-right-radius: torem(20);
     opacity: 0;
     transition: 200ms ease;
   }
@@ -120,6 +107,32 @@ const getTextClasses = () => {
     }
     .text {
       color: $cove;
+    }
+    .svg-border {
+      :deep(path) {
+        stroke: $cove;
+      }
+    }
+    &.active {
+      &:before {
+        opacity: 1;
+      }
+      .text {
+        color: white;
+      }
+    }
+  }
+  &.color-asparagus {
+    &:before {
+      background-color: $asparagus;
+    }
+    .text {
+      color: $asparagus;
+    }
+    .svg-border {
+      :deep(path) {
+        stroke: $asparagus;
+      }
     }
     &.active {
       &:before {

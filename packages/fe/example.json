@@ -1,0 +1,15 @@
+{
+    "_id" : ObjectId("63b518024d86196205298bb3"),
+    "name" : "compost",
+    "portal_refs" : [],
+    "initiator_token" : "godess-of-anarchy",
+    "state" : "leaking",
+    "bounds" : {
+        "x" : 2732,
+        "y" : 2000
+    },
+    "updatedAt" : ISODate("2024-11-19T04:01:25.311Z"),
+    "init_screencap" : true,
+    "temperature" : 315,
+    "print_ref" : ObjectId("6501f2af65c77d446e7f0110")
+}

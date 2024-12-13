@@ -7,13 +7,15 @@
 
     <VerseLandingSite />
 
-    <CompostPortal />
-
     <Pocket />
+
+    <CompostPortal v-if="!inCompost" />
 
     <VerseTextEditor />
 
-    <Caddy :container="viewport" />
+    <ClientOnly>
+      <Caddy :container="viewport" />
+    </ClientOnly>
 
     <Drippy v-if="activeModes.drippy" />
 
@@ -22,10 +24,13 @@
 
 <script setup>
 // ======================================================================== Data
+const route = useRoute()
 const generalStore = useGeneralStore()
 const { activeModes } = storeToRefs(generalStore)
 
 const viewport = ref(null)
+
+const inCompost = computed(() => route.params.page === 'compost')
 
 </script>
 
@@ -55,5 +60,12 @@ const viewport = ref(null)
   bottom: torem(25);
   right: torem(25);
   z-index: 2;
+}
+
+:deep(#compost-portal-anchor) {
+  position: absolute;
+  bottom: torem(25);
+  left: torem(25);
+  z-index: 3;
 }
 </style>

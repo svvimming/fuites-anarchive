@@ -45,7 +45,7 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { dragndrop } = storeToRefs(generalStore)
 
-const { data } = await useAsyncData('settings', async () => {
+const { data } = await useAsyncData(route.fullPath, async () => {
   const content = await queryContent({
     where: {
       _file: { $contains: 'settings.json' }
@@ -65,7 +65,6 @@ const { initPageshot } = usePageshotBot(stageRef)
 useHandleThingieDragEvents(pageRef, stageRef)
 
 // ==================================================================== Computed
-const verseName = computed(() => route.params.verse)
 const pageName = computed(() => route.params.page)
 const bounds = computed(() => page.value.data.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
@@ -73,9 +72,11 @@ const pagePortals = computed(() => page.value.data?.portal_refs || [])
 
 // ==================================================================== Watchers
 watch(data, async () => {
-  await verseStore.getVerse({ verse: verseName.value })
-  await verseStore.getPage({ page: pageName.value })
+  const vrs = route.params.verse
+  const slug = route.params.page
   await generalStore.setSiteData({ key: 'settings', value: data.value })
+  await verseStore.getVerse({ verse: vrs })
+  await verseStore.getPage({ page: slug })
   await collectorStore.getThingies()
 }, { immediate: true })
 
