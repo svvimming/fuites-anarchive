@@ -60,7 +60,7 @@ defineProps({
   padding: torem(8.5);
   width: torem(40);
   height: torem(40);
-  --two-tone-a: black;
+  --two-tone-a: #{$effy};
   --two-tone-b: white;
   &:before {
     content: '';
