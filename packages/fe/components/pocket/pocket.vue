@@ -10,7 +10,7 @@
     <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
-      <!-- <DashedBorderRectangle class="pocket-border" /> -->
+      <DashedBorderRectangle :inherit-from="pocketRef" />
        <!-- ===================================================== Token Auth -->
       <VerseAuth :class="['auth-modal', { open: !authenticated || tokenInputOpen }]" />
       <!-- ========================================================== Pocket -->
@@ -92,17 +92,24 @@ const buttonText = [
   { letter: 'e', classes: 'pt-serif' },
   { letter: 't', classes: 'pt-serif bold italic' }
 ]
+const tokenInputToggleTooltip = ref('')
+const uploaderToggleTooltip = ref('')
 
 useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id).sort((a, b) => a.zIndex - b.zIndex))
-const tokenInputToggleTooltip = computed(() => siteData.value?.settings?.tooltips['token-input-toggle-button'])
-const uploaderToggleTooltip = computed(() => siteData.value?.settings?.tooltips['uploader-toggle-button'])
 
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {
   if (val) { tokenInputOpen.value = false }
+})
+
+// ======================================================================= Hooks
+onMounted(() => {
+  tokenInputToggleTooltip.value = siteData.value?.settings?.tooltips['token-input-toggle-button']
+  console.log(siteData.value?.settings?.tooltips['token-input-toggle-button'])
+  uploaderToggleTooltip.value = siteData.value?.settings?.tooltips['uploader-toggle-button']
 })
 
 </script>
@@ -164,23 +171,22 @@ watch(uploaderOpen, (val) => {
   }
 }
 
-// .pocket-border {
-//   position: absolute;
-//   top: 0;
-//   left: 0;
-//   width: 100%;
-//   height: 100%;
-// }
-
 :deep(.turbulence) {
-  width: calc(100% - torem(6));
-  height: calc(100% - torem(4));
-  top: torem(2);
-  left: torem(3);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
   border-radius: torem(25);
   overflow: hidden;
   opacity: 0.95;
   background-color: white;
+}
+
+:deep(.svg-border-rectangle) {
+  rect {
+    stroke: $cove;
+    rx: 24;
+  }
 }
 
 // ---------------------------------------------------------------------- Pocket
@@ -199,12 +205,15 @@ watch(uploaderOpen, (val) => {
   transform: translate(-50%, 2rem);
 }
 
+:deep(.icon-button) {
+  --two-tone-a: #{$cove};
+  --two-tone-b: white;
+}
+
 .uploader-toggle {
   position: absolute !important;
   left: torem(12);
   bottom: torem(12);
-  width: torem(41);
-  height: torem(41);
   z-index: 101;
   .icon {
     transition: 150ms ease;
@@ -233,8 +242,6 @@ watch(uploaderOpen, (val) => {
   position: absolute !important;
   right: torem(12);
   top: torem(12);
-  width: torem(41);
-  height: torem(41);
   z-index: 99;
   :deep(.slot) {
     display: flex;

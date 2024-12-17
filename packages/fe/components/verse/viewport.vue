@@ -5,7 +5,7 @@
 
     <VerseHelpMenu />
 
-    <VerseLandingSite />
+    <VerseLandingSites />
 
     <Pocket />
 
@@ -27,9 +27,9 @@
 const route = useRoute()
 const generalStore = useGeneralStore()
 const { activeModes } = storeToRefs(generalStore)
-
 const viewport = ref(null)
 
+// ==================================================================== Computed
 const inCompost = computed(() => route.params.page === 'compost')
 
 </script>
@@ -48,7 +48,7 @@ const inCompost = computed(() => route.params.page === 'compost')
   z-index: 2;
 }
 
-:deep(#landing-site) {
+:deep(#landing-site-anchor) {
   position: absolute;
   top: torem(25);
   right: torem(25);

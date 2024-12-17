@@ -5,11 +5,11 @@ import { defineStore } from 'pinia'
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useMixerStore = defineStore('mixer', () => {
+
   // ===================================================================== state
-  const audioContext = ref(false)
+  const audioContext = ref(false)  
 
   // =================================================================== actions
-
   /**
    * @method createAudioContext
    */
@@ -19,17 +19,14 @@ export const useMixerStore = defineStore('mixer', () => {
   }
 
   /**
-   * @method toggleAudioContextPlayState
+   * @method setAudioContextPlayState
    */
 
-  const toggleAudioContextPlayState = () => {
-    if (audioContext.value) {
-      const state = audioContext.value.state
-      if (state === 'suspended') {
-        audioContext.value.resume()
-      } else if (state === 'running') {
-        state.audioContext.suspend()
-      }
+  const setAudioContextPlayState = val => {
+    if (val) {
+      audioContext.value.resume()
+    } else {
+      audioContext.value.suspend()
     }
   }
 
@@ -39,6 +36,6 @@ export const useMixerStore = defineStore('mixer', () => {
     audioContext,
     // ----- actions
     createAudioContext,
-    toggleAudioContextPlayState
+    setAudioContextPlayState
   }
 })

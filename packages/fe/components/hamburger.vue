@@ -32,8 +32,6 @@ defineProps({
 <style lang="scss" scoped>
 .hamburger {
   position: relative;
-  width: torem(22);
-  height: torem(16);
   &.open {
     .top {
       top: 50%;
@@ -55,6 +53,7 @@ defineProps({
   width: 100%;
   border-top: solid torem(1) black;
   border-bottom: solid torem(1) black;
+  border-radius: torem(1);
   transition: 200ms ease;
 }
 
