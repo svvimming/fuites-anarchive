@@ -108,7 +108,6 @@ watch(uploaderOpen, (val) => {
 // ======================================================================= Hooks
 onMounted(() => {
   tokenInputToggleTooltip.value = siteData.value?.settings?.tooltips['token-input-toggle-button']
-  console.log(siteData.value?.settings?.tooltips['token-input-toggle-button'])
   uploaderToggleTooltip.value = siteData.value?.settings?.tooltips['uploader-toggle-button']
 })
 
