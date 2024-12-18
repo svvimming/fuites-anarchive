@@ -244,7 +244,7 @@ const update = useThrottleFn(data => {
   justify-content: space-between;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px black;
+  border: solid 0.5px $woodsmoke;
   background-color: white;
   overflow: hidden;
   width: torem(40);
@@ -256,13 +256,13 @@ const update = useThrottleFn(data => {
 }
 
 .param-button {
-  color: black;
+  color: $woodsmoke;
   font-size: torem(8);
   &.pair {
     width: 50%;
     height: 100%;
     &:first-child {
-      border-right: solid 0.5px black;
+      border-right: solid 0.5px $woodsmoke;
     }
   }
 }

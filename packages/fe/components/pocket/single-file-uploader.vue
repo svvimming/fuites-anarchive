@@ -250,7 +250,7 @@ const finalizeUpload = async () => {
   top: 0;
   left: 0;
   height: 100%;
-  background-color: black;
+  background-color: $woodsmoke;
 }
 
 :deep(.percentage) {

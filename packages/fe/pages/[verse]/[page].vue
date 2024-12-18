@@ -20,6 +20,7 @@
               :thingie="thingie" />
 
             <Portal
+              v-if="portalsActive"
               v-for="portal in pagePortals"
               :key="portal._id"
               :portal="portal" />
@@ -43,7 +44,7 @@ const { page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { dragndrop, activeModes } = storeToRefs(generalStore)
 
 const { data } = await useAsyncData(route.fullPath, async () => {
   const content = await queryContent({
@@ -69,6 +70,7 @@ const pageName = computed(() => route.params.page)
 const bounds = computed(() => page.value.data.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.portal_refs || [])
+const portalsActive = computed(() => activeModes.value.portals)
 
 // ==================================================================== Watchers
 watch(data, async () => {

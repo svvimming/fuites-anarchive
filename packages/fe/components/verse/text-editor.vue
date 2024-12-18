@@ -192,8 +192,8 @@ onBeforeUnmount(() => {
 :deep(.tiptap) {
   padding: torem(4) torem(6);
   line-height: 1.5;
-  ::-moz-selection { background: rgba(black, 0.05); }
-  ::selection { background: rgba(black, 0.05); }
+  ::-moz-selection { background: rgba($woodsmoke, 0.05); }
+  ::selection { background: rgba($woodsmoke, 0.05); }
 }
 
 // :deep(.ProseMirror-trailingBreak) {

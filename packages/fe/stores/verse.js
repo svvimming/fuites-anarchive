@@ -1,6 +1,9 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useVerseStore = defineStore('verse', () => {
+  // ==================================================================== import
+  const generalStore = useGeneralStore()
+
   // ===================================================================== state
   const verse = ref({
     loading: false,
@@ -57,8 +60,12 @@ export const useVerseStore = defineStore('verse', () => {
       useSetStoreData(page, {
         loading: false,
         refresh: false,
-        data: response
+        data: response || { doesNotExist: true }
       })
+      // If no page is found, open the 'new page' modal to create a new page from this route
+      if (!response) {
+        generalStore.setModal({ active: true, action: 'new-page', data: null })
+      }
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(page, {

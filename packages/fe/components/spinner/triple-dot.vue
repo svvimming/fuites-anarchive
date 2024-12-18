@@ -44,7 +44,7 @@ export default {
   }
   &.theme-dark {
     .dot {
-      background-color: black;
+      background-color: $woodsmoke;
     }
   }
   &.theme-cove {

@@ -156,7 +156,7 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   padding: 2rem;
-  border: solid 1px black;
+  border: solid 1px $woodsmoke;
   border-radius: torem(20);
   visibility: hidden;
   opacity: 0;

@@ -26,7 +26,7 @@ const emit = defineEmits(['selected'])
 <style lang="scss" scoped>
 .selector-button {
   button {
-    color: black;
+    color: $woodsmoke;
     padding: torem(8) torem(8);
     font-size: 8px;
   }

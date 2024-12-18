@@ -42,7 +42,7 @@ const { textEditor } = storeToRefs(verseStore)
   justify-content: space-around;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px black;
+  border: solid 0.5px $woodsmoke;
   background-color: white;
   overflow: hidden;
   width: torem(40);
@@ -50,7 +50,7 @@ const { textEditor } = storeToRefs(verseStore)
 }
 
 .font-style-button {
-  color: black;
+  color: $woodsmoke;
   font-size: torem(8);
   padding: torem(4);
 }

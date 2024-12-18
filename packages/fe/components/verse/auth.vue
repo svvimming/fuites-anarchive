@@ -127,19 +127,19 @@ const submit = async () => {
 }
 
 input::-webkit-input-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::-moz-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::-ms-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 .submit {
