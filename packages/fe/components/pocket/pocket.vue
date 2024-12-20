@@ -12,10 +12,12 @@
       <Turbulence instance-id="pocket-turbulence-bg" />
       <DashedBorderRectangle :inherit-from="pocketRef" />
        <!-- ===================================================== Token Auth -->
-      <VerseAuth :class="['auth-modal', { open: !authenticated || tokenInputOpen }]" />
+      <VerseAuth
+        :class="['auth-modal', { open: !authenticated || tokenInputOpen || !pageExists }]"
+        @authenticate-success="handleAuthenticateSuccess" />
       <!-- ========================================================== Pocket -->
       <div
-        v-show="authenticated"
+        v-show="authenticated && pageExists"
         id="pocket"
         ref="pocketRef"
         :draggable="dragndrop"
@@ -103,16 +105,20 @@ useHandleThingieDragEvents(pocketRef, stageRef)
 // ==================================================================== Computed
 const uploader = computed(() => uploaders.value[pocketUploaderId])
 const uploaderOpen = computed(() => uploader.value?.open)
-const pageExists = computed(() => page.value.data._id && !page.value.data.doesNotExist)
-const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id).sort((a, b) => a.zIndex - b.zIndex))
+const pageExists = computed(() => page.value.data?._id && !page.value.data.doesNotExist)
+const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data?._id).sort((a, b) => a.zIndex - b.zIndex))
 
-watch(uploader, (val) => {
-  console.log(val)
-}, { deep: true })
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {
   if (val) { tokenInputOpen.value = false }
 })
+
+// ===================================================================== Methods
+const handleAuthenticateSuccess = () => {
+  if (!pageExists.value) {
+    pocketStore.setPocketOpen(false)
+  }
+}
 
 // ======================================================================= Hooks
 onMounted(() => {

@@ -31,13 +31,13 @@ const { $io, $bus } = useNuxtApp()
 const generalStore = useGeneralStore()
 const { sessionId } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
-const { verse } = storeToRefs(verseStore)
+const { verse, page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
 
 // ==================================================================== Watchers
-watch(() => verse.value.data.name, async () => {
+watch(() => page.value.data, async () => {
   /**
    * Initialize websocket connection to backend
    */

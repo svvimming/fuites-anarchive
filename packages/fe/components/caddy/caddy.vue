@@ -88,7 +88,7 @@ const expanded = ref('')
 // ==================================================================== Computed
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
-const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data._id))
+const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data?._id))
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
 const type = computed(() => thingie.value?.thingie_type)
 const shared = computed(() => editableParams.value?.shared || [])

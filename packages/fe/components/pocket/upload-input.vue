@@ -86,7 +86,6 @@ watch(uploaderOpen, (val) => {
   if (val) {
     clickFileInput()
   } else {
-    console.log('hit uploaderOpen watcher')
     clearFileInput({ file: false, file_id: false })
     setTimeout(() => {
       pocketStore.setUploader({ id: props.uploaderId, status: 'idle' })
@@ -154,9 +153,7 @@ const handleInputChange = async e => {
  */
 
 const clickFileInput = () => {
-  console.log(props.uploaderId, authenticated.value, fileInput.value)
   if (authenticated.value && fileInput.value) {
-    console.log('hit click file input')
     clearFileInput({ id: props.uploaderId, status: 'idle', file: false, file_id: false })
     fileInput.value.click()
   }
@@ -203,8 +200,6 @@ const uploadNextChunk = data => {
   goal.value = data.goal
   const chunksize = data.chunksize
   const index = place.value * chunksize
-  console.log('upload next chunk', uploader.value)
-  console.log(file.value)
   const chunk = file.value.slice(index, index + Math.min(chunksize, (filesize.value - index)), file.value.type)
   progress.value = ((place.value / goal.value) * 100).toFixed(0)
   nextChunkPayload.value = {
@@ -232,10 +227,8 @@ const fileUploadComplete = () => {
  */
 
 const handleWebsocketConnected = websocket => {
-  console.log('handle websocket connected')
   fileReader.value = new FileReader()
   fileReader.value.onload = (e) => {
-    console.log(props.uploaderId, e)
     websocket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
   }
   websocket.on('module|file-upload-chunk|payload', uploadNextChunk)

@@ -43,7 +43,6 @@ export const usePocketStore = defineStore('pocket', () => {
   const registerUploader = id => {
     const uploaderExists = uploaders.value[id]
     if (!uploaderExists) {
-      console.log('register uploader')
       uploaders.value[id] = {
         status: 'idle', // 'idle', 'initializing', 'ready', 'uploading', 'upload-complete'
         file: false,

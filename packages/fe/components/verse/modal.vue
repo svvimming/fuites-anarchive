@@ -12,23 +12,20 @@
       <!-- ------------------------------------------------------------ text -->
       <span class="title text">{{ newPageTitle }}</span>
       <span class="prompt text">{{ newPageMessage }}</span>
-
-      <template v-if="authenticated">
-        <!-- -------------------------------------------------------- uploader -->
-        <PocketSingleFileUploader
-          :uploader-id="modalUploaderId"
-          :class="{ shrink: uploader?.status === 'idle' || uploader?.status === 'initializing' }" />
-        <!-- -------------------------------------------- open uploader button -->
-        <div class="button-row">
-          <ButtonBasic
-            :class="['uploader-button', { 'upload-ready': uploader?.status === 'ready' }]"
-            :force-loading="uploader?.status === 'initializing'"
-            :force-disabled="uploader?.status === 'uploading'"
-            @clicked="pocketStore.toggleUploaderOpen({ id: modalUploaderId })">
-            {{ uploader?.status === 'ready' ? 'Cancel' : 'Upload file' }}
-          </ButtonBasic>
-        </div>
-      </template>
+      <!-- -------------------------------------------------------- uploader -->
+      <PocketSingleFileUploader
+        :uploader-id="modalUploaderId"
+        :class="{ shrink: uploader?.status === 'idle' || uploader?.status === 'initializing' }" />
+      <!-- -------------------------------------------- open uploader button -->
+      <div v-if="authenticated" class="button-row">
+        <ButtonBasic
+          :class="['uploader-button', { 'upload-ready': uploader?.status === 'ready' }]"
+          :force-loading="uploader?.status === 'initializing'"
+          :force-disabled="uploader?.status === 'uploading'"
+          @clicked="pocketStore.toggleUploaderOpen({ id: modalUploaderId })">
+          {{ uploader?.status === 'ready' ? 'Cancel' : 'Upload file' }}
+        </ButtonBasic>
+      </div>
 
     </div>
 
@@ -49,9 +46,6 @@ const uploader = computed(() => uploaders.value[modalUploaderId])
 const newPageTitle = computed(() => `'${route.params.page}' doesn't seem to exist yet!`)
 const newPageMessage = computed(() => authenticated.value ? `You can create a new page called ${route.params.page} by uploading a thingie below:` : `You can create a new page called '${route.params.page}' but first, you'll need to enter a token using the pocket.`)
 
-// watch(uploader, (val) => {
-//   console.log(val)
-// }, { deep: true })
 // ======================================================================= Hooks
 onMounted(() => {
   pocketStore.registerUploader(modalUploaderId)
