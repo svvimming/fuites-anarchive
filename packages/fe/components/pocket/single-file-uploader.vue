@@ -1,6 +1,7 @@
 <template>
   <PocketUploadInput
     accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    :uploader-id="uploaderId"
     :max-file-size-mb="maxFileSizeMB"
     :class="[
       'single-file-uploader',
@@ -57,15 +58,9 @@ import { filesize } from 'filesize'
 
 // ======================================================================= Setup
 const props = defineProps({
-  finalPrompt: {
+  uploaderId: {
     type: String,
-    required: false,
-    default: ''
-  },
-  uploadToPage: {
-    type: String,
-    required: false,
-    default: ''
+    required: true
   },
   maxFileSizeMB: {
     type: Number,
@@ -78,20 +73,22 @@ const props = defineProps({
 const bicho = ref([])
 const collectorStore = useCollectorStore()
 const pocketStore = usePocketStore()
-const { uploaderOpen, uploader, fullscreen } = storeToRefs(pocketStore)
+const { uploaders, fullscreen } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
-const file = computed(() => uploader.value.file)
-const status = computed(() => uploader.value.status)
+const uploader = computed(() => uploaders.value[props.uploaderId])
+const uploaderOpen = computed(() => uploader.value?.open)
+const file = computed(() => uploader.value?.file)
+const status = computed(() => uploader.value?.status)
 const finalizeUploadPrompt = computed(() => {
-  return file.value.size > (props.maxFileSizeMB * 1000000) ?
-    `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : props.finalPrompt || 'Draw a shape to upload selected file:'
+  return file.value?.size > (props.maxFileSizeMB * 1000000) ?
+    `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : 'Draw a shape to upload selected file:'
 })
 
 // ==================================================================== Watchers
 watch(status, (stat) => {
   if (stat === 'upload-complete') {
-    pocketStore.setUploaderOpen(false)
+    pocketStore.toggleUploaderOpen({ id: props.uploaderId, newValue: false })
     finalizeUpload()
   }
 })
@@ -107,8 +104,7 @@ const getExtension = data => { return Mime.getExtension(data) }
 
 const finalizeUpload = async () => {
   await collectorStore.postCreateThingie({
-    file_id: file.value.id,
-    ...(!!props.uploadToPage && { location: props.uploadToPage }),
+    file_id: uploader.value.file_id,
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
     path_data: bicho.value,
     location: 'pocket',

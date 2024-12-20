@@ -22,7 +22,7 @@
             class="input"
             :accept="acceptedMimetypes"
             @change="handleInputChange"
-            @cancel="pocketStore.setUploaderOpen(false)" />
+            @cancel="pocketStore.toggleUploaderOpen({ id: uploaderId, newValue: false })" />
         </div>
         <!-- ===================================== [button] prompt to upload -->
         <slot
@@ -42,19 +42,13 @@ import ImageCompression from 'browser-image-compression'
 
 // ======================================================================= Setup
 const props = defineProps({
-  acceptedMimetypes: {
+  uploaderId: {
     type: String,
     required: true
   },
-  clearFileAfterUpload: {
-    type: Boolean,
-    required: false,
-    default: false
-  },
-  clearProgressAfterUpload: {
-    type: Boolean,
-    required: false,
-    default: false
+  acceptedMimetypes: {
+    type: String,
+    required: true
   },
   maxFileSizeMB: {
     type: Number,
@@ -76,27 +70,26 @@ const imageData = ref({})
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 const pocketStore = usePocketStore()
-const {
-  authenticated,
-  uploader,
-  uploaderOpen
-} = storeToRefs(pocketStore)
+const { authenticated, uploaders } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
-const file = computed(() => uploader.value.file)
-const status = computed(() => uploader.value.status)
-const filename = computed(() => file.value.name)
-const filesize = computed(() => file.value.size)
-const mimetype = computed(() => file.value.type)
+const uploader = computed(() => uploaders.value[props.uploaderId])
+const uploaderOpen = computed(() => uploader.value?.open)
+const file = computed(() => uploader.value?.file)
+const status = computed(() => uploader.value?.status)
+const filename = computed(() => file.value?.name)
+const filesize = computed(() => file.value?.size)
+const mimetype = computed(() => file.value?.type)
 
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {
   if (val) {
     clickFileInput()
   } else {
-    clearFileInput({ file: false })
+    console.log('hit uploaderOpen watcher')
+    clearFileInput({ file: false, file_id: false })
     setTimeout(() => {
-      pocketStore.setUploader({ status: 'idle' })
+      pocketStore.setUploader({ id: props.uploaderId, status: 'idle' })
     }, 200)
   }
 })
@@ -147,12 +140,12 @@ const compressImage = async data => {
 const handleInputChange = async e => {
   let newFile = e.target.files[0]
   if (newFile) {
-    pocketStore.setUploader({ status: 'initializing' })
+    pocketStore.setUploader({ id: props.uploaderId, status: 'initializing' })
     if (['image/jpeg', 'image/png'].includes(newFile.type)) {
       await computeImageData(newFile)
       newFile = await compressImage(newFile, true)
     }
-    pocketStore.setUploader({ status: 'ready', file: newFile })
+    pocketStore.setUploader({ id: props.uploaderId, status: 'ready', file: newFile, file_id: false })
   }
 }
 
@@ -161,8 +154,10 @@ const handleInputChange = async e => {
  */
 
 const clickFileInput = () => {
+  console.log(props.uploaderId, authenticated.value, fileInput.value)
   if (authenticated.value && fileInput.value) {
-    clearFileInput({ status: 'idle', file: false })
+    console.log('hit click file input')
+    clearFileInput({ id: props.uploaderId, status: 'idle', file: false, file_id: false })
     fileInput.value.click()
   }
 }
@@ -185,7 +180,7 @@ const clearFileInput = reset => {
 
 const uploadFile = () => {
   if (authenticated.value && file.value && uploaderOpen.value) {
-    pocketStore.setUploader({ status: 'uploading' })
+    pocketStore.setUploader({ id: props.uploaderId, status: 'uploading' })
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
       filename: filename.value,
@@ -201,18 +196,20 @@ const uploadFile = () => {
  */
 
 const uploadNextChunk = data => {
-  if (!file.value.id) {
-    pocketStore.setUploadingFileId(data.file_id)
+  if (!uploader.value.file_id) {
+    pocketStore.setUploader({ id: props.uploaderId, file_id: data.file_id })
   }
   place.value = data.place
   goal.value = data.goal
   const chunksize = data.chunksize
   const index = place.value * chunksize
+  console.log('upload next chunk', uploader.value)
+  console.log(file.value)
   const chunk = file.value.slice(index, index + Math.min(chunksize, (filesize.value - index)), file.value.type)
   progress.value = ((place.value / goal.value) * 100).toFixed(0)
   nextChunkPayload.value = {
     socket_id: socket.value.id,
-    file_id: file.value.id,
+    file_id: uploader.value.file_id,
     file_ext: data.file_ext,
     place: place.value,
     goal: goal.value
@@ -225,11 +222,9 @@ const uploadNextChunk = data => {
  */
 
 const fileUploadComplete = () => {
-  pocketStore.setUploader({ status: 'upload-complete' })
+  pocketStore.setUploader({ id: props.uploaderId, status: 'upload-complete' })
   place.value = 0
   nextChunkPayload.value = false
-  if (props.clearFileAfterUpload) { pocketStore.setUploader({ file: false })}
-  if (props.clearProgressAfterUpload) { progress.value = 0 }
 }
 
 /**
@@ -237,8 +232,10 @@ const fileUploadComplete = () => {
  */
 
 const handleWebsocketConnected = websocket => {
+  console.log('handle websocket connected')
   fileReader.value = new FileReader()
   fileReader.value.onload = (e) => {
+    console.log(props.uploaderId, e)
     websocket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
   }
   websocket.on('module|file-upload-chunk|payload', uploadNextChunk)

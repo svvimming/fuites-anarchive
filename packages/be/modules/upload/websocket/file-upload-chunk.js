@@ -17,6 +17,7 @@ const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
 MC.socket.listeners.push({
   name: 'module|file-upload-chunk|payload',
   async handler (data) {
+    console.log('upload chunk', data)
     try {
       const socket = GetSocket(data.socket_id)
       const chunk = data.chunk

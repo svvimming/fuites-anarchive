@@ -13,6 +13,7 @@ const MC = require('@Root/config')
 MC.socket.listeners.push({
   name: 'module|file-upload-initialize|payload',
   async handler (data) {
+    console.log('initialize upload', data)
     try {
       const socket = GetSocket(data.socket_id)
       const mimetype = data.mimetype
