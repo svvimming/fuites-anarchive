@@ -17,14 +17,8 @@ export const usePocketStore = defineStore('pocket', () => {
       verses: []
     }
   })
-
-  const uploader = ref({
-    status: 'idle', // 'idle', 'initializing', 'ready', 'uploading', 'upload-complete'
-    file: false
-  })
-
+  const uploaders = ref({})
   const pocketOpen = ref(false)
-  const uploaderOpen = ref(false)
   const fullscreen = ref(false)
   
   // ================================================================== Computed
@@ -43,11 +37,30 @@ export const usePocketStore = defineStore('pocket', () => {
   }
 
   /**
-   * @method setUploaderOpen
+   * @method registerUploader
    */
 
-  const setUploaderOpen = val => {
-    uploaderOpen.value = val
+  const registerUploader = id => {
+    const uploaderExists = uploaders.value[id]
+    if (!uploaderExists) {
+      uploaders.value[id] = {
+        status: 'idle', // 'idle', 'initializing', 'ready', 'uploading', 'upload-complete'
+        file: false,
+        open: false,
+        id
+      }
+    }
+  }
+
+  /**
+   * @method toggleUploaderOpen
+   */
+
+  const toggleUploaderOpen = incoming => {
+    const id = incoming.id
+    if (uploaders.value[id]) {
+      uploaders.value[id].open = incoming.hasOwnProperty('newValue') ? incoming.newValue : !uploaders.value[id].open
+    }
   }
 
   /**
@@ -55,16 +68,9 @@ export const usePocketStore = defineStore('pocket', () => {
    */
 
   const setUploader = incoming => {
-    useSetStoreData(uploader, Object.assign({}, incoming))
-  }
-
-  /**
-   * @method setUploadingFileId
-   */
-
-  const setUploadingFileId = id => {
-    if (uploader.value.file) {
-      uploader.value.file.id = id
+    const id = incoming.id
+    if (uploaders.value[id]) {
+      uploaders.value[id] = Object.assign({}, uploaders.value[id], incoming)
     }
   }
 
@@ -144,9 +150,8 @@ export const usePocketStore = defineStore('pocket', () => {
   return {
     // ----- state
     pocket,
-    uploader,
+    uploaders,
     pocketOpen,
-    uploaderOpen,
     fullscreen,
     // ----- computed
     token,
@@ -154,9 +159,9 @@ export const usePocketStore = defineStore('pocket', () => {
     authenticated,
     // ----- actions
     setPocketOpen,
-    setUploaderOpen,
+    registerUploader,
+    toggleUploaderOpen,
     setUploader,
-    setUploadingFileId,
     togglePocketFullscreen,
     getAuthPocket
   }

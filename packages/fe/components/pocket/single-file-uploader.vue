@@ -1,6 +1,7 @@
 <template>
   <PocketUploadInput
     accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    :uploader-id="uploaderId"
     :max-file-size-mb="maxFileSizeMB"
     :class="[
       'single-file-uploader',
@@ -57,15 +58,9 @@ import { filesize } from 'filesize'
 
 // ======================================================================= Setup
 const props = defineProps({
-  finalPrompt: {
+  uploaderId: {
     type: String,
-    required: false,
-    default: ''
-  },
-  uploadToPage: {
-    type: String,
-    required: false,
-    default: ''
+    required: true
   },
   maxFileSizeMB: {
     type: Number,
@@ -75,24 +70,32 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
+const route = useRoute()
 const bicho = ref([])
+const generalStore = useGeneralStore()
 const collectorStore = useCollectorStore()
+const verseStore = useVerseStore()
 const pocketStore = usePocketStore()
-const { uploaderOpen, uploader, fullscreen } = storeToRefs(pocketStore)
+const { pocket, uploaders, fullscreen } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
-const file = computed(() => uploader.value.file)
-const status = computed(() => uploader.value.status)
+const uploader = computed(() => uploaders.value[props.uploaderId])
+const uploaderOpen = computed(() => uploader.value?.open)
+const file = computed(() => uploader.value?.file)
+const status = computed(() => uploader.value?.status)
 const finalizeUploadPrompt = computed(() => {
-  return file.value.size > (props.maxFileSizeMB * 1000000) ?
-    `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : props.finalPrompt || 'Draw a shape to upload selected file:'
+  return file.value?.size > (props.maxFileSizeMB * 1000000) ?
+    `compressed file size is too big! :-O<br>max is ${props.maxFileSizeMB}mb` : 'Draw a shape to upload selected file:'
 })
 
 // ==================================================================== Watchers
-watch(status, (stat) => {
+watch(status, async (stat) => {
   if (stat === 'upload-complete') {
-    pocketStore.setUploaderOpen(false)
-    finalizeUpload()
+    pocketStore.toggleUploaderOpen({ id: props.uploaderId, newValue: false })
+    const created = await finalizeUpload()
+    if (props.uploaderId === 'new-page-modal-uploader') {
+      await initCreatePage(created)
+    }
   }
 })
 
@@ -106,12 +109,12 @@ const getExtension = data => { return Mime.getExtension(data) }
  */
 
 const finalizeUpload = async () => {
-  await collectorStore.postCreateThingie({
-    file_id: file.value.id,
-    ...(!!props.uploadToPage && { location: props.uploadToPage }),
+  const location = props.uploaderId === 'new-page-modal-uploader' ? route.params.page : 'pocket'
+  return await collectorStore.postCreateThingie({
+    file_id: uploader.value.file_id,
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
     path_data: bicho.value,
-    location: 'pocket',
+    location,
     at: {
       x: Math.random() * 650,
       y: Math.random() * 400,
@@ -120,6 +123,22 @@ const finalizeUpload = async () => {
       rotation: 0
     }
   })
+}
+
+/**
+ * @method initCreatePage
+ */
+
+const initCreatePage = async firstThingie => {
+  const newPage = await verseStore.postCreatePage({
+    initiatorPocket: pocket.value.data._id,
+    creatorThingie: firstThingie,
+    name: route.params.page
+  })
+  if (newPage) {
+    generalStore.setModal({ active: false, action: '', data: null })
+    await collectorStore.getThingies()
+  }
 }
 </script>
 
@@ -250,7 +269,7 @@ const finalizeUpload = async () => {
   top: 0;
   left: 0;
   height: 100%;
-  background-color: black;
+  background-color: $woodsmoke;
 }
 
 :deep(.percentage) {

@@ -73,6 +73,7 @@ export const useCollectorStore = defineStore('collector', () => {
         thingies.value.data.push(thingie)
       }
       useSetStoreData(thingies, { refresh: false })
+      return thingie
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(thingies, { refresh: false })

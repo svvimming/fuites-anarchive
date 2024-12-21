@@ -62,7 +62,7 @@ const setSelectionFontFamily = font => {
   justify-content: space-between;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px black;
+  border: solid 0.5px $woodsmoke;
   background-color: white;
   width: torem(40);
   height: torem(40);
@@ -82,7 +82,7 @@ const setSelectionFontFamily = font => {
 }
 
 .font-family-button {
-  color: black;
+  color: $woodsmoke;
   padding: torem(3) torem(4);
   font-size: torem(8);
   &.selected {
@@ -92,6 +92,6 @@ const setSelectionFontFamily = font => {
 }
 
 .collapsed {
-  color: black;
+  color: $woodsmoke;
 }
 </style>

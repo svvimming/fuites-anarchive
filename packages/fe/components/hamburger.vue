@@ -51,8 +51,8 @@ defineProps({
   position: absolute;
   left: 0;
   width: 100%;
-  border-top: solid torem(1) black;
-  border-bottom: solid torem(1) black;
+  border-top: solid torem(1) $woodsmoke;
+  border-bottom: solid torem(1) $woodsmoke;
   border-radius: torem(1);
   transition: 200ms ease;
 }

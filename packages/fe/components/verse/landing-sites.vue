@@ -41,6 +41,9 @@
 </template>
 
 <script setup>
+// ====================================================================== Import
+import { onClickOutside } from '@vueuse/core'
+
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { siteData, activeModes } = storeToRefs(generalStore)
@@ -51,6 +54,12 @@ const dropdownOpen = ref(false)
 const tooltip = ref('')
 const landingSitesRef = ref(null)
 const transform = ref(false)
+
+onClickOutside(landingSitesRef, () => {
+  if (dropdownOpen.value) {
+    dropdownOpen.value = false
+  }
+})
 
 // ==================================================================== Computed
 const landingSites = computed(() => siteData.value?.settings?.landingSites || [])

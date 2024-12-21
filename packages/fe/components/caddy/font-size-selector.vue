@@ -74,7 +74,7 @@ const setSelectionFontSize = size => {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px black;
+  border: solid 0.5px $woodsmoke;
   background-color: white;
   width: torem(40);
   height: torem(40);
@@ -95,7 +95,7 @@ const setSelectionFontSize = size => {
 
 .font-size-button {
   position: absolute;
-  color: black;
+  color: $woodsmoke;
   padding: torem(3) torem(4);
   font-size: torem(8);
   border-radius: 50%;
@@ -111,14 +111,14 @@ const setSelectionFontSize = size => {
   position: absolute;
   width: calc(100% + torem(6));
   height: 100%;
-  border: solid 0.5px black;
-  color: black;
+  border: solid 0.5px $woodsmoke;
+  color: $woodsmoke;
   font-size: torem(8);
   transform: translate(torem(-3), 125%);
   border-radius: torem(3);
 }
 
 .collapsed {
-  color: black;
+  color: $woodsmoke;
 }
 </style>

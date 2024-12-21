@@ -1,22 +1,20 @@
 <template>
   <div ref="viewport" class="verse-viewport">
-
+    <!-- ------------------------------------------------------------- Modal -->
     <VerseModal />
-
-    <VerseHelpMenu />
-
+    <!-- --------------------------------------------------------- Help Menu -->
+    <!-- <VerseHelpMenu /> -->
+    <!-- ----------------------------------------------------- Landing Sites -->
     <VerseLandingSites />
-
+    <!-- ------------------------------------------------------------ Pocket -->
     <Pocket />
-
+    <!-- ---------------------------------------------------- Compost Portal -->
     <CompostPortal v-if="!inCompost" />
-
+    <!-- ------------------------------------------------------- Text Editor -->
     <VerseTextEditor />
-
-    <ClientOnly>
-      <Caddy :container="viewport" />
-    </ClientOnly>
-
+    <!-- ------------------------------------------------------------- Caddy -->
+    <ClientOnly><Caddy :container="viewport" /></ClientOnly>
+    <!-- ------------------------------------------------------------ Drippy -->
     <Drippy v-if="activeModes.drippy" />
 
   </div>
@@ -39,13 +37,6 @@ const inCompost = computed(() => route.params.page === 'compost')
 .verse-viewport {
   width: 100%;
   height: 100%;
-}
-
-:deep(#modal) {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
 }
 
 :deep(#landing-site-anchor) {

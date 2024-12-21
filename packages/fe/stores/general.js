@@ -13,7 +13,8 @@ export const useGeneralStore = defineStore('general', () => {
   const draggingThingie = ref(false)
   const modal = ref({
     active: false,
-    action: ''
+    action: '',
+    data: null
   })
   const activeModes = ref({
     portals: true,

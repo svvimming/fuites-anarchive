@@ -88,7 +88,7 @@ const expanded = ref('')
 // ==================================================================== Computed
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
-const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data._id))
+const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data?._id))
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
 const type = computed(() => thingie.value?.thingie_type)
 const shared = computed(() => editableParams.value?.shared || [])
@@ -244,7 +244,7 @@ const update = useThrottleFn(data => {
   justify-content: space-between;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px black;
+  border: solid 0.5px $woodsmoke;
   background-color: white;
   overflow: hidden;
   width: torem(40);
@@ -256,13 +256,13 @@ const update = useThrottleFn(data => {
 }
 
 .param-button {
-  color: black;
+  color: $woodsmoke;
   font-size: torem(8);
   &.pair {
     width: 50%;
     height: 100%;
     &:first-child {
-      border-right: solid 0.5px black;
+      border-right: solid 0.5px $woodsmoke;
     }
   }
 }

@@ -1,6 +1,9 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useVerseStore = defineStore('verse', () => {
+  // ==================================================================== import
+  const generalStore = useGeneralStore()
+
   // ===================================================================== state
   const verse = ref({
     loading: false,
@@ -11,7 +14,7 @@ export const useVerseStore = defineStore('verse', () => {
   const page = ref({
     loading: false,
     refresh: false,
-    data: {}
+    data: null
   })
 
   const sceneData = ref({
@@ -57,8 +60,12 @@ export const useVerseStore = defineStore('verse', () => {
       useSetStoreData(page, {
         loading: false,
         refresh: false,
-        data: response
+        data: response || { doesNotExist: true }
       })
+      // If no page is found, open the 'new page' modal to create a new page from this route
+      if (!response) {
+        generalStore.setModal({ active: true, action: 'new-page', data: null })
+      }
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(page, {
@@ -76,6 +83,29 @@ export const useVerseStore = defineStore('verse', () => {
   const updatePage = incoming => {
     if (incoming.name === page.value.data.name) {
       page.value.data = incoming
+    }
+  }
+
+  /**
+   * @method postCreatePage
+   */
+
+  const postCreatePage = async incoming => {
+    try {
+      useSetStoreData(page, { refresh: true })
+      const newPage = await useFetchAuth('/post-create-page', Object.assign({}, incoming, {
+        verse: verse.value.data.name,
+        method: 'post'
+      }))
+      useSetStoreData(page, {
+        refresh: false,
+        data: newPage
+      })
+      return newPage
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(page, { refresh: false })
+      return false
     }
   }
 
@@ -115,6 +145,7 @@ export const useVerseStore = defineStore('verse', () => {
     getVerse,
     getPage,
     updatePage,
+    postCreatePage,
     updateSceneData,
     setTextEditor,
     setColorSelectorHex

@@ -1,7 +1,7 @@
 <template>
   <div id="compost-portal-anchor">
     <!-- ============================================= Compost Portal Toggle -->
-    <ButtonText
+    <ButtonStamp
       :active="compostPortalOpen"
       :stylized="buttonText"
       :class="['text-content color-asparagus', { active: compostPortalOpen }]"
