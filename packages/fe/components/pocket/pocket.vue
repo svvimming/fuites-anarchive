@@ -25,7 +25,7 @@
         <!-- ------------------------------------------------------- spinner -->
         <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
-        <PocketSingleFileUploader v-if="pageExists" :uploader-id="pocketUploaderId" />
+        <PocketSingleFileUploader :uploader-id="pocketUploaderId" />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
           <v-stage ref="stageRef" :config="{ width: 650, height: 400 }">

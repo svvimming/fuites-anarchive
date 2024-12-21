@@ -35,11 +35,12 @@ const PageSchema = new Schema({
       }
     ]
   },
-  initiator_token: {
-    type: String,
-    required: true
+  initiator_pocket_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pockets',
+    required: false
   },
-  creator_thingie: {
+  creator_thingie_ref: {
     type: Schema.Types.ObjectId,
     ref: 'thingies',
     required: false
@@ -65,11 +66,6 @@ const PageSchema = new Schema({
       required: true,
       default: 2000
     }
-  },
-  consistencies: {
-    type: [String],
-    required: false,
-    default: []
   },
   temperature: {
     type: Number,

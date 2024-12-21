@@ -70,10 +70,13 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
+const route = useRoute()
 const bicho = ref([])
+const generalStore = useGeneralStore()
 const collectorStore = useCollectorStore()
+const verseStore = useVerseStore()
 const pocketStore = usePocketStore()
-const { uploaders, fullscreen } = storeToRefs(pocketStore)
+const { pocket, uploaders, fullscreen } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const uploader = computed(() => uploaders.value[props.uploaderId])
@@ -86,10 +89,13 @@ const finalizeUploadPrompt = computed(() => {
 })
 
 // ==================================================================== Watchers
-watch(status, (stat) => {
+watch(status, async (stat) => {
   if (stat === 'upload-complete') {
     pocketStore.toggleUploaderOpen({ id: props.uploaderId, newValue: false })
-    finalizeUpload()
+    const created = await finalizeUpload()
+    if (props.uploaderId === 'new-page-modal-uploader') {
+      await initCreatePage(created)
+    }
   }
 })
 
@@ -103,11 +109,12 @@ const getExtension = data => { return Mime.getExtension(data) }
  */
 
 const finalizeUpload = async () => {
-  await collectorStore.postCreateThingie({
+  const location = props.uploaderId === 'new-page-modal-uploader' ? route.params.page : 'pocket'
+  return await collectorStore.postCreateThingie({
     file_id: uploader.value.file_id,
     thingie_type: ['audio/mpeg', 'audio/x-m4a'].includes(file.value.type) ? 'sound' : 'image',
     path_data: bicho.value,
-    location: 'pocket',
+    location,
     at: {
       x: Math.random() * 650,
       y: Math.random() * 400,
@@ -116,6 +123,22 @@ const finalizeUpload = async () => {
       rotation: 0
     }
   })
+}
+
+/**
+ * @method initCreatePage
+ */
+
+const initCreatePage = async firstThingie => {
+  const newPage = await verseStore.postCreatePage({
+    initiatorPocket: pocket.value.data._id,
+    creatorThingie: firstThingie,
+    name: route.params.page
+  })
+  if (newPage) {
+    generalStore.setModal({ active: false, action: '', data: null })
+    await collectorStore.getThingies()
+  }
 }
 </script>
 

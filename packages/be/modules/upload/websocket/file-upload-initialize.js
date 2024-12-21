@@ -15,6 +15,7 @@ MC.socket.listeners.push({
   async handler (data) {
     try {
       const socket = GetSocket(data.socket_id)
+      const uploaderId = data.uploader_id
       const mimetype = data.mimetype
       const filesize = data.filesize
       const fileExt = Mime.getExtension(mimetype)
@@ -29,7 +30,7 @@ MC.socket.listeners.push({
         upload_status: 0
       })
       // Emit db entry _id, chunksize and a start chunk place of 0
-      socket.emit('module|file-upload-chunk|payload', {
+      socket.emit(`${uploaderId}|file-upload-chunk|payload`, {
         file_id: created._id,
         file_ext: fileExt,
         chunksize,

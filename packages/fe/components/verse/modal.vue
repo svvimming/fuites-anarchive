@@ -108,7 +108,7 @@ onMounted(() => {
 }
 
 .new-page-modal {
-  max-width: torem(320);
+  width: torem(382);
 }
 
 .button-row {
@@ -155,12 +155,12 @@ onMounted(() => {
 }
 
 :deep(.bicho-canvas-wrapper) {
-  width: torem(230);
-  height: torem(230);
+  width: torem(296);
+  height: torem(296);
 }
 
 :deep(.bicho-canvas) {
-  width: 100%;
-  height: 100%;
+  width: torem(296);
+  height: torem(296);
 }
 </style>

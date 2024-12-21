@@ -180,6 +180,7 @@ const uploadFile = () => {
     pocketStore.setUploader({ id: props.uploaderId, status: 'uploading' })
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
+      uploader_id: props.uploaderId,
       filename: filename.value,
       filesize: filesize.value,
       mimetype: mimetype.value,
@@ -204,6 +205,7 @@ const uploadNextChunk = data => {
   progress.value = ((place.value / goal.value) * 100).toFixed(0)
   nextChunkPayload.value = {
     socket_id: socket.value.id,
+    uploader_id: props.uploaderId,
     file_id: uploader.value.file_id,
     file_ext: data.file_ext,
     place: place.value,
@@ -231,8 +233,8 @@ const handleWebsocketConnected = websocket => {
   fileReader.value.onload = (e) => {
     websocket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
   }
-  websocket.on('module|file-upload-chunk|payload', uploadNextChunk)
-  websocket.on('module|file-upload-complete|payload', fileUploadComplete)
+  websocket.on(`${props.uploaderId}|file-upload-chunk|payload`, uploadNextChunk)
+  websocket.on(`${props.uploaderId}|file-upload-complete|payload`, fileUploadComplete)
 }
 
 // ======================================================================= Hooks

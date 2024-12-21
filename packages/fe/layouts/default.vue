@@ -33,6 +33,8 @@ const { sessionId } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
+const websocketStore = useWebsocketStore()
+const { socket } = storeToRefs(websocketStore)
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
 
@@ -41,14 +43,21 @@ watch(() => page.value.data, async () => {
   /**
    * Initialize websocket connection to backend
    */
-  await $io.connect()
+  if (!socket.value?.connected) {
+    console.log('init io connect')
+    await $io.connect()
+  }
   /**
    * Add keydown/up event listeners
    */
-  keydownEventListener.value = e => { setDragndropOnShift(e, true) }
-  keyupEventListener.value = e => { setDragndropOnShift(e, false) }
-  window.addEventListener('keydown', keydownEventListener.value) 
-  window.addEventListener('keyup', keyupEventListener.value)   
+  if (!keydownEventListener.value) {
+    keydownEventListener.value = e => { setDragndropOnShift(e, true) }
+    window.addEventListener('keydown', keydownEventListener.value) 
+  }
+  if (!keyupEventListener.value) {
+    keyupEventListener.value = e => { setDragndropOnShift(e, false) }
+    window.addEventListener('keyup', keyupEventListener.value)  
+  }
 })
 
 // ===================================================================== Methods
