@@ -19,6 +19,7 @@ MC.socket.listeners.push({
   async handler (data) {
     try {
       const socket = GetSocket(data.socket_id)
+      const uploaderId = data.uploader_id
       const chunk = data.chunk
       const fileId = data.file_id
       const fileExt = data.file_ext
@@ -31,10 +32,10 @@ MC.socket.listeners.push({
         upload.upload_status = 1
         await upload.save()
         // File upload complete
-        return socket.emit('module|file-upload-complete|payload')
+        return socket.emit(`${uploaderId}|file-upload-complete|payload`)
       }
       // Emit db entry _id, chunksize and an incremented chunk place of 0
-      socket.emit('module|file-upload-chunk|payload', {
+      socket.emit(`${uploaderId}|file-upload-chunk|payload`, {
         file_id: fileId,
         file_ext: fileExt,
         chunksize: MC.modules.uploader.chunkSize,

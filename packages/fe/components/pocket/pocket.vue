@@ -1,7 +1,7 @@
 <template>
   <div id="pocket-anchor">
     <!-- ===================================================== Pocket Toggle -->
-    <ButtonText
+    <ButtonStamp
       :active="pocketOpen"
       :stylized="buttonText"
       :class="['text-content color-cove', { active: pocketOpen }]"
@@ -12,10 +12,12 @@
       <Turbulence instance-id="pocket-turbulence-bg" />
       <DashedBorderRectangle :inherit-from="pocketRef" />
        <!-- ===================================================== Token Auth -->
-      <VerseAuth :class="['auth-modal', { open: !authenticated || tokenInputOpen }]" />
+      <VerseAuth
+        :class="['auth-modal', { open: !authenticated || tokenInputOpen || !pageExists }]"
+        @authenticate-success="handleAuthenticateSuccess" />
       <!-- ========================================================== Pocket -->
       <div
-        v-show="authenticated"
+        v-show="authenticated && pageExists"
         id="pocket"
         ref="pocketRef"
         :draggable="dragndrop"
@@ -23,7 +25,7 @@
         <!-- ------------------------------------------------------- spinner -->
         <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
-        <PocketSingleFileUploader />
+        <PocketSingleFileUploader :uploader-id="pocketUploaderId" />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
           <v-stage ref="stageRef" :config="{ width: 650, height: 400 }">
@@ -50,11 +52,12 @@
         </ButtonIcon>
         <!-- ----------------------------------------------- uploader toggle -->
         <ButtonIcon
-          :class="['uploader-toggle', { 'upload-ready': uploader.status === 'ready' }]"
-          :force-loading="uploader.status === 'initializing'"
-          :force-disabled="uploader.status === 'uploading'"
+          v-if="pageExists"
+          :class="['uploader-toggle', { 'upload-ready': uploader?.status === 'ready' }]"
+          :force-loading="uploader?.status === 'initializing'"
+          :force-disabled="uploader?.status === 'uploading'"
           :data-tooltip="uploaderToggleTooltip"
-          @clicked="pocketStore.setUploaderOpen(!uploaderOpen)">
+          @clicked="pocketStore.toggleUploaderOpen({ id: pocketUploaderId })">
           <IconPlus :data-tooltip="uploaderToggleTooltip" class="icon" />
         </ButtonIcon>
     
@@ -71,14 +74,15 @@ const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { siteData, dragndrop } = storeToRefs(generalStore)
+const verseStore = useVerseStore()
+const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
 const {
   pocket,
-  uploader,
+  uploaders,
   fullscreen,
   authenticated,
   pocketOpen,
-  uploaderOpen,
 } = storeToRefs(pocketStore)
 
 const pocketRef = ref(null)
@@ -94,21 +98,35 @@ const buttonText = [
 ]
 const tokenInputToggleTooltip = ref('')
 const uploaderToggleTooltip = ref('')
+const pocketUploaderId = 'pocket-uploader'
 
 useHandleThingieDragEvents(pocketRef, stageRef)
 
 // ==================================================================== Computed
-const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data._id).sort((a, b) => a.zIndex - b.zIndex))
+const uploader = computed(() => uploaders.value[pocketUploaderId])
+const uploaderOpen = computed(() => uploader.value?.open)
+const pageExists = computed(() => page.value.data?._id && !page.value.data.doesNotExist)
+const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data?._id).sort((a, b) => a.zIndex - b.zIndex))
 
 // ==================================================================== Watchers
 watch(uploaderOpen, (val) => {
   if (val) { tokenInputOpen.value = false }
 })
 
+// ===================================================================== Methods
+const handleAuthenticateSuccess = () => {
+  if (!pageExists.value) {
+    pocketStore.setPocketOpen(false)
+  }
+}
+
 // ======================================================================= Hooks
 onMounted(() => {
+  // Set component tooltips
   tokenInputToggleTooltip.value = siteData.value?.settings?.tooltips['token-input-toggle-button']
   uploaderToggleTooltip.value = siteData.value?.settings?.tooltips['uploader-toggle-button']
+  // Register the pocket uploader object in the pocket store
+  pocketStore.registerUploader(pocketUploaderId)
 })
 
 </script>

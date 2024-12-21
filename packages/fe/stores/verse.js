@@ -14,7 +14,7 @@ export const useVerseStore = defineStore('verse', () => {
   const page = ref({
     loading: false,
     refresh: false,
-    data: {}
+    data: null
   })
 
   const sceneData = ref({
@@ -87,6 +87,29 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method postCreatePage
+   */
+
+  const postCreatePage = async incoming => {
+    try {
+      useSetStoreData(page, { refresh: true })
+      const newPage = await useFetchAuth('/post-create-page', Object.assign({}, incoming, {
+        verse: verse.value.data.name,
+        method: 'post'
+      }))
+      useSetStoreData(page, {
+        refresh: false,
+        data: newPage
+      })
+      return newPage
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(page, { refresh: false })
+      return false
+    }
+  }
+
+  /**
    * @method updateSceneData
    */
 
@@ -122,6 +145,7 @@ export const useVerseStore = defineStore('verse', () => {
     getVerse,
     getPage,
     updatePage,
+    postCreatePage,
     updateSceneData,
     setTextEditor,
     setColorSelectorHex
