@@ -50,8 +50,6 @@
     }
   ],
   "thingieEditableParams": {
-    "image": [],
-    "sound": [],
     "shared": [
       {
         "type": "static",
@@ -76,13 +74,13 @@
         "content": "z",
         "params": [
           {
-            "directive": "bringForward",
-            "content": "Forward"
-          },
-          {
             "directive": "sendBack",
             "content": "Back",
             "closeOnSelect": true
+          },
+          {
+            "directive": "bringForward",
+            "content": "Forward"
           }
         ]
       },
@@ -92,12 +90,12 @@
         "content": "O",
         "params": [
           {
-            "directive": "increaseOpacity",
-            "content": "O+"
-          },
-          {
             "directive": "decreaseOpacity",
             "content": "O-"
+          },
+          {
+            "directive": "increaseOpacity",
+            "content": "O+"
           }
         ]
       }
