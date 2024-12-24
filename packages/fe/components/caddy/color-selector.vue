@@ -1,14 +1,14 @@
 <template>
   <div class="color-picker">
 
-    <div :class="['icon-color-picker', { expanded }]">
+    <div :class="['icon-color-picker', { selected }]">
       <IconColorPicker />
     </div>
 
     <div
       id="color-wheel"
       ref="wheel"
-      :class="['cpw_container', { expanded }]"
+      :class="['cpw_container', { selected }]"
       :style="{ width: `${width}px`, height: `${height}px` }">
         
       <div
@@ -45,7 +45,7 @@ const props = defineProps({
     required: false,
     default: '#000000'
   },
-  expanded: {
+  selected: {
     type: Boolean,
     required: false,
     default: false
@@ -403,7 +403,7 @@ const widgetCoords = e => ({
 // })
 
 const mousedown = e => {
-  if (props.expanded) {
+  if (props.selected) {
     // Capture mouse
     if (!dragging.value) {
       document.addEventListener('mousemove', mousemove)
@@ -554,7 +554,7 @@ const RGBToHSL = val => {
   border-radius: 50%;
   visibility: hidden;
   opacity: 0;
-  &.expanded {
+  &.selected {
     transform: translate(-50%, -50%) scale(1);
     visibility: visible;
     opacity: 1;

@@ -6,7 +6,7 @@
     :container-element="container"
     :class="['caddy-wrapper', { active: thingie }]">
 
-    <div id="caddy" class="caddy">
+    <div id="caddy" :class="['caddy', { expanded }, `selected__${selected}`]">
 
       <!-- <div
         v-for="n in toolNum"
@@ -27,7 +27,7 @@
         ref="handle"
         class="caddy-tool handle"
         :style="getToolTransform('handle')"
-        @click="setExpanded('handle')">
+        @click="setSelected('handle')">
         <IconHand />
       </div>
 
@@ -61,25 +61,17 @@
 
       <!-- ============================================================ Text -->
       <template v-if="type === 'text'">
-        <CaddyFontFamilySelector
-          :expanded="expanded === 'font-family-selector'"
+        <CaddyFontEditor
+          :selected="selected === 'font-editor'"
           class="caddy-tool z-index-2"
-          :style="getToolTransform('font-family-selector')"
-          @click.native="setExpanded('font-family-selector')" />
-        <CaddyFontSizeSelector
-          :expanded="expanded === 'font-size-selector'"
-          class="caddy-tool z-index-2"
-          :style="getToolTransform('font-size-selector')"
-          @click.native="setExpanded('font-size-selector')" />
-        <CaddyFontStyleSelector
-          class="caddy-tool z-index-2"
-          :style="getToolTransform('font-style-selector')" />
+          :style="getToolTransform('font-editor')"
+          @click.native="setSelected('font-editor')" />
         <CaddyColorSelector
           :init-color="thingieColor || '#000000'"
-          :expanded="expanded === 'color-selector'"
+          :selected="selected === 'color-selector'"
           class="caddy-tool z-index-1"
           :style="getToolTransform('color-selector')"
-          @click.native="setExpanded('color-selector')"
+          @click.native="setSelected('color-selector')"
           @color-change="handleColorSelection" />
       </template>
 
@@ -123,16 +115,14 @@ const verseStore = useVerseStore()
 const { page, textEditor } = storeToRefs(verseStore)
 
 const handle = ref(null)
-const expanded = ref(0)
+const selected = ref('handle')
 const positions = ref({
   'handle': 0,
   'rotation': 1,
   'z-index': 2,
   'opacity': 3,
-  'font-family-selector': 4,
-  'font-size-selector': 5,
-  'font-style-selector': 6,
-  'color-selector': 7,
+  'font-editor': 4,
+  'color-selector': 5,
   'clip-toggle': 4
 })
 
@@ -141,12 +131,13 @@ const thingie = computed(() => thingies.value.data.find(item => item._id === edi
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data?._id))
 const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
+const expanded = computed(() => ['color-selector', 'font-editor'].includes(selected.value))
 const type = computed(() => thingie.value?.thingie_type)
 const shared = computed(() => editableParams.value?.shared || [])
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const toolNum = computed(() => {
-  const num = type.value === 'text' ? 4 : type.value === 'image' ? 1 : 1
+  const num = type.value === 'text' ? 2 : type.value === 'image' ? 1 : 1
   return num + shared.value.length + 1 // + 1 is for the handle
 })
 
@@ -170,13 +161,13 @@ const handleShared = (directive, closeOnSelect) => {
 }
 
 /**
- * @method setExpanded
+ * @method setSelected
  */
 
-const setExpanded = id => {
-  positions.value[expanded.value] = positions.value[id]
+const setSelected = id => {
+  positions.value[selected.value] = positions.value[id]
   positions.value[id] = 0
-  expanded.value = id
+  selected.value = id
 }
 
 /**
@@ -263,51 +254,46 @@ const handleToggleClip = () => {
  */
 
 const getToolTransform = id => {
-  if (id === expanded.value) {
-    return {
-      '--tool-offset-x': '0px',
-      '--tool-offset-y': '0px'
-    }
+  if (id === selected.value) {
+    return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
   const index = positions.value[id]
+  const distance = selected.value === 'font-editor' ? 110 : expanded.value ? 90 : 60
   const coords = {
-    x: Math.cos((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * 60,
-    y: Math.sin((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * 60
+    x: Math.cos((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * distance,
+    y: Math.sin((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * distance
   }
-  return {
-    '--tool-offset-x': coords.x + 'px',
-    '--tool-offset-y': coords.y + 'px'
-  }
+  return { '--tool-offset-x': coords.x + 'px', '--tool-offset-y': coords.y + 'px' }
 }
 
-/**
- * @method getShadowTransform
- */
+// /**
+//  * @method getShadowTransform
+//  */
 
-const getShadowTransform = (index, dir) => {
-  if (index === expanded.value) {
-    return {
-      '--shadow-offset-x': '0px',
-      '--shadow-offset-y': '0px',
-      '--shadow-rotate': '0rad'
-    }
-  }
-  let phase = 0
-  switch (toolNum.value) {
-    case 8 : phase = 0.5; break
-    case 4 : phase = 0.28; break
-  }
-  const coords = {
-    x: Math.cos((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52,
-    y: Math.sin((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52
-  }
-  const rotateOffset = dir === -1 ? Math.PI / 2 : -Math.PI / 4
-  return {
-    '--shadow-offset-x': coords.x + 'px',
-    '--shadow-offset-y': coords.y + 'px',
-    '--shadow-rotate': (index * 2 * Math.PI) / (toolNum.value - 1) - rotateOffset + 'rad'
-  }
-}
+// const getShadowTransform = (index, dir) => {
+//   if (index === selected.value) {
+//     return {
+//       '--shadow-offset-x': '0px',
+//       '--shadow-offset-y': '0px',
+//       '--shadow-rotate': '0rad'
+//     }
+//   }
+//   let phase = 0
+//   switch (toolNum.value) {
+//     case 8 : phase = 0.5; break
+//     case 4 : phase = 0.28; break
+//   }
+//   const coords = {
+//     x: Math.cos((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52,
+//     y: Math.sin((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52
+//   }
+//   const rotateOffset = dir === -1 ? Math.PI / 2 : -Math.PI / 4
+//   return {
+//     '--shadow-offset-x': coords.x + 'px',
+//     '--shadow-offset-y': coords.y + 'px',
+//     '--shadow-rotate': (index * 2 * Math.PI) / (toolNum.value - 1) - rotateOffset + 'rad'
+//   }
+// }
 
 /**
  * @method update
@@ -353,13 +339,27 @@ const update = useThrottleFn(data => {
     width: torem(90);
     height: torem(90);
     transform: translate(-50%, -50%);
+    transition: 200ms ease;
     background-color: $woodsmoke;
     border-radius: 50%;
+  }
+  &.expanded {
+    &:before {
+      width: torem(142);
+      height: torem(142);
+    }
+  }
+  &.selected__font-editor {
+    &:before {
+      width: torem(182);
+      height: torem(182);
+    }
   }
 }
 
 .handle {
   display: flex;
+  background-color: transparent !important;
   z-index: 100000 !important;
   &:hover {
     cursor: grab;

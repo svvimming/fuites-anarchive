@@ -10,12 +10,12 @@
   "fonts": [
     {
       "class": "nanum",
-      "display": "Nanum Myeongjo",
+      "display": "Nanum",
       "fontFaceDeclaration": "\"Nanum Myeongjo\", serif"
     },
     {
       "class": "courier",
-      "display": "Courier Prime",
+      "display": "Courier",
       "fontFaceDeclaration": "\"Courier Prime\", monospace"
     },
     {
@@ -25,7 +25,7 @@
     },
     {
       "class": "source-code",
-      "display": "Source Code Pro",
+      "display": "Source Code",
       "fontFaceDeclaration": "\"Source Code Pro\", monospace"
     },
     {
