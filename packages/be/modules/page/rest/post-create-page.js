@@ -49,6 +49,7 @@ MC.app.post('/post-create-page', async (req, res) => {
       SendData(res, 400, 'An error occured while generating a new page name.', false)
       return
     }
+    // Create the new page
     const created = await MC.model.Page.create({
       overflow_page: overflowPage || '',
       initiator_pocket_ref: initiatorPocket,
@@ -56,9 +57,13 @@ MC.app.post('/post-create-page', async (req, res) => {
       verse,
       name
     })
+    // Add the new page ref to its Verse's document
+    await MC.model.Verse.findOneAndUpdate({ name: created.verse }, { $push: { page_refs: created._id } })
+    // If created from a tip, set the tipped page to leaking
     if (created.overflow_page) {
       await MC.model.Page.findOneAndUpdate({ name: created.overflow_page }, { state: 'leaking' }, { new: true })
     }
+    // Grab a thingie from the compost and add it to the new page
     const compostThingies = await MC.model.Thingie.find({ location: 'compost' }).select('_id at')
     if (compostThingies.length) {
       const thingieToMove = compostThingies[Math.floor(Math.random() * compostThingies.length)]

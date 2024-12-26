@@ -3,8 +3,6 @@
 export const usePocketStore = defineStore('pocket', () => {
   // ==================================================================== import
   const toasterStore = useToasterStore()
-  const verseStore = useVerseStore()
-  const { verse } = storeToRefs(verseStore)
 
   // ===================================================================== state
   const pocket = ref({
@@ -87,7 +85,7 @@ export const usePocketStore = defineStore('pocket', () => {
 
   const getAuthPocket = async token => {
     try {
-      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token, verse: verse.value.data?._id })
+      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token })
       toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
       useSetStoreData(pocket, {
         loading: false,

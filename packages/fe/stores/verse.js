@@ -2,7 +2,7 @@
 // -----------------------------------------------------------------------------
 export const useVerseStore = defineStore('verse', () => {
   // ==================================================================== import
-  const generalStore = useGeneralStore()
+  const alertStore = useZeroAlertStore()
 
   // ===================================================================== state
   const verse = ref({
@@ -64,7 +64,7 @@ export const useVerseStore = defineStore('verse', () => {
       })
       // If no page is found, open the 'new page' modal to create a new page from this route
       if (!response) {
-        generalStore.setModal({ active: true, action: 'new-page', data: null })
+        alertStore.openAlert('page-creator-alert')
       }
     } catch (e) {
       useHandleFetchError(e)

@@ -35,7 +35,7 @@ export const useCollectorStore = defineStore('collector', () => {
     try {
       useSetStoreData(thingies, { loading: true })
       const response = await useFetchAuth('/get-thingies', {
-        location: page.value.data.name,
+        location: page.value.data?.name,
         verse: verse.value.data.name,
         pocketId: pocket.value.data?._id,
         method: 'get'

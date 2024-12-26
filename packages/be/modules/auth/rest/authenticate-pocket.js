@@ -10,16 +10,16 @@ const MC = require('@Root/config')
 // -----------------------------------------------------------------------------
 MC.app.get('/authenticate-pocket', async (req, res) => {
   try {
-    const verse = req.query.verse
     const token = req.query.token
     const tokensString = process.env.REFACTOR_AUTH_TOKENS
     const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
       const pocket = await MC.model.Pocket
-        .findOne({ verses: { $in: verse }, token })
+        .findOne({ token })
         .populate({
           path: 'verses',
-          select: 'name'
+          select: 'name',
+          populate: { path: 'page_refs', select: 'name' }
         })
       SendData(res, 200, 'Pocket retrieved successfully', pocket)
     } else {

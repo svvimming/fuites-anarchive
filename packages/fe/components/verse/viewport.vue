@@ -1,9 +1,14 @@
 <template>
   <div ref="viewport" class="verse-viewport">
-    <!-- ------------------------------------------------------------- Modal -->
-    <VerseModal />
-    <!-- --------------------------------------------------------- Help Menu -->
-    <!-- <VerseHelpMenu /> -->
+    <!-- --------------------------------------------------------- To Verses -->
+    <ButtonIcon
+      tag="nuxt-link"
+      to="/verses"
+      class="to-multiverse">
+      <IconCompass class="icon"/>
+    </ButtonIcon>
+    <!-- ------------------------------------------------------ Page Creator -->
+    <VersePageCreator />
     <!-- ----------------------------------------------------- Landing Sites -->
     <VerseLandingSites />
     <!-- ------------------------------------------------------------ Pocket -->
@@ -37,6 +42,25 @@ const inCompost = computed(() => route.params.page === 'compost')
 .verse-viewport {
   width: 100%;
   height: 100%;
+}
+
+:deep(.to-multiverse) {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: torem(25);
+  left: torem(25);
+  z-index: 2;
+  --two-tone-a: #{$blueHaze};
+  --two-tone-b: white;
+  .icon {
+    width: torem(20);
+    height: torem(20);
+    path {
+      stroke: $blueHaze;
+    }
+  }
 }
 
 :deep(#landing-site-anchor) {

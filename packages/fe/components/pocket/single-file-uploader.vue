@@ -72,7 +72,7 @@ const props = defineProps({
 // ======================================================================== Data
 const route = useRoute()
 const bicho = ref([])
-const generalStore = useGeneralStore()
+const alertStore = useZeroAlertStore()
 const collectorStore = useCollectorStore()
 const verseStore = useVerseStore()
 const pocketStore = usePocketStore()
@@ -136,7 +136,7 @@ const initCreatePage = async firstThingie => {
     name: route.params.page
   })
   if (newPage) {
-    generalStore.setModal({ active: false, action: '', data: null })
+    alertStore.closeAlert('page-creator-alert')
     await collectorStore.getThingies()
   }
 }

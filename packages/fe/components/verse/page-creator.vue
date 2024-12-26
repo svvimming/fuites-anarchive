@@ -1,9 +1,10 @@
 <template>
-  <div id="modal" :class="[{ open: modal.active }]">
+  <ZeroAlert
+    mode="modal"
+    alert-id="page-creator-alert"
+    :class="['page-creator-alert']">
     <!-- ================================================== Mode: [New Page] -->
-    <div
-      v-if="modal.action === 'new-page'"
-      class="message new-page-modal">
+    <div class="message new-page-modal">
       <!-- ------------------------------------------------------------ text -->
       <span class="title text">{{ newPageTitle }}</span>
       <span class="prompt text">{{ newPageMessage }}</span>
@@ -24,14 +25,16 @@
 
     </div>
 
-  </div>
+  </ZeroAlert>
 </template>
 
 <script setup>
+import ZeroAlert from '../../modules/alert/components/zero-alert.vue'
+
 // ======================================================================== Data
 const route = useRoute()
-const generalStore = useGeneralStore()
-const { modal } = storeToRefs(generalStore)
+// const generalStore = useGeneralStore()
+// const { modal } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { uploaders, authenticated } = storeToRefs(pocketStore)
 const modalUploaderId = 'new-page-modal-uploader'
@@ -49,34 +52,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-#modal {
-  position: absolute;
-  visibility: hidden;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: 300ms ease;
-  z-index: 2;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba($woodsmoke, 0.8);
-  }
-  &.open {
-    visibility: visible;
-    opacity: 1;
-    .message {
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-}
-
 .message {
   position: absolute;
   left: 50%;
