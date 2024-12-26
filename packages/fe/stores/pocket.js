@@ -22,10 +22,9 @@ export const usePocketStore = defineStore('pocket', () => {
   const fullscreen = ref(false)
   
   // ================================================================== Computed
-  const thingies = computed(() => pocket.value?.data.thingies || [])
   const token = computed(() => pocket.value?.data.token)
   const authenticated = computed(() => pocket.value.authenticated)
-
+  
   // =================================================================== actions
 
   /**
@@ -88,7 +87,7 @@ export const usePocketStore = defineStore('pocket', () => {
 
   const getAuthPocket = async token => {
     try {
-      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token, verse: verse.value.data?.name })
+      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token, verse: verse.value.data?._id })
       toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
       useSetStoreData(pocket, {
         loading: false,
@@ -112,40 +111,6 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
-  /**
-   * @method postUpdatePocket
-   */
-
-  // const postUpdatePocket = async incoming => {
-  //   try {
-  //     const thingie = incoming.thingie
-  //     const action = incoming.action
-  //     if (action && token.value === thingie.last_update_token) {
-  //       let updated = []
-  //       // Add a thingie to the pocket
-  //       if (action === 'add') {
-  //         if (!thingies.value.includes(thingie._id)) {
-  //           updated = [thingie._id].concat(thingies.value)
-  //         } else {
-  //           throw 'this thingie is already in the pocket!'
-  //         }
-  //       }
-  //       // Remove a thingie from the pocket
-  //       if (action === 'remove') {
-  //         if (thingies.value.includes(thingie._id)) {
-  //           updated = thingies.value.filter(id => id !== thingie._id)
-  //         } else {
-  //           throw 'tried to remove a thingie not in the pocket!'
-  //         }
-  //       }
-  //       const response = await useFetchAuth('/post-update-pocket', { token: token.value, thingies: updated  })
-  //       pocket.value = response
-  //     }
-  //   } catch (e) {
-  //     useHandleFetchError(e, 'use-pocket-store:post-update-pocket')
-  //   }
-  // }
-
   // ==================================================================== return
   return {
     // ----- state
@@ -155,7 +120,6 @@ export const usePocketStore = defineStore('pocket', () => {
     fullscreen,
     // ----- computed
     token,
-    thingies,
     authenticated,
     // ----- actions
     setPocketOpen,

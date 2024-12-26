@@ -28,7 +28,6 @@
 // ======================================================================== Data
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
-const collectorStore = useCollectorStore()
 const value = ref('')
 
 const emit = defineEmits(['authenticate-success'])
@@ -39,7 +38,6 @@ const submit = async () => {
   const joined = sanitized.join('-')
   await pocketStore.getAuthPocket(joined)
   if (pocket.value.authenticated) {
-    collectorStore.getThingies()
     emit('authenticate-success')
   }
   value.value = ''

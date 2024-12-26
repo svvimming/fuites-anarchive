@@ -1,10 +1,5 @@
 <template>
   <div id="modal" :class="[{ open: modal.active }]">
-    
-    <!-- <VerseAuth
-      v-if="modal.action === 'auth'"
-      @close-modal="generalStore.closeModal()" /> -->
-
     <!-- ================================================== Mode: [New Page] -->
     <div
       v-if="modal.action === 'new-page'"

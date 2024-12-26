@@ -15,7 +15,12 @@ MC.app.get('/authenticate-pocket', async (req, res) => {
     const tokensString = process.env.REFACTOR_AUTH_TOKENS
     const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
-      const pocket = await MC.model.Pocket.findOne({ verses: { $in: verse }, token }).exec()
+      const pocket = await MC.model.Pocket
+        .findOne({ verses: { $in: verse }, token })
+        .populate({
+          path: 'verses',
+          select: 'name'
+        })
       SendData(res, 200, 'Pocket retrieved successfully', pocket)
     } else {
       SendData(res, 200, 'oops, try another token', false)
