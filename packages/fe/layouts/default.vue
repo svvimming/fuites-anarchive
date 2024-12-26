@@ -44,7 +44,6 @@ watch(() => page.value.data, async () => {
    * Initialize websocket connection to backend
    */
   if (!socket.value?.connected) {
-    console.log('init io connect')
     await $io.connect()
   }
   /**

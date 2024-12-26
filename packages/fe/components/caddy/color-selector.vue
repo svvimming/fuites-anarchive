@@ -1,32 +1,39 @@
 <template>
-  <div
-    id="color-wheel"
-    ref="wheel"
-    :class="['cpw_container', { expanded }]"
-    :style="{ width: `${width}px`, height: `${height}px` }">
-      
-    <div
-      ref="farbtastic-solid"
-      class="farbtastic-solid"
-      :style="solidStyle">
+  <div class="color-picker">
+
+    <div :class="['icon-color-picker', { selected }]">
+      <IconColorPicker />
     </div>
 
-      <canvas
-        ref="mask"
-        class="farbtastic-mask"
-        :style="{width, height}"
-        :width="width"
-        :height="height">
-      </canvas>
+    <div
+      id="color-wheel"
+      ref="wheel"
+      :class="['cpw_container', { selected }]"
+      :style="{ width: `${width}px`, height: `${height}px` }">
+        
+      <div
+        ref="farbtastic-solid"
+        class="farbtastic-solid"
+        :style="solidStyle">
+      </div>
 
-      <canvas
-        ref="overlay"
-        :width="width"
-        :height="height"
-        class="farbtastic-overlay"
-        :style="{ width, height }"
-        @mousedown="mousedown" />
+        <canvas
+          ref="mask"
+          class="farbtastic-mask"
+          :style="{width, height}"
+          :width="width"
+          :height="height">
+        </canvas>
 
+        <canvas
+          ref="overlay"
+          :width="width"
+          :height="height"
+          class="farbtastic-overlay"
+          :style="{ width, height }"
+          @mousedown="mousedown" />
+
+    </div>
   </div>
 </template>
 
@@ -38,7 +45,7 @@ const props = defineProps({
     required: false,
     default: '#000000'
   },
-  expanded: {
+  selected: {
     type: Boolean,
     required: false,
     default: false
@@ -56,8 +63,8 @@ const hsl = ref('')
 const radius = ref(0)
 const square = ref(0)
 const mid = ref(0)
-const width = ref(160)
-const height = ref(160)
+const width = ref(104)
+const height = ref(104)
 const markerSize = ref(0)
 const invert = ref(0)
 
@@ -396,7 +403,7 @@ const widgetCoords = e => ({
 // })
 
 const mousedown = e => {
-  if (props.expanded) {
+  if (props.selected) {
     // Capture mouse
     if (!dragging.value) {
       document.addEventListener('mousemove', mousemove)
@@ -525,20 +532,32 @@ const RGBToHSL = val => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
+.icon-color-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
 .cpw_container {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   -webkit-touch-callout: none; /* prevent callout to copy image, etc when tap to hold */
   text-size-adjust:none; /* prevent webkit from resizing text to fit */
   tap-highlight-color:rgba(0,0,0,0); /* prevent tap highlight color*/
   tap-highlight-color: transparent; /* prevent tap highlight color*/
   user-select:none;
-  transform-origin: top left;
-  transform: scale(0.25);
-  transition: transform 300ms ease;
-  // background-color: white;
+  transform: translate(-50%, -50%) scale(0.25);
+  transition: 300ms ease;
   border-radius: 50%;
-  &.expanded {
-    transform: scale(1);
+  visibility: hidden;
+  opacity: 0;
+  &.selected {
+    transform: translate(-50%, -50%) scale(1);
+    visibility: visible;
+    opacity: 1;
   }
 }
 
