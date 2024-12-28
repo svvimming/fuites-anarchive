@@ -109,6 +109,33 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method postCreateVerse
+   */
+
+  const postCreateVerse = async incoming => {
+    try {
+      useSetStoreData(pocket, { refresh: true })
+      const response = await useFetchAuth('/post-create-verse', Object.assign({}, {
+        verseName: incoming.verseName,
+        firstPageName: incoming.firstPageName,
+        pocketId: pocket.value.data._id,
+        method: 'post'
+      }))
+      useSetStoreData(pocket, {
+        loading: false,
+        refresh: false,
+        authenticated: true,
+        data: response
+      })
+      return pocket
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(pocket, { refresh: false })
+      return false
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -125,7 +152,8 @@ export const usePocketStore = defineStore('pocket', () => {
     toggleUploaderOpen,
     setUploader,
     togglePocketFullscreen,
-    getAuthPocket
+    getAuthPocket,
+    postCreateVerse
   }
 })
 

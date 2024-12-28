@@ -20,7 +20,8 @@ const VerseSchema = new Schema({
         required: false
       }
     ],
-    required: true
+    required: true,
+    validate: arr => Array.isArray(arr) && arr.length > 0
   },
   settings: {
     tunneler: {

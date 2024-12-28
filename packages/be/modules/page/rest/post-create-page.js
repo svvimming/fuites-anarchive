@@ -40,7 +40,7 @@ MC.app.post('/post-create-page', async (req, res) => {
     const creatorThingie = body.creatorThingie
     const name = body.name || useCreatePageName(creatorThingie.consistencies)
     const overflowPage = creatorThingie.location_history[1]?.location
-    const pageNameAlreadyExists = await MC.model.Page.findOne({ name })
+    const pageNameAlreadyExists = await MC.model.Page.findOne({ verse, name })
     if (name === 'pocket') {
       SendData(res, 400, 'Error: cannot name a page \'pocket\'!', false)
       return

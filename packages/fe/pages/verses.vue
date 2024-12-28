@@ -1,8 +1,10 @@
 <template>
   <div class="verses-overview">
-
+    <!-- ======================================================== Token Auth -->
     <OverviewAuthAlert />
 
+    <OverviewCreateVerseAlert />
+    <!-- ========================================================= Main page -->
     <div class="grid">
       <div class="col-5" data-push-left="off-2">
 
@@ -10,6 +12,7 @@
         <span class="desc text">The verses listed below are accessible to your token:</span>
         
         <div class="verse-list">
+          <!-- ------------------------------------------------------ Verses -->
           <ButtonBasic
             v-for="verse in verses"
             :key="verse.name"
@@ -20,11 +23,14 @@
             <span>{{ verse.name }}</span>
             <!-- <IconGoto /> -->
           </ButtonBasic>
+          <!-- -------------------------------------------- Create new Verse -->
           <ButtonBasic
-            class="list-item new-verse-button">
+            class="list-item new-verse-button"
+            @clicked="handleCreateNewVerseClick">
             <span>Create new verse</span>
             <IconPlus class="icon" />
           </ButtonBasic>
+
         </div>
       </div>
     </div>
@@ -39,6 +45,7 @@ definePageMeta({ layout: 'verses' })
 // ======================================================================== Data
 const route = useRoute()
 const generalStore = useGeneralStore()
+const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 
@@ -59,6 +66,9 @@ watch(data, async () => {
   await generalStore.setSiteData({ key: 'settings', value: data.value })
 }, { immediate: true })
 
+const handleCreateNewVerseClick = () => {
+  alertStore.openAlert('overview-create-verse-alert')
+}
 </script>
 
 <style lang="scss" scoped>
