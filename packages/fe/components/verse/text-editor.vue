@@ -104,11 +104,34 @@ const handleEditorKeydown = e => {
  */
 
 const handleSubmit = update => {
-  collectorStore.initThingieUpdate(update)
+  console.log('handle submit', update)
+  if (update._id === 'new-text-thingie') {
+    console.log('init create text')
+    initCreateTextThingie(update)
+  } else {
+    console.log('update text')
+    collectorStore.initThingieUpdate(update)
+  }
   verseStore.setColorSelectorHex('')
   id.value = ''
   rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
   textEditor.value.commands.setContent('', false, { preserveWhitespace: 'full' })
+}
+
+/**
+ * @method initCreateTextThingie
+ */
+
+const initCreateTextThingie = async update => {
+  const newTextThingie = thingies.value.data.find(item => item._id === 'new-text-thingie')
+  const data = Object.assign({}, newTextThingie, update)
+  delete data._id
+  if (!thingies.value.refresh && newTextThingie) {
+    // Create the new text thingie
+    await collectorStore.postCreateThingie(data)
+    // Remove the template from the thingies array
+    collectorStore.removeNewTextThingie()
+  }
 }
 
 // ======================================================================= Hooks

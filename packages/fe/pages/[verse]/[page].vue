@@ -11,7 +11,8 @@
           ref="stageRef"
           :config="canvasConfig"
           @wheel="handleMouseWheel($event)"
-          @click="handleClick($event)">
+          @click="handleClick($event)"
+          @dblclick="handleDoubleClick($event)">
           <v-layer ref="layerRef">
 
             <Thingie
@@ -45,6 +46,8 @@ const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { dragndrop, activeModes } = storeToRefs(generalStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const { data } = await useAsyncData(route.fullPath, async () => {
   const content = await queryContent({
@@ -58,7 +61,7 @@ const { data } = await useAsyncData(route.fullPath, async () => {
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)
-const canvasConfig = ref({})
+const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
 const { initPageshot } = usePageshotBot(stageRef)
@@ -100,6 +103,17 @@ const handleClick = e => {
     } else {
       collectorStore.setEditing(false)
     }
+  }
+}
+
+/**
+ * @method handleDoubleClick
+ */
+
+const handleDoubleClick = e => {
+  const target = e.target
+  if (target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && authenticated.value) {
+    collectorStore.addNewTextThingie(e)
   }
 }
 
@@ -173,7 +187,7 @@ const scaleScene = (dir, noScale = false) => {
  */
 
 const setCanvasDimensions = () => {
-  canvasConfig.value = { width: window.innerWidth, height: window.innerHeight }
+  Object.assign(canvasConfig.value, { width: window.innerWidth, height: window.innerHeight })
 }
 
 // ======================================================================= Hooks

@@ -130,6 +130,49 @@ export const useCollectorStore = defineStore('collector', () => {
     editing.value = incoming
   }
 
+  /**
+   * @method addNewTextThingie
+   */
+
+  const addNewTextThingie = e => {
+    const newTextThingie = thingies.value.data.find(item => item._id === 'new-text-thingie')
+    if (!newTextThingie) {
+      const newTextThingieId = 'new-text-thingie'
+      thingies.value.data.push({
+        _id: newTextThingieId,
+        verse: verse.value.data.name,
+        location: page.value.data.name,
+        location_history: [],
+        at: {
+          x: 200,
+          y: 200,
+          width: 80,
+          height: 80,
+          rotation: 0
+        },
+        zIndex: 1,
+        thingie_type: 'text',
+        text: '',
+        colors: []
+      })
+      setEditing(newTextThingieId)
+    } else {
+      /** @TODO if new text thingie is found update with event coords */
+    }
+  }
+
+  /**
+   * @method removeNewTextThingie
+   */
+
+  const removeNewTextThingie = () => {
+    useSetStoreData(thingies, {
+      loading: false,
+      refresh: false,
+      data: thingies.value.data.filter(item => item._id !== 'new-text-thingie')
+    })
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -140,7 +183,9 @@ export const useCollectorStore = defineStore('collector', () => {
     postCreateThingie,
     initThingieUpdate,
     updateThingie,
-    setEditing
+    setEditing,
+    addNewTextThingie,
+    removeNewTextThingie
   }
 })
 
