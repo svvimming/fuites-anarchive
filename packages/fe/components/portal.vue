@@ -86,7 +86,7 @@ const portalConfig = computed(() => ({
   fillRadialGradientStartRadius: 0,
   fillRadialGradientEndPoint: { x: 0, y: 0 },
   fillRadialGradientEndRadius: radius,
-  fillRadialGradientColorStops: [0.15, colors.value[0], 0.45, colors.value[1], 1.0, 'rgba(255, 255, 255, 0)']
+  fillRadialGradientColorStops: [0.15, colors.value[0] || '#6c6575', 0.45, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)']
 }))
 
 // ==================================================================== Watchers
@@ -96,7 +96,7 @@ watch(hovering, (val) => {
   const pulse = pulseRef.value.getNode()
   const prtl = portalRef.value.getNode()
   const scale = val ? 2.5 : 1
-  const grad = val ? [0.075, colors.value[0], 0.33, colors.value[1], 1.0, 'rgba(255, 255, 255, 0)'] : [0.15, colors.value[0], 0.45, colors.value[1], 1.0, 'rgba(255, 255, 255, 0)']
+  const grad = val ? [0.075, colors.value[0] || '#6c6575', 0.33, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)'] : [0.15, colors.value[0] || '#6c6575', 0.45, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)']
   group.to({
     scaleX: scale,
     scaleY: scale,

@@ -30,7 +30,7 @@ import { useDebounceFn } from '@vueuse/core'
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const { page, portalCreatorOpen } = storeToRefs(verseStore)
+const { page, sceneData, portalCreatorOpen } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 
@@ -39,7 +39,6 @@ const to = ref('')
 const position = ref({ x: 0, y: 0 })
 const checking = ref(false)
 const pageExists = ref(false)
-const count = ref(0)
 
 // ==================================================================== Watchers
 watch(portalCreatorOpen, (val) => {
@@ -66,7 +65,10 @@ const submit = async () => {
       page_ref: page.value.data._id
     }, {
       location: useSlugify(to.value)
-    }].map(vertex => Object.assign({}, vertex, { at: position.value }))
+    }].map(vertex => Object.assign({}, vertex, { at: {
+      x: (position.value.x / sceneData.value.scale) - sceneData.value.x,
+      y: (position.value.y / sceneData.value.scale) - sceneData.value.y
+    } }))
     const closest = getClosestThingie()
     await verseStore.postCreatePortal({ thingieRef: closest._id, vertices })
     verseStore.setPortalCreatorOpen(false)
