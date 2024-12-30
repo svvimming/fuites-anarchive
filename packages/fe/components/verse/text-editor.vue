@@ -17,7 +17,7 @@
         <EditorContent
           v-if="textEditor"
           :editor="textEditor"
-          class="content-editor"
+          class="content-editor thingie-rich-text"
           @keydown="handleEditorKeydown" />
 
       </div>
@@ -72,10 +72,15 @@ const highlight = computed(() => colors.value[colors.value.length - 1] || '#6c65
 watch(editing, (newId, oldId) => {
   if (oldId && oldId === id.value) {
     const pushColor = !!colorSelectorHex.value && colors.value[colors.value.length - 1] !== colorSelectorHex.value
+    const text = textEditor.value.getHTML()
+    if (text === '<p></p>') {
+      resetEditor()
+      return
+    }
     handleSubmit({
       _id: id.value,
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
-      text: textEditor.value.getHTML().replaceAll('<p></p>', '<p><br></p>'),
+      text: text.replaceAll('<p></p>', '<p><br></p>'),
       ...(pushColor && {
         colors: colors.value.concat([colorSelectorHex.value])
       })
@@ -87,6 +92,9 @@ watch(editing, (newId, oldId) => {
     id.value = editingThingie._id
     const content = editingThingie.text.replaceAll('<p><br></p>', '<p></p>')
     textEditor.value.commands.setContent(content, false, { preserveWhitespace: 'full' })
+    setTimeout(() => {
+      textEditor.value.commands.focus()
+    }, 100)
   }
 })
 
@@ -103,12 +111,42 @@ const handleEditorKeydown = e => {
  * @method handleSubmit
  */
 
-const handleSubmit = update => {
-  collectorStore.initThingieUpdate(update)
+const handleSubmit = async update => {
+  if (update._id === 'new-text-thingie') {
+    await initCreateTextThingie(update)
+  } else {
+    collectorStore.initThingieUpdate(update)
+  }
+  resetEditor()
+}
+
+/**
+ * @method initCreateTextThingie
+ */
+
+const initCreateTextThingie = async update => {
+  const newTextThingie = thingies.value.data.find(item => item._id === 'new-text-thingie')
+  const data = Object.assign({}, newTextThingie, update)
+  delete data._id
+  if (!thingies.value.refresh && newTextThingie) {
+    // Create the new text thingie
+    await collectorStore.postCreateThingie(data)
+  }
+}
+
+/**
+ * @method resetEditor
+ */
+
+const resetEditor = () => {
   verseStore.setColorSelectorHex('')
   id.value = ''
   rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
   textEditor.value.commands.setContent('', false, { preserveWhitespace: 'full' })
+  // Remove the template from the thingies array
+  if (thingies.value.data.find(item => item._id === 'new-text-thingie')) {
+    collectorStore.removeNewTextThingie()
+  }
 }
 
 // ======================================================================= Hooks
@@ -194,6 +232,9 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   ::-moz-selection { background: rgba($woodsmoke, 0.05); }
   ::selection { background: rgba($woodsmoke, 0.05); }
+  // p, div, li {
+  //   line-height: 1;
+  // }
 }
 
 // :deep(.ProseMirror-trailingBreak) {

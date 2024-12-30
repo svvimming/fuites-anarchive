@@ -1,5 +1,9 @@
 <template>
   <div class="auth-container">
+    <!-- ============================================================ Prompt -->
+    <span class="title text">Add a token</span>
+    <span class="prompt text">{{ message }}</span>
+    <!-- ============================================================ Input -->
     <div class="input-container">
 
       <div :class="['input-wrapper', { active: value }]">
@@ -25,13 +29,19 @@
 </template>
 
 <script setup>
+// ======================================================================= Setup
+defineProps({
+  message: {
+    type: String,
+    required: true
+  }
+})
+const emit = defineEmits(['authenticate-success'])
+
 // ======================================================================== Data
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
-const collectorStore = useCollectorStore()
 const value = ref('')
-
-const emit = defineEmits(['authenticate-success'])
 
 // ===================================================================== Methods
 const submit = async () => {
@@ -39,7 +49,6 @@ const submit = async () => {
   const joined = sanitized.join('-')
   await pocketStore.getAuthPocket(joined)
   if (pocket.value.authenticated) {
-    collectorStore.getThingies()
     emit('authenticate-success')
   }
   value.value = ''
@@ -58,25 +67,41 @@ const submit = async () => {
 }
 
 .auth-container {
-  &.touchmode {
-    padding-left: 0.5rem;
-    .input-container {
-      flex-direction: row;
-    }
-    .input-wrapper {
-      margin: 0;
-    }
-    .input {
-      width: 8rem;
-      font-size: 1.25rem;
-    }
-    .submit {
-      position: relative;
-      margin: 0 0.5rem;
-      padding: 0 0.5rem;
-      font-size: 1rem;
-    }
+  padding: torem(16);
+  border-radius: torem(20);
+  background-color: $athensGray;
+  @include modalShadow;
+  .title {
+    font-weight: 600;
   }
+  .title,
+  .prompt {
+    margin-bottom: torem(10);
+  }
+  .text {
+    display: block;
+    font-size: torem(12);
+    line-height: 1.5;
+  }
+  // &.touchmode {
+  //   padding-left: 0.5rem;
+  //   .input-container {
+  //     flex-direction: row;
+  //   }
+  //   .input-wrapper {
+  //     margin: 0;
+  //   }
+  //   .input {
+  //     width: 8rem;
+  //     font-size: 1.25rem;
+  //   }
+  //   .submit {
+  //     position: relative;
+  //     margin: 0 0.5rem;
+  //     padding: 0 0.5rem;
+  //     font-size: 1rem;
+  //   }
+  // }
 }
 
 // ////////////////////////////////////////////////////////////// authentication

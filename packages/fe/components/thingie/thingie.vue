@@ -1,5 +1,6 @@
 <template>
   <v-group
+    v-if="id !== 'new-text-thingie'"
     :config="config"
     __use-strict-mode
     @dragmove="drag($event)"

@@ -1,5 +1,9 @@
 <template>
   <div class="page-container">
+    <!-- ============================================================ Loader -->
+    <SpinnerTripleDot
+      v-if="verse.loading || page.loading || thingies.loading"
+      theme="dark" />
     <!-- ============================================================== Page -->
     <div
       ref="pageRef"
@@ -11,7 +15,8 @@
           ref="stageRef"
           :config="canvasConfig"
           @wheel="handleMouseWheel($event)"
-          @click="handleClick($event)">
+          @click="handleClick($event)"
+          @dblclick="handleDoubleClick($event)">
           <v-layer ref="layerRef">
 
             <Thingie
@@ -40,11 +45,13 @@ import { useThrottleFn } from '@vueuse/core'
 // ======================================================================== Data
 const route = useRoute()
 const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
+const { verse, page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { dragndrop, activeModes } = storeToRefs(generalStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const { data } = await useAsyncData(route.fullPath, async () => {
   const content = await queryContent({
@@ -58,7 +65,7 @@ const { data } = await useAsyncData(route.fullPath, async () => {
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)
-const canvasConfig = ref({})
+const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
 const { initPageshot } = usePageshotBot(stageRef)
@@ -100,6 +107,20 @@ const handleClick = e => {
     } else {
       collectorStore.setEditing(false)
     }
+  }
+}
+
+/**
+ * @method handleDoubleClick
+ */
+
+const handleDoubleClick = e => {
+  const target = e.target
+  if (target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && authenticated.value) {
+    collectorStore.addNewTextThingie({
+      x: e.evt.clientX,
+      y: e.evt.clientY
+    })
   }
 }
 
@@ -173,7 +194,7 @@ const scaleScene = (dir, noScale = false) => {
  */
 
 const setCanvasDimensions = () => {
-  canvasConfig.value = { width: window.innerWidth, height: window.innerHeight }
+  Object.assign(canvasConfig.value, { width: window.innerWidth, height: window.innerHeight })
 }
 
 // ======================================================================= Hooks
@@ -224,6 +245,13 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+:deep(.triple-dot-loader) {
+  position: absolute;
+  top: torem(45);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .page {

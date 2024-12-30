@@ -2,7 +2,7 @@
 // -----------------------------------------------------------------------------
 export const useVerseStore = defineStore('verse', () => {
   // ==================================================================== import
-  const generalStore = useGeneralStore()
+  const alertStore = useZeroAlertStore()
 
   // ===================================================================== state
   const verse = ref({
@@ -34,6 +34,7 @@ export const useVerseStore = defineStore('verse', () => {
 
   const getVerse = async incoming => {
     try {
+      useSetStoreData(verse, { loading: true })
       const response = await useFetchAuth('/get-verse', { verse: incoming.verse, method: 'get' })
       useSetStoreData(verse, {
         loading: false,
@@ -56,6 +57,7 @@ export const useVerseStore = defineStore('verse', () => {
 
   const getPage = async incoming => {
     try {
+      useSetStoreData(page, { loading: true })
       const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
       useSetStoreData(page, {
         loading: false,
@@ -64,7 +66,7 @@ export const useVerseStore = defineStore('verse', () => {
       })
       // If no page is found, open the 'new page' modal to create a new page from this route
       if (!response) {
-        generalStore.setModal({ active: true, action: 'new-page', data: null })
+        alertStore.openAlert('page-creator-alert')
       }
     } catch (e) {
       useHandleFetchError(e)

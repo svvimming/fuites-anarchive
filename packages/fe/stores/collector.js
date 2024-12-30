@@ -10,7 +10,7 @@ export const useCollectorStore = defineStore('collector', () => {
   const generalStore = useGeneralStore()
   const { sessionId } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
-  const { verse, page } = storeToRefs(verseStore)
+  const { verse, page, sceneData } = storeToRefs(verseStore)
   const pocketStore = usePocketStore()
   const { pocket, token } = storeToRefs(pocketStore)
   const websocketStore = useWebsocketStore()
@@ -35,7 +35,7 @@ export const useCollectorStore = defineStore('collector', () => {
     try {
       useSetStoreData(thingies, { loading: true })
       const response = await useFetchAuth('/get-thingies', {
-        location: page.value.data.name,
+        location: page.value.data?.name,
         verse: verse.value.data.name,
         pocketId: pocket.value.data?._id,
         method: 'get'
@@ -130,6 +130,57 @@ export const useCollectorStore = defineStore('collector', () => {
     editing.value = incoming
   }
 
+  /**
+   * @method addNewTextThingie
+   */
+
+  const addNewTextThingie = coords => {
+    // Search for an existing template text thingie
+    const newTextId = 'new-text-thingie'
+    const newTextThingieIndex = thingies.value.data.findIndex(item => item._id === newTextId)
+    // Get position of double click event scaled to scene
+    const scaled = { x: (coords.x / sceneData.value.scale) - sceneData.value.x, y: (coords.y / sceneData.value.scale) - sceneData.value.y }
+    // If not found, add one to the thingies array
+    console.log(newTextThingieIndex, scaled)
+    if (newTextThingieIndex < 0) {
+      thingies.value.data.push({
+        _id: newTextId,
+        verse: verse.value.data.name,
+        location: page.value.data.name,
+        location_history: [],
+        at: {
+          x: scaled.x,
+          y: scaled.y,
+          width: 250,
+          height: 120,
+          rotation: 0
+        },
+        zIndex: 1,
+        thingie_type: 'text',
+        text: '',
+        colors: []
+      })
+      // Set it to the current editing thingie
+      setEditing(newTextId)
+    } else {
+      // If found, remove
+      setEditing(false)
+      removeNewTextThingie()
+    }
+  }
+
+  /**
+   * @method removeNewTextThingie
+   */
+
+  const removeNewTextThingie = () => {
+    useSetStoreData(thingies, {
+      loading: false,
+      refresh: false,
+      data: thingies.value.data.filter(item => item._id !== 'new-text-thingie')
+    })
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -140,7 +191,9 @@ export const useCollectorStore = defineStore('collector', () => {
     postCreateThingie,
     initThingieUpdate,
     updateThingie,
-    setEditing
+    setEditing,
+    addNewTextThingie,
+    removeNewTextThingie
   }
 })
 

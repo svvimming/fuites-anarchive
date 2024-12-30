@@ -12,7 +12,8 @@
       <Turbulence instance-id="pocket-turbulence-bg" />
       <DashedBorderRectangle :inherit-from="pocketRef" />
        <!-- ===================================================== Token Auth -->
-      <VerseAuth
+      <Auth
+        message="Enter a token below to access your pocket and make changes."
         :class="['auth-modal', { open: !authenticated || tokenInputOpen || !pageExists }]"
         @authenticate-success="handleAuthenticateSuccess" />
       <!-- ========================================================== Pocket -->
@@ -115,6 +116,7 @@ watch(uploaderOpen, (val) => {
 
 // ===================================================================== Methods
 const handleAuthenticateSuccess = () => {
+  collectorStore.getThingies()
   if (!pageExists.value) {
     pocketStore.setPocketOpen(false)
   }
@@ -173,9 +175,6 @@ onMounted(() => {
   position: absolute;
   top: 50%;
   left: 50%;
-  padding: 2rem;
-  border: solid 1px $woodsmoke;
-  border-radius: torem(20);
   visibility: hidden;
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.8);

@@ -12,6 +12,17 @@ const VerseSchema = new Schema({
     type: String,
     required: true
   },
+  page_refs: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'pages',
+        required: false
+      }
+    ],
+    required: true,
+    validate: arr => Array.isArray(arr) && arr.length > 0
+  },
   settings: {
     tunneler: {
       portalChainLength: {

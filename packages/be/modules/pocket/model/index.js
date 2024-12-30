@@ -13,13 +13,14 @@ const PocketSchema = new Schema({
     required: true
   },
   verses: {
-    type: [String],
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'verses',
+        required: false
+      }
+    ],
     required: true
-  },
-  thingies: {
-    type: [String],
-    required: true,
-    default: []
   }
 }, {
   timestamps: true,

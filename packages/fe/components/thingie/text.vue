@@ -31,6 +31,7 @@ const props = defineProps({
 // ======================================================================== Data
 const key = ref(0)
 const raster = ref(false)
+const loading = ref(true)
 
 // ==================================================================== Computed
 const textConfig = computed(() => ({
@@ -44,20 +45,26 @@ const textConfig = computed(() => ({
 
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
-watch(() => props.text, () => { rasterizeText() })
+watch([
+  () => props.text,
+  () => props.parentConfig.width,
+  () => props.parentConfig.height
+], () => { rasterizeText() })
 
 // ======================================================================= Hooks
 onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
+  loading.value = true
   const div = document.createElement('div')
   div.innerHTML = props.text
+  div.classList.add('thingie-rich-text')
   div.style.width = `${textConfig.value.width}px`
   div.style.height = `${textConfig.value.height}px`
   div.style.position = 'absolute'
   div.style.fontSize = props.text.fontsize + 'px'
-  div.style.lineHeight = 1.5
+  div.style.lineHeight = 1
   div.style.whiteSpace= 'break-spaces'
   div.style.wordWrap = 'break-word'
   // div.style.left = '0px'
@@ -72,6 +79,7 @@ const rasterizeText = () => {
     raster.value = cnv
     key.value++
     div.remove()
+    loading.value = false
   })
 }
 </script>
