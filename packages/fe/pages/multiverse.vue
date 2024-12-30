@@ -1,9 +1,9 @@
 <template>
-  <div class="verses-overview">
+  <div class="multiverse">
     <!-- ======================================================== Token Auth -->
-    <OverviewAuthAlert />
-
-    <OverviewCreateVerseAlert />
+    <MultiverseAuthAlert />
+    <!-- ================================================ Create Verse Alert -->
+    <MultiverseCreateVerseAlert />
     <!-- ========================================================= Main page -->
     <div class="grid">
       <div class="col-5" data-push-left="off-2">
@@ -40,7 +40,7 @@
 
 <script setup>
 // ======================================================================= Setup
-definePageMeta({ layout: 'verses' })
+definePageMeta({ layout: 'multiverse' })
 
 // ======================================================================== Data
 const route = useRoute()
@@ -67,12 +67,12 @@ watch(data, async () => {
 }, { immediate: true })
 
 const handleCreateNewVerseClick = () => {
-  alertStore.openAlert('overview-create-verse-alert')
+  alertStore.openAlert('multiverse-create-verse-alert')
 }
 </script>
 
 <style lang="scss" scoped>
-.verses-overview {
+.multiverse {
   position: relative;
   width: 100%;
   height: 100%;

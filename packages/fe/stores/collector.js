@@ -151,8 +151,8 @@ export const useCollectorStore = defineStore('collector', () => {
         at: {
           x: scaled.x,
           y: scaled.y,
-          width: 150,
-          height: 80,
+          width: 250,
+          height: 120,
           rotation: 0
         },
         zIndex: 1,

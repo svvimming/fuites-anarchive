@@ -3,7 +3,7 @@
     <!-- --------------------------------------------------------- To Verses -->
     <ButtonIcon
       tag="nuxt-link"
-      to="/verses"
+      to="/multiverse"
       class="to-multiverse">
       <IconCompass class="icon"/>
     </ButtonIcon>

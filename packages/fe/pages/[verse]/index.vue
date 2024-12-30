@@ -1,3 +1,3 @@
 <script setup>
-await navigateTo('/verses')
+await navigateTo('/multiverse')
 </script>

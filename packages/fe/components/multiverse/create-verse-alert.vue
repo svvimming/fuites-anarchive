@@ -1,7 +1,7 @@
 <template>
   <ZeroAlert
     mode="modal"
-    alert-id="overview-create-verse-alert">
+    alert-id="multiverse-create-verse-alert">
 
     <div class="alert-message">
       <span class="title text">Create a new Verse</span>
@@ -47,7 +47,7 @@
           Submit
         </ButtonBasic>
         <ButtonBasic
-          @clicked="alertStore.closeAlert('overview-create-verse-alert')">
+          @clicked="alertStore.closeAlert('multiverse-create-verse-alert')">
           Cancel
         </ButtonBasic>
       </div>
@@ -80,7 +80,7 @@ const submitCreateVerse = async () => {
       firstPageName: useChangeCase(pageName.value, 'kebabCase').value
     })
     if (created) {
-      alertStore.closeAlert('overview-create-verse-alert')
+      alertStore.closeAlert('multiverse-create-verse-alert')
     }
   }
   /** @TODO - add incorrect token error states */
