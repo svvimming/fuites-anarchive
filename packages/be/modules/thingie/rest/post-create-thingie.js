@@ -18,22 +18,24 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     if (!upload && body.thingie_type !== 'text') {
       throw new Error('File could not be uploaded. Please try again.')
     }
+    const at = body.at
+    if (body.thingie_type === 'image' && upload.aspect) {
+      Object.assign(at, { width: 80, height: 80 / upload.aspect })
+    }
     const created = await MC.model.Thingie.create({
       file_ref: body.file_id,
       location: body.location,
       pocket_ref: body.pocket_ref,
       verse: body.verse,
-      at: body.at,
-      width: body.width ? body.width : 80,
-      angle: 0,
+      thingie_type: body.thingie_type,
+      at,
       clip: false,
       creator_token: body.creator_token,
-      last_update_token: body.last_update_token ? body.last_update_token : body.creator_token,
-      last_update: Date.now(),
-      thingie_type: body.thingie_type,
+      last_update: {
+        token: body.creator_token,
+        timestamp: Date.now()
+      },
       text: body.text,
-      fontsize: body.fontsize ? body.fontsize : 13,
-      fontfamily: body.fontfamily ? body.fontfamily : '',
       consistencies: [],
       colors: body.colors ? body.colors : [],
       path_data: body.path_data

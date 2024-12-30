@@ -33,6 +33,11 @@ const UploadSchema = new Schema({
   palette: {
     type: [[]],
     required: false
+  },
+  aspect: {
+    type: Number,
+    required: false,
+    default: 1
   }
 }, {
   timestamps: true,

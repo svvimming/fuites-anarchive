@@ -107,7 +107,10 @@ const computeImageData = async imgFile => {
     image.src = e.target.result
     image.onload = async () => {
       const colorPalette = await colorThief.getPalette(image, 3)
-      imageData.value = { colorPalette }
+      imageData.value = {
+        aspect: image.width / image.height,
+        colorPalette
+      }
     }
   }
 }
@@ -184,7 +187,8 @@ const uploadFile = () => {
       filename: filename.value,
       filesize: filesize.value,
       mimetype: mimetype.value,
-      palette: imageData.value.colorPalette
+      palette: imageData.value.colorPalette,
+      aspect: imageData.value.aspect
     })
   }
 }

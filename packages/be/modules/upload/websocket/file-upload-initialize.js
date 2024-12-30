@@ -27,6 +27,7 @@ MC.socket.listeners.push({
         filesize,
         file_ext: fileExt,
         palette: data.palette,
+        aspect: data.aspect,
         upload_status: 0
       })
       // Emit db entry _id, chunksize and a start chunk place of 0
