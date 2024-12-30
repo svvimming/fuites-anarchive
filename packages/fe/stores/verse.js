@@ -149,6 +149,23 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method checkPageExists
+   */
+
+  const checkPageExists = async incoming => {
+    try {
+      const result = await useFetchAuth('/get-page', Object.assign({}, incoming, {
+        verse: verse.value.data.name,
+        method: 'get'
+      }))
+      return result
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
    * @method postCreatePortal
    */
 
@@ -187,6 +204,7 @@ export const useVerseStore = defineStore('verse', () => {
     setTextEditor,
     setColorSelectorHex,
     setPortalCreatorOpen,
+    checkPageExists,
     postCreatePortal
   }
 })

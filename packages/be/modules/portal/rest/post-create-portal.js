@@ -15,13 +15,28 @@ MC.app.post('/post-create-portal', async (req, res) => {
     const verseRef = body.verseRef
     const thingieRef = body.thingieRef
     const vertices = body.vertices
+    // Get the page ref for the destination portal
+    for (let i = 0; i < vertices.length; i++) {
+      const vertex = vertices[i]
+      if (!vertex.hasOwnProperty('page_ref')) {
+        const dest = await MC.model.Page.findOne({ name: vertex.location, verse })
+        if (dest) {
+          vertices[i].page_ref = dest._id
+        } else {
+          SendData(res, 200, 'The destination page doesn\'t exist!')
+          return
+        }
+      }
+    }
+    // Create the portal
     const created = await MC.model.Portal.create({
-      verse: verse,
       verse_ref: verseRef,
+      verse,
       ...(thingieRef && { thingie_ref: thingieRef }),
       manual: true,
       vertices
     })
+    // Update each page with the portal ref
     for (let i = 0; i < created.vertices.length; i++) {
       const updated = await MC.model.Page.findOneAndUpdate(
         { name: created.vertices[i].location },
@@ -31,10 +46,12 @@ MC.app.post('/post-create-portal', async (req, res) => {
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }
       })
+      // Broadcast page updates to the socket connection
       MC.socket.io
         .to(`${verse}|pages`)
-        .emit('module|post-update-page|payload', updated)
+        .emit('module|post-update-page|payload', { page: updated })
     }
+    // Return result
     console.log(`New portal opened between ${created.vertices[0].location} and ${created.vertices[1].location}.`)
     SendData(res, 200, 'Portal successfully created', created)
   } catch (e) {

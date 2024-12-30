@@ -51,7 +51,7 @@ const radius = 12 // portal radius
 // ==================================================================== Computed
 const verseName = computed(() => verse.value.data.name)
 const vertices = computed(() => props.portal.vertices)
-const colors = computed(() => props.portal.thingie_ref.colors || [])
+const colors = computed(() => props.portal.thingie_ref?.colors || [])
 const thisVertex = computed(() => vertices.value.find(vertex => vertex.location === page.value.data.name))
 const thatVertex = computed(() => vertices.value.find(vertex => vertex.location !== page.value.data.name))
 
