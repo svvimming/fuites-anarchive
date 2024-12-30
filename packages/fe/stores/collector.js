@@ -141,7 +141,6 @@ export const useCollectorStore = defineStore('collector', () => {
     // Get position of double click event scaled to scene
     const scaled = { x: (coords.x / sceneData.value.scale) - sceneData.value.x, y: (coords.y / sceneData.value.scale) - sceneData.value.y }
     // If not found, add one to the thingies array
-    console.log(newTextThingieIndex, scaled)
     if (newTextThingieIndex < 0) {
       thingies.value.data.push({
         _id: newTextId,

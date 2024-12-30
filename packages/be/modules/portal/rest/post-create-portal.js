@@ -12,21 +12,19 @@ MC.app.post('/post-create-portal', async (req, res) => {
   try {
     const body = req.body
     const verse = body.verse
-    const edge = `${body.vertices[0].location}_${body.vertices[1].location}`
-    const vertices = {
-      a: body.vertices[0],
-      b: body.vertices[1]
-    }
+    const verseRef = body.verseRef
+    const thingieRef = body.thingieRef
+    const vertices = body.vertices
     const created = await MC.model.Portal.create({
-      thingie_ref: body.thingieId,
-      edge,
-      vertices,
-      enabled: true,
-      manual: true
+      verse: verse,
+      verse_ref: verseRef,
+      ...(thingieRef && { thingie_ref: thingieRef }),
+      manual: true,
+      vertices
     })
-    for (let i = 0; i < body.vertices.length; i++) {
+    for (let i = 0; i < created.vertices.length; i++) {
       const updated = await MC.model.Page.findOneAndUpdate(
-        { name: body.vertices[i].location },
+        { name: created.vertices[i].location },
         { $push: { portal_refs: created._id } },
         { new: true }
       ).populate({
@@ -37,7 +35,7 @@ MC.app.post('/post-create-portal', async (req, res) => {
         .to(`${verse}|pages`)
         .emit('module|post-update-page|payload', updated)
     }
-    console.log(`New portal opened between ${created.edge.replace('_', ' and ')}.`)
+    console.log(`New portal opened between ${created.vertices[0].location} and ${created.vertices[1].location}.`)
     SendData(res, 200, 'Portal successfully created', created)
   } catch (e) {
     console.log('============================= [Endpoint: /post-create-portal]')

@@ -54,6 +54,7 @@ const PortalSchema = new Schema({
   },
   manual: {
     type: Boolean,
+    default: false,
     required: false
   }
 }, {

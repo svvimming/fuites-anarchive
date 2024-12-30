@@ -45,7 +45,7 @@ import { useThrottleFn } from '@vueuse/core'
 // ======================================================================== Data
 const route = useRoute()
 const verseStore = useVerseStore()
-const { verse, page } = storeToRefs(verseStore)
+const { verse, page, portalCreatorOpen } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
@@ -95,6 +95,7 @@ watch(data, async () => {
  */
 
 const handleClick = e => {
+  // Handle closing Caddy/Thingie editing
   const target = e.target
   const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
   if (editing.value) {
@@ -107,6 +108,12 @@ const handleClick = e => {
     } else {
       collectorStore.setEditing(false)
     }
+  }
+  // Handle toggling Portal Creator
+  if (e.evt.shiftKey) {
+    verseStore.setPortalCreatorOpen(true)
+  } else if (portalCreatorOpen.value) {
+    verseStore.setPortalCreatorOpen(false)
   }
 }
 
