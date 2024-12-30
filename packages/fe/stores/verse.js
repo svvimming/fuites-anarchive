@@ -34,6 +34,7 @@ export const useVerseStore = defineStore('verse', () => {
 
   const getVerse = async incoming => {
     try {
+      useSetStoreData(verse, { loading: true })
       const response = await useFetchAuth('/get-verse', { verse: incoming.verse, method: 'get' })
       useSetStoreData(verse, {
         loading: false,
@@ -56,6 +57,7 @@ export const useVerseStore = defineStore('verse', () => {
 
   const getPage = async incoming => {
     try {
+      useSetStoreData(page, { loading: true })
       const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
       useSetStoreData(page, {
         loading: false,

@@ -1,5 +1,9 @@
 <template>
   <div class="page-container">
+    <!-- ============================================================ Loader -->
+    <SpinnerTripleDot
+      v-if="verse.loading || page.loading || thingies.loading"
+      theme="dark" />
     <!-- ============================================================== Page -->
     <div
       ref="pageRef"
@@ -41,7 +45,7 @@ import { useThrottleFn } from '@vueuse/core'
 // ======================================================================== Data
 const route = useRoute()
 const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
+const { verse, page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
@@ -113,7 +117,10 @@ const handleClick = e => {
 const handleDoubleClick = e => {
   const target = e.target
   if (target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && authenticated.value) {
-    collectorStore.addNewTextThingie(e)
+    collectorStore.addNewTextThingie({
+      x: e.evt.clientX,
+      y: e.evt.clientY
+    })
   }
 }
 
@@ -238,6 +245,13 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+:deep(.triple-dot-loader) {
+  position: absolute;
+  top: torem(45);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .page {

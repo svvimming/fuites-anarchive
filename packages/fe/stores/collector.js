@@ -10,7 +10,7 @@ export const useCollectorStore = defineStore('collector', () => {
   const generalStore = useGeneralStore()
   const { sessionId } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
-  const { verse, page } = storeToRefs(verseStore)
+  const { verse, page, sceneData } = storeToRefs(verseStore)
   const pocketStore = usePocketStore()
   const { pocket, token } = storeToRefs(pocketStore)
   const websocketStore = useWebsocketStore()
@@ -134,19 +134,24 @@ export const useCollectorStore = defineStore('collector', () => {
    * @method addNewTextThingie
    */
 
-  const addNewTextThingie = e => {
-    const newTextThingie = thingies.value.data.find(item => item._id === 'new-text-thingie')
-    if (!newTextThingie) {
-      const newTextThingieId = 'new-text-thingie'
+  const addNewTextThingie = coords => {
+    // Search for an existing template text thingie
+    const newTextId = 'new-text-thingie'
+    const newTextThingieIndex = thingies.value.data.findIndex(item => item._id === newTextId)
+    // Get position of double click event scaled to scene
+    const scaled = { x: (coords.x / sceneData.value.scale) - sceneData.value.x, y: (coords.y / sceneData.value.scale) - sceneData.value.y }
+    // If not found, add one to the thingies array
+    console.log(newTextThingieIndex, scaled)
+    if (newTextThingieIndex < 0) {
       thingies.value.data.push({
-        _id: newTextThingieId,
+        _id: newTextId,
         verse: verse.value.data.name,
         location: page.value.data.name,
         location_history: [],
         at: {
-          x: 200,
-          y: 200,
-          width: 80,
+          x: scaled.x,
+          y: scaled.y,
+          width: 150,
           height: 80,
           rotation: 0
         },
@@ -155,9 +160,12 @@ export const useCollectorStore = defineStore('collector', () => {
         text: '',
         colors: []
       })
-      setEditing(newTextThingieId)
+      // Set it to the current editing thingie
+      setEditing(newTextId)
     } else {
-      /** @TODO if new text thingie is found update with event coords */
+      // If found, remove
+      setEditing(false)
+      removeNewTextThingie()
     }
   }
 

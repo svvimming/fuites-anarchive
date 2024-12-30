@@ -31,6 +31,7 @@ const props = defineProps({
 // ======================================================================== Data
 const key = ref(0)
 const raster = ref(false)
+const loading = ref(true)
 
 // ==================================================================== Computed
 const textConfig = computed(() => ({
@@ -55,6 +56,7 @@ onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
+  loading.value = true
   const div = document.createElement('div')
   div.innerHTML = props.text
   div.classList.add('thingie-rich-text')
@@ -77,6 +79,7 @@ const rasterizeText = () => {
     raster.value = cnv
     key.value++
     div.remove()
+    loading.value = false
   })
 }
 </script>
