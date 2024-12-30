@@ -140,8 +140,12 @@ export const useVerseStore = defineStore('verse', () => {
    * @method setPortalCreatorOpen
    */
 
-  const setPortalCreatorOpen = incoming => {
-    portalCreatorOpen.value = incoming
+  const setPortalCreatorOpen = e => {
+    if (e) {
+      portalCreatorOpen.value = { x: e.evt.clientX, y: e.evt.clientY }
+    } else {
+      portalCreatorOpen.value = false
+    }
   }
 
   /**

@@ -111,7 +111,7 @@ const handleClick = e => {
   }
   // Handle toggling Portal Creator
   if (e.evt.shiftKey) {
-    verseStore.setPortalCreatorOpen(true)
+    verseStore.setPortalCreatorOpen(e)
   } else if (portalCreatorOpen.value) {
     verseStore.setPortalCreatorOpen(false)
   }
