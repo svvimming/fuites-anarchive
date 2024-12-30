@@ -24,6 +24,7 @@ export const useVerseStore = defineStore('verse', () => {
   })
 
   const textEditor = ref(false)
+  const portalCreatorOpen = ref(false)
   const colorSelectorHex = ref('')
 
   // =================================================================== actions
@@ -83,7 +84,7 @@ export const useVerseStore = defineStore('verse', () => {
    */
 
   const updatePage = incoming => {
-    if (incoming.name === page.value.data.name) {
+    if (incoming.name === page.value.data.name && incoming.verse === verse.value.data.name) {
       page.value.data = incoming
     }
   }
@@ -135,6 +136,56 @@ export const useVerseStore = defineStore('verse', () => {
     colorSelectorHex.value = incoming
   }
 
+  /**
+   * @method setPortalCreatorOpen
+   */
+
+  const setPortalCreatorOpen = e => {
+    if (e) {
+      portalCreatorOpen.value = { x: e.evt.clientX, y: e.evt.clientY }
+    } else {
+      portalCreatorOpen.value = false
+    }
+  }
+
+  /**
+   * @method checkPageExists
+   */
+
+  const checkPageExists = async incoming => {
+    try {
+      const result = await useFetchAuth('/get-page', Object.assign({}, incoming, {
+        verse: verse.value.data.name,
+        method: 'get'
+      }))
+      return result
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
+   * @method postCreatePortal
+   */
+
+  const postCreatePortal = async incoming => {
+    try {
+      useSetStoreData(page, { refresh: true })
+      await useFetchAuth('/post-create-portal', Object.assign({}, incoming, {
+        verse: verse.value.data.name,
+        verseRef: verse.value.data._id,
+        method: 'post'
+      }))
+      // No need to update page.value.data here because the update page with the
+      // new portal comes through the 'module|post-update-page|payload' socket update
+      useSetStoreData(page, { refresh: false })
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(page, { refresh: false })
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -143,6 +194,7 @@ export const useVerseStore = defineStore('verse', () => {
     sceneData,
     textEditor,
     colorSelectorHex,
+    portalCreatorOpen,
     // ----- actions
     getVerse,
     getPage,
@@ -150,7 +202,10 @@ export const useVerseStore = defineStore('verse', () => {
     postCreatePage,
     updateSceneData,
     setTextEditor,
-    setColorSelectorHex
+    setColorSelectorHex,
+    setPortalCreatorOpen,
+    checkPageExists,
+    postCreatePortal
   }
 })
 
