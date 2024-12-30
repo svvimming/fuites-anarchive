@@ -17,7 +17,7 @@
         <EditorContent
           v-if="textEditor"
           :editor="textEditor"
-          class="content-editor"
+          class="content-editor thingie-rich-text"
           @keydown="handleEditorKeydown" />
 
       </div>
@@ -104,12 +104,9 @@ const handleEditorKeydown = e => {
  */
 
 const handleSubmit = update => {
-  console.log('handle submit', update)
   if (update._id === 'new-text-thingie') {
-    console.log('init create text')
     initCreateTextThingie(update)
   } else {
-    console.log('update text')
     collectorStore.initThingieUpdate(update)
   }
   verseStore.setColorSelectorHex('')
@@ -217,6 +214,9 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   ::-moz-selection { background: rgba($woodsmoke, 0.05); }
   ::selection { background: rgba($woodsmoke, 0.05); }
+  // p, div, li {
+  //   line-height: 1;
+  // }
 }
 
 // :deep(.ProseMirror-trailingBreak) {

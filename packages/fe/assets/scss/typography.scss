@@ -257,3 +257,11 @@ h5, .h5 {
 h6, .h6 {
   font-size: 0.8rem;
 }
+
+.thingie-rich-text {
+  p,
+  div,
+  li {
+    line-height: 1 !important;
+  }
+}
