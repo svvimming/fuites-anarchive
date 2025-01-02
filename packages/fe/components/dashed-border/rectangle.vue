@@ -39,7 +39,10 @@ const { width, height } = useElementBounding(boundingElement)
 // ==================================================================== Watchers
 watch([width, height], (dimensions) => {
   if (dimensions[0] && dimensions[1]) {
-    emit('loaded')
+    setTimeout(() => {
+      emit('loaded')
+    }, 100)
+    // nextTick(() => { emit('loaded') })
   }
 })
 

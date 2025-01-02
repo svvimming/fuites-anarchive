@@ -1,5 +1,5 @@
 <template>
-  <div id="landing-site-anchor">
+  <div id="landing-site-anchor" ref="anchorRef">
     <!-- =================================================== Dropdown Toggle -->
     <ButtonIcon
       :key="activeModes.drippy"
@@ -50,12 +50,13 @@ const { siteData, activeModes } = storeToRefs(generalStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 
+const anchorRef = ref(null)
 const dropdownOpen = ref(false)
 const tooltip = ref('')
 const landingSitesRef = ref(null)
 const transform = ref(false)
 
-onClickOutside(landingSitesRef, () => {
+onClickOutside(anchorRef, () => {
   if (dropdownOpen.value) {
     dropdownOpen.value = false
   }
@@ -113,9 +114,9 @@ onMounted(() => {
   background-color: white;
   opacity: 0;
   visibility: hidden;
-  transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear;
   &.transform {
     transform: scale(0.8);
+    transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear;
   }
   &.open {
     transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
@@ -133,6 +134,7 @@ onMounted(() => {
 
 #landing-sites {
   padding: torem(15) torem(13);
+  min-width: torem(142);
 }
 
 // ///////////////////////////////////////////////////////////////////// Toggles

@@ -7,10 +7,10 @@
       :class="['text-content color-cove', { active: pocketOpen }]"
       @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
 
-    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
+    <div :class="['pocket-container', { transform }, { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
-      <DashedBorderRectangle :inherit-from="pocketRef" />
+      <DashedBorderRectangle :inherit-from="pocketRef" @loaded="transform = true" />
        <!-- ===================================================== Token Auth -->
       <Auth
         message="Enter a token below to access your pocket and make changes."
@@ -86,6 +86,7 @@ const {
   pocketOpen,
 } = storeToRefs(pocketStore)
 
+const transform = ref(false)
 const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
@@ -155,10 +156,12 @@ onMounted(() => {
   z-index: 1;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.1);
-  transform-origin: bottom right;
-  transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
   @include modalShadow;
+  &.transform {
+    transform: scale(0.1);
+    transform-origin: bottom right;
+    transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
+  }
   &.open {
     transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
     opacity: 1;
