@@ -98,6 +98,15 @@
             "content": "O+"
           }
         ]
+      },
+      {
+        "type": "static",
+        "name": "delete-thingie",
+        "params": [
+          {
+            "directive": "deleteThingie"
+          }
+        ]
       }
     ]
   },

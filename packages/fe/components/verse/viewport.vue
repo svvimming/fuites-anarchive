@@ -21,6 +21,8 @@
     <VerseTextEditor />
     <!-- ------------------------------------------------------------- Caddy -->
     <ClientOnly><Caddy :container="viewport" /></ClientOnly>
+    <!-- ---------------------------------------------- Delete Thingie Alert -->
+    <VerseDeleteThingieAlert />
     <!-- ------------------------------------------------------------ Drippy -->
     <Drippy v-if="activeModes.drippy" />
 

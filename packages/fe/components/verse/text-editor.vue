@@ -43,7 +43,7 @@ import { Color } from '@tiptap/extension-color'
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
-const { thingies, editing } = storeToRefs(collectorStore)
+const { thingies, editing, deleted } = storeToRefs(collectorStore)
 const verseStore = useVerseStore()
 const {
   sceneData,
@@ -73,7 +73,8 @@ watch(editing, (newId, oldId) => {
   if (oldId && oldId === id.value) {
     const pushColor = !!colorSelectorHex.value && colors.value[colors.value.length - 1] !== colorSelectorHex.value
     const text = textEditor.value.getHTML()
-    if (text === '<p></p>') {
+    // If the new text thingie is empty OR if this thingie has been deleted, return and reset
+    if (text === '<p></p>' || deleted.value.includes(oldId)) {
       resetEditor()
       return
     }

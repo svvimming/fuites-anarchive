@@ -59,6 +59,10 @@ const props = defineProps({
   background-color: $gullGray;
   border-radius: torem(10);
   padding: torem(10) torem(25);
+  transition: 150ms ease;
+  &:hover {
+    background-color: $gullGrayDark;
+  }
 }
 
 .slot {

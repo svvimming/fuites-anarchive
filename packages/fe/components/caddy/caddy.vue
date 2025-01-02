@@ -7,21 +7,6 @@
     :class="['caddy-wrapper', { active: thingie }]">
 
     <div id="caddy" :class="['caddy', { expanded }, `selected__${selected}`]">
-
-      <!-- <div
-        v-for="n in toolNum"
-        :key="`shadow${n}`"
-        class="shadow left"
-        :style="getShadowTransform(n - 1, -1)">
-      </div>
-
-      <div
-        v-for="n in toolNum"
-        :key="`shadow${n}`"
-        class="shadow right"
-        :style="getShadowTransform(n - 1, 1)">
-      </div> -->
-
       <!-- ==========================================================Handle -->
       <div
         ref="handle"
@@ -30,7 +15,6 @@
         @click="setSelected('handle')">
         <IconHand />
       </div>
-
       <!-- ========================================================== Shared -->
       <div
         v-for="(tool, i) in shared"
@@ -53,12 +37,12 @@
             <IconArrowSmall v-else-if="param.directive === 'sendBack'" />
             <IconOpaque v-else-if="param.directive === 'increaseOpacity'" />
             <IconTransparent v-else-if="param.directive === 'decreaseOpacity'" />
+            <IconTrashbin v-else-if="param.directive === 'deleteThingie'" />
             <span v-else>{{ param.content }}</span>
           </button>
         </template>
 
       </div>
-
       <!-- ============================================================ Text -->
       <template v-if="type === 'text'">
         <CaddyFontEditor
@@ -74,7 +58,6 @@
           @click.native="setSelected('color-selector')"
           @color-change="handleColorSelection" />
       </template>
-
       <!-- =========================================================== Image -->
       <template v-if="type === 'image'">
         <div class="caddy-tool clip-toggle" :style="getToolTransform('clip-toggle')">
@@ -113,6 +96,7 @@ const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { page, textEditor } = storeToRefs(verseStore)
+const alertStore = useZeroAlertStore()
 
 const handle = ref(null)
 const selected = ref('handle')
@@ -121,9 +105,10 @@ const positions = ref({
   'rotation': 1,
   'z-index': 2,
   'opacity': 3,
-  'font-editor': 4,
-  'color-selector': 5,
-  'clip-toggle': 4
+  'delete-thingie': 4,
+  'font-editor': 5,
+  'color-selector': 6,
+  'clip-toggle': 5
 })
 
 // ==================================================================== Computed
@@ -154,6 +139,7 @@ const handleShared = (directive, closeOnSelect) => {
     case 'sendBack' : sendThingieBack(); break
     case 'increaseOpacity' : changeOpacity(0.1); break
     case 'decreaseOpacity' : changeOpacity(-0.1); break
+    case 'deleteThingie' : openDeleteThingieModal(); break
   }
   if (closeOnSelect) {
     nextTick(() => { collectorStore.setEditing(false) })
@@ -250,6 +236,14 @@ const handleToggleClip = () => {
 }
 
 /**
+ * @method openDeleteThingieModal
+ */
+
+const openDeleteThingieModal = () => {
+  alertStore.openAlert('delete-thingie-alert')
+}
+
+/**
  * @method getToolTransform
  */
 
@@ -265,35 +259,6 @@ const getToolTransform = id => {
   }
   return { '--tool-offset-x': coords.x + 'px', '--tool-offset-y': coords.y + 'px' }
 }
-
-// /**
-//  * @method getShadowTransform
-//  */
-
-// const getShadowTransform = (index, dir) => {
-//   if (index === selected.value) {
-//     return {
-//       '--shadow-offset-x': '0px',
-//       '--shadow-offset-y': '0px',
-//       '--shadow-rotate': '0rad'
-//     }
-//   }
-//   let phase = 0
-//   switch (toolNum.value) {
-//     case 8 : phase = 0.5; break
-//     case 4 : phase = 0.28; break
-//   }
-//   const coords = {
-//     x: Math.cos((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52,
-//     y: Math.sin((index + (phase * dir)) * 2 * Math.PI / (toolNum.value - 1)) * 52
-//   }
-//   const rotateOffset = dir === -1 ? Math.PI / 2 : -Math.PI / 4
-//   return {
-//     '--shadow-offset-x': coords.x + 'px',
-//     '--shadow-offset-y': coords.y + 'px',
-//     '--shadow-rotate': (index * 2 * Math.PI) / (toolNum.value - 1) - rotateOffset + 'rad'
-//   }
-// }
 
 /**
  * @method update
@@ -387,22 +352,6 @@ const update = useThrottleFn(data => {
   }
 }
 
-.shadow {
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 0px;
-  --shadow-rotate: 0deg;
-  position: absolute;
-  width: torem(16);
-  height: torem(16);
-  top: 50%;
-  left: 50%;
-  // background-color: red;
-  border-radius: 50%;
-  box-shadow: -5px 0px $woodsmoke;
-  transform: translate(calc(-50% + var(--shadow-offset-x)), calc(-50% + var(--shadow-offset-y))) rotate(var(--shadow-rotate));
-  z-index: 100;
-}
-
 // /////////////////////////////////////////////////////////////////////// Tools
 .shared-tool {
   display: flex;
@@ -430,6 +379,14 @@ const update = useThrottleFn(data => {
       :deep(svg) {
         width: torem(14);
         height: torem(14);
+      }
+    }
+  }
+  &.delete-thingie {
+    .param-button {
+      :deep(svg) {
+        width: torem(22);
+        height: torem(22);
       }
     }
   }

@@ -24,6 +24,7 @@ export const useCollectorStore = defineStore('collector', () => {
   })
 
   const editing = ref(false)
+  const deleted = ref([])
 
   // =================================================================== actions
 
@@ -94,8 +95,51 @@ export const useCollectorStore = defineStore('collector', () => {
   }
 
   /**
+   * @method postDeleteThingie
+   */
+
+  const postDeleteThingie = async incoming => {
+    try {
+      useSetStoreData(thingies, { refresh: true })
+      const response = await useFetchAuth('/post-delete-thingie', {
+        thingieId: incoming._id,
+        verse: verse.value.data.name,
+        method: 'post'
+      })
+      // Thingie will be removed from the thingies.value.data array in a socket
+      // broadcast - search 'module|post-delete-thingie|payload'
+      // But record deleted ID here for the text editor
+      if (!deleted.value.includes(response._id)) {
+        deleted.value.push(response._id)
+      }
+      useSetStoreData(thingies, { refresh: false })
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(thingies, { refresh: false })
+      return false
+    }
+  }
+
+  /**
+   * @method popDeletedThingie
+   */
+
+  const popDeletedThingie = incoming => {
+    const filtered = thingies.value.data.filter(item => item._id !== incoming._id)
+    useSetStoreData(thingies, {
+      loading: false,
+      refresh: false,
+      data: filtered
+    })
+    if (!deleted.value.includes(incoming._id)) {
+      deleted.value.push(incoming._id)
+    }
+  }
+
+  /**
    * @method initThingieUpdate
-   * @desc Emits a thinige update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
+   * @desc Emits a thingie update to the 'thingies' room using the websocket store socket. If updating the `at` property, the session id is recorded into the update and the thingie is also directly updated in the store rather than waiting for a response over the network.
    */
 
   const initThingieUpdate = (update, forceViaServer = false) => {
@@ -198,10 +242,13 @@ export const useCollectorStore = defineStore('collector', () => {
     // ----- state
     thingies,
     editing,
+    deleted,
     // ----- actions
     getThingies,
     postCreateThingie,
     pushCreatedThingie,
+    postDeleteThingie,
+    popDeletedThingie,
     initThingieUpdate,
     updateThingie,
     setEditing,

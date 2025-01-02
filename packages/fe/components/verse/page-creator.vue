@@ -29,12 +29,8 @@
 </template>
 
 <script setup>
-import ZeroAlert from '../../modules/alert/components/zero-alert.vue'
-
 // ======================================================================== Data
 const route = useRoute()
-// const generalStore = useGeneralStore()
-// const { modal } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { uploaders, authenticated } = storeToRefs(pocketStore)
 const modalUploaderId = 'new-page-modal-uploader'

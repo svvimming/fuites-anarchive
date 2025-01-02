@@ -16,10 +16,10 @@ const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
 MC.app.post('/post-delete-thingie', async (req, res) => {
   try {
     const verse = req.body.verse
-    const thingieId = req.body.thingie_id
+    const thingieId = req.body.thingieId
     const thingie = await MC.model.Thingie.findById(thingieId)
     if (!thingie) {
-      throw new Error('File does not exist!')
+      throw new Error('Thingie does not exist!')
     }
     if (thingie.thingie_type !== 'text') {
       const fileId = thingie.file_ref
@@ -46,8 +46,8 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
     console.log(`deleted file ${thingieId}`)
     MC.socket.io
       .to(`${verse}|thingies`)
-      .emit('module|post-delete-thingie|payload', thingieId)
-    SendData(res, 200, 'Thingie successfully deleted', 'deleted thingie')
+      .emit('module|post-delete-thingie|payload', { _id: thingieId })
+    SendData(res, 200, 'Thingie successfully deleted', { _id: thingieId })
   } catch (e) {
     console.log('============================ [Endpoint: /post-delete-thingie]')
     console.log(e)

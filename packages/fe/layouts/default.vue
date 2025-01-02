@@ -77,6 +77,9 @@ watch(() => page.value.data, async () => {
   socket.on('module|post-create-thingie|payload', (data) => {
     collectorStore.pushCreatedThingie(data)
   })
+  socket.on('module|post-delete-thingie|payload', (data) => {
+    collectorStore.popDeletedThingie(data)
+  })
   socket.on('module|post-update-page|payload', (data) => {
     verseStore.updatePage(data.page)
   })
