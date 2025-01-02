@@ -28,6 +28,7 @@ const VertexSchema = new Schema({
 
 // --------------------------------------------------------------------- Thingie
 const ThingieSchema = new Schema({
+  /** Identifiers */
   file_ref: {
     type: Schema.Types.ObjectId,
     ref: 'uploads',
@@ -51,11 +52,26 @@ const ThingieSchema = new Schema({
     required: false,
     default: []
   },
-  dragging: {
-    type: Boolean,
+  thingie_type: {
+    type: String,
     required: true,
-    default: false
+    enum: ['image', 'text', 'sound', 'video']
   },
+  creator_token: {
+    type: String,
+    required: true
+  },
+  last_update: {
+    token: {
+      type: String,
+      required: false
+    },
+    timestamp: {
+      type: String,
+      required: false
+    }
+  },
+  /** Shared properties */
   at: {
     x: {
       type: Number,
@@ -83,61 +99,15 @@ const ThingieSchema = new Schema({
     required: false,
     default: 1
   },
-  gain: {
-    type: Number,
-    required: false,
-    default: 1
-  },
-  thingie_type: {
-    type: String,
-    required: true,
-    enum: ['image', 'text', 'sound', 'video']
-  },
-  text: {
-    type: String,
-    required: false,
-    default: ''
-  },
-  creator_token: {
-    type: String,
-    required: true
-  },
-  last_update: {
-    token: {
-      type: String,
-      required: false
-    },
-    timestamp: {
-      type: String,
-      required: false
-    }
-  },
-  consistencies: {
-    type: [String],
-    required: false
-  },
-  colors: {
-    type: [String],
-    required: false
-  },
   opacity: {
     type: Number,
     required: false,
     default: 1.0
   },
-  clip: {
+  dragging: {
     type: Boolean,
-    required: false,
+    required: true,
     default: false
-  },
-  path_data: {
-    type: String,
-    required: false
-  },
-  stroke_width: {
-    type: Number,
-    required: false,
-    default: 3
   },
   update_count: {
     type: Number,
@@ -149,6 +119,14 @@ const ThingieSchema = new Schema({
     required: false,
     default: 0
   },
+  consistencies: {
+    type: [String],
+    required: false
+  },
+  colors: {
+    type: [String],
+    required: false
+  },
   compostedAt: {
     type: Date,
     required: false
@@ -157,13 +135,33 @@ const ThingieSchema = new Schema({
     type: [String],
     required: false
   },
-  sensors: {
+  /** Image specific */
+  clip: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  /** Sound specific */
+  gain: {
     type: Number,
+    required: false,
+    default: 1
+  },
+  stroke_width: {
+    type: Number,
+    required: false,
+    default: 3
+  },
+  /** Image and Sound */
+  path_data: {
+    type: String,
     required: false
   },
-  sensors_active: {
-    type: [String],
-    required: false
+  /** Text specific */
+  text: {
+    type: String,
+    required: false,
+    default: ''
   }
 }, {
   timestamps: true,
