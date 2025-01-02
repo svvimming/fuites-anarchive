@@ -74,6 +74,9 @@ watch(() => page.value.data, async () => {
     if (data.omit_session_id === sessionId.value) { return }
     collectorStore.updateThingie(data.thingie)
   })
+  socket.on('module|post-create-thingie|payload', (data) => {
+    collectorStore.pushCreatedThingie(data)
+  })
   socket.on('module|post-update-page|payload', (data) => {
     verseStore.updatePage(data.page)
   })

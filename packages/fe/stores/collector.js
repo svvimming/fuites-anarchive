@@ -69,14 +69,27 @@ export const useCollectorStore = defineStore('collector', () => {
         verse: verse.value.data.name,
         method: 'post'
       }))
-      if (thingie) {
-        thingies.value.data.push(thingie)
-      }
+      // No need to add created thingie to thingies.value.data here because
+      // it will be added through a socket broadcast - search 'module|post-create-thingie|payload'
       useSetStoreData(thingies, { refresh: false })
       return thingie
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(thingies, { refresh: false })
+      return false
+    }
+  }
+
+  /**
+   * @method pushCreatedThingie
+   */
+
+  const pushCreatedThingie = incoming => {
+    if (
+      (incoming.location === page.value.data.name || incoming.pocket_ref === pocket.value.data._id) &&
+      !thingies.value.data.find(item => item._id === incoming._id)
+    ) {
+      thingies.value.data.push(incoming)
     }
   }
 
@@ -188,6 +201,7 @@ export const useCollectorStore = defineStore('collector', () => {
     // ----- actions
     getThingies,
     postCreateThingie,
+    pushCreatedThingie,
     initThingieUpdate,
     updateThingie,
     setEditing,
