@@ -48,3 +48,25 @@ try {
 } catch (e) {
   console.log(e)
 }
+
+// const updatePortalCollection = async () => {
+//   try {
+//     const portals = await MC.model.Portal.find({})
+//     const len = portals.length
+//     for (let i = 0; i < len; i++) {
+//       const portal = portals[i]
+//       // const vertices = portal.vertices
+//       // for (let j = 0; j < vertices.length; j++) {
+//       //   const location = vertices[j].location
+//       //   const page = await MC.model.Page.findOne({ verse: 'music', name: location })
+//       //   portal.vertices[j].page_ref = page._id
+//       // }
+//       // portal.verse_ref = '677722f4d883c52fcc5fd25a'
+//       await portal.save()
+//     }
+//   } catch (e) {
+//     console.log(e)
+//   }
+// }
+
+// updatePortalCollection()

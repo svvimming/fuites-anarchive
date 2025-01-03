@@ -11,7 +11,7 @@ const MC = require('@Root/config')
 MC.app.get('/authenticate-pocket', async (req, res) => {
   try {
     const token = req.query.token
-    const tokensString = process.env.REFACTOR_AUTH_TOKENS
+    const tokensString = process.env.AUTH_TOKENS
     const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
       const pocket = await MC.model.Pocket
