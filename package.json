@@ -7,8 +7,8 @@
     "email": "benmunozj@gmail.com"
   },
   "scripts": {
-    "app:stable:launch": "npm run launch:stable -w fe && npm run reload:stable -w backend",
-    "app:production:launch": "npm run launch:production -w fe && npm run reload:production -w backend",
+    "app:stable:launch": "npm run launch:stable -w fe && npm run reload:stable -w be",
+    "app:production:launch": "npm run launch:production -w fe && npm run reload:production -w be",
     "be:dev": "npm run dev -w be",
     "fe:dev": "npm run dev -w fe"
   },
