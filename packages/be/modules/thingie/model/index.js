@@ -22,30 +22,56 @@ const VertexSchema = new Schema({
       required: false
     }
   }
+}, {
+  _id: false
 })
 
 // --------------------------------------------------------------------- Thingie
 const ThingieSchema = new Schema({
+  /** Identifiers */
   file_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Upload',
+    ref: 'uploads',
     required: false
   },
-  location: {
+  pocket_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pockets',
+    required: false
+  },
+  verse: {
     type: String,
     required: true
   },
-  last_locations: {
+  location: {
+    type: String,
+    required: false
+  },
+  location_history: {
     type: [VertexSchema],
     required: false,
-    validate: [(val) => { return val.length < 6 }, 'recorded locations should not exceed 5'],
     default: []
   },
-  dragging: {
-    type: Boolean,
+  thingie_type: {
+    type: String,
     required: true,
-    default: false
+    enum: ['image', 'text', 'sound', 'video']
   },
+  creator_token: {
+    type: String,
+    required: true
+  },
+  last_update: {
+    token: {
+      type: String,
+      required: false
+    },
+    timestamp: {
+      type: String,
+      required: false
+    }
+  },
+  /** Shared properties */
   at: {
     x: {
       type: Number,
@@ -55,79 +81,33 @@ const ThingieSchema = new Schema({
       type: Number,
       required: true
     },
-    z: {
+    width: {
+      type: Number,
+      required: true
+    },
+    height: {
+      type: Number,
+      required: true
+    },
+    rotation: {
       type: Number,
       required: true
     }
   },
-  width: {
-    type: Number,
-    required: true
-  },
-  angle: {
-    type: Number,
-    required: true
-  },
-  gain: {
+  zIndex: {
     type: Number,
     required: false,
     default: 1
-  },
-  thingie_type: {
-    type: String,
-    required: true,
-    enum: ['image', 'text', 'sound', 'video']
-  },
-  text: {
-    type: String,
-    required: false
-  },
-  fontsize: {
-    type: Number,
-    required: false
-  },
-  fontfamily: {
-    type: String,
-    required: false
-  },
-  creator_token: {
-    type: String,
-    required: true
-  },
-  last_update_token: {
-    type: String,
-    required: true
-  },
-  last_update: {
-    type: Date,
-    required: false
-  },
-  consistencies: {
-    type: [String],
-    required: false
-  },
-  colors: {
-    type: [String],
-    required: false
   },
   opacity: {
     type: Number,
     required: false,
     default: 1.0
   },
-  clip: {
+  dragging: {
     type: Boolean,
-    required: false,
+    required: true,
     default: false
-  },
-  path_data: {
-    type: String,
-    required: false
-  },
-  stroke_width: {
-    type: Number,
-    required: false,
-    default: 3
   },
   update_count: {
     type: Number,
@@ -139,6 +119,14 @@ const ThingieSchema = new Schema({
     required: false,
     default: 0
   },
+  consistencies: {
+    type: [String],
+    required: false
+  },
+  colors: {
+    type: [String],
+    required: false
+  },
   compostedAt: {
     type: Date,
     required: false
@@ -147,13 +135,33 @@ const ThingieSchema = new Schema({
     type: [String],
     required: false
   },
-  sensors: {
+  /** Image specific */
+  clip: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  /** Sound specific */
+  gain: {
     type: Number,
+    required: false,
+    default: 1
+  },
+  stroke_width: {
+    type: Number,
+    required: false,
+    default: 3
+  },
+  /** Image and Sound */
+  path_data: {
+    type: String,
     required: false
   },
-  sensors_active: {
-    type: [String],
-    required: false
+  /** Text specific */
+  text: {
+    type: String,
+    required: false,
+    default: ''
   }
 }, {
   timestamps: true,
@@ -162,4 +170,4 @@ const ThingieSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = ThingieSchema // Mongoose.model('thingies', ThingieSchema)
+module.exports = Mongoose.model('thingies', ThingieSchema)

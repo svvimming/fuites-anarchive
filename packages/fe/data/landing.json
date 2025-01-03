@@ -88,18 +88,5 @@
       "br",
       "when audio is on, sound thingies can be heard by taping on them"
     ]
-  },
-  "font_families": [
-    "nanum",
-    "courier",
-    "merriweather",
-    "source-code",
-    "anton",
-    "arvo"
-  ],
-  "site_settings": {
-    "bypass_token_list": [],
-    "auth_bypass_token": "",
-    "bypass_expiry": null
   }
 }

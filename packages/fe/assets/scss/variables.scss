@@ -23,6 +23,15 @@ $gray900: #212121;
 
 $lavender: #BDBBD7;
 $salt: #6c6575;
+$cove: #7794C5;
+$contessa: #D67272;
+$asparagus: #88995F;
+$effy: #F2A60D;
+$woodsmoke: #0B0C0E;
+$athensGray: #EFF0F3;
+$gullGray: #949DB8;
+$gullGrayDark: #6a7185;
+$blueHaze: #C2C3D6;
 
 // ----------------------------------------------------------------- Breakpoints
 $breakpoint_Tiny: 25.9375rem; // 415px
@@ -50,10 +59,10 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 }
 
 @mixin link {
-	@include fontSize_Main;
-  @include fontWeight_Bold;
+	font-size: 0.8125rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
-  @include fontFamily_NanumMyeongjo;
+  font-family: 'Nanum Myeongjo', serif;
 }
 
 @mixin linkShadow {
@@ -81,48 +90,63 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
   border-radius: 0.125rem;
 }
 
-@mixin tooltipMobilePosition {
-  &:hover {
-    &:before,
-    &:after {
-      transform: translate(0, 0);
-    }
-  }
-  &:before,
-  &:after {
-    transform: translate(0, 0.5rem);
-  }
-  &:before {
-    left: 1rem;
-  }
-  &:after {
-    left: 0.5rem;
-  }
-  &[data-tooltip-mobile-position="right"] {
-    &:before,
-    &:after {
-      left: auto;
-    }
-    &:before {
-      right: 1rem;
-    }
-    &:after {
-      right: 0.5rem;
-    }
-  }
+@mixin modalShadow {
+  filter: drop-shadow(1px 4px 4px rgba(0, 0, 0, 0.25));
 }
 
-@mixin selection-dark {
-  ::-moz-selection { background: black; color: white; }
-  ::selection { background: black; color: white; }
+@mixin modalShadowLight {
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.125));
 }
 
-@mixin selection-light {
-  ::-moz-selection { background: white; color: black; }
-  ::selection { background: white; color: black; }
-}
+// @mixin tooltipMobilePosition {
+//   &:hover {
+//     &:before,
+//     &:after {
+//       transform: translate(0, 0);
+//     }
+//   }
+//   &:before,
+//   &:after {
+//     transform: translate(0, 0.5rem);
+//   }
+//   &:before {
+//     left: 1rem;
+//   }
+//   &:after {
+//     left: 0.5rem;
+//   }
+//   &[data-tooltip-mobile-position="right"] {
+//     &:before,
+//     &:after {
+//       left: auto;
+//     }
+//     &:before {
+//       right: 1rem;
+//     }
+//     &:after {
+//       right: 0.5rem;
+//     }
+//   }
+// }
+
+// @mixin selection-dark {
+//   ::-moz-selection { background: black; color: white; }
+//   ::selection { background: black; color: white; }
+// }
+
+// @mixin selection-light {
+//   ::-moz-selection { background: white; color: black; }
+//   ::selection { background: white; color: black; }
+// }
 
 // --------------------------------------------------------------------- General
+/**
+ * Convert pixels to rems
+ */
+@function torem($value) {
+  @return math.div($value, 16) + rem;
+}
+
 @mixin transform($transforms) {
 	   -moz-transform: $transforms;
 	     -o-transform: $transforms;
@@ -276,4 +300,4 @@ $breakpoint_UltraLarge: 140.625rem; // 2250px
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // =============================================================================
-@import 'typography';
+// @import 'typography';

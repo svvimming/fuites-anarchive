@@ -1,14 +1,14 @@
 {
   "name": "be",
-  "version": "1.1.1",
-  "description": "Backend",
+  "version": "2.0.0",
+  "description": "Backend for the fuites anarchive",
   "main": "app.js",
   "scripts": {
     "dev": "../../node_modules/.bin/nodemon --exec 'npm run lint:staged && node app.js'",
-    "lint:staged": "../../node_modules/.bin/eslint -c .eslintrc.js $(git diff HEAD --name-only --relative --diff-filter=ACMRTUXB | grep  -E \"(.js$|.ts$)\")",
+    "lint:staged": "../../node_modules/.bin/eslint -c eslint.config.js $(git diff HEAD --name-only --relative --diff-filter=ACMRTUXB | grep  -E \"(.js$|.ts$)\")",
     "lint:full": "../../node_modules/.bin/eslint ./ --ext .js --ext .ts",
-    "reload:production": "pm2 reload fuites-be",
-    "reload:stable": "pm2 reload fuites-stable-be"
+    "reload:production": "pm2 reload v2-be",
+    "reload:stable": "pm2 reload v2-stable-be"
   },
   "nodemonConfig": {
     "ignore": [
@@ -18,38 +18,49 @@
       "public/*"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/svvimming/fuites-anarchive.git"
-  },
   "devDependencies": {
-    "eslint": "^8.24.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.3.0",
-    "eslint-plugin-promise": "^6.0.1",
-    "nodemon": "^2.0.20"
+    "eslint": "^9.6.0",
+    "neostandard": "^0.11.0",
+    "nodemon": "^3.1.4"
   },
   "dependencies": {
-    "axios": "^1.1.2",
-    "body-parser": "^1.20.1",
-    "connect-mongo": "^4.6.0",
+    "archiver": "^7.0.1",
+    "axios": "^1.5.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.2",
+    "change-case": "4.1.2",
+    "connect-mongo": "^5.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.0.0",
+    "ethereumjs-util": "^7.1.5",
     "express": "^4.17.1",
+    "express-rate-limit": "^7.2.0",
     "express-session": "^1.17.1",
-    "filesize": "^10.0.5",
-    "fs-extra": "^10.1.0",
-    "helmet": "^6.0.0",
+    "express-slow-down": "^2.0.3",
+    "filesize": "^10.1.0",
+    "fs-extra": "^11.1.1",
+    "helmet": "^7.0.0",
     "lodash": "^4.17.20",
-    "mime": "^3.0.0",
+    "md5": "^2.3.0",
+    "mim": "^0.3.1",
+    "mime": "^2.6.0",
     "minimist": "^1.2.5",
     "module-alias": "^2.2.2",
-    "moment": "^2.29.4",
-    "moment-timezone": "^0.5.37",
-    "mongoose": "^6.6.5",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33",
+    "mongoose": "^8.4.4",
+    "mongoose-lean-getters": "^2.1.0",
     "mongoose-slug-updater": "^3.2.3",
-    "socket.io": "^4.5.2",
-    "socket.io-client": "^4.5.2"
+    "octokit": "^3.1.2",
+    "papaparse": "^5.3.2",
+    "pg": "^8.7.3",
+    "rate-limit-mongo": "^2.3.2",
+    "sharp": "^0.33.4",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "uuid": "^10.0.0",
+    "uuid-apikey": "^1.5.1",
+    "web3": "^4.10.0"
   }
 }

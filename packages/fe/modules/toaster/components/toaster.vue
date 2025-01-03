@@ -1,53 +1,50 @@
 <template>
-  <div v-if="messages" class="toaster">
+  <div :class="['toaster', `from-${from}`]">
 
-    <template v-for="toast in toasts">
+    <transition-group :name="`toast-slide-in__${from}`">
       <Toast
-        v-if="toast"
+        v-for="toast in toasts"
         :key="toast.id"
-        :toast="toast" />
-    </template>
+        :toast="toast"
+        :timeout="timeout">
+
+        <template #toast="{ toast }">
+          <div :class="['toast', toast.type, { jingle: toast.jingle > 0 }]">
+            <div class="icon-container">
+              <!-- <IconCheck v-if="toast.type === 'success'" />
+              <IconExclamationTriangleFill v-if="toast.type === 'caution'" />
+              <IconExclamation v-if="toast.type === 'error'" /> -->
+            </div>
+            <div class="content" v-html="toast.text" />
+          </div>
+        </template>
+
+      </Toast>
+    </transition-group>
 
   </div>
 </template>
 
-<script>
-// ===================================================================== Imports
-import { mapGetters } from 'vuex'
-import Cookie from 'cookie'
-
-import Toast from '@/modules/toaster/components/toast'
-
-// ====================================================================== Export
-export default {
-  name: 'Toaster',
-
-  components: {
-    Toast
-  },
-
-  computed: {
-    ...mapGetters({
-      messages: 'toaster/messages'
-    }),
-    toasts () {
-      const toasts = this.messages.filter((message) => {
-        if (message && message.type === 'toast') { return message }
-        return false
-      })
-      if (toasts.length > 0) { return toasts.reverse() }
-      return false
-    }
-  },
-
-  mounted () {
-    const cookie = this.$getCookie(document.cookie, 'toast')
-    if (cookie) {
-      this.$toaster.addToast(JSON.parse(cookie))
-      document.cookie = Cookie.serialize('toast', 'expired', { path: '/', maxAge: 0, expires: new Date('Thu, 01 Jan 1970 00:00:00 GMT') })
-    }
+<script setup>
+// ======================================================================= Setup
+const props = defineProps({
+  from: {
+    type: [String, Object],
+    required: false,
+    default: null
   }
-}
+})
+
+// ======================================================================== Data
+const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
+const toasterStore = useToasterStore()
+const { toasts } = storeToRefs(toasterStore)
+
+const settings = computed(() => siteData.value?.settings?.toaster || {})
+const from = computed(() => props.from || settings.value?.from || 'top')
+const timeout = computed(() => settings.value?.timeout || 5000)
+
 </script>
 
 <style lang="scss" scoped>
@@ -57,19 +54,53 @@ $padding: 1rem;
 .toaster {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   position: fixed;
-  top: 0;
-  left: 50%;
-  padding-top: $padding;
-  transform: translateX(-50%);
   z-index: 100000;
-  @include customMaxMQ (32rem) {
-    left: 0;
-    width: 100%;
-    padding: $padding;
-    padding-bottom: 0;
-    transform: none;
+  &.from-top {
+    top: $padding;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  &.from-bottom {
+    bottom: $padding;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/**
+ * 💡 these animations should be edited in an external stylesheet and will
+ * require the use of `!important`
+ */
+
+.toast-slide-in__top {
+  &-move,
+  &-enter-active,
+  &-leave-active {
+    transition: all 0.5s ease;
+  }
+  &-enter-from {
+    opacity: 0;
+    transform: translateY(-2rem);
+  }
+  &-leave-to {
+    opacity: 0;
+  }
+}
+
+.toast-slide-in__bottom {
+  &-move,
+  &-enter-active,
+  &-leave-active {
+    transition: all 0.5s ease;
+  }
+  &-enter-from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  &-leave-to {
+    opacity: 0;
   }
 }
 </style>

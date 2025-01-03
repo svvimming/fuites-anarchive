@@ -1,24 +1,26 @@
 <template>
-  <div
-    v-if="!authenticated && isNotLandingPage"
-    :class="['auth-container', { touchmode }]">
+  <div class="auth-container">
+    <!-- ============================================================ Prompt -->
+    <span class="title text">Add a token</span>
+    <span class="prompt text">{{ message }}</span>
+    <!-- ============================================================ Input -->
     <div class="input-container">
 
-      <div :class="['input-wrapper', { active: token }]">
+      <div :class="['input-wrapper', { active: value }]">
         <input
-          v-model="token"
+          v-model="value"
           ref="input"
           type="email"
           autocomplete="off"
           class="input"
           autocapitalize="none"
-          @keyup.enter="submit(token)"
+          @keyup.enter="submit"
           placeholder="enter token" />
       </div>
 
       <button
-        :class="['link', 'portal-link', 'submit', { active: token }]"
-        @click="submit(token)">
+        :class="['link', 'portal-link', 'submit', { active: !!value }]"
+        @click="submit">
         submit
       </button>
 
@@ -26,49 +28,30 @@
   </div>
 </template>
 
-<script>
-// ====================================================================== Import
-import { mapGetters, mapActions } from 'vuex'
-
-// ====================================================================== Export
-export default {
-  name: 'Auth',
-
-  data () {
-    return {
-      token: ''
-    }
-  },
-
-  computed: {
-    ...mapGetters({
-      authenticated: 'general/authenticated',
-      touchmode: 'general/touchmode',
-      landing: 'general/landing'
-    }),
-    isNotLandingPage () {
-      return this.$route.path !== '/' && this.$route.path !== '/info'
-    },
-    bypassTokenList () {
-      return this.landing.data.site_settings.bypass_token_list
-    }
-  },
-
-  methods: {
-    ...mapActions({
-      authenticate: 'general/authenticate'
-    }),
-    async submit (token) {
-      const sanitized = token.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
-      const joined = sanitized.join('-')
-      const authenticated = await this.authenticate(joined)
-      const pagename = this.$route.params.id
-      if (process.client && authenticated && !this.bypassTokenList.includes(pagename)) {
-        localStorage.setItem('fuitesAnarchiveAuthToken', joined)
-        localStorage.setItem('fuitesAnarchiveAuthDate', Date.now().toString())
-      }
-    }
+<script setup>
+// ======================================================================= Setup
+defineProps({
+  message: {
+    type: String,
+    required: true
   }
+})
+const emit = defineEmits(['authenticate-success'])
+
+// ======================================================================== Data
+const pocketStore = usePocketStore()
+const { pocket } = storeToRefs(pocketStore)
+const value = ref('')
+
+// ===================================================================== Methods
+const submit = async () => {
+  const sanitized = value.value.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
+  const joined = sanitized.join('-')
+  await pocketStore.getAuthPocket(joined)
+  if (pocket.value.authenticated) {
+    emit('authenticate-success')
+  }
+  value.value = ''
 }
 </script>
 
@@ -78,35 +61,47 @@ export default {
   position: relative;
   transition: 300ms ease;
   filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0));
-  @include fontSize_Main;
-  @include fontWeight_Bold;
+  font-size: torem(18);
+  font-weight: 700;
   letter-spacing: 0.1em;
-  @include fontFamily_NanumMyeongjo;
-  &:hover {
-    @include linkShadow;
-  }
 }
 
 .auth-container {
-  &.touchmode {
-    padding-left: 0.5rem;
-    .input-container {
-      flex-direction: row;
-    }
-    .input-wrapper {
-      margin: 0;
-    }
-    .input {
-      width: 8rem;
-      font-size: 1.25rem;
-    }
-    .submit {
-      position: relative;
-      margin: 0 0.5rem;
-      padding: 0 0.5rem;
-      font-size: 1rem;
-    }
+  padding: torem(16);
+  border-radius: torem(20);
+  background-color: $athensGray;
+  @include modalShadow;
+  .title {
+    font-weight: 600;
   }
+  .title,
+  .prompt {
+    margin-bottom: torem(10);
+  }
+  .text {
+    display: block;
+    font-size: torem(12);
+    line-height: 1.5;
+  }
+  // &.touchmode {
+  //   padding-left: 0.5rem;
+  //   .input-container {
+  //     flex-direction: row;
+  //   }
+  //   .input-wrapper {
+  //     margin: 0;
+  //   }
+  //   .input {
+  //     width: 8rem;
+  //     font-size: 1.25rem;
+  //   }
+  //   .submit {
+  //     position: relative;
+  //     margin: 0 0.5rem;
+  //     padding: 0 0.5rem;
+  //     font-size: 1rem;
+  //   }
+  // }
 }
 
 // ////////////////////////////////////////////////////////////// authentication
@@ -121,7 +116,6 @@ export default {
 .input-wrapper {
   flex-grow: 1;
   margin: 0.25rem 0;
-  margin-left: 1.5rem;
   position: relative;
   &:after {
     content: '';
@@ -152,30 +146,28 @@ export default {
 .input {
   width: 100%;
   height: 2rem;
-  @include fontSize_Main;
-  @include fontWeight_Bold;
+  font-size: torem(18);
+  font-weight: 700;
   letter-spacing: 0.1em;
 }
 
 input::-webkit-input-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::-moz-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::-ms-placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 input::placeholder {
-  color: black;
+  color: $woodsmoke;
 }
 
 .submit {
-  position: absolute;
-  top: 100%;
   margin: 0.25rem 0;
   margin-left: 1.5rem;
   text-align: left;

@@ -11,9 +11,6 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
-const Rules = require('../rules.json')
-const argv = require('minimist')(process.argv.slice(2))
-const instance = argv.instance
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
@@ -43,9 +40,10 @@ try {
 
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
-// require('@Module_Thingie')
-// require('@Module_Page')
-// require('@Module_Portal')
+require('@Module_Thingie')
+require('@Module_Page')
+require('@Module_Portal')
+require('@Module_Verse')
 
 const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities`)
 
@@ -53,44 +51,111 @@ const { GenerateWebsocketClient } = require(`${MC.packageRoot}/modules/utilities
 // -----------------------------------------------------------------------------
 MC.app = Express()
 
-const socket = GenerateWebsocketClient(instance)
+const socket = GenerateWebsocketClient()
 
 // ===================================================================== connect
-socket.on('connect', () => { socket.emit('join-room', `${instance}|cron|websocket`) })
+socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 
 // /////////////////////////////////////////////////////////////////// Functions
-// ------------------------------------------------------------- createNewPortal
-const createNewPortal = async (thingieId, portalName, vertices) => {
+/**
+ * @method checkAllPortalThingiesExist
+ */
+
+const checkAllPortalThingiesExist = async () => {
   try {
-    for (let i = 0; i < vertices.length; i++) {
-      const vertex = vertices[i]
-      if (!vertex.hasOwnProperty('at')) {
-        const thingie = await MC.mongoInstances[instance].model.Thingie.findById(thingieId)
-        vertex.at = {
-          x: thingie.at.x + (Math.floor(Math.random() * thingie.width)),
-          y: thingie.at.y + (Math.floor(Math.random() * 20))
-        }
+    // Loop through all Portals irrespective of Verse
+    const allPortals = await MC.model.Portal.find({})
+    for (let i = 0; i < allPortals.length; i++) {
+      const portal = allPortals[i]
+      const hasThingieRef = await MC.model.Thingie.exists({ _id: portal.thingie_ref })
+      // If Portal references a Thingie that no longer exists, delete it
+      if (!hasThingieRef) {
+        await closePortal(portal)
       }
     }
-    const created = await MC.mongoInstances[instance].model.Portal.create({
-      thingie_ref: thingieId,
-      edge: portalName,
-      vertices: { a: vertices[0], b: vertices[1] }
+  } catch (e) {
+    console.log('===================== [Function: checkAllPortalThingiesExist]')
+    console.log(e)
+  }
+}
+
+/**
+ * @method closePortal
+ */
+
+const closePortal = async portal => {
+  try {
+    const vertices = portal.vertices
+    for (let i = 0; i < vertices.length; i++) {
+      // Remove the portal ref from both connected Pages
+      const updated = await MC.model.Page.findOneAndUpdate(
+        { name: vertices[i].location },
+        { $pull: { portal_refs: portal._id } },
+        { new: true }
+      ).populate({
+        path: 'portal_refs',
+        populate: { path: 'thingie_ref', select: 'colors' }
+      })
+      // Broadcast updated Pages to the socket
+      socket.emit('cron|page-portals-changed|initialize', updated)
+    }
+    // Delete this Portal
+    const closed = await MC.model.Portal.deleteOne({ id: portal._id })
+    console.log(`Portal closed: ${closed}`)
+  } catch (e) {
+    console.log('===================================== [function: closePortal]')
+    console.log(e)
+  }
+}
+
+/**
+ * @method createNewPortal
+ * @param {Object} verse
+ * @param {Object} thingie
+ * @param {Array} vertices
+ */
+
+const createNewPortal = async (verse, thingie, vertices) => {
+  try {
+    // Create the new Portal document
+    const created = await MC.model.Portal.create({
+      verse: verse.name,
+      verse_ref: verse._id,
+      thingie_ref: thingie._id,
+      vertices
     })
     if (created) {
-      console.log(`New portal opened between ${created.edge.replace('_', ' and ')}.`)
-      for (let i = 0; i < vertices.length; i++) {
-        const updated = await MC.mongoInstances[instance].model.Page.findOneAndUpdate(
-          { name: vertices[i].location },
+      // Console log the new connection
+      console.log(`New portal opened between ${vertices[0].location} and ${vertices[1].location}.`)
+      // Update the two Pages connected by the new Portal with portal refs.
+      for (let i = 0; i < created.vertices.length; i++) {
+        const updated = await MC.model.Page.findOneAndUpdate(
+          {
+            name: created.vertices[i].location,
+            verse: verse.name
+          },
           { $push: { portal_refs: created._id } },
           { new: true }
         ).populate({
           path: 'portal_refs',
           populate: { path: 'thingie_ref', select: 'colors' }
         })
-        if (updated) {
-          socket.emit(`${instance}|cron|page-portals-changed|initialize`, updated)
-        }
+        // Add page refs to each vertex
+        created.vertices[i].page_ref = updated._id
+        // Broadcast the updated page to the socket
+        socket.emit('cron|page-portals-changed|initialize', updated)
+      }
+      // Save the Portal with updated vertex page refs
+      await created.save()
+    }
+    // Now that a new Portal is associated with this Thingie, fetch them and
+    // make sure there aren't more than the max chain limit for this Verse
+    const maxLinks = verse.settings.tunneler.portalChainLength
+    const portals = await MC.model.Portal.find({ thingie_ref: thingie._id }).sort({ createdAt: 'desc' })
+    if (portals.length > maxLinks) {
+      const outdatedPortals = portals.slice(maxLinks)
+      for (let i = 0; i < outdatedPortals.length; i++) {
+        await closePortal(outdatedPortals[i])
       }
     }
   } catch (e) {
@@ -99,82 +164,53 @@ const createNewPortal = async (thingieId, portalName, vertices) => {
   }
 }
 
-// ----------------------------------------------------------------- closePortal
-const closePortal = async (incoming) => {
-  try {
-    const portal = await MC.mongoInstances[instance].model.Portal.findById(incoming._id)
-    const vertices = [portal.vertices.a, portal.vertices.b]
-    for (let i = 0; i < vertices.length; i++) {
-      const updated = await MC.mongoInstances[instance].model.Page.findOneAndUpdate(
-        { name: vertices[i].location },
-        { $pull: { portal_refs: portal._id } },
-        { new: true }
-      ).populate({
-        path: 'portal_refs',
-        populate: { path: 'thingie_ref', select: 'colors' }
-      })
-      socket.emit(`${instance}|cron|page-portals-changed|initialize`, updated)
-    }
-    const closed = await MC.mongoInstances[instance].model.Portal.deleteOne({ id: portal._id })
-    console.log(`Portal closed: ${closed}`)
-  } catch (e) {
-    console.log('===================================== [Function: closePortal]')
-    console.log(e)
-  }
-}
+/**
+ * @method updatePortalsBetweenPages
+ * @param {Object} verse
+ */
 
-// ---------------------------------------------------- checkPortalThingiesExist
-const checkPortalThingiesExist = async () => {
+const updatePortalsBetweenPages = async verse => {
   try {
-    const allPortals = await MC.mongoInstances[instance].model.Portal.find({})
-    const portalsMissingThingies = []
-    for (let i = 0; i < allPortals.length; i++) {
-      const hasThingieRef = await MC.mongoInstances[instance].model.Thingie.exists({ _id: allPortals[i].thingie_ref })
-      if (!hasThingieRef) {
-        portalsMissingThingies.push(allPortals[i]._id)
-      }
-    }
-    for (let j = 0; j < portalsMissingThingies.length; j++) {
-      await closePortal(portalsMissingThingies[j])
-    }
-  } catch (e) {
-    console.log('======================== [Function: checkPortalThingiesExist]')
-    console.log(e)
-  }
-}
-
-// -------------------------------------------------- updatePortalsBetweenPages
-const updatePortalsBetweenPages = async () => {
-  try {
-    await checkPortalThingiesExist()
-    const thingies = await MC.mongoInstances[instance].model.Thingie.find({})
-    const preventConnections = Rules[instance]?.tunneler?.prevent_connection_list || []
-    const maxLinks = Rules[instance]?.tunneler?.max_portal_chain_length || 3
-    for (let i = 0; i < thingies.length; i++) {
+    // Get all Thingies in this Verse
+    const thingies = await MC.model.Thingie.find({ verse: verse.name })
+    const len = thingies.length
+    const maxLinks = verse.settings.tunneler.portalChainLength
+    // Loop through Thingies
+    for (let i = 0; i < len; i++) {
       const thingie = thingies[i]
-      const locations = [...thingie.last_locations].reverse()
-      const portals = await MC.mongoInstances[instance].model.Portal
-        .find({ thingie_ref: thingie._id })
-        .sort({ createdAt: 'desc' })
-      if (locations.length > 1) {
-        const len = Math.min(locations.length - 1, maxLinks)
-        for (let j = 0; j < len; j++) {
-          const vA = locations[j]
-          const vB = locations[j + 1]
-          if (vA.location !== vB.location) {
-            const portalName = `${vA.location}_${vB.location}`
-            const portalExists = portals.some(portal => portal.edge === portalName)
-            const notOnPreventList = !preventConnections.includes(vA.location) && !preventConnections.includes(vB.location)
-            if (!portalExists && notOnPreventList) {
-              await createNewPortal(thingie._id, portalName, [vA, vB])
-            }
-          }
+      // Get thingie location history without the Pocket and Compost
+      // Reverse the array to start with the most recent
+      const locationHistory = thingie.location_history.filter(item => item.location !== 'pocket' && item.location !== 'compost').reverse()
+      const entries = locationHistory.length
+      // Loop through the locations
+      const locationObjects = []
+      const locations = []
+      // Add only one unique record for each location to the locationObjects array
+      // Break the loop if the number of location objects is 1 greater than the Verse portal chain length
+      for (let j = 0; j < entries; j++) {
+        const item = locationHistory[j]
+        if (!locations.includes(item.location)) {
+          locationObjects.push(item)
+          locations.push(item.location)
         }
+        if (locationObjects.length > maxLinks) { break }
       }
-      if (portals.length > maxLinks) {
-        const outdatedPortals = portals.slice(maxLinks)
-        for (let k = 0; k < outdatedPortals.length; k++) {
-          await closePortal(outdatedPortals[k]._id)
+      // Get all Portals associated with this Thingie
+      const portals = await MC.model.Portal.find({ thingie_ref: thingie._id }).sort({ createdAt: 'desc' })
+      // Loop through locationObjects and determine if a portal associated with
+      // this Thingie already exists between the two locations
+      if (locationObjects.length > 1) {
+        for (let k = 0; k < locationObjects.length - 1; k++) {
+          const a = locationObjects[k]
+          const b = locationObjects[k + 1]
+          const connectionAlreadyExists = portals.find(portal => {
+            const vertices = portal.vertices.map(vertex => vertex.location)
+            return vertices.includes(a.location) && vertices.includes(b.location)
+          })
+          // If there is no existing portal that meets the criteria, create one
+          if (!connectionAlreadyExists) {
+            await createNewPortal(verse, thingie, [a, b])
+          }
         }
       }
     }
@@ -184,38 +220,23 @@ const updatePortalsBetweenPages = async () => {
   }
 }
 
-// //////////////////////////////////////////////////////////// SetActivePortals
-const setActivePortals = async () => {
-  try {
-    const pages = await MC.mongoInstances[instance].model.Page.find({}).populate({
-      path: 'portal_refs',
-      populate: { path: 'thingie_ref' }
-    })
-    const len = pages.length
-    for (let i = 0; i < len; i++) {
-      const page = pages[i]
-      const connections = page.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== page.name))
+/**
+ * @method updateVersePortals
+ */
 
-      if (page.portal_refs.length) {
-        const slugs = [...new Set(connections.flat())]
-        for (let j = 0; j < slugs.length; j++) {
-          const slug = slugs[j]
-          const refs = page.portal_refs.filter(ref => ref.edge.includes(slug))
-          const lowestP = refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
-          const enabled = refs.filter((portal) => portal.enabled)
-          for (let k = 0; k < enabled.length; k++) {
-            await MC.mongoInstances[instance].model.Portal.findOneAndUpdate({ _id: enabled[k]._id }, { enabled: false })
-          }
-          await MC.mongoInstances[instance].model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
-        }
-        // for (let i = 0; i < enabled.length; i++) {
-        //   await MC.mongoInstances[instance].model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
-        // }
-        // await MC.mongoInstances[instance].model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
-      }
+const updateVersePortals = async () => {
+  try {
+    // First check to see if each portal's thingie-ref thingie exists,
+    // if not, close the portal. This operates globally independent of Verse.
+    await checkAllPortalThingiesExist()
+    // Next, loop through all Verses and update portals within each Verse.
+    const verses = await MC.model.Verse.find({})
+    const len = verses.length
+    for (let i = 0; i < len; i++) {
+      await updatePortalsBetweenPages(verses[i])
     }
   } catch (e) {
-    console.log('==================================== [Cron: setActivePortals]')
+    console.log('============================== [function: updateVersePortals]')
     console.log(e)
   }
 }
@@ -225,21 +246,50 @@ const setActivePortals = async () => {
 MC.app.on('mongoose-connected', async () => {
   console.log('🚇 Tunneler started')
   try {
-    const mongoInstances = Object.keys(MC.mongoInstances)
-    if (!instance) {
-      throw new Error('Missing argument: no Mongo instance name provided.')
-    }
-    if (!mongoInstances.includes(instance)) {
-      throw new Error('The provided instance does not exist.')
-    }
-    await updatePortalsBetweenPages()
-    await setActivePortals()
+    await updateVersePortals()
+    // await setActivePortals()
     console.log('🚇 Tunneler updates completed')
     socket.disconnect()
     process.exit(0)
   } catch (e) {
-    console.log('===================================== [Cron: GodessOfAnarchy]')
+    console.log('============================================ [Cron: Tunneler]')
     console.log(e)
     process.exit(0)
   }
 })
+
+// //////////////////////////////////////////////////////////// SetActivePortals
+// const setActivePortals = async () => {
+//   try {
+//     const pages = await MC.model.Page.find({}).populate({
+//       path: 'portal_refs',
+//       populate: { path: 'thingie_ref' }
+//     })
+//     const len = pages.length
+//     for (let i = 0; i < len; i++) {
+//       const page = pages[i]
+//       const connections = page.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== page.name))
+
+//       if (page.portal_refs.length) {
+//         const slugs = [...new Set(connections.flat())]
+//         for (let j = 0; j < slugs.length; j++) {
+//           const slug = slugs[j]
+//           const refs = page.portal_refs.filter(ref => ref.edge.includes(slug))
+//           const lowestP = refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
+//           const enabled = refs.filter((portal) => portal.enabled)
+//           for (let k = 0; k < enabled.length; k++) {
+//             await MC.model.Portal.findOneAndUpdate({ _id: enabled[k]._id }, { enabled: false })
+//           }
+//           await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
+//         }
+//         // for (let i = 0; i < enabled.length; i++) {
+//         //   await MC.model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
+//         // }
+//         // await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
+//       }
+//     }
+//   } catch (e) {
+//     console.log('==================================== [Cron: setActivePortals]')
+//     console.log(e)
+//   }
+// }

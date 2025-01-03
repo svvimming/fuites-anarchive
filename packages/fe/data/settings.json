@@ -1,0 +1,132 @@
+{
+  "uploader": {
+    "maxFileSizeMb": 8
+  },
+  "toaster": {
+    "display": 3,
+    "timeout": 5000,
+    "from": "top"
+  },
+  "fonts": [
+    {
+      "class": "nanum",
+      "display": "Nanum",
+      "fontFaceDeclaration": "\"Nanum Myeongjo\", serif"
+    },
+    {
+      "class": "courier",
+      "display": "Courier",
+      "fontFaceDeclaration": "\"Courier Prime\", monospace"
+    },
+    {
+      "class": "merriweather",
+      "display": "Merriweather",
+      "fontFaceDeclaration": "\"Merriweather\", serif"
+    },
+    {
+      "class": "source-code",
+      "display": "Source Code",
+      "fontFaceDeclaration": "\"Source Code Pro\", monospace"
+    },
+    {
+      "class": "anton",
+      "display": "Anton",
+      "fontFaceDeclaration": "\"Anton\", sans-serif"
+    },
+    {
+      "class": "arvo",
+      "display": "Arvo",
+      "fontFaceDeclaration": "\"Arvo\", serif"
+    },
+    {
+      "class": "pt-sans",
+      "display": "PT Sans",
+      "fontFaceDeclaration": "\"PT Sans\", sans-serif"
+    },
+    {
+      "class": "pt-serif",
+      "display": "PT Serif",
+      "fontFaceDeclaration": "\"PT Serif\", serif"
+    }
+  ],
+  "thingieEditableParams": {
+    "shared": [
+      {
+        "type": "static",
+        "name": "rotation",
+        "content": "θ",
+        "params": [
+          {
+            "directive": "rotateCW",
+            "button": "retrigger",
+            "content": "CW"
+          },
+          {
+            "directive": "rotateCCW",
+            "button": "retrigger",
+            "content": "CCW"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "z-index",
+        "content": "z",
+        "params": [
+          {
+            "directive": "sendBack",
+            "content": "Back",
+            "closeOnSelect": true
+          },
+          {
+            "directive": "bringForward",
+            "content": "Forward"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "opacity",
+        "content": "O",
+        "params": [
+          {
+            "directive": "decreaseOpacity",
+            "content": "O-"
+          },
+          {
+            "directive": "increaseOpacity",
+            "content": "O+"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "delete-thingie",
+        "params": [
+          {
+            "directive": "deleteThingie"
+          }
+        ]
+      }
+    ]
+  },
+  "tooltips": {
+    "mode-menu-toggle-button": "Settings that affect the app as a whole.",
+    "token-input-toggle-button": "Click here to submit a token.<br>A token gives access to create within a Verse.",
+    "uploader-toggle-button": "Click to toggle the file uploader where you can add new image and sound thingies."
+  },
+  "landingSites": [
+    {
+      "label": "portals",
+      "slug": "portals"
+    },
+    {
+      "label": "audio",
+      "slug": "audio"
+    },
+    {
+      "label": "tooltips",
+      "slug": "drippy"
+    }
+  ]
+}

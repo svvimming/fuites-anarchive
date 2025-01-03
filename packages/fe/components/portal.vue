@@ -1,166 +1,190 @@
 <template>
-  <nuxt-link
-    :to="`/${slug}`"
-    class="portal"
-    :style="portalStyles">
+  <v-group
+    ref="groupRef"
+    :config="groupConfig">
 
-    <div class="portal-thingie">
-      <div
-        v-if="print"
-        class="page-preview"
-        :style="pagePreview">
-      </div>
-    </div>
+    <v-image
+      v-if="image"
+      ref="imageRef"
+      :config="imageConfig" />
 
-  </nuxt-link>
+    <v-circle ref="pulseRef" :config="pulseConfig" />
+
+    <v-circle
+      ref="portalRef"
+      :config="portalConfig"
+      @mouseover="hovering = true"
+      @mouseout="hovering = false"
+      @click="handlePortalClick" />
+
+  </v-group>
 </template>
 
-<script>
-// ====================================================================== Export
-export default {
-  name: 'Portal',
+<script setup>
+import { onBeforeMount } from 'vue';
 
-  props: {
-    to: {
-      type: Object,
-      required: true,
-      default: () => ({})
-    }
-  },
+// ======================================================================= Setup
+const props = defineProps({
+  portal: {
+    type: Object,
+    required: true
+  }
+})
 
-  data () {
-    return {
-      fallback: ['#BDBBD7', '#6c6575', '#ffffff'],
-      print: ''
-    }
-  },
+// ======================================================================== Data
+const verseStore = useVerseStore()
+const { verse, page } = storeToRefs(verseStore)
+const generalStore = useGeneralStore()
+const { baseUrl } = storeToRefs(generalStore)
 
-  async fetch () {
-    const response = await this.$axiosAuth.get(`/${this.$config.mongoInstance}/get-page-background?page=${this.to.slug}`)
-    if (response.data.payload) {
-      this.print = response.data.payload.data_url
-    }
-  },
+const groupRef = ref(null)
+const imageRef = ref(null)
+const pulseRef = ref(null)
+const portalRef = ref(null)
+const imageLoadError = ref(false)
+const imageLoading = ref(false)
+const image = ref(false)
+const hovering = ref(false)
+const animation = ref(false)
+const radius = 12 // portal radius
 
-  computed: {
-    slug () {
-      return this.to.slug
-    },
-    position () {
-      return this.to.at ? this.to.at : { x: 0, y: 0 }
-    },
-    colors () {
-      const colors = this.to.colors
-      if (Array.isArray(colors)) {
-        if (colors.length > 2) {
-          return colors
-        } else {
-          const len = 3 - colors.length
-          const hydrated = [...colors]
-          for (let i = 0; i < len; i++) {
-            hydrated.push(this.fallback[i])
-          }
-          return hydrated
-        }
-      }
-      return [...this.fallback].reverse()
-    },
-    portalStyles () {
-      return {
-        left: this.position.x + 'px',
-        top: this.position.y + 'px',
-        '--portal-gradient-start': this.colors[0],
-        '--portal-gradient-stop': `${this.colors[1]}80`,
-        '--portal-hover-ring': `${this.colors[2]}80`
-      }
-    },
-    pagePreview () {
-      return this.print ? { 'background-image': `url(${this.print})` } : { 'background-image': 'none' }
-    }
+// ==================================================================== Computed
+const verseName = computed(() => verse.value.data.name)
+const vertices = computed(() => props.portal.vertices)
+const colors = computed(() => props.portal.thingie_ref?.colors || [])
+const thisVertex = computed(() => vertices.value.find(vertex => vertex.location === page.value.data.name))
+const thatVertex = computed(() => vertices.value.find(vertex => vertex.location !== page.value.data.name))
+
+const destPrintId = computed(() => {
+  const prints = thatVertex.value.page_ref?.print_refs || []
+  return prints[prints.length - 1]
+})
+
+const groupConfig = computed(() => ({
+  x: thisVertex.value.at.x,
+  y: thisVertex.value.at.y
+}))
+
+const imageConfig = computed(() => ({
+  image: image.value,
+  width: radius * 4,
+  height: radius * 4,
+  x: -2 * radius,
+  y: -2 * radius,
+  opacity: 0
+}))
+
+const pulseConfig = computed(() => ({
+  radius,
+  opacity: 0,
+  fill: colors.value[2] || '#ffffff'
+}))
+
+const portalConfig = computed(() => ({
+  radius,
+  fillRadialGradientStartPoint: { x: 0, y: 0 },
+  fillRadialGradientStartRadius: 0,
+  fillRadialGradientEndPoint: { x: 0, y: 0 },
+  fillRadialGradientEndRadius: radius,
+  fillRadialGradientColorStops: [0.15, colors.value[0] || '#6c6575', 0.45, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)']
+}))
+
+// ==================================================================== Watchers
+watch(hovering, (val) => {
+  const group = groupRef.value.getNode()
+  const preview = imageRef.value?.getNode()
+  const pulse = pulseRef.value.getNode()
+  const prtl = portalRef.value.getNode()
+  const scale = val ? 2.5 : 1
+  const grad = val ? [0.075, colors.value[0] || '#6c6575', 0.33, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)'] : [0.15, colors.value[0] || '#6c6575', 0.45, colors.value[1] || '#BDBBD7', 1.0, 'rgba(255, 255, 255, 0)']
+  group.to({
+    scaleX: scale,
+    scaleY: scale,
+    duration: 0.2,
+    easing: Konva.Easings.EaseInOut
+  })
+  if (preview) {
+    preview.to({
+      opacity: val ? 1 : 0,
+      duration: 0.2,
+      easing: Konva.Easings.EaseInOut
+    })
+  }
+  prtl.to({
+    scaleX: scale,
+    scaleY: scale,
+    fillRadialGradientColorStops: grad,
+    duration: 0.2,
+    easing: Konva.Easings.EaseInOut
+  })
+  if (val) {
+    animation.value.start()
+  } else {
+    animation.value.stop()
+    pulse.opacity(0)
+  }
+})
+
+watch(destPrintId, id => {
+  if (id) {
+    loadImage()
+  } else {
+    clearImage()
+  }
+})
+
+// ===================================================================== Methods
+/**
+ * @method handlePortalClick
+ */
+
+const handlePortalClick = async () => {
+  if (verseName.value && thatVertex.value) {
+    const newRoute = `/${verseName.value}/${thatVertex.value.location}`
+    await navigateTo({ path: newRoute })
+  }  
+}
+
+/**
+ * @method loadImage
+ */
+
+const loadImage = () => {
+  imageLoading.value = true
+  const img = document.createElement('img')
+  img.onload = function () {
+    imageLoadError.value = false
+    imageLoading.value = false
+    image.value = img
+  }
+  img.onerror = function () {
+    imageLoadError.value = true
+    imageLoading.value = false
+  }
+  img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
+}
+
+/**
+ * @method clearImage
+ */
+
+const clearImage = () => {
+  if (image.value) {
+    image.value.remove()
+    image.value = false
   }
 }
+
+// ======================================================================= Hooks
+onMounted(() => {
+  // Initialize hover animation
+  const pulse = pulseRef.value.getNode()
+  animation.value = new Konva.Animation((frame) => {
+    pulse.opacity(0.5 * Math.sin((frame.time * 2 * Math.PI - (Math.PI / 2)) / 2000) + 0.5)
+  }, pulse.getLayer())
+  // Load portal preview image
+  if (destPrintId.value) { loadImage() }
+})
+
+onBeforeMount(() => { clearImage() })
 </script>
-
-<style lang="scss" scoped>
-// ///////////////////////////////////////////////////////////////////// General
-.portal {
-  --portal-gradient-start: #ffffff;
-  --portal-gradient-stop: #ffffff;
-  --portal-hover-ring: #ffffff;
-  position: absolute;
-  z-index: 10000;
-  user-select: none;
-  -webkit-user-drag: none;
-  .page-preview {
-    filter: drop-shadow(0px 0px 2px var(--portal-gradient-stop));
-  }
-  .portal-thingie {
-    &:before {
-      background-color: var(--portal-hover-ring);
-      filter: drop-shadow(0 0 0.125rem var(--portal-hover-ring)) drop-shadow(0 0 0.25rem var(--portal-hover-ring));
-      opacity: 0;
-    }
-    &:after {
-      background: radial-gradient(circle, var(--portal-gradient-start) 10%, var(--portal-gradient-stop) 30%, rgba(255, 255, 255, 0) 66%);
-    }
-  }
-  &:hover {
-    .portal-thingie {
-      transform: scale(2.5);
-      &:before {
-        animation: 2s linear 0s infinite normal forwards running hoverRing;
-      }
-      &:after {
-        transform: scale(3);
-        background: radial-gradient(circle, var(--portal-gradient-start) 5%, var(--portal-gradient-stop) 20%, rgba(255, 255, 255, 0) 66%);
-      }
-    }
-    .page-preview {
-      opacity: 1;
-    }
-  }
-}
-
-.page-preview {
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background-position: center;
-  background-size: 100%;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: 300ms ease;
-}
-
-.portal-thingie {
-  position: relative;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  z-index: 2;
-  transition: 300ms ease;
-  opacity: 0.9;
-  &:before,
-  &:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: inherit;
-    height: inherit;
-    border-radius: inherit;
-    z-index: 1;
-  }
-}
-
-@keyframes hoverRing {
-  0%, 100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-</style>

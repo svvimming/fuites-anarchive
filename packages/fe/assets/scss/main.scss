@@ -1,90 +1,17 @@
-////////////////////////////////////////////////////////////////////////// Fonts
+//////////////////////////////////////////////////////////////////////// General
 // -----------------------------------------------------------------------------
 @import 'normalize';
 @import 'grid/gridlex-2.7.1';
 
-$fontAssetPath: '~assets/fonts';
+/**
+ * Fonts, text and background colours are applied here.
+ *
+ * See utilities.scss to edit these vars.
+ */
 
-// -------------------------------------------------------------- Nanum Myeongjo
-@font-face {
-  font-family: 'Nanum Myeongjo';
-  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Nanum Myeongjo';
-  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Bold.ttf') format('truetype');
-  font-weight: 700;
-}
-
-// ---------------------------------------------------------------- Merriweather
-@font-face {
-  font-family: 'Merriweather';
-  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Merriweather';
-  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Italic.ttf') format('truetype');
-  font-style: italic;
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Merriweather';
-  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Bold.ttf') format('truetype');
-  font-weight: 700;
-}
-
-// --------------------------------------------------------------- Courier Prime
-@font-face {
-  font-family: 'Courier Prime';
-  src: url('#{$fontAssetPath}/CourierPrime/CourierPrime-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// --------------------------------------------------------------------- Cousine
-@font-face {
-  font-family: 'Cousine';
-  src: url('#{$fontAssetPath}/Cousine/Cousine-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// ------------------------------------------------------------------------ Arvo
-@font-face {
-  font-family: 'Arvo';
-  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// ------------------------------------------------------------------------ Arvo
-@font-face {
-  font-family: 'Arvo';
-  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// ----------------------------------------------------------------------- Anton
-@font-face {
-  font-family: 'Anton';
-  src: url('#{$fontAssetPath}/Anton/Anton-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// ------------------------------------------------------------- Source Code Pro
-@font-face {
-  font-family: 'Source Code Pro';
-  src: url('#{$fontAssetPath}/SourceCodePro/SourceCodePro-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-//////////////////////////////////////////////////////////////////////// General
-//------------------------------------------------------------------------------
 html {
   &.no-scroll {
-    overflow-y: hidden;
+    overflow: hidden;
   }
   &.no-cursor {
     cursor: none;
@@ -92,12 +19,12 @@ html {
 }
 
 body {
-  @include selection-light;
-  @include fontFamily_NanumMyeongjo;
+  // @include selection-light;
+  font-family: 'PT Sans', sans-serif;
   padding: 0;
   margin: 0;
   height: auto;
-  color: black;
+  // color: $woodsmoke;
   font-size: 16px;
   line-height: 1.2;
   letter-spacing: 0px;
@@ -105,6 +32,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
+  &.no-scroll {
+    overflow: hidden;
+  }
 }
 
 button::-moz-focus-inner,
@@ -122,7 +52,7 @@ select:-moz-focusring {
 }
 
 strong {
-  font-weight: 500;
+  font-weight: 700;
 }
 
 a,
@@ -277,86 +207,6 @@ span.error {
   cursor: pointer;
 }
 
-////////////////////////////////////////////////////////////////////////// Fonts
-//------------------------------------------------------------------------------
-.anton {
-  @include fontFamily_Anton;
-}
-.arvo {
-  @include fontFamily_Arvo;
-}
-.courier {
-  @include fontFamily_CourierPrime;
-}
-.merriweather {
-  @include fontFamily_Merriweather;
-}
-.nanum {
-  @include fontFamily_NanumMyeongjo;
-}
-.source-code {
-  @include fontFamily_SourceCodePro;
-}
-
-h1, .h1,
-h2, .h2,
-h3, .h3,
-h4, .h4,
-h5, .h5,
-h6, .h6,
-p,
-div,
-button {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-p,
-div,
-button {
-  line-height: 1.7;
-}
-
-h1, .h1,
-h2, .h2,
-h3, .h3,
-h4, .h4,
-h5, .h5,
-h6, .h6 {
-  display: block;
-  line-height: 1.4;
-  font-weight: 500;
-  letter-spacing: 1px;
-  text-transform: none;
-}
-
-h1, .h1 {
-  font-size: 3rem;
-  @include small {
-    font-size: 2rem;
-  }
-}
-
-h2, .h2 {
-  font-size: 1.8rem;
-}
-
-h3, .h3 {
-  font-size: 1.6rem;
-}
-
-h4, .h4 {
-  font-size: 1rem;
-}
-
-h5, .h5 {
-  font-size: 0.9rem;
-}
-
-h6, .h6 {
-  font-size: 0.8rem;
-}
-
 //////////////////////////////////////////////////////////////////////// General
 //------------------------------------------------------------------------------
 #__nuxt {
@@ -434,51 +284,51 @@ h6, .h6 {
   display: none;
 }
 
-[data-tooltip] {
-  position: relative;
-  &:hover {
-    &:before,
-    &:after {
-      transition: 250ms ease-in;
-      transform: translate(-50%, 0);
-      opacity: 1;
-    }
-  }
-  &:before,
-  &:after {
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, 0.5rem);
-    pointer-events: none;
-    opacity: 0;
-    transition: 250ms ease-out;
-  }
-  &:before {
-    content: '';
-    top: calc(100% + 2px);
-    border-left: 0.5rem solid transparent;
-    border-right: 0.5rem solid transparent;
-    border-bottom: 0.375rem solid white;
-  }
-  &:after {
-    content: attr(data-tooltip);
-    top: calc(100% + 0.5rem);
-    background-color: black;
-    color: white;
-    font-family: inherit;
-    font-size: 0.625rem;
-    white-space: nowrap;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid white;
-    border-radius: 1.5rem;
-  }
-  &[data-tooltip-theme="light"] {
-    &:after {
-      color: white;
-      background-color: black;
-    }
-  }
-}
+// [data-tooltip] {
+//   position: relative;
+//   &:hover {
+//     &:before,
+//     &:after {
+//       transition: 250ms ease-in;
+//       transform: translate(-50%, 0);
+//       opacity: 1;
+//     }
+//   }
+//   &:before,
+//   &:after {
+//     position: absolute;
+//     left: 50%;
+//     transform: translate(-50%, 0.5rem);
+//     pointer-events: none;
+//     opacity: 0;
+//     transition: 250ms ease-out;
+//   }
+//   &:before {
+//     content: '';
+//     top: calc(100% + 2px);
+//     border-left: 0.5rem solid transparent;
+//     border-right: 0.5rem solid transparent;
+//     border-bottom: 0.375rem solid white;
+//   }
+//   &:after {
+//     content: attr(data-tooltip);
+//     top: calc(100% + 0.5rem);
+//     background-color: black;
+//     color: white;
+//     font-family: inherit;
+//     font-size: 0.625rem;
+//     white-space: nowrap;
+//     padding: 0.25rem 0.5rem;
+//     border: 1px solid white;
+//     border-radius: 1.5rem;
+//   }
+//   &[data-tooltip-theme="light"] {
+//     &:after {
+//       color: white;
+//       background-color: black;
+//     }
+//   }
+// }
 
 .chevron {
   position: relative;
@@ -487,7 +337,7 @@ h6, .h6 {
   height: 0.5rem;
   border-style: solid;
   border-width: 2px 2px 0 0;
-  border-color: black;
+  border-color: $woodsmoke;
   transition: 250ms ease-out;
   &.up,
   &.down {

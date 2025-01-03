@@ -145,9 +145,9 @@ const ParseQuerySearch = async (search = '') => {
 }
 
 // ///////////////////////////////////////////////////// GenerateWebsocketClient
-const GenerateWebsocketClient = (namespace) => {
+const GenerateWebsocketClient = () => {
   https.globalAgent.options.rejectUnauthorized = false
-  return io(`${MC.backendUrl}/${namespace}`, {
+  return io(MC.backendUrl, {
     withCredentials: true,
     secure: true,
     // ca: Fs.readFileSync(`${MC.repoRoot}/localhost_cert.pem`, 'ascii'),
@@ -156,8 +156,8 @@ const GenerateWebsocketClient = (namespace) => {
 }
 
 // /////////////////////////////////////////////////////////////////// GetSocket
-const GetSocket = (socketId, namespace) => {
-  return MC.socket.io.of(`/${namespace}`).sockets.get(socketId)
+const GetSocket = (socketId) => {
+  return MC.socket.io.sockets.sockets.get(socketId)
 }
 
 // ///////////////////////////////////////////////////////////// IsValidObjectId
@@ -187,7 +187,7 @@ const GetThingieConsistencies = async (instance, thingie, upload) => {
         hexes.push(color.data.hex.value)
       }
       consistencies = [...new Set(consistencies)]
-      await MC.mongoInstances[instance].model.Thingie.findOneAndUpdate(
+      await MC.model.Thingie.findOneAndUpdate(
         { _id: thingie._id },
         { colors: hexes, consistencies },
         { new: true }
@@ -199,11 +199,11 @@ const GetThingieConsistencies = async (instance, thingie, upload) => {
   }
   if (thingie.thingie_type === 'sound') {
     try {
-      const recentThingies = await MC.mongoInstances[instance].model.Thingie.find({ last_update_token: thingie.creator_token, thingie_type: ['image', 'text'] })
+      const recentThingies = await MC.model.Thingie.find({ last_update_token: thingie.creator_token, thingie_type: ['image', 'text'] })
       if (recentThingies.length) {
         const recent = recentThingies[Math.floor(Math.random() * recentThingies.length)]
         const color = recent.colors[Math.floor(Math.random() * recent.colors.length)]
-        const updated = await MC.mongoInstances[instance].model.Thingie.findOneAndUpdate(
+        const updated = await MC.model.Thingie.findOneAndUpdate(
           { _id: thingie._id },
           { colors: [color] },
           { new: true }
