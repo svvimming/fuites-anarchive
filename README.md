@@ -1,13 +1,13 @@
-## Repository for the fuites anarchive
+## Repository for the fuites anarchive v2
 
-The repo uses npm workspaces. Packages are divided up into a single backend application (be) and multiple frontend packages. The main site is run using the fe package. The fe packages should be taken as the template from which to create and run new frontend instances as per the instructions below (replace fe with the package/instance name of your choice below). To install and run locally:
+The repo uses npm workspaces. Packages are divided up into a backend application (be) and frontend (fe) packages. To install and run locally:
 
 1. clone or fork the repository:
-2. Make sure to have installed and be using Node.js 16.18 or higher.
+2. Make sure to have installed and be using Node.js 20.9 or higher.
 3. Configure a self-signed certificate for local HTTPS support (see the section below on how to do this).
 4. Add .env files to both the `packages/be` directory and the `packages/fe` directory (email contact@fuit.es to get these files)
-5. from the repo root run `npm ci` and then run `npm run dev-be`
-6. In a second terminal (or command line) window, from the repo root run `npm run dev-fe`
+5. from the repo root run `npm ci` and then run `npm run be:dev`
+6. In a second terminal (or command line) window, from the repo root run `npm run fe:dev`
 
 
 ## Self-signed certificate
