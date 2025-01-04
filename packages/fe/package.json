@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nuxi dev --no-clear",
     "build": "nuxi build",
-    "start": "node .output/server/index.mjs",
+    "start": "node --env-file=.env .output/server/index.mjs",
     "launch:stable": "nuxi build && pm2 restart v2-stable-fe",
     "launch:production": "nuxi build && pm2 restart v2-fe",
     "preview": "nuxi preview",
