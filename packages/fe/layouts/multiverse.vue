@@ -1,9 +1,7 @@
 <template>
-  <div class="multiverse">
+  <div class="multiverse-layout">
 
     <slot />
-
-    <!-- <VerseViewport /> -->
 
     <Toaster />
 
@@ -27,7 +25,7 @@ if (process.client && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse {
+.multiverse-layout {
   position: relative;
   width: 100vw;
   height: 100vh;

@@ -55,6 +55,8 @@ const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { editing } = storeToRefs(collectorStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const selectionColor = useGetSelectionColor(props.thingie.colors)
 
@@ -69,7 +71,7 @@ const highlight = computed(() => editMode.value ? { shadowColor: selectionColor,
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
-  draggable: !dragndrop.value,
+  draggable: authenticated.value && !dragndrop.value,
   opacity: opacity.value,
   offsetX: at.value.width * 0.5,
   offsetY: at.value.height * 0.5 
@@ -81,16 +83,18 @@ const config = computed(() => ({
  */
 
 const drag = e => {
-  const attrs = e.target.attrs
-  update({
-    at: {
-      x: Math.max(0, Math.min(attrs.x, bounds.value.x)),
-      y: Math.max(0, Math.min(attrs.y, bounds.value.y)),
-      width: attrs.width,
-      height: attrs.height,
-      rotation: attrs.rotation
-    }
-  })
+  if (authenticated.value) {
+    const attrs = e.target.attrs
+    update({
+      at: {
+        x: Math.max(0, Math.min(attrs.x, bounds.value.x)),
+        y: Math.max(0, Math.min(attrs.y, bounds.value.y)),
+        width: attrs.width,
+        height: attrs.height,
+        rotation: attrs.rotation
+      }
+    })
+  }
 }
 
 /**
@@ -98,7 +102,7 @@ const drag = e => {
  */
 
 const doubleClick = () => {
-  if (editing.value !== props.thingie._id) {
+  if (authenticated.value && editing.value !== props.thingie._id) {
     collectorStore.setEditing(props.thingie._id)
   }
 }
@@ -109,7 +113,7 @@ const doubleClick = () => {
 
 const wheel = e => {
   e.evt.preventDefault()
-  if (editMode.value && type.value !== 'text') {
+  if (authenticated.value && editMode.value && type.value !== 'text') {
     e.cancelBubble = true
     const attrs = e.target.attrs
     const width = attrs.width || at.value.width

@@ -95,25 +95,27 @@ watch(data, async () => {
  */
 
 const handleClick = e => {
-  // Handle closing Caddy/Thingie editing
-  const target = e.target
-  const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
-  if (editing.value) {
-    if (targetIsThingie) {
-      setTimeout(() => {
-        if (target.attrs.thingie_id !== editing.value) {
-          collectorStore.setEditing(false)
-        }
-      }, 250)
-    } else {
-      collectorStore.setEditing(false)
+  if (authenticated.value) {
+    // Handle closing Caddy/Thingie editing
+    const target = e.target
+    const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
+    if (editing.value) {
+      if (targetIsThingie) {
+        setTimeout(() => {
+          if (target.attrs.thingie_id !== editing.value) {
+            collectorStore.setEditing(false)
+          }
+        }, 250)
+      } else {
+        collectorStore.setEditing(false)
+      }
     }
-  }
-  // Handle toggling Portal Creator
-  if (e.evt.shiftKey) {
-    verseStore.setPortalCreatorOpen(e)
-  } else if (portalCreatorOpen.value) {
-    verseStore.setPortalCreatorOpen(false)
+    // Handle toggling Portal Creator
+    if (e.evt.shiftKey) {
+      verseStore.setPortalCreatorOpen(e)
+    } else if (portalCreatorOpen.value) {
+      verseStore.setPortalCreatorOpen(false)
+    }
   }
 }
 
@@ -123,7 +125,7 @@ const handleClick = e => {
 
 const handleDoubleClick = e => {
   const target = e.target
-  if (target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && authenticated.value) {
+  if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas') {
     collectorStore.addNewTextThingie({
       x: e.evt.clientX,
       y: e.evt.clientY
