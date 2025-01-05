@@ -232,11 +232,12 @@ onMounted(() => {
   }
   window.addEventListener('keydown', keydownEventListener.value)
   // Initialize canvas screencap
-  setTimeout(() => {
-    if (page.value?.data.init_screencap) {
-      initPageshot()
-    }
-  }, 2000)
+  /** @TODO implement a better way than using setTimeout to initiate screenshots after all thingies have loaded */
+  // setTimeout(() => {
+  //   if (page.value?.data.init_screencap) {
+  //     initPageshot()
+  //   }
+  // }, 2000)
 })
 
 onBeforeUnmount(() => {
