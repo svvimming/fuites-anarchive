@@ -298,12 +298,15 @@ const simplifySvgPath = (points, options = {}) => {
     return getSegmentsPathData(fit(points.map(typeof points[0].x === 'number' ? (p) => point(p.x, p.y) : (p) => point(p[0], p[1])), options.closed, options.tolerance ?? 2.5), options.closed, options.precision ?? 5);
 };
 
-export const useGetSvgPath = (pathData, width, height) => {
+export const useGetSvgPath = (pathData, width, height, options = {}) => {
   const data = []
   const coords = pathData.split(' ').map(num => parseInt(num) / 200)
   const len = coords.length
   for (let i = 0; i < len - 1; i += 2) {
     data.push([coords[i] * width, coords[i + 1] * height])
   }
-  return data.length ? simplifySvgPath(data, { tolerance: 0.001 }) + ' Z' : false
+  if (!options.hasOwnProperty('tolerance')) {
+    options.tolerance = 0.001
+  }
+  return data.length ? simplifySvgPath(data, options) : false
 }

@@ -31,7 +31,7 @@ MC.socket.io.on('connection', socket => {
 // //////////////////////////////////////// Import Websocket (socket.io) Modules
 // -----------------------------------------------------------------------------
 try {
-  const items = ['modules', 'crons'].map((dirName) => { /** @TODO add crons back in to this list */
+  const items = ['modules', 'crons'].map((dirName) => {
     const path = `${MC.packageRoot}/${dirName}`
     return Fs.readdirSync(path).map(name => `${path}/${name}`)
   }).flat(1)

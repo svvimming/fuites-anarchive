@@ -44,28 +44,29 @@
 
       </div>
       <!-- ============================================================ Text -->
-      <template v-if="type === 'text'">
-        <CaddyFontEditor
-          :selected="selected === 'font-editor'"
-          class="caddy-tool z-index-2"
-          :style="getToolTransform('font-editor')"
-          @click.native="setSelected('font-editor')" />
-        <CaddyColorSelector
-          :init-color="thingieColor || '#000000'"
-          :selected="selected === 'color-selector'"
-          class="caddy-tool z-index-1"
-          :style="getToolTransform('color-selector')"
-          @click.native="setSelected('color-selector')"
-          @color-change="handleColorSelection" />
-      </template>
+      <CaddyFontEditor
+        v-if="type === 'text'"
+        :selected="selected === 'font-editor'"
+        class="caddy-tool z-index-2"
+        :style="getToolTransform('font-editor')"
+        @click.native="setSelected('font-editor')" />
+      <!-- ====================================================== Text/Sound -->
+      <CaddyColorSelector
+        v-if="type === 'text' || type === 'sound'"
+        :init-color="thingieColor || '#000000'"
+        :selected="selected === 'color-selector'"
+        class="caddy-tool z-index-1"
+        :style="getToolTransform('color-selector')"
+        @click.native="setSelected('color-selector')"
+        @color-change="handleColorSelection" />
       <!-- =========================================================== Image -->
       <template v-if="type === 'image'">
         <div class="caddy-tool clip-toggle" :style="getToolTransform('clip-toggle')">
-            <button
-              class="param-button"
-              @click="handleToggleClip">
-              <IconScizors />
-            </button>
+          <button
+            class="param-button"
+            @click="handleToggleClip">
+            <IconScizors />
+          </button>
         </div>
       </template>
 
@@ -106,9 +107,9 @@ const positions = ref({
   'z-index': 2,
   'opacity': 3,
   'delete-thingie': 4,
-  'font-editor': 5,
-  'color-selector': 6,
-  'clip-toggle': 5
+  'color-selector': 5,
+  'clip-toggle': 5,
+  'font-editor': 6
 })
 
 // ==================================================================== Computed
@@ -209,8 +210,11 @@ const sendThingieBack = () => {
 const handleColorSelection = val => {
   if (type.value === 'text') {
     textEditor.value.chain().focus().setColor(val).run()
+    verseStore.setColorSelectorHex(val)
   }
-  verseStore.setColorSelectorHex(val)
+  if (type.value === 'sound') {
+    /** @TODO add color editing to sound thingie */
+  }
 }
 
 /**

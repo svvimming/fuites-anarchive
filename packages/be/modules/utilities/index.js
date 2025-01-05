@@ -172,48 +172,28 @@ const IsValidObjectId = (incoming) => {
 }
 
 // ///////////////////////////////////////////////////// GetThingieConsistencies
-const GetThingieConsistencies = async (instance, thingie, upload) => {
-  let consistencies = []
-  const hexes = []
-  if (thingie.thingie_type === 'image') {
-    try {
-      for (let i = 0; i < upload.palette.length; i++) {
-        const rgb = upload.palette[i]
-        const color = await axios.get(`https://www.thecolorapi.com/id?rgb=${rgb[0]},${rgb[1]},${rgb[2]}`)
-        const colorWithoutSpaces = color.data.name.value.replaceAll(' ', '').toLowerCase().substring(0, 9)
-        const anagrams = await axios.get(`http://anagramica.com/best/:${colorWithoutSpaces}`)
-        consistencies.push(color.data.name.value.toLowerCase())
-        consistencies = consistencies.concat(anagrams.data.best)
-        hexes.push(color.data.hex.value)
-      }
-      consistencies = [...new Set(consistencies)]
-      await MC.model.Thingie.findOneAndUpdate(
-        { _id: thingie._id },
-        { colors: hexes, consistencies },
-        { new: true }
-      )
-    } catch (e) {
-      console.log('Error getting image thingie consistencies')
-      console.log(e)
+const GetThingieConsistencies = async (thingie, upload) => {
+  try {
+    let consistencies = []
+    const hexes = []
+    for (let i = 0; i < upload.palette.length; i++) {
+      const rgb = upload.palette[i]
+      const color = await axios.get(`https://www.thecolorapi.com/id?rgb=${rgb[0]},${rgb[1]},${rgb[2]}`)
+      const colorWithoutSpaces = color.data.name.value.replaceAll(' ', '').toLowerCase().substring(0, 9)
+      const anagrams = await axios.get(`http://anagramica.com/best/:${colorWithoutSpaces}`)
+      consistencies.push(color.data.name.value.toLowerCase())
+      consistencies = consistencies.concat(anagrams.data.best)
+      hexes.push(color.data.hex.value)
     }
-  }
-  if (thingie.thingie_type === 'sound') {
-    try {
-      const recentThingies = await MC.model.Thingie.find({ last_update_token: thingie.creator_token, thingie_type: ['image', 'text'] })
-      if (recentThingies.length) {
-        const recent = recentThingies[Math.floor(Math.random() * recentThingies.length)]
-        const color = recent.colors[Math.floor(Math.random() * recent.colors.length)]
-        const updated = await MC.model.Thingie.findOneAndUpdate(
-          { _id: thingie._id },
-          { colors: [color] },
-          { new: true }
-        )
-        console.log(updated)
-      }
-    } catch (e) {
-      console.log('Error getting sound thingie consistencies')
-      console.log(e)
-    }
+    consistencies = [...new Set(consistencies)]
+    await MC.model.Thingie.findOneAndUpdate(
+      { _id: thingie._id },
+      { colors: hexes, consistencies },
+      { new: true }
+    )
+  } catch (e) {
+    console.log('Error getting image thingie consistencies')
+    console.log(e)
   }
 }
 

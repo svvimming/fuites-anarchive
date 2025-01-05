@@ -88,12 +88,12 @@ watch(() => props.clipActive, (val) => {
  */
 
 const applyClipPath = () => {
-  clipPath.value = useGetSvgPath(props.path, clipConfig.value.width, clipConfig.value.height)
+  clipPath.value = useGetSvgPath(props.path, clipConfig.value.width, clipConfig.value.height, { closed: true })
   if (clipPath.value && clipGroup.value) {
     clipGroupVisible.value = true
     nextTick(() => {
       const group = clipGroup.value.getNode()
-      canvas.value = group.toCanvas()
+      canvas.value = group.toCanvas({ pixelRatio: 2 })
       clipGroupVisible.value = false
     })
   }

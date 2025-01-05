@@ -1,5 +1,8 @@
 <template>
-  <v-path :config="pathConfig" :key="key" />
+  <v-group>
+    <v-path :config="pathConfig" :key="key" />
+    <v-path :config="shadowConfig" :key="`shadow-${key}`" />
+  </v-group>
 </template>
 
 <script setup>
@@ -63,7 +66,7 @@ const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
 
 // ==================================================================== Computed
-const svgPath = computed(() => useGetSvgPath(props.path, 200, 200) || '')
+const svgPath = computed(() => useGetSvgPath(props.path, 200, 200, { closed: false }) || '')
 const playState = computed(() => audioContext.value?.state || 'suspended')
 const opacity = computed(() => playState.value === 'running' ? 0.4 + (amplitude.value * 0.6) : 0.4)
 const pathConfig = computed(() => ({
@@ -71,11 +74,12 @@ const pathConfig = computed(() => ({
   scaleX: props.parentConfig.width / 200,
   scaleY: props.parentConfig.height / 200,
   data: svgPath.value,
-  stroke: props.colors[0] || '#6c6575',
-  strokeWidth: props.strokeWidth < 1 ? -1 / (props.strokeWidth - 1) : props.strokeWidth,
+  stroke: props.colors[props.colors.length - 1] || '#6c6575',
+  strokeWidth: props.strokeWidth < 1 ? 1 / (props.strokeWidth - 1) : props.strokeWidth,
   opacity: opacity.value,
   ...props.options
 }))
+const shadowConfig = computed(() => Object.assign({}, pathConfig.value, { strokeWidth: 40, opacity: 0 }))
     
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
