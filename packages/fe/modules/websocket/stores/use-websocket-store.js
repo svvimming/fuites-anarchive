@@ -13,7 +13,6 @@ export const useWebsocketStore = defineStore('websocket', () => {
 
   const setWebsocketConnection = payload => {
     socket.value = payload
-    console.log(socket.value)
   }
 
   // ==================================================================== return

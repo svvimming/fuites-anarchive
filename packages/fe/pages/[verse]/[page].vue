@@ -206,7 +206,7 @@ const setCanvasDimensions = () => {
 
 // ======================================================================= Hooks
 onMounted(() => {
-  document.body.classList.add('no-scroll')
+  // document.body.classList.add('no-scroll')
   setCanvasDimensions()
   resizeEventListener.value = useThrottleFn(() => {
     setCanvasDimensions()
@@ -238,7 +238,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  document.body.classList.remove('no-scroll')
+  // document.body.classList.remove('no-scroll')
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)
 })

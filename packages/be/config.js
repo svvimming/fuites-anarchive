@@ -51,8 +51,8 @@ module.exports = {
     '/public'
   ],
   // ================================================================== Database
-  databaseUrl: process.env.DATABASE_URL,
-  databaseName: process.env.DATABASE_NAME,
+  databaseUrl: process.env.DATABASE_URL_REFACTOR,
+  databaseName: process.env.DATABASE_NAME_REFACTOR,
   mongoConnectionOptions: {
     // ssl: true,
     auth: {

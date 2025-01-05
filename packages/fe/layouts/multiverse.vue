@@ -1,5 +1,5 @@
 <template>
-  <div class="verses-layout">
+  <div class="multiverse">
 
     <slot />
 
@@ -27,9 +27,10 @@ if (process.client && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.verses-layout {
+.multiverse {
   position: relative;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
 }
 </style>
