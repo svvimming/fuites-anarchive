@@ -84,9 +84,13 @@ watch(data, async () => {
   const vrs = route.params.verse
   const slug = route.params.page
   await generalStore.setSiteData({ key: 'settings', value: data.value })
-  await verseStore.getVerse({ verse: vrs })
-  await verseStore.getPage({ page: slug })
-  await collectorStore.getThingies()
+  const result = await verseStore.getVerse({ verse: vrs })
+  if (result) {
+    await verseStore.getPage({ page: slug })
+    await collectorStore.getThingies()
+  } else {
+    await navigateTo('/multiverse')
+  }
 }, { immediate: true })
 
 // ===================================================================== Methods

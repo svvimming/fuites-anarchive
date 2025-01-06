@@ -37,11 +37,13 @@ export const useVerseStore = defineStore('verse', () => {
     try {
       useSetStoreData(verse, { loading: true })
       const response = await useFetchAuth('/get-verse', { verse: incoming.verse, method: 'get' })
+      if (!response) { return false }
       useSetStoreData(verse, {
         loading: false,
         refresh: false,
         data: response
       })
+      return response
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(verse, {
@@ -49,6 +51,7 @@ export const useVerseStore = defineStore('verse', () => {
         refresh: false,
         data: {}
       })
+      return false
     }
   }
 

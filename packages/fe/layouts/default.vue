@@ -100,8 +100,12 @@ $bus.$on('socket.io-connected', handleWebsocketConnected)
 
 onBeforeUnmount(() => {
   $bus.$off('socket.io-connected', handleWebsocketConnected)
-  window.removeEventListener('keydown', keydownEventListener.value) 
-  window.removeEventListener('keyup', keyupEventListener.value)  
+  if (keydownEventListener.value) {
+    window.removeEventListener('keydown', keydownEventListener.value)
+  }
+  if (keyupEventListener.value) {
+    window.removeEventListener('keyup', keyupEventListener.value)
+  }
 })
 
 </script>
