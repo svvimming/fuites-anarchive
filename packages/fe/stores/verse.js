@@ -22,6 +22,7 @@ export const useVerseStore = defineStore('verse', () => {
   })
 
   const sceneData = ref({
+    initialized: false,
     x: 0,
     y: 0,
     scale: 1

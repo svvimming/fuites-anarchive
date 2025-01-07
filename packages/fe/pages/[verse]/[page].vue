@@ -17,7 +17,7 @@
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
           @dblclick="handleDoubleClick($event)">
-          <v-layer ref="layerRef">
+          <v-layer ref="layerRef" :config="initLayer">
 
             <Thingie
               v-for="thingie in pageThingies"
@@ -45,7 +45,7 @@ import { useThrottleFn } from '@vueuse/core'
 // ======================================================================== Data
 const route = useRoute()
 const verseStore = useVerseStore()
-const { verse, page, portalCreatorOpen } = storeToRefs(verseStore)
+const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
@@ -65,6 +65,7 @@ const { data } = await useAsyncData(route.fullPath, async () => {
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)
+const initLayer = ref({})
 const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
@@ -74,7 +75,7 @@ useHandleThingieDragEvents(pageRef, stageRef)
 
 // ==================================================================== Computed
 const pageName = computed(() => route.params.page)
-const bounds = computed(() => page.value.data.bounds || { x: 2372, y: 2000 })
+const bounds = computed(() => page.value.data?.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.filtered_portals || [])
 const portalsActive = computed(() => activeModes.value.portals)
@@ -212,8 +213,20 @@ const setCanvasDimensions = () => {
 
 // ======================================================================= Hooks
 onMounted(() => {
-  // document.body.classList.add('no-scroll')
+  // Set canvas dimensions based on current viewport dimensions
   setCanvasDimensions()
+  // Initialize scene position and scale
+  if (sceneData.value.initialized) {
+    initLayer.value = { x: sceneData.value.x, y: sceneData.value.y }
+  } else {
+    initLayer.value = {
+      x: -0.5 * (bounds.value.x - canvasConfig.value.width),
+      y: -0.5 * (bounds.value.y - canvasConfig.value.height)
+    }
+    verseStore.updateSceneData({ initialized: true })
+  }
+  Object.assign(canvasConfig.value, { scaleX: sceneData.value.scale, scaleY: sceneData.value.scale })
+  // Add event listeners
   resizeEventListener.value = useThrottleFn(() => {
     setCanvasDimensions()
     nextTick(() => { scaleScene(1, true) })
@@ -245,7 +258,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  // document.body.classList.remove('no-scroll')
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)
 })
