@@ -16,6 +16,7 @@ MC.app.get('/get-page', async (req, res) => {
       .findOne({ name, verse })
       .populate({
         path: 'portal_refs',
+        sort: { createdAt: 1 },
         populate: [
           {
             path: 'thingie_ref',

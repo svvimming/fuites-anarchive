@@ -1,5 +1,9 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
+import { useFilterPortals } from '../composables/use-filter-portals.js'
+
+// ////////////////////////////////////////////////////////////////////// Export
+// -----------------------------------------------------------------------------
 export const useVerseStore = defineStore('verse', () => {
   // ==================================================================== import
   const alertStore = useZeroAlertStore()
@@ -63,6 +67,10 @@ export const useVerseStore = defineStore('verse', () => {
     try {
       useSetStoreData(page, { loading: true })
       const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
+      // Add filtered portals to response object
+      if (response) {
+        response.filtered_portals = await useFilterPortals(response.portal_refs)
+      }
       useSetStoreData(page, {
         loading: false,
         refresh: false,
