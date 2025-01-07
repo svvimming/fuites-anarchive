@@ -1,6 +1,6 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-export const useFilterPortals = async portals => {
+export const useFilterDuplicatePortals = async portals => {
   const len = portals.length
   const active = []
   for (let i = 0; i < len; i++) {

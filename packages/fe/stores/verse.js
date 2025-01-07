@@ -1,6 +1,6 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-import { useFilterPortals } from '../composables/use-filter-portals.js'
+import { useFilterDuplicatePortals } from '../composables/use-filter-duplicate-portals.js'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ export const useVerseStore = defineStore('verse', () => {
       const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
       // Add filtered portals to response object
       if (response) {
-        response.filtered_portals = await useFilterPortals(response.portal_refs)
+        response.filtered_portals = await useFilterDuplicatePortals(response.portal_refs)
       }
       useSetStoreData(page, {
         loading: false,
