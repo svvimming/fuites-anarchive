@@ -1,7 +1,7 @@
 <template>
   <v-group>
     <v-path :config="pathConfig" :key="key" />
-    <v-path :config="shadowConfig" :key="`shadow-${key}`" />
+    <v-path :config="shadowConfig" />
   </v-group>
 </template>
 
@@ -60,6 +60,8 @@ const gainNode = ref(false)
 const amplitude = ref(0)
 const mousemoveEventListener = ref(false)
 const key = ref(0)
+const verseStore = useVerseStore()
+const { sceneData } = storeToRefs(verseStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
@@ -79,7 +81,15 @@ const pathConfig = computed(() => ({
   opacity: opacity.value,
   ...props.options
 }))
-const shadowConfig = computed(() => Object.assign({}, pathConfig.value, { strokeWidth: 40, opacity: 0 }))
+const shadowConfig = computed(() => ({
+  thingie_id: props.parentConfig.thingie_id,
+  scaleX: props.parentConfig.width / 200,
+  scaleY: props.parentConfig.height / 200,
+  data: svgPath.value,
+  stroke: '#FFFFFF',
+  strokeWidth: 40,
+  opacity: 0
+}))
     
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
@@ -100,8 +110,8 @@ watch(() => props.gain, (val) => {
  */
 
 const calculateMouseDistance = e => {
-  const deltaX = props.position.x + props.parentConfig.width * 0.5 - e.clientX - window.scrollX
-  const deltaY = props.position.y + props.parentConfig.height * 0.5 - e.clientY - window.scrollY
+  const deltaX = props.position.x - (e.clientX / sceneData.value.scale) + sceneData.value.x
+  const deltaY = props.position.y - (e.clientY / sceneData.value.scale) + sceneData.value.y
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
   const amp = Math.exp(-0.005 * distance)
   gainNode.value.gain.value = amp * props.gain
