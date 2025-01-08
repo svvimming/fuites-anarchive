@@ -63,7 +63,7 @@ const initLayer = ref({})
 const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
-const { initPageshot } = usePageshotBot(stageRef)
+// const { initPageshot } = usePageshotBot(stageRef)
 
 useHandleThingieDragEvents(pageRef, stageRef)
 

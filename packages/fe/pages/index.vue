@@ -26,28 +26,18 @@
 
 <script setup>
 // ======================================================================= Setup
+import SettingsData from '@/data/settings.json'
+
 definePageMeta({ layout: 'empty' })
 
 // ======================================================================== Data
-const { data } = await useAsyncData('index', async () => {
-  const content = await queryContent({
-    where: {
-      _file: { $contains: 'settings.json' }
-    }
-  }).find()
-  return content[0]
-})
-
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)
 
+await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+
 // ==================================================================== Computed
 const navigation = computed(() => siteData.value?.settings?.navigation || [])
-
-// ==================================================================== Watchers
-watch(data, async () => {
-  await generalStore.setSiteData({ key: 'settings', value: data.value })
-}, { immediate: true })
 
 </script>
 
