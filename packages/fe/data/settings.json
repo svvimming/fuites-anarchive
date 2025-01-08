@@ -128,5 +128,25 @@
       "label": "tooltips",
       "slug": "drippy"
     }
+  ],
+  "navigation": [
+    {
+      "text": "multiverse",
+      "tag": "nuxt-link",
+      "to": "/multiverse",
+      "theme": "clear"
+    },
+    {
+      "text": "info",
+      "tag": "nuxt-link",
+      "to": "/info",
+      "theme": "clear"
+    },
+    {
+      "text": "contact",
+      "tag": "a",
+      "to": "mailto:contact@fuit.es",
+      "theme": "clear"
+    }
   ]
 }

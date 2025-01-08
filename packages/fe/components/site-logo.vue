@@ -1,14 +1,17 @@
 <template>
-  <div class="site-logo bingo">
+  <nuxt-link
+    to="/"
+    class="site-logo bingo">
     <ClientOnly>
-      <span
+      <div
         v-for="(letter, i) in letters"
+        v-once
         :class="['letter', 'no-select', getFontClass()]"
         :style="getLetterStyles(i)">
-        {{ letter }}
-      </span>
+        <span>{{ letter }}</span>
+      </div>
     </ClientOnly>
-  </div>
+  </nuxt-link>
 </template>
 
 <script setup>
@@ -30,7 +33,7 @@ const params = {
 
 // ==================================================================== Computed
 const letters = computed(() => text.split(''))
-const fontfamilies = computed(() => siteData.value?.settings?.fonts.map(font => font.class) || [])
+const fontfamilies = computed(() => siteData.value?.settings?.fonts?.map(font => font.class) || [])
 
 // ===================================================================== Methods
 const getFontClass = () => fontfamilies.value[Math.floor(Math.random() * fontfamilies.value.length)]
@@ -46,35 +49,24 @@ const getLetterStyles = index => ({
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .site-logo {
+  display: block;
   position: relative;
   height: torem(80);
 }
 
 .letter {
   position: absolute;
-}
-
-.letter {
   display: block;
-  color: black;
+  padding: torem(8);
+  color: $woodsmoke;
+  span {
+    display: block;
+    transition: 150ms ease;
+  }
+  &:hover {
+    span {
+      transform: scale(1.15);
+    }
+  }
 }
-
-// .anton {
-//   @include fontFamily_Anton;
-// }
-// .arvo {
-//   @include fontFamily_Arvo;
-// }
-// .courier {
-//   @include fontFamily_CourierPrime;
-// }
-// .merriweather {
-//   @include fontFamily_Merriweather;
-// }
-// .nanum {
-//   @include fontFamily_NanumMyeongjo;
-// }
-// .source-code {
-//   @include fontFamily_SourceCodePro;
-// }
 </style>

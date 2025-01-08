@@ -94,4 +94,24 @@ const props = defineProps({
     // }
   }
 }
+
+.basic-button.theme__clear {
+  background-color: transparent;
+  border-radius: 0;
+  .slot {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    color: $woodsmoke;
+    letter-spacing: 1px;
+    transition: 150ms ease;
+    font-family: 'PT Sans';
+  }
+  &:hover {
+    .slot {
+      letter-spacing: 3px;
+      font-family: 'PT Serif';
+    }
+  }
+}
 </style>

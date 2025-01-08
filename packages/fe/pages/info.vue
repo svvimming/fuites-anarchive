@@ -1,7 +1,6 @@
 <template>
   <div class="info-page">
     <div class="grid">
-
       <div
         class="col-10_mi-12"
         data-push-left="off-1_mi-0">
@@ -22,7 +21,6 @@
         </div>
 
       </div>
-
     </div>
   </div>
 </template>
@@ -46,9 +44,11 @@ const markdown = ref(false)
 
 // ==================================================================== Watchers
 watch(data, async () => {
-  const settings = data.value.find(item => item._file === 'data/settings.json')
-  await generalStore.setSiteData({ key: 'settings', value: settings })
-  markdown.value = data.value.find(item => item._file === 'data/info.md')
+  if (data && Array.isArray(data.value)) {
+    const settings = data.value.find(item => item._file === 'data/settings.json')
+    await generalStore.setSiteData({ key: 'settings', value: settings })
+    markdown.value = data.value.find(item => item._file === 'data/info.md')
+  }
 }, { immediate: true })
 
 </script>
@@ -57,7 +57,7 @@ watch(data, async () => {
 // ///////////////////////////////////////////////////////////////////// General
 .info-page {
   position: relative;
-  padding-top: torem(140);
+  padding-top: torem(132);
   overflow: hidden;
   &:before,
   &:after {
@@ -88,11 +88,11 @@ watch(data, async () => {
   h1 {
     font-size: torem(26);
     font-family: 'Nanum Myeongjo', serif;
-    margin-top: torem(7);
-    margin-right: torem(16);
+    margin-top: torem(15);
+    margin-right: torem(8);
   }
   :deep(.site-logo) {
-    span {
+    .letter {
       &:first-child {
         font-family: 'Nanum Myeongjo', serif !important;
       }

@@ -1,29 +1,100 @@
 <template>
-  <div class="page">
+  <div class="index-page">
     <div class="grid">
-      <div class="col">
+      <div class="col-12_lg-10_ti-12" data-push-left="off-0_lg-1_ti-0">
 
-        <div class="nanum">Nanum</div>
+        <div class="title">
+          <SiteLogo v-once />
+        </div>
 
-        <div class="merriweather">Merriweather</div>
-
-        <div class="courier">Courier Prime</div>
-
-        <div class="source-code">Source Code Pro</div>
-
-        <div class="arvo">Arvo</div>
-
-        <div class="anton">Anton</div>
-
-        <div class="pt-sans">PT Sans</div>
-
-        <div class="pt-serif">PT Serif</div>
+        <nav class="navigation">
+          <ButtonBasic
+            v-for="link in navigation"
+            :key="link.text"
+            :tag="link.tag"
+            :to="link.to"
+            :theme="link.theme"
+            class="nav-link">
+            {{ link.text }}
+          </ButtonBasic>
+        </nav>
 
       </div>
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped>
+<script setup>
+// ======================================================================= Setup
+definePageMeta({ layout: 'empty' })
 
+// ======================================================================== Data
+const { data } = await useAsyncData('index', async () => {
+  const content = await queryContent({
+    where: {
+      _file: { $contains: 'settings.json' }
+    }
+  }).find()
+  return content[0]
+})
+
+const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
+
+// ==================================================================== Computed
+const navigation = computed(() => siteData.value?.settings?.navigation || [])
+
+// ==================================================================== Watchers
+watch(data, async () => {
+  await generalStore.setSiteData({ key: 'settings', value: data.value })
+}, { immediate: true })
+
+</script>
+
+<style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
+.index-page {
+  position: relative;
+  padding-top: torem(140);
+  height: 100%;
+  overflow: hidden;
+  &:before,
+  &:after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: torem(1800);
+    height: torem(1350);
+    transform: translate(-50%, torem(-260));
+    z-index: 1;
+  }
+  &:before {
+    background-image: url('/irridescent.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    opacity: 0.2;
+  }
+  &:after {
+    background: linear-gradient(97deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 33%, rgba(255,255,255,0) 66%, rgba(255,255,255,1) 100%), linear-gradient(0deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 50%);;
+  }
+}
+
+.title,
+.navigation {
+  position: relative;
+  z-index: 2;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  padding: torem(20) 0;
+  margin-left: torem(8);
+}
+
+.nav-link {
+  width: fit-content;
+}
 </style>
