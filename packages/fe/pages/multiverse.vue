@@ -56,7 +56,7 @@ const { data } = await useAsyncData(route.fullPath, async () => {
     }
   }).find()
   return content[0]
-})
+}, { server: false })
 
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data?.verses || [])

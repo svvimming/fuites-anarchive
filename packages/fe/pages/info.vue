@@ -37,7 +37,7 @@ const { data } = await useAsyncData('info', async () => {
     }
   }).find()
   return content
-})
+}, { server: false })
 
 const generalStore = useGeneralStore()
 const markdown = ref(false)

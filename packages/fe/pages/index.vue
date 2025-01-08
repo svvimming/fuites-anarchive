@@ -36,7 +36,7 @@ const { data } = await useAsyncData('index', async () => {
     }
   }).find()
   return content[0]
-})
+}, { server: false })
 
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)

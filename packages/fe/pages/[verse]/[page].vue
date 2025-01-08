@@ -60,7 +60,7 @@ const { data } = await useAsyncData(route.fullPath, async () => {
     }
   }).find()
   return content[0]
-})
+}, { server: false })
 
 const pageRef = ref(null)
 const stageRef = ref(null)
