@@ -21,6 +21,7 @@
         data-location="compost">
         <!-- ----------------------------------------------- Compost Preview -->
         <nuxt-link
+          v-if="verseName"
           :to="`/${verseName}/compost`"
           class="compost-link">
           <div class="portal-thingie">
@@ -55,7 +56,7 @@ const buttonText = [
 ]
 
 // ==================================================================== Computed
-const verseName = computed(() => verse.value.data.name)
+const verseName = computed(() => verse.value.data?.name)
 
 </script>
 

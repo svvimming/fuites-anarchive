@@ -40,32 +40,22 @@
 
 <script setup>
 // ======================================================================= Setup
+import SettingsData from '@/data/settings.json'
+
 definePageMeta({ layout: 'multiverse' })
 
 // ======================================================================== Data
-const route = useRoute()
 const generalStore = useGeneralStore()
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 
-const { data } = await useAsyncData(route.fullPath, async () => {
-  const content = await queryContent({
-    where: {
-      _file: { $contains: 'settings.json' }
-    }
-  }).find()
-  return content[0]
-}, { server: false })
+await generalStore.setSiteData({ key: 'settings', value: SettingsData })
 
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data?.verses || [])
 
-// ==================================================================== Watchers
-watch(data, async () => {
-  await generalStore.setSiteData({ key: 'settings', value: data.value })
-}, { immediate: true })
-
+// ===================================================================== Methods
 const handleCreateNewVerseClick = () => {
   alertStore.openAlert('multiverse-create-verse-alert')
 }

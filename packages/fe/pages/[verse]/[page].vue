@@ -2,7 +2,7 @@
   <div class="page-container">
     <!-- ============================================================ Loader -->
     <SpinnerTripleDot
-      v-if="verse.loading || page.loading || thingies.loading"
+      v-show="verse.loading || page.loading || thingies.loading"
       theme="dark" />
     <!-- ============================================================== Page -->
     <div
@@ -41,6 +41,7 @@
 <script setup>
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
+import SettingsData from '@/data/settings.json'
 
 // ======================================================================== Data
 const route = useRoute()
@@ -53,14 +54,7 @@ const { dragndrop, activeModes } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 
-const { data } = await useAsyncData(route.fullPath, async () => {
-  const content = await queryContent({
-    where: {
-      _file: { $contains: 'settings.json' }
-    }
-  }).find()
-  return content[0]
-}, { server: false })
+const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
 const pageRef = ref(null)
 const stageRef = ref(null)
@@ -69,7 +63,7 @@ const initLayer = ref({})
 const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
-const { initPageshot } = usePageshotBot(stageRef)
+// const { initPageshot } = usePageshotBot(stageRef)
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -81,16 +75,15 @@ const pagePortals = computed(() => page.value.data?.filtered_portals || [])
 const portalsActive = computed(() => activeModes.value.portals)
 
 // ==================================================================== Watchers
-watch(data, async () => {
-  const vrs = route.params.verse
-  const slug = route.params.page
-  await generalStore.setSiteData({ key: 'settings', value: data.value })
-  const result = await verseStore.getVerse({ verse: vrs })
-  if (result) {
-    await verseStore.getPage({ page: slug })
-    await collectorStore.getThingies()
-  } else {
-    await navigateTo('/multiverse')
+watch(data, async (val) => {
+  if (val) {
+    if (verse.value.data?.name) {
+      await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+      await verseStore.getPage({ page: route.params.page })
+      await collectorStore.getThingies()
+    } else {
+      await navigateTo('/multiverse')
+    }
   }
 }, { immediate: true })
 
