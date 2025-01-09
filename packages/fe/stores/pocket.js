@@ -83,18 +83,34 @@ export const usePocketStore = defineStore('pocket', () => {
    * @method getAuthPocket
    */
 
-  const getAuthPocket = async token => {
+  const getAuthPocket = async incoming => {
     try {
-      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token })
-      toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
-      useSetStoreData(pocket, {
-        loading: false,
-        refresh: false,
-        authenticated: true,
-        data: response
-      })
+      useSetStoreData(pocket, { loading: true })
+      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token: incoming })
+      // If token is found
+      if (response) {
+        toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
+        useSetStoreData(pocket, {
+          loading: false,
+          refresh: false,
+          authenticated: true,
+          data: response
+        })
+      } else {
+        // If token is not found
+        toasterStore.addMessage({ type: 'error', text: 'Oops, try another token' })
+        useSetStoreData(pocket, {
+          loading: false,
+          refresh: false,
+          authenticated: false,
+          data: {
+            _id: '',
+            token: '',
+            verses: []
+          }
+        })
+      }
     } catch (e) {
-      toasterStore.addMessage({ type: 'error', text: 'Oops, try another token' })
       useHandleFetchError(e)
       useSetStoreData(pocket, {
         loading: false,
