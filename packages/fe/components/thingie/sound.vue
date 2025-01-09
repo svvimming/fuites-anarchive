@@ -61,22 +61,25 @@ const amplitude = ref(0)
 const mousemoveEventListener = ref(false)
 const key = ref(0)
 const verseStore = useVerseStore()
-const { sceneData } = storeToRefs(verseStore)
+const { sceneData, colorSelectorHex } = storeToRefs(verseStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
+const collectorStore = useCollectorStore()
+const { editing } = storeToRefs(collectorStore)
 
 // ==================================================================== Computed
 const svgPath = computed(() => useGetSvgPath(props.path, 200, 200, { closed: false }) || '')
 const playState = computed(() => audioContext.value?.state || 'suspended')
 const opacity = computed(() => playState.value === 'running' ? 0.4 + (amplitude.value * 0.6) : 0.4)
+const color = computed(() => editing.value === props.parentConfig.thingie_id && colorSelectorHex.value.sound ? colorSelectorHex.value.sound : props.colors[props.colors.length - 1] || '#6c6575')
 const pathConfig = computed(() => ({
   thingie_id: props.parentConfig.thingie_id,
   scaleX: props.parentConfig.width / 200,
   scaleY: props.parentConfig.height / 200,
   data: svgPath.value,
-  stroke: props.colors[props.colors.length - 1] || '#6c6575',
+  stroke: color.value,
   strokeWidth: props.strokeWidth < 1 ? 1 / (props.strokeWidth - 1) : props.strokeWidth,
   opacity: opacity.value,
   ...props.options

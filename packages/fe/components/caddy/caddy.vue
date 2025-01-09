@@ -1,6 +1,6 @@
 <template>
   <UseDraggable
-    :initial-value="{ x: 40, y: 40 }"
+    :initial-value="{ x: 140, y: 140 }"
     :prevent-default="true"
     :handle="handle"
     :container-element="container"
@@ -96,9 +96,10 @@ const { thingies, editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const { page, textEditor } = storeToRefs(verseStore)
+const { page, textEditor, colorSelectorHex } = storeToRefs(verseStore)
 const alertStore = useZeroAlertStore()
 
+const soundThingieData = ref({})
 const handle = ref(null)
 const selected = ref('handle')
 const positions = ref({
@@ -125,6 +126,27 @@ const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const toolNum = computed(() => {
   const num = type.value === 'text' ? 2 : type.value === 'image' ? 1 : 1
   return num + shared.value.length + 1 // + 1 is for the handle
+})
+
+// ==================================================================== Watchers
+watch(() => thingie.value?._id, (newId, oldId) => {
+  // Update closed sound thingie with saved hex color
+  if (oldId && soundThingieData.value._id === oldId && colorSelectorHex.value.sound) {
+    collectorStore.initThingieUpdate({
+      _id: oldId,
+      colors: soundThingieData.value.colors.concat(colorSelectorHex.value.sound)
+    })
+  }
+  // reset sound thingie data
+  if (soundThingieData.value._id) { soundThingieData.value = {} }
+  // Reset selector hex for new sound thingie being edited
+  if (newId && thingie.value.thingie_type === 'sound') {
+    verseStore.setColorSelectorHex({ sound: '' })
+    soundThingieData.value = {
+      _id: newId,
+      colors: [...thingie.value.colors]
+    }
+  }
 })
 
 // ===================================================================== Methods
@@ -210,11 +232,8 @@ const sendThingieBack = () => {
 const handleColorSelection = val => {
   if (type.value === 'text') {
     textEditor.value.chain().focus().setColor(val).run()
-    verseStore.setColorSelectorHex(val)
   }
-  if (type.value === 'sound') {
-    /** @TODO add color editing to sound thingie */
-  }
+  verseStore.setColorSelectorHex({ [type.value]: val })
 }
 
 /**

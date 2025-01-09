@@ -71,7 +71,7 @@ const highlight = computed(() => colors.value[colors.value.length - 1] || '#6c65
 // ==================================================================== Watchers
 watch(editing, (newId, oldId) => {
   if (oldId && oldId === id.value) {
-    const pushColor = !!colorSelectorHex.value && colors.value[colors.value.length - 1] !== colorSelectorHex.value
+    const pushColor = !!colorSelectorHex.value.text && colors.value[colors.value.length - 1] !== colorSelectorHex.value.text
     const text = textEditor.value.getHTML()
     // If the new text thingie is empty OR if this thingie has been deleted, return and reset
     if (text === '<p></p>' || deleted.value.includes(oldId)) {
@@ -83,7 +83,7 @@ watch(editing, (newId, oldId) => {
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
       text: text.replaceAll('<p></p>', '<p><br></p>'),
       ...(pushColor && {
-        colors: colors.value.concat([colorSelectorHex.value])
+        colors: colors.value.concat([colorSelectorHex.value.text])
       })
     })
   }
@@ -140,7 +140,7 @@ const initCreateTextThingie = async update => {
  */
 
 const resetEditor = () => {
-  verseStore.setColorSelectorHex('')
+  verseStore.setColorSelectorHex({ text: '' })
   id.value = ''
   rect.value = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
   textEditor.value.commands.setContent('', false, { preserveWhitespace: 'full' })

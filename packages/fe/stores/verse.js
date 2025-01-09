@@ -30,7 +30,10 @@ export const useVerseStore = defineStore('verse', () => {
 
   const textEditor = ref(false)
   const portalCreatorOpen = ref(false)
-  const colorSelectorHex = ref('')
+  const colorSelectorHex = ref({
+    text: '',
+    sound: ''
+  })
 
   // =================================================================== actions
 
@@ -144,7 +147,7 @@ export const useVerseStore = defineStore('verse', () => {
    */
 
   const setColorSelectorHex = incoming => {
-    colorSelectorHex.value = incoming
+    Object.assign(colorSelectorHex.value, incoming)
   }
 
   /**
