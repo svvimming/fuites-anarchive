@@ -11,6 +11,7 @@ const MC = require('@Root/config')
 MC.app.get('/authenticate-pocket', async (req, res) => {
   try {
     const token = req.query.token
+    const localStorageAuth = req.query.localStorageAuth
     const tokensString = process.env.AUTH_TOKENS
     const tokens = tokensString.split(',')
     if (token !== '' && tokens.includes(token)) {
@@ -21,13 +22,25 @@ MC.app.get('/authenticate-pocket', async (req, res) => {
           select: 'name',
           populate: { path: 'page_refs', select: 'name' }
         })
-      SendData(res, 200, 'Pocket retrieved successfully', pocket)
+      if (!pocket) {
+        SendData(res, 200, 'oops, try another token', { type: 'token-not-found', pocket: false })
+        return
+      }
+      if (!localStorageAuth) {
+        pocket.manualAuthDate = Date.now()
+        await pocket.save()
+        SendData(res, 200, 'Pocket retrieved successfully', { type: 'manual-auth-success', pocket })
+      } else if (pocket.manualAuthDate && (Date.now() - new Date(pocket.manualAuthDate).getTime()) <= 10800000) {
+        SendData(res, 200, 'Pocket retrieved successfully', { type: 'local-storage-auth-success', pocket })
+      } else {
+        SendData(res, 200, 'oops, try another token', { type: 'local-storage-auth-failed' })
+      }
     } else {
-      SendData(res, 200, 'oops, try another token', false)
+      SendData(res, 200, 'oops, try another token', { type: 'token-not-found', pocket: false })
     }
   } catch (e) {
     console.log('============================ [Endpoint: /authenticate-pocket]')
     console.log(e)
-    SendData(res, 200, 'oops, something went wrong...', false)
+    SendData(res, 500, 'oops, something went wrong...', false)
   }
 })

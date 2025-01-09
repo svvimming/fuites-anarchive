@@ -13,16 +13,18 @@
         
         <div class="verse-list">
           <!-- ------------------------------------------------------ Verses -->
-          <ButtonBasic
-            v-for="verse in verses"
-            :key="verse.name"
-            tag="nuxt-link"
-            :to="`/${verse.name}/${verse.page_refs[0].name}`"
-            theme="verse"
-            class="list-item">
-            <span>{{ verse.name }}</span>
-            <!-- <IconGoto /> -->
-          </ButtonBasic>
+          <ClientOnly>
+            <ButtonBasic
+              v-for="verse in verses"
+              :key="verse.name"
+              tag="nuxt-link"
+              :to="`/${verse.name}/${verse.page_refs[0].name}`"
+              theme="verse"
+              class="list-item">
+              <span>{{ verse.name }}</span>
+              <!-- <IconGoto /> -->
+            </ButtonBasic>
+          </ClientOnly>
           <!-- -------------------------------------------- Create new Verse -->
           <ButtonBasic
             class="list-item new-verse-button"
@@ -48,9 +50,17 @@ definePageMeta({ layout: 'multiverse' })
 const generalStore = useGeneralStore()
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const { pocket } = storeToRefs(pocketStore)
+const { pocket, authenticated } = storeToRefs(pocketStore)
 
+// Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+// Check local storage for auth token and try to authenticate if found
+if (process.client) {
+  const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+  if (!authenticated.value && localStorageAuthToken) {
+    await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
+  }
+}
 
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data?.verses || [])

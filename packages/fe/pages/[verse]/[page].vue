@@ -78,8 +78,15 @@ const portalsActive = computed(() => activeModes.value.portals)
 watch(data, async (val) => {
   if (val) {
     if (verse.value.data?.name) {
+      // Set site data and fetch page data
       await generalStore.setSiteData({ key: 'settings', value: SettingsData })
       await verseStore.getPage({ page: route.params.page })
+      // Check local storage for auth token and try to authenticate if found
+      const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
+      if (!authenticated.value && localStorageAuthToken) {
+        await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
+      }
+      // Fetch thingies
       await collectorStore.getThingies()
     } else {
       await navigateTo('/multiverse')

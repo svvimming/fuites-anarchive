@@ -47,9 +47,12 @@ const value = ref('')
 const submit = async () => {
   const sanitized = value.value.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
   const joined = sanitized.join('-')
-  await pocketStore.getAuthPocket(joined)
+  await pocketStore.getAuthPocket({ token: joined })
   if (pocket.value.authenticated) {
     emit('authenticate-success')
+    if (process.client) {
+      localStorage.setItem('fuitesAnarchiveAuthToken', joined)
+    }
   }
   value.value = ''
 }

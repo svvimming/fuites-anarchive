@@ -86,15 +86,23 @@ export const usePocketStore = defineStore('pocket', () => {
   const getAuthPocket = async incoming => {
     try {
       useSetStoreData(pocket, { loading: true })
-      const response = await useFetchAuth('/authenticate-pocket', { method: 'get', token: incoming })
+      const response = await useFetchAuth('/authenticate-pocket', {
+        method: 'get',
+        token: incoming.token,
+        localStorageAuth: incoming.localStorageAuth
+      })
       // If token is found
-      if (response) {
-        toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
+      if (response.pocket) {
+        // Add a toaster message if manually entered token is retrieved
+        if (response.type === 'manual-auth-success') {
+          toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
+        }
+        // Set the pocket data
         useSetStoreData(pocket, {
           loading: false,
           refresh: false,
           authenticated: true,
-          data: response
+          data: response.pocket
         })
       } else {
         // If token is not found

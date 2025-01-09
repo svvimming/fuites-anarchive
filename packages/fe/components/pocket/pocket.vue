@@ -120,6 +120,8 @@ const handleAuthenticateSuccess = () => {
   collectorStore.getThingies()
   if (!pageExists.value) {
     pocketStore.setPocketOpen(false)
+  } else {
+    tokenInputOpen.value = false
   }
 }
 
