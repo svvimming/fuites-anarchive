@@ -76,7 +76,7 @@ const bounds = computed(() => page.value.data?.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.filtered_portals || [])
 const portalsActive = computed(() => activeModes.value.portals)
-const textImageIds = computed(() => pageThingies.value.filter(item => ['text'].includes(item.thingie_type)).map(item => item._id))
+const textImageIds = computed(() => pageThingies.value.filter(item => ['image', 'text'].includes(item.thingie_type)).map(item => item._id))
 
 // ==================================================================== Watchers
 watch(data, async (val) => {
