@@ -30,14 +30,24 @@ export const usePageshotBot = stageRef => {
   const initPageshot = () => {
     console.log('pageshot initiated')
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
+    // Get the stage layer
+    const layers = stage.value.getLayers()
+    // Record old scene position
+    const pos = layers[0].position()
+    // Reposition it at 0,0
+    layers[0].position({ x: 0, y: 0 })
+    // Clone the stage
     cloned.value = stage.value.clone()
+    // Set the canvas to full width / height and scale 1
     cloned.value.width(bounds.x || 2732)
     cloned.value.height(bounds.y || 2000)
+    cloned.value.scaleX(1)
+    cloned.value.scaleY(1)
+    // Return scene to old position
+    layers[0].position(pos)
+    // Export canvas & initiate upload
     cloned.value.toBlob({
-      callback: (data) => {
-        blob.value = data
-        uploadPrint()
-      },
+      callback: (data) => { blob.value = data; uploadPrint() },
       type: 'image/png',
       quality: 1.0
     })
