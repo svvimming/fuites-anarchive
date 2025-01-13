@@ -22,7 +22,8 @@
             <Thingie
               v-for="thingie in pageThingies"
               :key="thingie._id"
-              :thingie="thingie" />
+              :thingie="thingie"
+              @record-load="handleRecordLoad" />
 
             <Portal
               v-if="portalsActive"
@@ -63,7 +64,9 @@ const initLayer = ref({})
 const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
 const keydownEventListener = ref(false)
-// const { initPageshot } = usePageshotBot(stageRef)
+const loadedIds = ref([])
+const pageshotReady = ref(false)
+const { initPageshot, status } = usePageshotBot(stageRef)
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -73,28 +76,51 @@ const bounds = computed(() => page.value.data?.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.filtered_portals || [])
 const portalsActive = computed(() => activeModes.value.portals)
+const textImageIds = computed(() => pageThingies.value.filter(item => ['image', 'text'].includes(item.thingie_type)).map(item => item._id))
 
 // ==================================================================== Watchers
 watch(data, async (val) => {
   if (val) {
+    console.log('verse loaded', new Date(Date.now()).toString())
     if (verse.value.data?.name) {
       // Set site data and fetch page data
       await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+      console.log('site settings loaded', new Date(Date.now()).toString())
       await verseStore.getPage({ page: route.params.page })
+      console.log('page loaded', new Date(Date.now()).toString())
       // Check local storage for auth token and try to authenticate if found
       const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
       if (!authenticated.value && localStorageAuthToken) {
         await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
+        console.log('token loaded', new Date(Date.now()).toString())
       }
       // Fetch thingies
       await collectorStore.getThingies()
+      console.log('thingies loaded', new Date(Date.now()).toString())
     } else {
       await navigateTo('/multiverse')
     }
   }
 }, { immediate: true })
 
+watch(loadedIds, (ids) => {
+  pageshotReady.value = textImageIds.value.every(id => ids.includes(id))
+  if (page.value?.data?.init_screencap && pageshotReady.value && status.value !== 'complete') {
+    initPageshot()
+  }
+}, { deep: true })
+
 // ===================================================================== Methods
+/**
+ * @method handleRecordLoad
+ */
+
+const handleRecordLoad = id => {
+  if (!loadedIds.value.includes(id)) {
+    loadedIds.value.push(id)
+  }
+}
+
 /**
  * @method handleClick
  */
@@ -258,6 +284,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  loadedIds.value = []
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)
 })
