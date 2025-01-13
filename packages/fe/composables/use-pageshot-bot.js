@@ -13,6 +13,7 @@ export const usePageshotBot = stageRef => {
   const place = ref(0)
   const goal = ref(0)
   const cloned = ref(null)
+  const status = ref('ready')
   const nextChunkPayload = ref(false)
   const { $bus } = useNuxtApp()
 
@@ -27,6 +28,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const initPageshot = () => {
+    console.log('pageshot initiated')
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
     cloned.value = stage.value.clone()
     cloned.value.width(bounds.x || 2732)
@@ -46,6 +48,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const uploadPrint = () => {
+    console.log('print upload initiated')
     if (blob.value) {
       socket.value.emit('module|print-upload-initialize|payload', {
         socket_id: socket.value.id,
@@ -62,6 +65,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const uploadNextChunk = data => {
+    console.log('print upload next chunk')
     if (!printId.value) {
       printId.value = data.file_id
     }
@@ -85,9 +89,11 @@ export const usePageshotBot = stageRef => {
    */
 
   const fileUploadComplete = () => {
+    console.log('print upload finalized')
     place.value = 0
     nextChunkPayload.value = false
     printId.value = ''
+    status.value = 'complete'
     if (cloned.value) {
       cloned.value.destroy()
       cloned.value = null
@@ -114,5 +120,5 @@ export const usePageshotBot = stageRef => {
     $bus.$off('socket.io-connected', handleWebsocketConnected)
   })
 
-  return { initPageshot }
+  return { initPageshot, status }
 }

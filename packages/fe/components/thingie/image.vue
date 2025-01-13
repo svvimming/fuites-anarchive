@@ -41,9 +41,9 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['loaded'])
+
 // ======================================================================== Data
-const imageLoadError = ref(false)
-const imageLoading = ref(false)
 const image = ref(false)
 const canvas = ref(false)
 const clipPath = ref(false)
@@ -104,19 +104,16 @@ const applyClipPath = () => {
  */
 
 const loadImage = () => {
-  imageLoading.value = true
   const img = document.createElement('img')
   img.onload = function () {
-    imageLoadError.value = false
-    imageLoading.value = false
+    emit('loaded', true)
     image.value = img
     if (props.clipActive) {
       nextTick(() => { applyClipPath() })
     }
   }
   img.onerror = function () {
-    imageLoadError.value = true
-    imageLoading.value = false
+    emit('loaded', true)
   }
   img.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
 }
