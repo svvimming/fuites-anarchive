@@ -4,7 +4,7 @@
     <ButtonStamp
       :active="pocketOpen"
       :stylized="buttonText"
-      :class="['text-content color-cove', { active: pocketOpen }]"
+      :class="['text-content', { active: pocketOpen }]"
       @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
 
     <div :class="['pocket-container', { transform }, { open: pocketOpen }, { fullscreen }]">
@@ -40,21 +40,21 @@
         </ClientOnly>
         <!-- --------------------------------------------------- token input -->
         <ButtonIcon
-          class="token-input-toggle"
+          class="pocket-button token-input-toggle"
           :data-tooltip="tokenInputToggleTooltip"
           @clicked="tokenInputOpen = !tokenInputOpen">
           🔑
         </ButtonIcon>
         <!-- -------------------------------------------- full screen toggle -->
         <ButtonIcon
-          class="fullscreen-toggle"
+          class="pocket-button fullscreen-toggle"
           @clicked="pocketStore.togglePocketFullscreen()">
           <IconExpand />
         </ButtonIcon>
         <!-- ----------------------------------------------- uploader toggle -->
         <ButtonIcon
           v-if="pageExists"
-          :class="['uploader-toggle', { 'upload-ready': uploader?.status === 'ready' }]"
+          :class="['pocket-button', 'uploader-toggle', { 'upload-ready': uploader?.status === 'ready' }]"
           :force-loading="uploader?.status === 'initializing'"
           :force-disabled="uploader?.status === 'uploading'"
           :data-tooltip="uploaderToggleTooltip"
@@ -238,6 +238,10 @@ onMounted(() => {
 :deep(.icon-button) {
   --two-tone-a: #{$cove};
   --two-tone-b: white;
+}
+
+.pocket-button {
+  filter: none !important;
 }
 
 .uploader-toggle {

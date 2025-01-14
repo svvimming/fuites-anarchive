@@ -140,7 +140,6 @@ const handleIncrement = () => {
   justify-content: space-between;
   align-items: center;
   border-radius: 0;
-  border: solid 0.5px $woodsmoke;
   width: torem(40);
   height: torem(40);
   transition: 200ms ease;

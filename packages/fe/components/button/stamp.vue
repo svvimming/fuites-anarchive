@@ -75,6 +75,7 @@ defineProps({
   transition: 200ms ease;
   filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0));
   @include modalShadowLight;
+  --stamp-color: #{$cove};
   &:before {
     content: '';
     position: absolute;
@@ -84,7 +85,8 @@ defineProps({
     height: calc(100% - torem(4));
     border-top-left-radius: torem(20);
     border-bottom-right-radius: torem(20);
-    opacity: 0;
+    background-color: white;
+    box-shadow: 2px 2px 6px 0px white, -2px 2px 6px 0px white, 2px -2px 6px 0px white, -2px -2px 6px 0px white;
     transition: 200ms ease;
   }
   &:hover {
@@ -101,46 +103,21 @@ defineProps({
       stroke-dasharray: 3 3;
     }
   }
-  &.color-cove {
-    &:before {
-      background-color: $cove;
-    }
-    .text {
-      color: $cove;
-    }
-    .svg-border {
-      :deep(path) {
-        stroke: $cove;
-      }
-    }
-    &.active {
-      &:before {
-        opacity: 1;
-      }
-      .text {
-        color: white;
-      }
+  .text {
+    color: var(--stamp-color);
+  }
+  .svg-border {
+    :deep(path) {
+      stroke: var(--stamp-color);
     }
   }
-  &.color-asparagus {
+  &.active {
     &:before {
-      background-color: $asparagus;
+      background-color: var(--stamp-color);
+      box-shadow: 2px 2px 6px 0px rgba(white, 0);
     }
     .text {
-      color: $asparagus;
-    }
-    .svg-border {
-      :deep(path) {
-        stroke: $asparagus;
-      }
-    }
-    &.active {
-      &:before {
-        opacity: 1;
-      }
-      .text {
-        color: white;
-      }
+      color: white;
     }
   }
 }

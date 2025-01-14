@@ -4,7 +4,7 @@
     <ButtonStamp
       :active="compostPortalOpen"
       :stylized="buttonText"
-      :class="['text-content color-asparagus', { active: compostPortalOpen }]"
+      :class="['text-content', { active: compostPortalOpen }]"
       @clicked="compostPortalOpen = !compostPortalOpen" />
 
     <div :class="['compost-portal-container', { open: compostPortalOpen }]">
@@ -67,6 +67,7 @@ const verseName = computed(() => verse.value.data?.name)
   z-index: 11;
   padding: 0 1.125rem 0.25rem 1.125rem;
   transition: transform 200ms ease;
+  --stamp-color: #{$asparagus};
   &.active {
     transform: scale(1.1) translate(torem(8), torem(-6)) rotate(15deg);
   }

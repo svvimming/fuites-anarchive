@@ -298,6 +298,16 @@ const update = useThrottleFn(data => {
   position: absolute;
   z-index: 1;
   visibility: hidden;
+  // &:before {
+  //   content: '';
+  //   position: absolute;
+  //   top: torem(-60);
+  //   left: torem(-60);
+  //   width: calc(torem(38) + torem(120));
+  //   height: calc(torem(38) + torem(120));
+  //   backdrop-filter: blur(10px);
+  //   border-radius: 50%;
+  // }
   .caddy {
     opacity: 0;
     transform: scale(0.8);
@@ -314,7 +324,7 @@ const update = useThrottleFn(data => {
 #caddy {
   position: relative;
   padding: torem(19);
-  background-color: $woodsmoke;
+  background-color: $stormGray;
   color: white;
   transition: 200ms ease;
   border-radius: 50%;
@@ -328,7 +338,7 @@ const update = useThrottleFn(data => {
     height: torem(90);
     transform: translate(-50%, -50%);
     transition: 200ms ease;
-    background-color: $woodsmoke;
+    background-color: $stormGray;
     border-radius: 50%;
   }
   &.expanded {
@@ -355,6 +365,10 @@ const update = useThrottleFn(data => {
   &:active {
     cursor: grabbing;
   }
+  :deep(path),
+  :deep(circle) {
+    stroke: $stormGray;
+  }
 }
 
 .caddy-tool {
@@ -366,7 +380,7 @@ const update = useThrottleFn(data => {
   width: torem(52);
   height: torem(52);
   z-index: 1;
-  background-color: $woodsmoke;
+  background-color: $stormGray;
   border-radius: 50%;
   transition: 200ms ease;
   transform: translate(calc(-50% + var(--tool-offset-x)), calc(-50% + var(--tool-offset-y)));
@@ -382,7 +396,7 @@ const update = useThrottleFn(data => {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  border: solid 0.5px $woodsmoke;
+  border: solid 0.5px $stormGray;
   // background-color: white;
   overflow: hidden;
   width: torem(52);
@@ -431,7 +445,7 @@ const update = useThrottleFn(data => {
 
 .param-button {
   display: flex;
-  color: $woodsmoke;
+  color: $stormGray;
   font-size: torem(8);
   &:active {
     transform: scale(1.15);

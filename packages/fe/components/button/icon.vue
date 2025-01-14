@@ -60,18 +60,19 @@ defineProps({
   padding: torem(8.5);
   width: torem(40);
   height: torem(40);
+  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.15));
   --two-tone-a: #{$effy};
   --two-tone-b: white;
   &:before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    left: torem(2);
+    top: torem(2);
+    width: calc(100% - torem(4));
+    height: calc(100% - torem(4));
     background-color: var(--two-tone-b);
+    box-shadow: 2px 2px 6px 0px var(--two-tone-b), -2px 2px 6px 0px var(--two-tone-b), 2px -2px 6px 0px var(--two-tone-b), -2px -2px 6px 0px var(--two-tone-b);
     border-radius: 50%;
-    opacity: 0.95;
   }
   .svg-border {
     :deep(circle),
@@ -93,6 +94,7 @@ defineProps({
   &.active {
     &:before {
       background-color: var(--two-tone-a);
+      box-shadow: 2px 2px 6px 0px var(--two-tone-a), -2px 2px 6px 0px var(--two-tone-a), 2px -2px 6px 0px var(--two-tone-a), -2px -2px 6px 0px var(--two-tone-a);
     }
     .svg-border {
       :deep(circle),
