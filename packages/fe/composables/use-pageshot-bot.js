@@ -130,10 +130,30 @@ export const usePageshotBot = stageRef => {
     websocket.on('module|print-upload-complete|payload', fileUploadComplete)
   }
 
+  /**
+   * @method resetUploader
+   */
+
+  const resetUploader = () => {
+    place.value = 0
+    nextChunkPayload.value = false
+    printId.value = ''
+    status.value = 'ready'
+    blob.value = false
+    goal.value = 0
+    fileReader.value
+    if (cloned.value) {
+      cloned.value.destroy()
+      cloned.value = null
+    }
+  }
+
   // ===================================================================== Hooks
   $bus.$on('socket.io-connected', handleWebsocketConnected)
 
   onBeforeUnmount(() => {
+    console.log('use pageshot composable onbeforeunmount')
+    resetUploader()
     $bus.$off('socket.io-connected', handleWebsocketConnected)
   })
 
