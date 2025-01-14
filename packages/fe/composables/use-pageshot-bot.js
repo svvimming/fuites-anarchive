@@ -83,6 +83,13 @@ export const usePageshotBot = stageRef => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
+    console.log('blob', blob.value)
+    console.log({
+      chunksize,
+      index,
+      blobsize: blobsize.value,
+      mimetype: mimetype.value
+    })
     const chunk = blob.value.slice(index, index + Math.min(chunksize, (blobsize.value - index)), mimetype.value)
     nextChunkPayload.value = {
       socket_id: socket.value.id,
