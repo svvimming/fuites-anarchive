@@ -81,22 +81,17 @@ const textImageIds = computed(() => pageThingies.value.filter(item => ['image', 
 // ==================================================================== Watchers
 watch(data, async (val) => {
   if (val) {
-    console.log('verse loaded', new Date(Date.now()).toString())
     if (verse.value.data?.name) {
       // Set site data and fetch page data
       await generalStore.setSiteData({ key: 'settings', value: SettingsData })
-      console.log('site settings loaded', new Date(Date.now()).toString())
       await verseStore.getPage({ page: route.params.page })
-      console.log('page loaded', new Date(Date.now()).toString())
       // Check local storage for auth token and try to authenticate if found
       const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
       if (!authenticated.value && localStorageAuthToken) {
         await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
-        console.log('token loaded', new Date(Date.now()).toString())
       }
       // Fetch thingies
       await collectorStore.getThingies()
-      console.log('thingies loaded', new Date(Date.now()).toString())
     } else {
       await navigateTo('/multiverse')
     }

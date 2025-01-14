@@ -28,7 +28,6 @@ export const usePageshotBot = stageRef => {
    */
 
   const initPageshot = () => {
-    console.log('pageshot initiated')
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
     // Get the stage layer
     const layers = stage.value.getLayers()
@@ -58,7 +57,6 @@ export const usePageshotBot = stageRef => {
    */
 
   const uploadPrint = () => {
-    console.log('print upload initiated')
     if (blob.value) {
       socket.value.emit('module|print-upload-initialize|payload', {
         socket_id: socket.value.id,
@@ -75,7 +73,6 @@ export const usePageshotBot = stageRef => {
    */
 
   const uploadNextChunk = data => {
-    console.log('print upload next chunk')
     if (!printId.value) {
       printId.value = data.file_id
     }
@@ -83,13 +80,6 @@ export const usePageshotBot = stageRef => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
-    console.log('blob', blob.value)
-    console.log({
-      chunksize,
-      index,
-      blobsize: blobsize.value,
-      mimetype: mimetype.value
-    })
     const chunk = blob.value.slice(index, index + Math.min(chunksize, (blobsize.value - index)), mimetype.value)
     nextChunkPayload.value = {
       socket_id: socket.value.id,
@@ -106,7 +96,6 @@ export const usePageshotBot = stageRef => {
    */
 
   const fileUploadComplete = () => {
-    console.log('print upload finalized')
     place.value = 0
     nextChunkPayload.value = false
     printId.value = ''
@@ -152,7 +141,6 @@ export const usePageshotBot = stageRef => {
   $bus.$on('socket.io-connected', handleWebsocketConnected)
 
   onBeforeUnmount(() => {
-    console.log('use pageshot composable onbeforeunmount')
     resetUploader()
     $bus.$off('socket.io-connected', handleWebsocketConnected)
   })
