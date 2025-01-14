@@ -3,6 +3,8 @@
 export const usePocketStore = defineStore('pocket', () => {
   // ==================================================================== import
   const toasterStore = useToasterStore()
+  const verseStore = useVerseStore()
+  const { verse } = storeToRefs(verseStore)
 
   // ===================================================================== state
   const pocket = ref({
@@ -21,7 +23,7 @@ export const usePocketStore = defineStore('pocket', () => {
   
   // ================================================================== Computed
   const token = computed(() => pocket.value?.data.token)
-  const authenticated = computed(() => pocket.value.authenticated)
+  const authenticated = computed(() => pocket.value.authenticated && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
   
   // =================================================================== actions
 
