@@ -7,7 +7,7 @@
     :class="['caddy-wrapper', { active: thingie }]">
 
     <div id="caddy" :class="['caddy', { expanded }, `selected__${selected}`]">
-      <!-- ==========================================================Handle -->
+      <!-- ========================================================== Handle -->
       <div
         ref="handle"
         class="caddy-tool handle"
@@ -16,7 +16,12 @@
         <IconHand />
       </div>
       <!-- ========================================================== Shared -->
-      <div
+      <CaddyRotation
+        :selected="selected === 'rotation'"
+        class="caddy-tool shared-tool z-index-2"
+        :style="getToolTransform('rotation')"
+        @click.native="setSelected('rotation')" />
+      <!-- <div
         v-for="(tool, i) in shared"
         :key="`tool-${i + 1}`"
         :class="['caddy-tool', 'shared-tool', 'z-index-2', tool.name, tool.type, { pair: tool.params.length === 2 }]"
@@ -41,8 +46,7 @@
             <span v-else>{{ param.content }}</span>
           </button>
         </template>
-
-      </div>
+      </div> -->
       <!-- ============================================================ Text -->
       <CaddyFontEditor
         v-if="type === 'text'"
