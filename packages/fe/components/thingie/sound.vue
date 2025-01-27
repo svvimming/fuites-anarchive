@@ -80,7 +80,7 @@ const pathConfig = computed(() => ({
   scaleY: props.parentConfig.height / 200,
   data: svgPath.value,
   stroke: color.value,
-  strokeWidth: props.strokeWidth < 1 ? 1 / (props.strokeWidth - 1) : props.strokeWidth,
+  strokeWidth: props.strokeWidth,
   opacity: opacity.value,
   ...props.options
 }))
@@ -90,7 +90,7 @@ const shadowConfig = computed(() => ({
   scaleY: props.parentConfig.height / 200,
   data: svgPath.value,
   stroke: '#FFFFFF',
-  strokeWidth: 40,
+  strokeWidth: Math.max(props.strokeWidth, 40),
   opacity: 0
 }))
     

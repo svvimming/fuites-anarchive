@@ -10,69 +10,54 @@
       <!-- ========================================================== Handle -->
       <div
         ref="handle"
-        class="caddy-tool handle"
+        class="caddy-tool-button handle"
         :style="getToolTransform('handle')"
-        @click="setSelected('handle')">
+        @click="handleToolClick('handle')">
         <IconHand />
       </div>
-      <!-- ========================================================== Shared -->
+      <!-- ==================================================== Tool Buttons -->
+      <ButtonCaddy
+        v-for="tool in tools"
+        :key="`${tool}-button`"
+        :selected="selected === tool"
+        class="caddy-tool-button z-index-2"
+        :style="getToolTransform(tool)"
+        @clicked="handleToolClick(tool)">
+        <IconFonts v-if="tool === 'font-editor'" />
+        <IconColorPicker v-if="tool === 'color-selector'" />
+        <IconRotation v-if="tool === 'rotation'" />
+        <IconLayerOpacity v-if="tool === 'layer-opacity'" />
+        <IconScizors v-if="tool === 'clip-toggle'" />
+        <IconScale v-if="tool === 'resize'" />
+      </ButtonCaddy>
+      <!-- =========================================================== Tools -->
+      <!-- ------------------------------------------ Shared [Layer/Opacity] -->
+      <CaddyLayerOpacity
+        :class="['caddy-tool', 'z-index-2', { selected: selected === 'layer-opacity'}]"
+        @bring-forward="bringThingieForward"
+        @send-back="sendThingieBack" />
+      <!-- ----------------------------------------------- Shared [Rotation] -->
       <CaddyRotation
-        :selected="selected === 'rotation'"
-        class="caddy-tool shared-tool z-index-2"
-        :style="getToolTransform('rotation')"
-        @click.native="setSelected('rotation')" />
-      <!-- <div
-        v-for="(tool, i) in shared"
-        :key="`tool-${i + 1}`"
-        :class="['caddy-tool', 'shared-tool', 'z-index-2', tool.name, tool.type, { pair: tool.params.length === 2 }]"
-        :style="getToolTransform(tool.name)">
-        <template v-for="param in tool.params" :key="param.directive">
-          <ButtonRetrigger
-            v-if="param.button === 'retrigger'"
-            :class="['param-button', param.directive]"
-            @retrigger="handleShared(param.directive, param.closeOnSelect)">
-            <IconRotateArrow v-if="tool.name === 'rotation'" />
-            <span v-else>{{ param.content }}</span>
-          </ButtonRetrigger>
-          <button
-            v-else
-            :class="['param-button', param.directive]"
-            @click="handleShared(param.directive, param.closeOnSelect)">
-            <IconArrowLarge v-if="param.directive === 'bringForward'" />
-            <IconArrowSmall v-else-if="param.directive === 'sendBack'" />
-            <IconOpaque v-else-if="param.directive === 'increaseOpacity'" />
-            <IconTransparent v-else-if="param.directive === 'decreaseOpacity'" />
-            <IconTrashbin v-else-if="param.directive === 'deleteThingie'" />
-            <span v-else>{{ param.content }}</span>
-          </button>
-        </template>
-      </div> -->
-      <!-- ============================================================ Text -->
+        :default-angle="initAngle"
+        :class="['caddy-tool', 'z-index-2', { selected: selected === 'rotation' }]"
+        @update-rotation="rotateThingie" />
+      <!-- ------------------------------------------ Image & Sound [Resize] -->
+      <CaddyResize
+        v-if="type === 'image' || type === 'sound'"
+        :class="['caddy-tool', 'z-index-2', { selected: selected === 'resize' }]"
+        @resize-thingie="resizeThingie"
+        @update-stroke-width="updateStrokeWidth" />
+      <!-- ---------------------------------------------- Text [Font Editor] -->
       <CaddyFontEditor
-        v-if="type === 'text'"
-        :selected="selected === 'font-editor'"
-        class="caddy-tool z-index-2"
-        :style="getToolTransform('font-editor')"
-        @click.native="setSelected('font-editor')" />
-      <!-- ====================================================== Text/Sound -->
+        v-if="type === 'text' && textEditor"
+        :class="['caddy-tool', 'z-index-2', { selected: selected === 'font-editor' }]" />
+      <!-- ------------------------------------- Text & Sound [Color Picker] -->
       <CaddyColorSelector
         v-if="type === 'text' || type === 'sound'"
         :init-color="thingieColor || '#000000'"
-        :selected="selected === 'color-selector'"
-        class="caddy-tool z-index-1"
-        :style="getToolTransform('color-selector')"
-        @click.native="setSelected('color-selector')"
+        :class="['caddy-tool', 'z-index-1', { selected: selected === 'color-selector'}]"
         @color-change="handleColorSelection" />
-      <!-- =========================================================== Image -->
-      <template v-if="type === 'image'">
-        <div class="caddy-tool clip-toggle" :style="getToolTransform('clip-toggle')">
-          <button
-            class="param-button"
-            @click="handleToggleClip">
-            <IconScizors />
-          </button>
-        </div>
-      </template>
+      <!-- -------------------------------------------------- Sound [Volume] -->
 
     </div>
 
@@ -93,8 +78,6 @@ defineProps({
 })
 
 // ======================================================================== Data
-const generalStore = useGeneralStore()
-const { siteData } = storeToRefs(generalStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
@@ -104,33 +87,48 @@ const { page, textEditor, colorSelectorHex } = storeToRefs(verseStore)
 const alertStore = useZeroAlertStore()
 
 const soundThingieData = ref({})
+const initAngle = ref(0)
 const handle = ref(null)
 const selected = ref('handle')
+const imageTools = [
+  'layer-opacity',
+  'rotation',
+  'resize',
+  'clip-toggle'
+]
+const textTools = [
+  'layer-opacity',
+  'rotation',
+  'font-editor',
+  'color-selector'
+]
+const soundTools = [
+  'layer-opacity',
+  'rotation',
+  'resize',
+  'color-selector',
+  'volume'
+]
 const positions = ref({
   'handle': 0,
-  'rotation': 1,
-  'z-index': 2,
-  'opacity': 3,
-  'delete-thingie': 4,
-  'color-selector': 5,
-  'clip-toggle': 5,
-  'font-editor': 6
+  'layer-opacity': 1,
+  'rotation': 2,
+  'resize': 3,
+  'clip-toggle': 4,
+  'font-editor': 3,
+  'color-selector': 4,
+  'volume': 5
 })
 
 // ==================================================================== Computed
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data?._id))
-const editableParams = computed(() => siteData.value?.settings?.thingieEditableParams || [])
-const expanded = computed(() => ['color-selector', 'font-editor'].includes(selected.value))
+const expanded = computed(() => ['color-selector', 'font-editor', 'rotation', 'layer-opacity', 'resize', 'volume'].includes(selected.value))
 const type = computed(() => thingie.value?.thingie_type)
-const shared = computed(() => editableParams.value?.shared || [])
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
-const toolNum = computed(() => {
-  const num = type.value === 'text' ? 2 : type.value === 'image' ? 1 : 1
-  return num + shared.value.length + 1 // + 1 is for the handle
-})
+const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
 
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
@@ -151,47 +149,57 @@ watch(() => thingie.value?._id, (newId, oldId) => {
       colors: [...thingie.value.colors]
     }
   }
+  if (newId) {
+    initAngle.value = thingie.value.at.rotation
+  }
 })
 
 // ===================================================================== Methods
 /**
- * @method handleShared
+ * @method handleToolClick
  */
 
-const handleShared = (directive, closeOnSelect) => {
-  switch (directive) {
-    case 'rotateCW' : rotateThingie(1); break
-    case 'rotateCCW' : rotateThingie(-1); break
-    case 'bringForward' : bringThingieForward(); break
-    case 'sendBack' : sendThingieBack(); break
-    case 'increaseOpacity' : changeOpacity(0.1); break
-    case 'decreaseOpacity' : changeOpacity(-0.1); break
-    case 'deleteThingie' : openDeleteThingieModal(); break
+const handleToolClick = tool => {
+  if (tool === 'clip-toggle') {
+    toggleImageClip()
+  } else {
+    positions.value[selected.value] = positions.value[tool]
+    positions.value[tool] = 0
+    selected.value = tool
   }
-  if (closeOnSelect) {
-    nextTick(() => { collectorStore.setEditing(false) })
-  }
-}
-
-/**
- * @method setSelected
- */
-
-const setSelected = id => {
-  positions.value[selected.value] = positions.value[id]
-  positions.value[id] = 0
-  selected.value = id
 }
 
 /**
  * @method rotateThingie
  */
 
-const rotateThingie = delta => {
+const rotateThingie = deg => {
   if (thingie.value) {
     update({
-      at: Object.assign({}, thingie.value.at, { rotation: thingie.value.at.rotation + delta })
+      at: Object.assign({}, thingie.value.at, { rotation: deg })
     })
+  }
+}
+
+/**
+ * @method resizeThingie
+ */
+
+const resizeThingie = dimensions => {
+  if (thingie.value) {
+    update({
+      at: Object.assign({}, thingie.value.at, dimensions)
+    })
+  }
+}
+
+/**
+ * @method updateStrokeWidth
+ */
+
+const updateStrokeWidth = val => {
+  if (thingie.value) {
+    update({ stroke_width: val })
   }
 }
 
@@ -253,10 +261,10 @@ const changeOpacity = amt => {
 }
 
 /**
- * @method handleToggleClip
+ * @method toggleImageClip
  */
 
-const handleToggleClip = () => {
+const toggleImageClip = () => {
   if (thingie.value) {
     update({ clip: !thingie.value.clip })
   }
@@ -281,8 +289,8 @@ const getToolTransform = id => {
   const index = positions.value[id]
   const distance = selected.value === 'font-editor' ? 110 : expanded.value ? 90 : 60
   const coords = {
-    x: Math.cos((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * distance,
-    y: Math.sin((index * 2 * Math.PI / (toolNum.value - 1)) + 1) * distance
+    x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + 1) * distance,
+    y: Math.sin((index * 2 * Math.PI / (tools.value.length)) + 1) * distance
   }
   return { '--tool-offset-x': coords.x + 'px', '--tool-offset-y': coords.y + 'px' }
 }
@@ -302,16 +310,6 @@ const update = useThrottleFn(data => {
   position: absolute;
   z-index: 1;
   visibility: hidden;
-  // &:before {
-  //   content: '';
-  //   position: absolute;
-  //   top: torem(-60);
-  //   left: torem(-60);
-  //   width: calc(torem(38) + torem(120));
-  //   height: calc(torem(38) + torem(120));
-  //   backdrop-filter: blur(10px);
-  //   border-radius: 50%;
-  // }
   .caddy {
     opacity: 0;
     transform: scale(0.8);
@@ -375,7 +373,7 @@ const update = useThrottleFn(data => {
   }
 }
 
-.caddy-tool {
+.caddy-tool-button {
   --tool-offset-x: 0px;
   --tool-offset-y: 0px;
   position: absolute;
@@ -393,85 +391,19 @@ const update = useThrottleFn(data => {
   }
 }
 
-// /////////////////////////////////////////////////////////////////////// Tools
-.shared-tool {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  border: solid 0.5px $stormGray;
-  // background-color: white;
-  overflow: hidden;
-  width: torem(52);
-  height: torem(52);
-  &.fontfamily {
-    width: unset;
-    height: unset;
+.caddy-tool {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  // width: // 100%; height and width are set inside the tool component
+  // height: // 100%; height and width are set inside the tool component
+  transform: translate(-50%, -50%);
+  transition: 200ms ease;
+  visibility: hidden;
+  opacity: 0;
+  &.selected {
+    visibility: visible;
+    opacity: 1;
   }
-  &.rotation,
-  &.z-index {
-    .param-button {
-      padding: 0 torem(2);
-    }
-  }
-  &.opacity {
-    .param-button {
-      :deep(svg) {
-        width: torem(14);
-        height: torem(14);
-      }
-    }
-  }
-  &.delete-thingie {
-    .param-button {
-      :deep(svg) {
-        width: torem(22);
-        height: torem(22);
-      }
-    }
-  }
-  &.pair {
-    &:before {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 50%;
-      border-right: solid torem(1) rgba(255, 255, 255, 0.5);
-    }
-    .param-button {
-      justify-content: center;
-      align-items: center;
-      min-width: torem(19);
-    }
-  }
-}
-
-.param-button {
-  display: flex;
-  color: $stormGray;
-  font-size: torem(8);
-  &:active {
-    transform: scale(1.15);
-  }
-  &.rotateCCW {
-    :deep(svg) {
-      transform: scaleX(-1);
-    }
-  }
-  &.bringForward {
-    :deep(svg) {
-      transform: translateY(torem(-4));
-    }
-  }
-  &.decreaseOpacity {
-    margin-right: torem(4);
-  }
-}
-
-.clip-toggle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 </style>

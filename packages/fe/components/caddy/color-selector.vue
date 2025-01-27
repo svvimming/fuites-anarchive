@@ -1,38 +1,28 @@
 <template>
   <div class="color-picker">
-
-    <div :class="['icon-color-picker', { selected }]">
-      <IconColorPicker />
-    </div>
-
     <div
       id="color-wheel"
       ref="wheel"
-      :class="['cpw_container', { selected }]"
+      class="cpw_container"
       :style="{ width: `${width}px`, height: `${height}px` }">
-        
       <div
         ref="farbtastic-solid"
         class="farbtastic-solid"
         :style="solidStyle">
       </div>
-
-        <canvas
-          ref="mask"
-          class="farbtastic-mask"
-          :style="{width, height}"
-          :width="width"
-          :height="height">
-        </canvas>
-
-        <canvas
-          ref="overlay"
-          :width="width"
-          :height="height"
-          class="farbtastic-overlay"
-          :style="{ width, height }"
-          @mousedown="mousedown" />
-
+      <canvas
+        ref="mask"
+        class="farbtastic-mask"
+        :style="{width, height}"
+        :width="width"
+        :height="height" />
+      <canvas
+        ref="overlay"
+        :width="width"
+        :height="height"
+        class="farbtastic-overlay"
+        :style="{ width, height }"
+        @mousedown="mousedown" />
     </div>
   </div>
 </template>
@@ -44,11 +34,6 @@ const props = defineProps({
     type: String,
     required: false,
     default: '#000000'
-  },
-  selected: {
-    type: Boolean,
-    required: false,
-    default: false
   }
 })
 
@@ -403,23 +388,20 @@ const widgetCoords = e => ({
 // })
 
 const mousedown = e => {
-  if (props.selected) {
-    // Capture mouse
-    if (!dragging.value) {
-      document.addEventListener('mousemove', mousemove)
-      document.addEventListener('mouseup', mouseup)
-      dragging.value = true
-    }
-    // Update the stored offset for the widget.
-    const rect = wheel.value.getBoundingClientRect()
-    offset.value = { left: rect.left, top: rect.top }
-    // Check which area is being dragged
-    const pos = widgetCoords(e)
-    circleDrag.value = Math.max(Math.abs(pos.x), Math.abs(pos.y)) > square.value + 2
-    // Process
-    mousemove(e)
+  // Capture mouse
+  if (!dragging.value) {
+    document.addEventListener('mousemove', mousemove)
+    document.addEventListener('mouseup', mouseup)
+    dragging.value = true
   }
-  return false
+  // Update the stored offset for the widget.
+  const rect = wheel.value.getBoundingClientRect()
+  offset.value = { left: rect.left, top: rect.top }
+  // Check which area is being dragged
+  const pos = widgetCoords(e)
+  circleDrag.value = Math.max(Math.abs(pos.x), Math.abs(pos.y)) > square.value + 2
+  // Process
+  mousemove(e)
 }
 
 const mousemove = e => {
@@ -532,33 +514,23 @@ const RGBToHSL = val => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.icon-color-picker {
+.color-picker {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  width: torem(152);
+  height: torem(152);
 }
 
 .cpw_container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  position: relative;
   -webkit-touch-callout: none; /* prevent callout to copy image, etc when tap to hold */
   text-size-adjust:none; /* prevent webkit from resizing text to fit */
   tap-highlight-color:rgba(0,0,0,0); /* prevent tap highlight color*/
   tap-highlight-color: transparent; /* prevent tap highlight color*/
   user-select:none;
-  transform: translate(-50%, -50%) scale(0.25);
   transition: 300ms ease;
   border-radius: 50%;
-  visibility: hidden;
-  opacity: 0;
-  &.selected {
-    transform: translate(-50%, -50%) scale(1);
-    visibility: visible;
-    opacity: 1;
-  }
 }
 
 .farbtastic-solid {
