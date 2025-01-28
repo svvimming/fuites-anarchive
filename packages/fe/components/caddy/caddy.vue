@@ -35,7 +35,8 @@
       <CaddyLayerOpacity
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'layer-opacity'}]"
         @bring-forward="bringThingieForward"
-        @send-back="sendThingieBack" />
+        @send-back="sendThingieBack"
+        @update-opacity="updateOpacity" />
       <!-- ----------------------------------------------- Shared [Rotation] -->
       <CaddyRotation
         :default-angle="initAngle"
@@ -249,13 +250,13 @@ const handleColorSelection = val => {
 }
 
 /**
- * @method changeOpacity
+ * @method updateOpacity
  */
 
-const changeOpacity = amt => {
+const updateOpacity = val => {
   if (thingie.value) {
     update({
-      opacity: Math.max(0.1, Math.min(1, thingie.value.opacity + amt))
+      opacity: Math.max(0.1, Math.min(1, val))
     })
   }
 }

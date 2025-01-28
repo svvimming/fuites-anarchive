@@ -1,6 +1,6 @@
 <template>
   <div
-    class="radial-slider"
+    class="radial-slider-infinte"
     :style="{ width: `${radius * 2}px`, height: `${radius * 2}px` }">
 
     <div ref="track" class="track">
@@ -67,7 +67,7 @@ defineExpose({ setTheta })
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.radial-slider {
+.radial-slider-infinite {
   position: relative;
 }
 

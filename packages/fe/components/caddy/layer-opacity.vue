@@ -1,7 +1,16 @@
 <template>
   <div class="layer-opacity-tool">
 
-    <div class="panel opacity-tool"></div>
+    <div class="panel opacity-tool">
+      <div class="slider-wrapper">
+        <RadialSliderBounded
+          ref="opacitySliderRef"
+          :input-range="[20, 160]"
+          :output-range="[0.1, 1]"
+          :include-thumb-bounds="true"
+          @degree-change="handleDegreeChange" />
+      </div>
+    </div>
 
     <div class="panel layer-tool">
       <button
@@ -27,7 +36,29 @@
 
 <script setup>
 // ======================================================================= Setup
-const emit = defineEmits(['send-back', 'bring-forward'])
+const emit = defineEmits(['send-back', 'bring-forward', 'update-opacity'])
+
+// ======================================================================== Data
+const collectorStore = useCollectorStore()
+const { thingies, editing } = storeToRefs(collectorStore)
+const opacitySliderRef = ref(null)
+
+// ==================================================================== Computed
+const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
+const opacity = computed(() => thingie.value?.opacity)
+
+// ==================================================================== Watchers
+watch(editing, () => {
+  if (opacitySliderRef.value) {
+    const defaultDegree = ((opacity.value - 0.1) * (160 - 20) / (1.0 - 0.1)) + 20
+    opacitySliderRef.value.setTheta(defaultDegree * (Math.PI / 180) - Math.PI)
+  }
+})
+
+// ===================================================================== Methods
+const handleDegreeChange = val => {
+  emit('update-opacity', val)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -41,7 +72,22 @@ const emit = defineEmits(['send-back', 'bring-forward'])
 }
 
 .panel {
+  position: relative;
   width: 50%;
+}
+
+.opacity-tool {
+  height: 100%;
+}
+
+.slider-wrapper {
+  position: absolute;
+  right: torem(8);
+  top: 50%;
+  width: torem(50);
+  transform: translate(0, -50%);
+  padding: torem(8) 0 torem(8) torem(10);
+  overflow: hidden;
 }
 
 .layer-tool {
