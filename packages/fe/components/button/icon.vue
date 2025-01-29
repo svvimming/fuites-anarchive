@@ -3,7 +3,7 @@
     v-slot="{ loading }"
     :force-loading="forceLoading"
     :force-disabled="forceDisabled"
-    :class="['icon-button', { active }]"
+    :class="['icon-button', { active }, { disabled: forceDisabled }]"
     :data-tooltip="tooltip">
 
     <DashedBorderCircle
@@ -83,11 +83,13 @@ defineProps({
     }
   }
   &:hover {
-    .svg-border {
-      :deep(circle),
-      :deep(rect),
-      :deep(path) {
-        stroke-dashoffset: 20%;
+    &:not(.disabled) {
+      .svg-border {
+        :deep(circle),
+        :deep(rect),
+        :deep(path) {
+          stroke-dashoffset: 20%;
+        }
       }
     }
   }
@@ -102,6 +104,16 @@ defineProps({
       :deep(path) {
         stroke: var(--two-tone-b);
       }
+    }
+  }
+  &.solid-outline {
+    filter: none;
+    &:before {
+      box-shadow: none;
+      left: torem(0.5);
+      top: torem(0.5);
+      width: calc(100% - torem(1));
+      height: calc(100% - torem(1));
     }
   }
 }

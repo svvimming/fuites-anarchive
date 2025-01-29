@@ -29,7 +29,7 @@
       :path="thingie.path_data"
       :colors="thingie.colors"
       :position="thingie.at"
-      :stoke-width="thingie.stroke_width" />
+      :stroke-width="thingie.stroke_width" />
 
     <ThingieText
       v-if="type === 'text'"
