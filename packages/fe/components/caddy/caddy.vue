@@ -13,9 +13,12 @@
       <div
         ref="handle"
         class="caddy-tool-button handle"
-        :style="getToolTransform('handle')"
-        @click="handleToolClick('handle')">
-        <IconHand />
+        :style="getToolTransform('handle')">
+        <ButtonIcon
+          :class="['solid-outline', { outside: selected !== 'handle' }]"
+          @clicked="handleToolClick('handle')">
+          <IconHand />
+        </ButtonIcon>
       </div>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
@@ -38,6 +41,7 @@
         <IconLayerOpacity v-if="tool === 'layer-opacity'" />
         <IconScizors v-if="tool === 'clip-toggle'" />
         <IconScale v-if="tool === 'resize'" />
+        <IconVolume v-if="tool === 'volume'" />
       </ButtonCaddy>
       <!-- =========================================================== Tools -->
       <!-- ------------------------------------------ Shared [Layer/Opacity] -->
@@ -68,6 +72,9 @@
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'color-selector'}]"
         @color-change="handleColorSelection" />
       <!-- -------------------------------------------------- Sound [Volume] -->
+      <CaddyVolume
+        v-if="type === 'sound'"
+        :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]" />
 
     </div>
 
@@ -414,9 +421,18 @@ const update = useThrottleFn(data => {
   &:active {
     cursor: grabbing;
   }
-  :deep(path),
-  :deep(circle) {
-    stroke: $stormGray;
+  :deep(.icon-button) {
+    width: 100% !important;
+    height: 100% !important;
+    --two-tone-a: #{$stormGray};
+    --two-tone-b: white;
+    &.outside {
+      .svg-border {
+        rect {
+          stroke-dasharray: none;
+        }
+      }
+    }
   }
 }
 

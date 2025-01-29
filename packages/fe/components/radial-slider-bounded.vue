@@ -3,6 +3,8 @@
     class="radial-slider-bounded"
     :style="{ width: `${radius * 2}px`, height: `${radius * 2}px` }">
 
+    <slot :theta="theta"></slot>
+
     <div
       ref="track"
       class="track"

@@ -48,8 +48,8 @@ const hsl = ref('')
 const radius = ref(0)
 const square = ref(0)
 const mid = ref(0)
-const width = ref(104)
-const height = ref(104)
+const width = ref(120)
+const height = ref(120)
 const markerSize = ref(0)
 const invert = ref(0)
 
@@ -518,8 +518,8 @@ const RGBToHSL = val => {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: torem(152);
-  height: torem(152);
+  width: torem(142);
+  height: torem(142);
 }
 
 .cpw_container {
