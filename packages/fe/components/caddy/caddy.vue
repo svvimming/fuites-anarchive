@@ -73,8 +73,9 @@
         @color-change="handleColorSelection" />
       <!-- -------------------------------------------------- Sound [Volume] -->
       <CaddyVolume
-        v-if="type === 'sound'"
-        :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]" />
+        v-show="type === 'sound'"
+        :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]"
+        @update-gain="handleGainUpdate" />
 
     </div>
 
@@ -298,6 +299,16 @@ const updateOpacity = val => {
 const toggleImageClip = () => {
   if (thingie.value) {
     update({ clip: !thingie.value.clip })
+  }
+}
+
+/**
+ * @method handleGainUpdate
+ */
+
+const handleGainUpdate = val => {
+  if (thingie.value) {
+    update({ gain: val })
   }
 }
 

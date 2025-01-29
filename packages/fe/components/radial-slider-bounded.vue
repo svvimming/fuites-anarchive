@@ -85,7 +85,10 @@ onMounted(() => {
 })
 
 // ===================================================================== Methods
-const setTheta = val => { theta.value = val }
+const setTheta = val => {
+  console.log('set theta', val)
+  theta.value = val
+}
 
 // ====================================================================== Expose
 defineExpose({ setTheta })

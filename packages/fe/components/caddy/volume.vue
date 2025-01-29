@@ -49,17 +49,35 @@
 </template>
 
 <script setup>
-// //////////////////////////////////////////////////////////////////////// Data
+// ======================================================================= Setup
+const emit = defineEmits(['update-gain'])
+
+// ======================================================================== Data
+const collectorStore = useCollectorStore()
+const { thingies, editing } = storeToRefs(collectorStore)
 const volumeSliderRef = ref(null)
 const level = ref(0)
 
-// ///////////////////////////////////////////////////////////////////// Methods
+// ==================================================================== Computed
+const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
+
+// ==================================================================== Watchers
+watch(editing, () => {
+  if (volumeSliderRef.value && thingie.value?.thingie_type === 'sound') {
+    const defaultDegree = (thingie.value.gain * (303 - 57)) + 57 // map gain to degree range of knob
+    volumeSliderRef.value.setTheta(defaultDegree * (Math.PI / 180) - Math.PI)
+    level.value = Math.round(thingie.value.gain * 10)
+  }
+})
+
+// ===================================================================== Methods
 /**
  * @method handleVolumeChange
  */
 
 const handleVolumeChange = val => {
-  level.value = val * 10
+  level.value = Math.round(val * 10)
+  emit('update-gain', val)
 }
 
 /**
@@ -67,7 +85,10 @@ const handleVolumeChange = val => {
  */
 
 const handleIncrementVolume = val => {
-  console.log(val)
+  level.value = Math.max(0, Math.min(level.value + val, 10))
+  const degree = ((level.value / 10) * (303 - 57)) + 57 // map level to degree range of knob
+  volumeSliderRef.value.setTheta(degree * (Math.PI / 180) - Math.PI)
+  emit('update-gain', level.value / 10)
 }
 </script>
 
@@ -183,6 +204,20 @@ const handleIncrementVolume = val => {
     font-family: 'Nunito';
     font-weight: 800;
     color: $stormGray;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
   }
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 </style>
