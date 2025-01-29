@@ -2,7 +2,9 @@
   <div class="volume-tool">
     
     <div class="meter">
-      <IconAudioMeter class="audio-meter-svg" />
+      <IconAudioMeter
+        class="audio-meter-svg"
+        :style="{ '--needle-angle': `${(mixerLevel * 120 / 100) - 60}deg` }" />
     </div>
 
     <div class="volume-knob">
@@ -32,7 +34,7 @@
         class="size-button">
         <IconCaddyArcMiddle />
         <input
-          v-model="level"
+          v-model="knobLevel"
           type="number"
           pattern="[0-9]*"
           class="input" />
@@ -50,13 +52,26 @@
 
 <script setup>
 // ======================================================================= Setup
+const props = defineProps({
+  active: {
+    type: Boolean,
+    required: false,
+    default: false
+  }
+})
 const emit = defineEmits(['update-gain'])
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
+const mixerStore = useMixerStore()
+const { audioContext, analyser } = storeToRefs(mixerStore)
+
+const audioBufferArray = ref(false)
+const requestId = ref(false)
+const mixerLevel = ref(0)
 const volumeSliderRef = ref(null)
-const level = ref(0)
+const knobLevel = ref(0)
 
 // ==================================================================== Computed
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
@@ -66,7 +81,23 @@ watch(editing, () => {
   if (volumeSliderRef.value && thingie.value?.thingie_type === 'sound') {
     const defaultDegree = (thingie.value.gain * (303 - 57)) + 57 // map gain to degree range of knob
     volumeSliderRef.value.setTheta(defaultDegree * (Math.PI / 180) - Math.PI)
-    level.value = Math.round(thingie.value.gain * 10)
+    knobLevel.value = Math.round(thingie.value.gain * 10)
+  }
+})
+
+watch(audioContext, (val) => {
+  if (val) {
+    nextTick(() => {
+      initAudioBufferArray()
+    })
+  }
+})
+
+watch(() => props.active, (val) => {
+  if (val && analyser.value && audioBufferArray.value) {
+    calculateOutputLevel()
+  } else if (requestId.value) {
+    cancelAnimationFrame(requestId.value)
   }
 })
 
@@ -76,7 +107,7 @@ watch(editing, () => {
  */
 
 const handleVolumeChange = val => {
-  level.value = Math.round(val * 10)
+  knobLevel.value = Math.round(val * 10)
   emit('update-gain', val)
 }
 
@@ -85,11 +116,45 @@ const handleVolumeChange = val => {
  */
 
 const handleIncrementVolume = val => {
-  level.value = Math.max(0, Math.min(level.value + val, 10))
-  const degree = ((level.value / 10) * (303 - 57)) + 57 // map level to degree range of knob
+  knobLevel.value = Math.max(0, Math.min(knobLevel.value + val, 10))
+  const degree = ((knobLevel.value / 10) * (303 - 57)) + 57 // map level to degree range of knob
   volumeSliderRef.value.setTheta(degree * (Math.PI / 180) - Math.PI)
-  emit('update-gain', level.value / 10)
+  emit('update-gain', knobLevel.value / 10)
 }
+
+/**
+ * @method initAudioBufferArray
+ */
+
+const initAudioBufferArray = () => {
+  const bufferLength = analyser.value.frequencyBinCount
+  audioBufferArray.value = new Uint8Array(bufferLength)
+  console.log(audioBufferArray.value)
+}
+
+/**
+ * @method calculateOutputLevel
+ */
+
+const calculateOutputLevel = () => {
+  analyser.value.getByteFrequencyData(audioBufferArray.value)
+  let sum = 0
+  for (const amplitude of audioBufferArray.value) {
+    sum += amplitude * amplitude
+  }
+  mixerLevel.value = Math.sqrt(sum / audioBufferArray.value.length)
+  requestId.value = requestAnimationFrame(calculateOutputLevel)
+}
+
+// ======================================================================= Hooks
+onMounted(() => {
+  if (audioContext.value) { initAudioBufferArray() }
+})
+
+onBeforeUnmount(() => {
+  if (requestId.value) { cancelAnimationFrame(requestId.value) }
+})
+
 </script>
 
 <style lang="scss" scoped>
@@ -116,10 +181,16 @@ const handleIncrementVolume = val => {
 }
 
 .audio-meter-svg {
+  --needle-angle: -60deg;
   position: absolute;
   left: 50%;
   top: 0;
   transform: translateX(-50%);
+  :deep(.needle) {
+    transition: 100ms linear;
+    transform-origin: 51px 50px;
+    transform: rotate(var(--needle-angle));
+  }
 }
 // //////////////////////////////////////////////////////////////////////// Knob
 .volume-knob {

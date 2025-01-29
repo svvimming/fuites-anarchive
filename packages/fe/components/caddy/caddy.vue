@@ -74,6 +74,7 @@
       <!-- -------------------------------------------------- Sound [Volume] -->
       <CaddyVolume
         v-show="type === 'sound'"
+        :active="selected === 'volume'"
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]"
         @update-gain="handleGainUpdate" />
 
