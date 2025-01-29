@@ -11,41 +11,49 @@
     {
       "class": "nanum",
       "display": "Nanum",
+      "styleAttribute": "Nanum Myeongjo, serif",
       "fontFaceDeclaration": "\"Nanum Myeongjo\", serif"
     },
     {
       "class": "courier",
       "display": "Courier",
+      "styleAttribute": "Courier Prime, monospace",
       "fontFaceDeclaration": "\"Courier Prime\", monospace"
     },
     {
       "class": "merriweather",
       "display": "Merriweather",
+      "styleAttribute": "Merriweather, serif",
       "fontFaceDeclaration": "\"Merriweather\", serif"
     },
     {
       "class": "source-code",
       "display": "Source Code",
+      "styleAttribute": "Source Code Pro, monospace",
       "fontFaceDeclaration": "\"Source Code Pro\", monospace"
     },
     {
       "class": "anton",
       "display": "Anton",
+      "styleAttribute": "Anton, sans-serif",
       "fontFaceDeclaration": "\"Anton\", sans-serif"
     },
     {
       "class": "arvo",
       "display": "Arvo",
+      "styleAttribute": "Arvo, serif",
       "fontFaceDeclaration": "\"Arvo\", serif"
     },
     {
       "class": "pt-sans",
       "display": "PT Sans",
+      "styleAttribute": "PT Sans, sans-serif",
       "fontFaceDeclaration": "\"PT Sans\", sans-serif"
     },
     {
       "class": "pt-serif",
       "display": "PT Serif",
+      "styleAttribute": "PT Serif, serif",
       "fontFaceDeclaration": "\"PT Serif\", serif"
     }
   ],

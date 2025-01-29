@@ -135,6 +135,20 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 700;
 }
 
+// ---------------------------------------------------------------------- Nunito
+@font-face {
+  font-family: 'Nunito';
+  src: url('#{$fontAssetPath}/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }

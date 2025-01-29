@@ -4,9 +4,11 @@
     :prevent-default="true"
     :handle="handle"
     :container-element="container"
+    :on-move="handleOnMove"
+    :on-end="handleDragEnd"
     :class="['caddy-wrapper', { active: thingie }]">
 
-    <div id="caddy" :class="['caddy', { expanded }, `selected__${selected}`]">
+    <div id="caddy" :class="['caddy', `selected__${selected}`]" :style="caddyStyles">
       <!-- ========================================================== Handle -->
       <div
         ref="handle"
@@ -50,7 +52,7 @@
         @update-stroke-width="updateStrokeWidth" />
       <!-- ---------------------------------------------- Text [Font Editor] -->
       <CaddyFontEditor
-        v-if="type === 'text' && textEditor"
+        v-if="textEditor"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'font-editor' }]" />
       <!-- ------------------------------------- Text & Sound [Color Picker] -->
       <CaddyColorSelector
@@ -89,6 +91,7 @@ const alertStore = useZeroAlertStore()
 
 const soundThingieData = ref({})
 const initAngle = ref(0)
+const dragging = ref(false)
 const handle = ref(null)
 const selected = ref('handle')
 const imageTools = [
@@ -110,6 +113,16 @@ const soundTools = [
   'color-selector',
   'volume'
 ]
+const radii = {
+  'handle': 60,
+  'layer-opacity': 86,
+  'rotation': 86,
+  'resize': 86,
+  'clip-toggle': 60,
+  'font-editor': 86,
+  'color-selector': 86,
+  'volume': 86
+}
 const positions = ref({
   'handle': 0,
   'layer-opacity': 1,
@@ -125,12 +138,13 @@ const positions = ref({
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
 const pageThingies = computed(() => thingies.value.data.filter(item => item.location === page.value?.data?.name))
 const pocketThingies = computed(() => thingies.value.data.filter(item => item.location === 'pocket' && item.pocket_ref === pocket.value.data?._id))
-const expanded = computed(() => ['color-selector', 'font-editor', 'rotation', 'layer-opacity', 'resize', 'volume'].includes(selected.value))
 const type = computed(() => thingie.value?.thingie_type)
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
-
+const caddyStyles = computed(() => ({
+  '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 30}px`
+}))
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
   // Update closed sound thingie with saved hex color
@@ -152,6 +166,8 @@ watch(() => thingie.value?._id, (newId, oldId) => {
   }
   if (newId) {
     initAngle.value = thingie.value.at.rotation
+    handleToolClick('handle')
+    resetPositions()
   }
 })
 
@@ -161,6 +177,7 @@ watch(() => thingie.value?._id, (newId, oldId) => {
  */
 
 const handleToolClick = tool => {
+  if (tool === 'handle' && dragging.value) { return }
   if (tool === 'clip-toggle') {
     toggleImageClip()
   } else {
@@ -280,6 +297,23 @@ const openDeleteThingieModal = () => {
 }
 
 /**
+ * @method resetPositions
+ */
+
+const resetPositions = () => {
+  positions.value = {
+    'handle': 0,
+    'layer-opacity': 1,
+    'rotation': 2,
+    'resize': 3,
+    'clip-toggle': 4,
+    'font-editor': 3,
+    'color-selector': 4,
+    'volume': 5
+  }
+}
+
+/**
  * @method getToolTransform
  */
 
@@ -288,12 +322,28 @@ const getToolTransform = id => {
     return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
   const index = positions.value[id]
-  const distance = selected.value === 'font-editor' ? 110 : expanded.value ? 90 : 60
+  const distance = radii[selected.value] || 60
   const coords = {
     x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + 1) * distance,
     y: Math.sin((index * 2 * Math.PI / (tools.value.length)) + 1) * distance
   }
   return { '--tool-offset-x': coords.x + 'px', '--tool-offset-y': coords.y + 'px' }
+}
+
+/**
+ * @method handleOnMove
+ */
+
+ const handleOnMove = () => {
+  if (!dragging.value) { dragging.value = true }
+}
+
+/**
+ * @method handleDragEnd
+ */
+
+const handleDragEnd = () => {
+  setTimeout(() => { dragging.value = false }, 50)
 }
 
 /**
@@ -325,6 +375,7 @@ const update = useThrottleFn(data => {
 }
 
 #caddy {
+  --center-panel-diameter: torem(90);
   position: relative;
   padding: torem(19);
   background-color: $stormGray;
@@ -337,25 +388,25 @@ const update = useThrottleFn(data => {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: torem(90);
-    height: torem(90);
+    width: var(--center-panel-diameter);
+    height: var(--center-panel-diameter);
     transform: translate(-50%, -50%);
     transition: 200ms ease;
     background-color: $stormGray;
     border-radius: 50%;
   }
-  &.expanded {
-    &:before {
-      width: torem(142);
-      height: torem(142);
-    }
-  }
-  &.selected__font-editor {
-    &:before {
-      width: torem(182);
-      height: torem(182);
-    }
-  }
+  // &.expanded {
+  //   &:before {
+  //     width: torem(142);
+  //     height: torem(142);
+  //   }
+  // }
+  // &.selected__font-editor {
+  //   &:before {
+  //     width: torem(182);
+  //     height: torem(182);
+  //   }
+  // }
 }
 
 .handle {

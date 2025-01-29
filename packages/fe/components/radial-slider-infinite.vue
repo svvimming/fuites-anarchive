@@ -1,6 +1,6 @@
 <template>
   <div
-    class="radial-slider-infinte"
+    class="radial-slider-infinite"
     :style="{ width: `${radius * 2}px`, height: `${radius * 2}px` }">
 
     <div ref="track" class="track">
