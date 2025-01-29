@@ -17,6 +17,13 @@
         @click="handleToolClick('handle')">
         <IconHand />
       </div>
+      <!-- ======================================================== Trashbin -->
+      <ButtonCaddy
+        class="caddy-tool-button z-index-2 trash-button"
+        :style="getToolTransform('trash')"
+        @clicked="openDeleteThingieModal">
+        <IconTrashbin />
+      </ButtonCaddy>
       <!-- ==================================================== Tool Buttons -->
       <ButtonCaddy
         v-for="tool in tools"
@@ -142,9 +149,8 @@ const type = computed(() => thingie.value?.thingie_type)
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
-const caddyStyles = computed(() => ({
-  '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 30}px`
-}))
+const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 30}px` }))
+
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
   // Update closed sound thingie with saved hex color
@@ -321,11 +327,12 @@ const getToolTransform = id => {
   if (id === selected.value) {
     return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
-  const index = positions.value[id]
-  const distance = radii[selected.value] || 60
+  const index = id === 'trash' ? 2.5 : positions.value[id]
+  const distance = (radii[selected.value] || 60) - (id === 'trash' ? 10 : 0)
+  const phase = tools.value.length === 5 ? (Math.PI / 3.3333) : 0
   const coords = {
-    x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + 1) * distance,
-    y: Math.sin((index * 2 * Math.PI / (tools.value.length)) + 1) * distance
+    x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + phase) * distance,
+    y: Math.sin((index * 2 * Math.PI / (tools.value.length)) + phase) * distance
   }
   return { '--tool-offset-x': coords.x + 'px', '--tool-offset-y': coords.y + 'px' }
 }
@@ -395,18 +402,6 @@ const update = useThrottleFn(data => {
     background-color: $stormGray;
     border-radius: 50%;
   }
-  // &.expanded {
-  //   &:before {
-  //     width: torem(142);
-  //     height: torem(142);
-  //   }
-  // }
-  // &.selected__font-editor {
-  //   &:before {
-  //     width: torem(182);
-  //     height: torem(182);
-  //   }
-  // }
 }
 
 .handle {
@@ -441,6 +436,15 @@ const update = useThrottleFn(data => {
   &.z-index-2 {
     z-index: 2;
   }
+}
+
+.trash-button {
+  width: torem(32) !important;
+  height: torem(32) !important;
+  background-color: white !important;
+  border-radius: 50%;
+  border: solid torem(3) $stormGray;
+  z-index: 4 !important;
 }
 
 .caddy-tool {
