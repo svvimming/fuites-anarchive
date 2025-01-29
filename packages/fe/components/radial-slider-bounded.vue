@@ -85,10 +85,7 @@ onMounted(() => {
 })
 
 // ===================================================================== Methods
-const setTheta = val => {
-  console.log('set theta', val)
-  theta.value = val
-}
+const setTheta = val => { theta.value = val }
 
 // ====================================================================== Expose
 defineExpose({ setTheta })
@@ -134,7 +131,10 @@ defineExpose({ setTheta })
     background-color: $stormGray;
     left: var(--lower-bound-left);
     top: var(--lower-bound-top);
-  } 
+  }
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .cover {
@@ -156,5 +156,9 @@ defineExpose({ setTheta })
   border-radius: 50%;
   transform: translate(-50%, -50%);
   z-index: 4;
+  transition: transform 150ms ease;
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 }
 </style>

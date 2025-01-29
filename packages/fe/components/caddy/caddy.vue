@@ -25,7 +25,7 @@
         class="caddy-tool-button z-index-2 trash-button"
         :style="getToolTransform('trash')"
         @clicked="openDeleteThingieModal">
-        <IconTrashbin />
+        <IconTrashbin class="icon" />
       </ButtonCaddy>
       <!-- ==================================================== Tool Buttons -->
       <ButtonCaddy
@@ -35,13 +35,13 @@
         class="caddy-tool-button z-index-2"
         :style="getToolTransform(tool)"
         @clicked="handleToolClick(tool)">
-        <IconFonts v-if="tool === 'font-editor'" />
-        <IconColorPicker v-if="tool === 'color-selector'" />
-        <IconRotation v-if="tool === 'rotation'" />
-        <IconLayerOpacity v-if="tool === 'layer-opacity'" />
-        <IconScizors v-if="tool === 'clip-toggle'" />
-        <IconScale v-if="tool === 'resize'" />
-        <IconVolume v-if="tool === 'volume'" />
+        <IconFonts v-if="tool === 'font-editor'" class="icon" />
+        <IconColorPicker v-if="tool === 'color-selector'" class="icon" />
+        <IconRotation v-if="tool === 'rotation'" class="icon" />
+        <IconLayerOpacity v-if="tool === 'layer-opacity'" class="icon" />
+        <IconScizors v-if="tool === 'clip-toggle'" class="icon" />
+        <IconScale v-if="tool === 'resize'" class="icon" />
+        <IconVolume v-if="tool === 'volume'" class="icon" />
       </ButtonCaddy>
       <!-- =========================================================== Tools -->
       <!-- ------------------------------------------ Shared [Layer/Opacity] -->
@@ -463,6 +463,14 @@ const update = useThrottleFn(data => {
   &.z-index-2 {
     z-index: 2;
   }
+  .icon {
+    transition: 150ms ease;
+  }
+  &:hover {
+    .icon {
+      transform: scale(1.1);
+    }
+  }
 }
 
 .trash-button {
@@ -472,6 +480,15 @@ const update = useThrottleFn(data => {
   border-radius: 50%;
   border: solid torem(3) $stormGray;
   z-index: 4 !important;
+  .icon {
+    transition: 150ms ease;
+    transform: scale(0.9);
+  }
+  &:hover {
+    .icon {
+      transform: scale(1);
+    }
+  }
 }
 
 .caddy-tool {

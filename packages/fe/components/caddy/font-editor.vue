@@ -181,6 +181,12 @@ onMounted(() => {
 // ///////////////////////////////////////////////////////////////// Font Styles
 .style-button {
   display: flex;
+  transition: 150ms ease;
+  filter: drop-shadow(0px 1px 1px rgba(#2C2E35, 0.5));
+  &:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
+  }
   &:first-child,
   &:last-child {
     margin-top: torem(11);
@@ -199,6 +205,11 @@ onMounted(() => {
   height: 100%;
   background-color: $shark;
   border-radius: torem(4);
+  box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.3);
+  transition: 150ms ease;
+  &:hover {
+    background-color: #3f424d;
+  }
   &:before {
     content: '';
     position: absolute;
@@ -242,6 +253,9 @@ onMounted(() => {
     font-weight: 400;
     line-height: 1.5;
     white-space: nowrap;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
   }
 }
 
@@ -268,6 +282,12 @@ onMounted(() => {
   &:first-child,
   &:last-child {
     margin-bottom: torem(11);
+    transition: 150ms ease;
+    filter: drop-shadow(0px 1px 1px rgba(#2C2E35, 0.5));
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
+    }
   }
   .input {
     position: absolute;

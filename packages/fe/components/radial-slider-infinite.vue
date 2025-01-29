@@ -80,6 +80,9 @@ defineExpose({ setTheta })
   transform: translate(-50%, -50%);
   border: solid torem(3) $texasRose;
   border-radius: 50%;
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .thumb {
@@ -90,5 +93,9 @@ defineExpose({ setTheta })
   border: solid torem(3) $stormGray;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+  transition: transform 150ms ease;
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 }
 </style>

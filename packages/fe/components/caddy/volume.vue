@@ -181,6 +181,12 @@ const handleIncrementVolume = val => {
   &:first-child,
   &:last-child {
     margin-bottom: torem(11);
+    transition: 150ms ease;
+    filter: drop-shadow(0px 1px 1px rgba(#2C2E35, 0.5));
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
+    }
   }
   .input {
     position: absolute;
