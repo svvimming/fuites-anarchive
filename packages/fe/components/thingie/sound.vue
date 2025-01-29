@@ -63,7 +63,7 @@ const key = ref(0)
 const verseStore = useVerseStore()
 const { sceneData, colorSelectorHex } = storeToRefs(verseStore)
 const mixerStore = useMixerStore()
-const { audioContext } = storeToRefs(mixerStore)
+const { audioContext, mixer } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
 const collectorStore = useCollectorStore()
@@ -133,7 +133,7 @@ const initSoundThingie = () => {
   source.value = audioContext.value.createMediaElementSource(player.value)
   gainNode.value = audioContext.value.createGain()
   gainNode.value.gain.value = 0
-  source.value.connect(gainNode.value).connect(audioContext.value.destination)
+  source.value.connect(gainNode.value).connect(mixer.value) // audioContext.value.destination
   mousemoveEventListener.value = useThrottleFn(e => { calculateMouseDistance(e) }, 100)
   window.addEventListener('mousemove', e => { mousemoveEventListener.value(e) })
   player.value.play()

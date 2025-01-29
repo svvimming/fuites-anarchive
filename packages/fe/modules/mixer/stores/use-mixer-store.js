@@ -7,7 +7,9 @@ import { defineStore } from 'pinia'
 export const useMixerStore = defineStore('mixer', () => {
 
   // ===================================================================== state
-  const audioContext = ref(false)  
+  const audioContext = ref(false)
+  const mixer = ref(false)
+  const analyser = ref(false)
 
   // =================================================================== actions
   /**
@@ -16,6 +18,10 @@ export const useMixerStore = defineStore('mixer', () => {
 
   const createAudioContext = () => {
     audioContext.value = new AudioContext()
+    mixer.value = audioContext.value.createGain()
+    analyser.value = audioContext.value.createAnalyser()
+    mixer.value.connect(analyser.value)
+    analyser.value.connect(audioContext.value.destination)
   }
 
   /**
@@ -34,6 +40,8 @@ export const useMixerStore = defineStore('mixer', () => {
   return {
     // ----- state
     audioContext,
+    mixer,
+    analyser,
     // ----- actions
     createAudioContext,
     setAudioContextPlayState
