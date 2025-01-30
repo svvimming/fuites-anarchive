@@ -64,9 +64,9 @@ socket.on('connect', () => { socket.emit('join-room', 'cron|websocket') })
 // -----------------------------------------------------------------------------
 /**
  * @method updatePageThingiePreaccelerations
- * @param {[Object]} thingies 
- * @param {[Number, Number]} pageCenterOfMass 
- * @param {Number} updateCountFloor 
+ * @param {[Object]} thingies
+ * @param {[Number, Number]} pageCenterOfMass
+ * @param {Number} updateCountFloor
  */
 
 const updatePageThingiePreaccelerations = async (thingies, pageCenterOfMass, updateCountFloor) => {
@@ -95,7 +95,7 @@ const updatePageThingiePreaccelerations = async (thingies, pageCenterOfMass, upd
 /**
  * @method getPageCenterOfMass
  * @desc Returns a 2D array of (x, y) coordinates of the page's center of mass
- * @param {[Object]} thingies 
+ * @param {[Object]} thingies
  * @returns {[Number, Number]}
  */
 
@@ -104,7 +104,7 @@ const getPageCenterOfMass = thingies => {
     x: thingie.at.x,
     y: thingie.at.y,
     m: thingie.at.width * thingie.at.height
-  })) 
+  }))
   const massPositionsX = points.reduce((collector, point) => collector + point.x * point.m, 0)
   const massPositionsY = points.reduce((collector, point) => collector + point.y * point.m, 0)
   const sum = points.reduce((collector, point) => collector + point.m, 0)
@@ -113,7 +113,7 @@ const getPageCenterOfMass = thingies => {
 
 /**
  * @method pagePreaccelerator
- * @param {Object} verse 
+ * @param {Object} verse
  */
 
 const pagePreaccelerator = async verse => {
