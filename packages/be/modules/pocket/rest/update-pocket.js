@@ -13,7 +13,6 @@ MC.app.post('/post-update-pocket', async (req, res) => {
     const body = req.body
     const pocket = await MC.model.Pocket.findOneAndUpdate(
       { token: body.token },
-      { thingies: req.body.thingies },
       { new: true }
     )
     SendData(res, 200, 'Dataset updated successfully', pocket)

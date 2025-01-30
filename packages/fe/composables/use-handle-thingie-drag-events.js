@@ -17,7 +17,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const collectorStore = useCollectorStore()
   const { thingies } = storeToRefs(collectorStore)
   const pocketStore = usePocketStore()
-  const { authenticated } = storeToRefs(pocketStore)
+  const { pocket, authenticated } = storeToRefs(pocketStore)
 
   const handleOffset = ref({ x: 0, y: 0 })
   const { x, y } = useMouse({ type: 'client' })
@@ -99,6 +99,10 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
           at
         }, true)
         handleOffset.value = { x: 0, y: 0 }
+        // If the page being dropped onto is metastable, trigger a tip
+        if (page.value.data?.state === 'metastable' && !['pocket', 'compost'].includes(targetLocation)) {
+          createNewPageFromThingie(thingie, at)
+        }
       }
       // Remove custom ghost image
       const ghost = document.querySelector(`.ghost-image[data-thingie-id="${draggingThingie.value?._id}"]`)
@@ -119,6 +123,30 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
    */
 
   const handleDrop = e => { e.preventDefault() }
+
+  /**
+   * @method createNewPageFromThingie
+   */
+
+  const createNewPageFromThingie = async (thingie, newAt) => {
+    const created = await verseStore.postCreatePage({
+      initiatorPocket: pocket.value.data._id,
+      creatorThingie: thingie,
+      overflowPage: page.value.data.name
+    })
+    if (created) {
+      collectorStore.initThingieUpdate({
+        _id: thingie._id,
+        location: created.name,
+        record_new_location: true,
+        at: newAt
+      }, true)
+      // Navigate to new page
+      const newRoute = `/${created.verse}/${created.name}`
+      await navigateTo({ path: newRoute })
+    }
+  }
+
 
   // ===================================================================== Hooks
   onMounted(() => {

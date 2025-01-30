@@ -8,11 +8,9 @@ const MC = require('@Root/config')
 
 // /////////////////////////////////////////////////////////////////// Functions
 // -----------------------------------------------------------------------------
-const useCreatePageName = thingieConsistencies => {
-  if (!thingieConsistencies.length) {
-    return false
-  }
-  const consistencies = thingieConsistencies.join(' ').split(' ')
+const useCreatePageName = creatorThingie => {
+  if (!creatorThingie.consistencies?.length) { return false }
+  const consistencies = creatorThingie.consistencies.join(' ').split(' ') // join split is necessary here to remove spaces within element strings
   let index = Math.floor(Math.random() * consistencies.length)
   let name = consistencies[index]
   consistencies.splice(index, 1)
@@ -38,8 +36,7 @@ MC.app.post('/post-create-page', async (req, res) => {
     const verse = body.verse
     const initiatorPocket = body.initiatorPocket
     const creatorThingie = body.creatorThingie
-    const name = body.name || useCreatePageName(creatorThingie.consistencies)
-    const overflowPage = creatorThingie.location_history[1]?.location
+    const name = body.name || useCreatePageName(creatorThingie)
     const pageNameAlreadyExists = await MC.model.Page.findOne({ verse, name })
     if (name === 'pocket') {
       SendData(res, 400, 'Error: cannot name a page \'pocket\'!', false)
@@ -51,7 +48,7 @@ MC.app.post('/post-create-page', async (req, res) => {
     }
     // Create the new page
     const created = await MC.model.Page.create({
-      overflow_page: overflowPage || '',
+      overflow_page: body.overflowPage || '',
       initiator_pocket_ref: initiatorPocket,
       creator_thingie_ref: creatorThingie._id,
       verse,
@@ -61,14 +58,15 @@ MC.app.post('/post-create-page', async (req, res) => {
     await MC.model.Verse.findOneAndUpdate({ name: created.verse }, { $push: { page_refs: created._id } })
     // If created from a tip, set the tipped page to leaking
     if (created.overflow_page) {
-      await MC.model.Page.findOneAndUpdate({ name: created.overflow_page }, { state: 'leaking' }, { new: true })
+      await MC.model.Page.findOneAndUpdate({ verse, name: created.overflow_page }, { state: 'leaking' }, { new: true })
     }
     // Grab a thingie from the compost and add it to the new page
-    const compostThingies = await MC.model.Thingie.find({ location: 'compost' }).select('_id at')
+    const compostThingies = await MC.model.Thingie.find({ verse, location: 'compost' }).select('_id at')
     if (compostThingies.length) {
       const thingieToMove = compostThingies[Math.floor(Math.random() * compostThingies.length)]
       await MC.model.Thingie.findOneAndUpdate({ _id: thingieToMove._id }, {
         location: created.name,
+        record_new_location: true,
         at: Object.assign({}, thingieToMove.at, {
           x: 683 + Math.random() * 1266,
           y: 500 + Math.random() * 800

@@ -48,6 +48,10 @@ MC.app.post('/post-create-thingie', async (req, res) => {
         token: body.creator_token,
         timestamp: Date.now()
       },
+      location_history: [{
+        location: body.location,
+        at: { x: at.x, y: at.y }
+      }],
       text: body.text,
       consistencies: [],
       colors: body.colors ? body.colors : [],
