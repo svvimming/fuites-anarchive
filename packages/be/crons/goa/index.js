@@ -161,6 +161,7 @@ const pagePreaccelerator = async verse => {
               }
             ]
           })
+        console.log(`Page ${page.name} in verse ${verse.name} changed from clumping to metastable.`)
         // Broadcast page changes to socket
         socket.emit('cron|page-state-update|initialize', updated)
         // Change page state to clumping empty enough
@@ -182,6 +183,7 @@ const pagePreaccelerator = async verse => {
               }
             ]
           })
+        console.log(`Page ${page.name} in verse ${verse.name} changed from leaking to clumping.`)
         // Broadcast page changes to socket
         socket.emit('cron|page-state-update|initialize', updated)
       }
