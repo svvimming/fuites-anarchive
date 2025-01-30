@@ -72,8 +72,6 @@
 </template>
 
 <script setup>
-import DropdownSelector from '../dropdown-selector.vue'
-
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)

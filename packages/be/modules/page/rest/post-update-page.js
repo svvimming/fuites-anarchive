@@ -20,7 +20,7 @@ MC.app.post('/post-update-page', async (req, res) => {
       }
     })
     const updated = await MC.model.Page
-      .findOneAndUpdate({ name: body.name }, pageUpdates, { new: true })
+      .findOneAndUpdate({ verse, name: body.name }, pageUpdates, { new: true })
       .populate({
         path: 'portal_refs',
         populate: { path: 'thingie_ref', select: 'colors' }

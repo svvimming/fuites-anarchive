@@ -39,7 +39,7 @@ MC.app.post('/post-create-portal', async (req, res) => {
     // Update each page with the portal ref
     for (let i = 0; i < created.vertices.length; i++) {
       const updated = await MC.model.Page.findOneAndUpdate(
-        { name: created.vertices[i].location },
+        { verse, name: created.vertices[i].location },
         { $push: { portal_refs: created._id } },
         { new: true }
       ).populate({

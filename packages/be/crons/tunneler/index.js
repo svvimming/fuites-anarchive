@@ -1,6 +1,6 @@
 /**
  *
- * ⏱️️ [Cron | every minute] Tunneler creates portals between past thingie locations
+ * ⏱️️ [Cron | every 2 minutes] Tunneler creates portals between past thingie locations
  *
  */
 console.log('🚇 [cron] Tunneler')
@@ -89,7 +89,7 @@ const closePortal = async portal => {
     for (let i = 0; i < vertices.length; i++) {
       // Remove the portal ref from both connected Pages
       const updated = await MC.model.Page.findOneAndUpdate(
-        { name: vertices[i].location },
+        { verse: portal.verse, name: vertices[i].location },
         { $pull: { portal_refs: portal._id } },
         { new: true }
       ).populate({
@@ -257,39 +257,3 @@ MC.app.on('mongoose-connected', async () => {
     process.exit(0)
   }
 })
-
-// //////////////////////////////////////////////////////////// SetActivePortals
-// const setActivePortals = async () => {
-//   try {
-//     const pages = await MC.model.Page.find({}).populate({
-//       path: 'portal_refs',
-//       populate: { path: 'thingie_ref' }
-//     })
-//     const len = pages.length
-//     for (let i = 0; i < len; i++) {
-//       const page = pages[i]
-//       const connections = page.portal_refs.map(ref => ref.edge.split('_').filter(name => name !== page.name))
-
-//       if (page.portal_refs.length) {
-//         const slugs = [...new Set(connections.flat())]
-//         for (let j = 0; j < slugs.length; j++) {
-//           const slug = slugs[j]
-//           const refs = page.portal_refs.filter(ref => ref.edge.includes(slug))
-//           const lowestP = refs.reduce((min, portal) => min.thingie_ref.preacceleration < portal.thingie_ref.preacceleration ? min : portal)
-//           const enabled = refs.filter((portal) => portal.enabled)
-//           for (let k = 0; k < enabled.length; k++) {
-//             await MC.model.Portal.findOneAndUpdate({ _id: enabled[k]._id }, { enabled: false })
-//           }
-//           await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
-//         }
-//         // for (let i = 0; i < enabled.length; i++) {
-//         //   await MC.model.Portal.findOneAndUpdate({ _id: enabled[i]._id }, { enabled: false })
-//         // }
-//         // await MC.model.Portal.findOneAndUpdate({ _id: lowestP._id }, { enabled: true })
-//       }
-//     }
-//   } catch (e) {
-//     console.log('==================================== [Cron: setActivePortals]')
-//     console.log(e)
-//   }
-// }
