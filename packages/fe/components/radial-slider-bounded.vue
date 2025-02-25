@@ -48,7 +48,7 @@ const emit = defineEmits(['degree-change'])
 
 // ======================================================================== Data
 const track = ref(null)
-const { elementX, elementY, isOutside } = useMouseInElement(track)
+const { elementX, elementY } = useMouseInElement(track)
 const { pressed } = useMousePressed({ target: track })
 const theta = ref(0)
 const thumbBounds = ref({})
@@ -63,7 +63,7 @@ const thumbStyles = computed(() => ({
 
 // ==================================================================== Watchers
 watch([elementX, elementY], () => {
-  if (pressed.value && !isOutside.value) {
+  if (pressed.value) {
     const rads = Math.atan2((elementX.value - props.radius), -1 * (elementY.value - props.radius))
     if (lowerBound.value <= rads && rads <= upperBound.value) {
       theta.value = rads
