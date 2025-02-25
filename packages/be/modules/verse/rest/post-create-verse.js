@@ -14,6 +14,11 @@ MC.app.post('/post-create-verse', async (req, res) => {
     const pocketId = body.pocketId
     const verseName = body.verseName
     const firstPageName = body.firstPageName
+    // Check if the first page name collides with the compost or pocket
+    if (firstPageName === 'compost' || firstPageName === 'pocket') {
+      SendData(res, 400, 'Can\'t create a page named after the compost or the pocket.', false)
+      return
+    }
     // Check if this Verse already exists
     const verseAlreadyExists = await MC.model.Verse.findOne({ name: verseName })
     if (verseAlreadyExists) {
@@ -26,10 +31,16 @@ MC.app.post('/post-create-verse', async (req, res) => {
       verse: verseName,
       name: firstPageName
     })
+    // Create a compost for the new Verse
+    const compostPage = await MC.model.Page.create({
+      initiator_pocket_ref: pocketId,
+      verse: verseName,
+      name: 'compost'
+    })
     // Create the new Verse
     const createdVerse = await MC.model.Verse.create({
       name: verseName,
-      page_refs: [createdPage._id]
+      page_refs: [createdPage._id, compostPage._id]
     })
     // Update the token with access to the new Verse
     const pocket = await MC.model.Pocket

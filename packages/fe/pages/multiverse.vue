@@ -18,7 +18,7 @@
               v-for="verse in verses"
               :key="verse.name"
               tag="nuxt-link"
-              :to="`/${verse.name}/${verse.page_refs[0].name}`"
+              :to="getVersePageRoute(verse)"
               theme="verse"
               class="list-item">
               <span>{{ verse.name }}</span>
@@ -68,6 +68,11 @@ const verses = computed(() => pocket.value.data?.verses || [])
 // ===================================================================== Methods
 const handleCreateNewVerseClick = () => {
   alertStore.openAlert('multiverse-create-verse-alert')
+}
+
+const getVersePageRoute = verse => {
+  const page = verse.page_refs.find(item => item.name !== 'compost')
+  return `/${verse.name}/${page.name}`
 }
 </script>
 
