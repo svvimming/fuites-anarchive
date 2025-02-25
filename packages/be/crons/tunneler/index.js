@@ -101,7 +101,7 @@ const closePortal = async portal => {
     }
     // Delete this Portal
     const closed = await MC.model.Portal.deleteOne({ id: portal._id })
-    console.log(`Portal closed: ${closed}`)
+    console.log(`Portal closed: ${closed._id}`)
   } catch (e) {
     console.log('===================================== [function: closePortal]')
     console.log(e)

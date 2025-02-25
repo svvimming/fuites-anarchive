@@ -30,6 +30,13 @@ const VerseSchema = new Schema({
         required: false,
         default: 3
       }
+    },
+    fuitesbot: {
+      gracePeriodMs: {
+        type: Number,
+        required: false,
+        default: 86400000 // one day in milliseconds
+      }
     }
   }
 }, {

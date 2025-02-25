@@ -164,7 +164,7 @@ const pagePreaccelerator = async verse => {
         console.log(`Page ${page.name} in verse ${verse.name} changed from clumping to metastable.`)
         // Broadcast page changes to socket
         socket.emit('cron|page-state-update|initialize', updated)
-        // Change page state to clumping empty enough
+        // Change page state to clumping if empty enough
       } else if (pageBytes <= 37000000 && pageThingies.length <= 37 && page.state === 'leaking') {
         // Update and return page
         const updated = await MC.model.Page
