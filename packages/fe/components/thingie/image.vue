@@ -8,12 +8,17 @@
       <v-image :config="clipConfig" />
     </v-group>
     
-    <v-image :config="imageConfig" :key="key" />
+    <v-image
+      ref="imgNode"
+      :config="imageConfig" :key="key" />
 
   </v-group>
 </template>
 
 <script setup>
+// ====================================================================== Import
+import { useDebounceFn } from '@vueuse/core'
+
 // ======================================================================= Props
 const props = defineProps({
   fileRef: {
@@ -49,6 +54,7 @@ const canvas = ref(false)
 const clipPath = ref(false)
 const clipGroup = ref(null)
 const clipGroupVisible = ref(false)
+const imgNode = ref(null)
 const generalStore = useGeneralStore()
 const { baseUrl } = storeToRefs(generalStore)
 const key = ref(0)
@@ -75,7 +81,7 @@ const groupConfig = computed(() => ({
 
 // ==================================================================== Watchers
 watch(() => props.options, () => { key.value++ }, { deep: true })
-
+watch(() => imageConfig.value, () => { drawImageThingieHitArea() })
 watch(() => props.clipActive, (val) => {
   if (val && !canvas.value) {
     nextTick(() => { applyClipPath() })
@@ -117,6 +123,19 @@ const loadImage = () => {
   }
   img.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
 }
+
+/**
+ * @method drawImageThingieHitArea 
+ */
+
+const drawImageThingieHitArea = useDebounceFn(() => {
+  nextTick(() => {
+    if (imgNode.value) {
+      imgNode.value.getNode().cache()
+      imgNode.value.getNode().drawHitFromCache()
+    }
+  })
+}, 100)
 
 // ======================================================================= Hooks
 onMounted(() => { loadImage() })

@@ -1,5 +1,9 @@
 <template>
-  <v-image v-if="raster" :config="textConfig" :key="key" />
+  <v-image
+    v-if="raster"
+    ref="imgNode"
+    :config="textConfig"
+    :key="key" />
 </template>
 
 <script setup>
@@ -33,6 +37,7 @@ const emit = defineEmits(['loaded'])
 // ======================================================================== Data
 const key = ref(0)
 const raster = ref(false)
+const imgNode = ref(null)
 
 // ==================================================================== Computed
 const textConfig = computed(() => ({
@@ -80,6 +85,13 @@ const rasterizeText = () => {
     key.value++
     div.remove()
     emit('loaded', true)
+    // draw hit area for raster
+    nextTick(() => {
+      if (imgNode.value) {
+        imgNode.value.getNode().cache()
+        imgNode.value.getNode().drawHitFromCache()
+      }
+    })
   })
 }
 </script>
