@@ -182,7 +182,7 @@ const checkSmallBreakpoint = () => {
 .artist,
 .description {
   color: white;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'PT Sans', sans-serif;
   letter-spacing: 0.02em;
 }
 

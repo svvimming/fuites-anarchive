@@ -113,6 +113,7 @@ $panelTopPercentageMobile: 40%;
   min-height: torem(900);
   overflow: hidden;
   background-color: black;
+  font-family: 'Fraunces Italic', serif;
   @include small {
     height: 100vh;
     min-height: unset;
@@ -122,6 +123,7 @@ $panelTopPercentageMobile: 40%;
   [class*="grid_"] {
     position: relative;
     height: 100%;
+    padding: 0 !important;
   }
 }
 

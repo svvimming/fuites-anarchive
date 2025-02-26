@@ -13,7 +13,7 @@
           <button
             id="close-info"
             class="button"
-            @click="$emit('close-info')">
+            @click="emit('close-info')">
             close
           </button>
 
@@ -23,26 +23,26 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'InfoPanel',
-
-  props: {
-    visible: {
-      type: Boolean,
-      required: true,
-      default: false
-    },
-    text: {
-      type: String,
-      required: true,
-      default: ''
-    }
+<script setup>
+// ======================================================================= Setup
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  text: {
+    type: String,
+    required: true,
+    default: ''
   }
-}
+})
+
+const emit = defineEmits(['close-info'])
 </script>
 
 <style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
 .info-content {
   position: absolute;
   padding-left: calc(33.5% + 1rem);

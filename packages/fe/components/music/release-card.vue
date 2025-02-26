@@ -19,11 +19,14 @@
           <ButtonBasic
             v-for="link in links"
             :key="link.text"
-            :text="link.text"
+            :force-disabled="link.disabled"
             :tag="link.tag"
-            :disabled="link.disabled"
             :to="link.to"
-            class="release-link" />
+            :target="link.target"
+            theme="clear"
+            class="release-link">
+            {{ link.text }}
+          </ButtonBasic>
         </div>
         <div class="name">
           {{ name }}
@@ -44,12 +47,14 @@
       <ButtonBasic
         v-for="link in links"
         :key="link.text"
-        :text="link.text"
+        :force-disabled="link.disabled"
         :tag="link.tag"
-        :disabled="link.disabled"
         :to="link.to"
         :target="link.target"
-        class="release-link" />
+        theme="clear"
+        class="release-link">
+        {{ link.text }}
+      </ButtonBasic>
     </div>
 
   </div>
@@ -183,7 +188,7 @@ const getInfoHeight = () => {
 .artist,
 .description {
   color: white;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'PT Sans', sans-serif;
   letter-spacing: 0.02em;
 }
 
@@ -223,12 +228,13 @@ const getInfoHeight = () => {
   &:not(:last-child) {
     margin-right: 1rem;
   }
-  font-family: 'Roboto', sans-serif;
-  ::v-deep .button-content {
-    font-family: 'Roboto', sans-serif;
+  // font-family: 'PT Sans', sans-serif ;
+  :deep(.slot) {
+    color: white !important;
+    font-family: 'PT Sans', sans-serif !important;
     font-size: torem(14);
   }
-  ::v-deep .tripe-dot-loader {
+  :deep(.tripe-dot-loader) {
     display: none;
   }
   &:hover {

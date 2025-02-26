@@ -156,19 +156,6 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 400;
 }
 
-// ---------------------------------------------------------------------- Roboto
-@font-face {
-  font-family: 'Roboto';
-  src: url('#{$fontAssetPath}/Roboto/Roboto-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Roboto';
-  src: url('#{$fontAssetPath}/Roboto/Roboto-Medium.ttf') format('truetype');
-  font-weight: 500;
-}
-
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
@@ -178,7 +165,6 @@ $fontAssetPath: '@/assets/fonts';
 @mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
 @mixin fontFamily_PTSans { font-family: 'PT Sans', sans-serif; }
 @mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
-@mixin fontFamily_Roboto { font-family: 'Roboto', sans-serif; }
 
 // ---------------------------------------------------------------------- Sizing
 
