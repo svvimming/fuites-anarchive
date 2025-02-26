@@ -1,5 +1,5 @@
 <template>
-  <div class="verse-container">
+  <div :class="['verse-container', { 'drag-n-drop-event': draggingThingie }]">
 
     <slot />
 
@@ -29,7 +29,7 @@ const { $io, $bus } = useNuxtApp()
 // ======================================================================== Data
 
 const generalStore = useGeneralStore()
-const { sessionId } = storeToRefs(generalStore)
+const { sessionId, draggingThingie } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
@@ -90,8 +90,8 @@ watch(() => page.value.data, async () => {
  */
 
 const setDragndropOnShift = (e, val) => {
-  const meta = e.key === 'Meta' || e.code === 'MetaLeft' || e.code === 'MetaRight' || e.keyCode === 91 || e.keyCode === 93
-  if (meta) { generalStore.setDragndrop(val) }
+  const drag = e.key === 'd' || e.code === 'KeyD' || e.keyCode === 68
+  if (drag) { generalStore.setDragndrop(val) }
 }
 
 // ======================================================================= Hooks
@@ -117,5 +117,8 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  &.drag-n-drop-event {
+    cursor: copy;
+  }
 }
 </style>
