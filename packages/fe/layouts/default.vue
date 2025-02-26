@@ -118,7 +118,7 @@ onBeforeUnmount(() => {
   height: 100vh;
   overflow: hidden;
   &.drag-n-drop-event {
-    cursor: copy;
+    cursor: copy !important;
   }
 }
 </style>
