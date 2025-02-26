@@ -130,7 +130,7 @@ const loadImage = () => {
 
 const drawImageThingieHitArea = useDebounceFn(() => {
   nextTick(() => {
-    if (imgNode.value) {
+    if (imgNode.value && !baseUrl.value.startsWith('https://localhost')) {
       imgNode.value.getNode().cache()
       imgNode.value.getNode().drawHitFromCache()
     }

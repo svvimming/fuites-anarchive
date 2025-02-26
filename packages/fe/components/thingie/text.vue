@@ -86,12 +86,12 @@ const rasterizeText = () => {
     div.remove()
     emit('loaded', true)
     // draw hit area for raster
-    nextTick(() => {
-      if (imgNode.value) {
-        imgNode.value.getNode().cache()
-        imgNode.value.getNode().drawHitFromCache()
-      }
-    })
+    // nextTick(() => {
+    //   if (imgNode.value) {
+    //     imgNode.value.getNode().cache()
+    //     imgNode.value.getNode().drawHitFromCache()
+    //   }
+    // })
   })
 }
 </script>
