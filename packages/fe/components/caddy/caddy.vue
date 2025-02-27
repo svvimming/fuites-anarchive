@@ -58,6 +58,7 @@
       <!-- ------------------------------------------ Image & Sound [Resize] -->
       <CaddyResize
         v-if="type === 'image' || type === 'sound'"
+        :type="type"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'resize' }]"
         @resize-thingie="resizeThingie"
         @update-stroke-width="updateStrokeWidth" />
