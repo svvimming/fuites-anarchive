@@ -1,41 +1,38 @@
 <template>
   <div id="landing-site-anchor" ref="anchorRef">
-    <!-- =================================================== Dropdown Toggle -->
+    <!-- ========================================================== Dropdown -->
+    <DropdownSelector class="landing-sites-dropdown">
+      <template #toggle-button="{ togglePanel, panelOpen }">
+        <ButtonIcon
+          :active="panelOpen"
+          class="landing-site-toggle"
+          @clicked="togglePanel">
+          <IconEllipsis />
+        </ButtonIcon>
+      </template>
+      <template #dropdown-panel>
+        <div class="mode-toggles">
+          <ClientOnly>
+            <ButtonToggle
+              v-for="mode in landingSites"
+              :key="mode.slug"
+              :active="activeModes[mode.slug]"
+              @clicked="handleModeClick(mode.slug)">
+              <span :class="['label', 'nanum', { active: activeModes[mode.slug] }]">
+                {{ mode.label }}
+              </span>
+            </ButtonToggle>
+          </ClientOnly>
+        </div>
+      </template>
+    </DropdownSelector>
+    <!-- ====================================================== Audio Toggle -->
     <ButtonIcon
-      :key="activeModes.drippy"
-      :active="dropdownOpen"
-      :tooltip="tooltip"
-      class="landing-site-toggle"
-      @clicked="dropdownOpen = !dropdownOpen">
-      <Hamburger
-        :open="dropdownOpen"
-        :data-tooltip="tooltip" />
+      class="audio-toggle"
+      :active="activeModes.audio"
+      @click="handleModeClick('audio')">
+      <IconAudio />
     </ButtonIcon>
-
-    <div :class="['landing-sites-dropdown', { open: dropdownOpen }, { transform }]">
-      <!-- ============================================= Background Elements -->
-      <DashedBorderRectangle
-        :inherit-from="landingSitesRef"
-        @loaded="transform = true" />
-      <!-- =================================================== Landing Sites -->
-      <div
-        id="landing-sites"
-        ref="landingSitesRef">
-        <!-- -------------------------------------------------- Mode Toggles -->
-        <ClientOnly>
-          <ButtonToggle
-            v-for="mode in landingSites"
-            :key="mode.slug"
-            :active="activeModes[mode.slug]"
-            @clicked="handleModeClick(mode.slug)">
-            <span :class="['label', 'nanum', { active: activeModes[mode.slug] }]">
-              {{ mode.label }}
-            </span>
-          </ButtonToggle>
-        </ClientOnly>
-
-      </div>
-    </div>
 
   </div>
 </template>
@@ -86,58 +83,53 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-// //////////////////////////////////////////////////////// Landing Sites toggle
-.landing-site-toggle {
-  --two-tone-a: #{$effy};
-  --two-tone-b: white;
+// ///////////////////////////////////////////////////////////////////// General
+#landing-site-anchor {
+  display: flex;
 }
 
-:deep(.hamburger) {
-  width: torem(20);
-  height: torem(14);
-  .line {
-    border-color: $effy;
+.landing-site-toggle,
+.audio-toggle {
+  --two-tone-a: #{$gullGray};
+  --two-tone-b: white;
+  :deep(.slot) {
+    path,
+    circle {
+      transition: 200ms ease;
+    }
   }
-  &.open {
-    .line {
-      border-color: white;
+  &.active {
+    :deep(.slot) {
+      path {
+        stroke: var(--two-tone-b);
+      }
+      circle {
+        fill: var(--two-tone-b);
+      }
     }
   }
 }
 
 // /////////////////////////////////////////////////////////////// Dropdown Menu
 .landing-sites-dropdown {
-  position: absolute;
-  top: torem(56); // toggle height + 1rem
-  right: 0;
-  border-radius: torem(20);
-  background-color: white;
-  opacity: 0;
-  visibility: hidden;
-  &.transform {
-    transform: scale(0.8);
-    transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear;
-  }
-  &.open {
-    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
-    visibility: visible;
-    opacity: 1;
-    transform: scale(1);
+  position: relative;
+  :deep(.panel-container) {
+    right: 0;
+    left: unset;
+    transform: translate(0, torem(12));
+    &:not(.open) {
+      transform: translate(0, torem(20));
+    }
   }
 }
 
-:deep(.svg-border-rectangle) {
-  rect {
-    stroke: $effy;
-  }
+.mode-toggles {
+  padding: torem(16);
+  border-radius: torem(10);
+  border: solid torem(1) $gullGray;
 }
 
-#landing-sites {
-  padding: torem(15) torem(13);
-  min-width: torem(142);
-}
-
-// ///////////////////////////////////////////////////////////////////// Toggles
+// //////////////////////////////////////////////////////////////// Mode Toggles
 :deep(.toggle-button) {
   &:not(:last-child) {
     margin-bottom: torem(16);
@@ -149,9 +141,17 @@ onMounted(() => {
   font-size: torem(16);
   line-height: 1;
   color: #AAAAAA;
+  white-space: nowrap;
   transition: 200ms ease;
   &.active {
     color: $effy;
   }
+}
+
+// //////////////////////////////////////////////////////////////// Audio Toggle
+.audio-toggle {
+  display: flex;
+  align-items: center;
+  margin-left: torem(20);
 }
 </style>

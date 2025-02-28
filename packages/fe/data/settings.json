@@ -125,16 +125,16 @@
   },
   "landingSites": [
     {
-      "label": "portals",
-      "slug": "portals"
-    },
-    {
-      "label": "audio",
-      "slug": "audio"
+      "label": "explore mode",
+      "slug": "explore"
     },
     {
       "label": "tooltips",
       "slug": "drippy"
+    },
+    {
+      "label": "portals",
+      "slug": "portals"
     }
   ],
   "navigation": [

@@ -19,6 +19,7 @@ export const useGeneralStore = defineStore('general', () => {
   const activeModes = ref({
     portals: true,
     audio: false,
+    explore: false,
     drippy: true
   })
 
