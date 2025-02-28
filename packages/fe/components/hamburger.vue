@@ -2,18 +2,15 @@
   <div :class="['hamburger', { open }]">
 
     <div
-      class="line top"
-      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }">
+      class="line top">
     </div>
 
     <div
-      class="line middle"
-      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }">
+      class="line middle">
     </div>
 
     <div
-      class="line bottom"
-      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }">
+      class="line bottom">
     </div>
 
   </div>

@@ -14,8 +14,7 @@
       rx="19"
       stroke="#F2A60D"
       stroke-width="2"
-      stroke-dasharray="2 4 6  8  2.5  2 4 1.5"
-      v-bind="{ 'data-tooltip': $attrs['data-tooltip'] }" />
+      stroke-dasharray="2 4 6  8  2.5  2 4 1.5" />
   </svg>
 </template>
 

@@ -11,6 +11,7 @@ export const useGeneralStore = defineStore('general', () => {
   const sessionId = ref('')
   const dragndrop = ref(false)
   const draggingThingie = ref(false)
+  const mouseOverScene = ref(false)
   const modal = ref({
     active: false,
     action: '',
@@ -72,6 +73,14 @@ export const useGeneralStore = defineStore('general', () => {
   }
 
   /**
+   * @method setMouseOverScene
+   */
+
+  const setMouseOverScene = incoming => {
+    mouseOverScene.value = incoming 
+  }
+
+  /**
    * @method toggleMode
    */
 
@@ -87,6 +96,7 @@ export const useGeneralStore = defineStore('general', () => {
     sessionId,
     dragndrop,
     draggingThingie,
+    mouseOverScene,
     modal,
     activeModes,
     // ----- actions
@@ -95,6 +105,7 @@ export const useGeneralStore = defineStore('general', () => {
     closeModal,
     setDragndrop,
     setDraggingThingie,
+    setMouseOverScene,
     toggleMode
   }
 })

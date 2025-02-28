@@ -14,11 +14,13 @@
         ref="handle"
         class="caddy-tool-button handle"
         :style="getToolTransform('handle')">
-        <ButtonIcon
-          :class="['solid-outline', { outside: selected !== 'handle' }]"
-          @clicked="handleToolClick('handle')">
-          <IconHand />
-        </ButtonIcon>
+        <Tooltip tooltip="caddy-handle" contact="bottom-right" class="handle-tooltip">
+          <ButtonIcon
+            :class="['solid-outline', { outside: selected !== 'handle' }]"
+            @clicked="handleToolClick('handle')">
+            <IconHand />
+          </ButtonIcon>
+        </Tooltip>
       </div>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
@@ -422,6 +424,15 @@ const update = useThrottleFn(data => {
     background-color: $stormGray;
     border-radius: 50%;
   }
+}
+
+.handle-tooltip {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:deep(.tooltip) {
+  color: $woodsmoke;
 }
 
 .handle {

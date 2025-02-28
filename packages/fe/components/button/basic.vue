@@ -4,15 +4,12 @@
     :force-loading="forceLoading"
     :force-disabled="forceDisabled"
     :class="['basic-button', { active }, { [`theme__${theme}`]: theme }]"
-    :data-tooltip="tooltip"
     v-bind="{ ...props }">
 
-    <SpinnerMaterialCircle
-      v-if="loading && !disableLoader"
-      :data-tooltip="tooltip" />
+    <SpinnerMaterialCircle v-if="loading && !disableLoader"/>
 
-    <div v-else class="slot" :data-tooltip="tooltip">
-      <slot :loading="loading" :data-tooltip="tooltip" />
+    <div v-else class="slot">
+      <slot :loading="loading" />
     </div>
 
   </ZeroButton>
@@ -40,11 +37,6 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
-  },
-  tooltip: {
-    type: String,
-    required: false,
-    default: ''
   },
   theme: {
     type: String,
