@@ -25,6 +25,7 @@
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
         class="caddy-tool-button z-index-2 trash-button"
+        tool="trash"
         :style="getToolTransform('trash')"
         @clicked="openDeleteThingieModal">
         <IconTrashbin class="icon" />
@@ -33,8 +34,9 @@
       <ButtonCaddy
         v-for="tool in tools"
         :key="`${tool}-button`"
+        :tool="tool"
         :selected="selected === tool"
-        class="caddy-tool-button z-index-2"
+        :class="['caddy-tool-button', 'z-index-2']"
         :style="getToolTransform(tool)"
         @clicked="handleToolClick(tool)">
         <IconFonts v-if="tool === 'font-editor'" class="icon" />
@@ -438,7 +440,7 @@ const update = useThrottleFn(data => {
 .handle {
   display: flex;
   background-color: transparent !important;
-  z-index: 100000 !important;
+  z-index: 10000 !important;
   &:hover {
     cursor: grab;
   }

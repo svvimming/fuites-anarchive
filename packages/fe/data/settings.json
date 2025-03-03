@@ -170,6 +170,38 @@
     "caddy-handle": {
       "heading": "Caddy",
       "message": "Click and drag this hand to grab and move your toolkit"
+    },
+    "caddy-trash": {
+      "heading": "Delete thingie",
+      "message": "You can use this tool to remove a thingie from fuites"
+    },
+    "caddy-layer-opacity": {
+      "heading": "Opacity/Layer",
+      "message": "Send a thingie to the back layer or move it to the top. Opacity can be changed here too"
+    },
+    "caddy-rotation": {
+      "heading": "Rotation",
+      "message": "Rotate a thingie using the radial slider"
+    },
+    "caddy-font-editor": {
+      "heading": "Fonts",
+      "message": "All font editing tools can be found here"
+    },
+    "caddy-color-selector": {
+      "heading": "Colours",
+      "message": "Use the colour picker tool to change font colours and sound thingie colours"
+    },
+    "caddy-resize": {
+      "heading": "Resize",
+      "message": "Click and hold to continuously resize. If editing a sound thingie you can also change the line width here."
+    },
+    "caddy-volume": {
+      "heading": "Volume",
+      "message": "Change the volume of a sound thingie"
+    },
+    "caddy-clip-toggle": {
+      "heading": "Clip",
+      "message": "Use the drawing you made when uploading an image as a clip path"
     }
   },
   "landingSites": [
