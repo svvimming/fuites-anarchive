@@ -129,7 +129,8 @@ const handleModeClick = slug => {
 .mode-toggles {
   padding: torem(16);
   border-radius: torem(10);
-  border: solid torem(1) $gullGray;
+  background-color: $athensGray;
+  @include modalShadow;
   :deep(.tooltip) {
     margin-left: 0 !important;
     &:not(:last-child) {
