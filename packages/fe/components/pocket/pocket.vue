@@ -81,13 +81,11 @@
 </template>
 
 <script setup>
-import Tooltip from '../tooltip.vue'
-
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { siteData, dragndrop } = storeToRefs(generalStore)
+const { dragndrop } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
