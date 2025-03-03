@@ -159,6 +159,10 @@
       "heading": "Compost",
       "message": "If there is a thingie you want to discard from this page, throw it here in the compost, where someone else can grab it."
     },
+    "multiverse-link": {
+      "heading": "Verses",
+      "message": "This leads to the multiverse where you can see the verses you have access to"
+    },
     "thingie": {
       "heading": "Thingie",
       "message": "Double click on a thingie to edit it."
@@ -212,7 +216,7 @@
     },
     {
       "label": "tooltips",
-      "slug": "drippy",
+      "slug": "tooltips",
       "tooltip": "tooltip-mode-toggle"
     },
     {

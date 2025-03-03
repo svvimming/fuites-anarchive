@@ -1,8 +1,8 @@
 <template>
   <div
-    id="drippy"
-    ref="drippy"
-    :class="['drippy', `side__${sideX}`, `side__${sideY}`]"
+    id="cursor-tooltip"
+    ref="cursorTooltipRef"
+    :class="['cursor-tooltip', `side__${sideX}`, `side__${sideY}`]"
     :style="{ left: `${x}px`, top: `${y}px` }">
     <div v-if="tip" class="tip">
 
@@ -25,10 +25,10 @@ import { useMouse, useElementBounding } from '@vueuse/core'
 
 // ======================================================================== Data
 const { x, y } = useMouse({ type: 'client' })
-const drippy = ref(null)
+const cursorTooltipRef = ref(null)
 const sideX = ref('right')
 const sideY = ref('bottom')
-const { width, height } = useElementBounding(drippy)
+const { width, height } = useElementBounding(cursorTooltipRef)
 const generalStore = useGeneralStore()
 const { siteData, mouseOverScene } = storeToRefs(generalStore)
 
@@ -54,7 +54,7 @@ const setTipSides = () => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.drippy {
+.cursor-tooltip {
   position: absolute;
   z-index: 10000000;
   width: torem(160);

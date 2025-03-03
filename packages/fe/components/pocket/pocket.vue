@@ -3,6 +3,7 @@
     <!-- ===================================================== Pocket Toggle -->
     <Tooltip
       :tooltip="pocketOpen ? 'pocket-toggle-button-open' : 'pocket-toggle-button-closed'"
+      :drippy-scene="2"
       contact="top-left"
       class="pocket-toggle-tooltip">
       <ButtonStamp

@@ -1,7 +1,11 @@
 <template>
   <div id="compost-portal-anchor">
     <!-- ============================================= Compost Portal Toggle -->
-    <Tooltip tooltip="compost-portal-toggle-button" contact="top-right" class="compost-portal-tooltip">
+    <Tooltip
+      tooltip="compost-portal-toggle-button"
+      contact="top-right"
+      :drippy-scene="3"
+      class="compost-portal-tooltip">
 
       <template #message>
         <span>{{ `Visit the compost anytime at fuit.es/${verseName}/compost to see what is happening in there!` }}</span>

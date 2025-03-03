@@ -180,7 +180,7 @@ const handleMouseWheel = e => {
  */
 
 const handleMouseMove = e => {
-  if (activeModes.value.drippy) {
+  if (activeModes.value.tooltips) {
     const attrs = e.target.attrs
     let type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : ''
     if (mouseOverScene.value !== type) {

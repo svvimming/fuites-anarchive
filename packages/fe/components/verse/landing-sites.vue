@@ -3,7 +3,10 @@
     <!-- ========================================================== Dropdown -->
     <DropdownSelector class="landing-sites-dropdown">
       <template #toggle-button="{ togglePanel, panelOpen }">
-        <Tooltip tooltip="settings-toggle-button" :force-disabled="panelOpen">
+        <Tooltip
+          tooltip="settings-toggle-button"
+          :drippy-scene="5"
+          :force-disabled="panelOpen">
           <ButtonIcon
             :active="panelOpen"
             class="landing-site-toggle"

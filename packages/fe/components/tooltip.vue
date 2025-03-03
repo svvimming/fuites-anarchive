@@ -1,24 +1,40 @@
 <template>
-  <div :class="['tooltip', `contact__${contact}`, { disabled }]">
-
+  <div
+    :class="[
+      'tooltip',
+      `contact__${contact}`,
+      { disabled },
+      { 'force-active': drippyScene === drippy },
+      `drippy-scene-${drippy}`
+    ]">
+    <!-- =========================================================== TOOLTIP -->
     <div class="floating">
       <div class="tip">
-
+        <!-- ------------------------------------------------------- Heading -->
         <span v-if="tooltips[tooltip]?.heading" class="heading">
           {{ tooltips[tooltip].heading }}
         </span>
-
+        <!-- ------------------------------------------------------- Message -->
         <span
           v-if="tooltips[tooltip]?.message"
           class="message"
           v-html="tooltips[tooltip].message">
         </span>
-
+        <!-- ------------------------------------------------ Custom Message -->
         <slot name="message" />
+        <!-- -------------------------------------------------------- Drippy -->
+        <template v-if="drippyScene === drippy">
+          <IconDrippy class="icon-drippy" />
+          <ButtonBasic
+            class="next-drippy-scene-button"
+            @clicked="pocketStore.setDrippyScene(drippy + 1)">
+            {{ drippy === 5 ? 'Done' : 'Next' }}
+          </ButtonBasic>
+        </template>
 
       </div>
     </div>
-
+    <!-- ========================================================= COMPONENT -->
     <slot />
 
   </div>
@@ -44,15 +60,22 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
+  },
+  drippyScene: {
+    type: [Number, Boolean],
+    required: false,
+    default: false
   }
 })
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { siteData, activeModes } = storeToRefs(generalStore)
+const pocketStore = usePocketStore()
+const { drippy } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const tooltips = computed(() => siteData.value?.settings?.tooltips || {})
-const disabled = computed(() => !activeModes.value.drippy || props.forceDisabled)
+const disabled = computed(() => !activeModes.value.tooltips || props.forceDisabled)
 
 </script>
 
@@ -69,6 +92,14 @@ $offsetOnHover: 0rem;
         transition: 150ms ease-in;
         opacity: 1;
       }
+    }
+  }
+  &.force-active {
+    .floating {
+      transition: 150ms ease-in;
+      opacity: 1;
+      transform: none !important;
+      pointer-events: all !important;
     }
   }
   &.contact__top-left,
@@ -149,6 +180,14 @@ $offsetOnHover: 0rem;
       }
     }
   }
+  &.drippy-scene-3,
+  &.drippy-scene-4 {
+    .icon-drippy {
+      right: unset;
+      left: 100%;
+      transform: translate(-30%, -30%);
+    }
+  }
 }
 
 .floating {
@@ -175,5 +214,17 @@ $offsetOnHover: 0rem;
       font-weight: 500;
     }
   }
+}
+
+.icon-drippy {
+  position: absolute;
+  top: 100%;
+  right: 100%;
+  transform: translate(30%, -30%);
+  filter: drop-shadow(0px 0px 25px #B2B9CC) drop-shadow(1px 2px 4px rgba(#262222, 0.25));
+}
+
+.next-drippy-scene-button {
+  margin-top: torem(10);
 }
 </style>
