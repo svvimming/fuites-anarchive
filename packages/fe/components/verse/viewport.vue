@@ -119,6 +119,7 @@ watch(drippy, (scene) => {
   position: absolute;
   top: torem(25);
   left: torem(25);
+  z-index: 2;
 }
 
 :deep(.to-multiverse) {
@@ -126,7 +127,6 @@ watch(drippy, (scene) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2;
   --two-tone-a: #{$blueHaze};
   --two-tone-b: white;
   .icon {
