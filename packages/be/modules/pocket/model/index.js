@@ -25,6 +25,11 @@ const PocketSchema = new Schema({
   manualAuthDate: {
     type: Date,
     required: false
+  },
+  manualAuthCount: {
+    type: Number,
+    required: false,
+    default: 0
   }
 }, {
   timestamps: true,

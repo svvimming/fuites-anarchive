@@ -16,7 +16,9 @@
           :config="canvasConfig"
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
-          @dblclick="handleDoubleClick($event)">
+          @dblclick="handleDoubleClick($event)"
+          @mousemove="handleMouseMove($event)"
+          @mouseleave="handleMouseLeave($event)">
           <v-layer ref="layerRef" :config="initLayer">
 
             <Thingie
@@ -51,7 +53,7 @@ const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop, activeModes } = storeToRefs(generalStore)
+const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 
@@ -171,6 +173,30 @@ const handleMouseWheel = e => {
     x: layer.x() - e.evt.deltaX,
     y: layer.y() - e.evt.deltaY
   })
+}
+
+/**
+ * @method handleMouseMove
+ */
+
+const handleMouseMove = e => {
+  if (activeModes.value.tooltips) {
+    const attrs = e.target.attrs
+    let type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : ''
+    if (mouseOverScene.value !== type) {
+      generalStore.setMouseOverScene(type)
+    }
+  }
+}
+
+/**
+ * @method handleMouseLeave
+ */
+
+const handleMouseLeave = () => {
+  if (mouseOverScene.value !== '') {
+    generalStore.setMouseOverScene('')
+  }
 }
 
 /**

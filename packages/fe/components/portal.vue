@@ -82,6 +82,7 @@ const pulseConfig = computed(() => ({
 
 const portalConfig = computed(() => ({
   radius,
+  portal_id: props.portal._id,
   fillRadialGradientStartPoint: { x: 0, y: 0 },
   fillRadialGradientStartRadius: 0,
   fillRadialGradientEndPoint: { x: 0, y: 0 },

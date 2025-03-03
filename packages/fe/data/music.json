@@ -1,0 +1,102 @@
+{
+  "contact": [
+    {
+      "text": "contact@fuit.es",
+      "url": "mailto:contact@fuit.es"
+    },
+    {
+      "text": "instagram",
+      "url": "https://www.instagram.com/fuit_es/"
+    },
+    {
+      "text": "bandcamp",
+      "url": "https://fuites.bandcamp.com/music"
+    }
+  ],
+  "info": {
+    "text": "music.fuit.es is an 'anarchival' music platform, a space for the process of an album to continue on after its release. In addition to being uploaded in their finished state to streaming platforms, a selection of sound fragments from each album; one-shots, samples, layers, loops, are released into the music.fuit.es anarchive where they begin a new process of composition and recomposition within the scatter of other releases."
+  },
+  "releases": [
+    {
+      "slug": "rollingunrolling",
+      "name": "RollingUnrolling",
+      "artist": "rollingunrolling",
+      "img": "/music/releases/rolling-unrolling.jpeg",
+      "description": "Tiny sounds by Matisse A-M, Taaaaawnyyy, Teah Morales, Myra Morales, Diego Gil, Radiolip, Memory Foam, Sher Doruff, Brian Massumi, Christian Brun Del Re, hh, Eddying Jackson, Oscar Talbot, Keerthi Basavarajaiah and certainly many more.<br><br>Cello on Prática by Laurence Gaudreau.<br>Clarinet by Jonah Bild-Lowrie.<br>Saxophone on Prática and Itchy by Ludo Désert.<br><br>Words & vocals by Anouk Hoogendoorn.<br>Translation to Portuguese for Prática by Erneste<br>Words & vocals on Superabundant by Ben Muñoz.<br>Music and production by Ben Muñoz.<br><br>Mixing on Sync Sink and Prática by Pierre Guerineau<br>Mastering by Pierre Guerineau<br><br>Artwork by Liz Talley (@nice_folk)<br><br>Released May 24, 2024",
+      "links": [
+        {
+          "text": "streaming",
+          "to": "https://open.spotify.com/album/5ia3N7EbJM4FjIpG07Gxgz?si=3HNBJRh_TXqFa89mwq9LHw",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "buy",
+          "to": "https://fuites.bandcamp.com/album/rolling-unrolling",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "portal",
+          "to": "/",
+          "tag": "nuxt-link",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "slug": "soon-a-memory",
+      "name": "Soon a Memory",
+      "artist": "Leaking Ghosts",
+      "img": "/music/releases/soon-a-memory.jpeg",
+      "description": "Ludovic Désert ≈ Saxophone, Vocals<br>Benjamin Muñoz ≈ Guitar<br>Vincent Paradis-Montplaisir ≈ Bass, Vocals<br>Jonah Bild-Lowrie ≈ Keyboards, Organ, Vocals<br>Christian Maria Brun del Re ≈ Drums & Cymbals<br>John John ≈ Effect Vocals<br><br>Mixed by Benjamin Muñoz<br>Mastered by CristobalU@seeyoumastering<br><br>Written by Vincent Paradis-Montplaisir & Jonah Bild-Lowrie<br><br>Released May 10, 2024",
+      "links": [
+        {
+          "text": "streaming",
+          "to": "https://open.spotify.com/album/77xasQjlKgy2q7rUIDWmYK?si=XWm5DcX8SYKMId4aizOiPA",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "buy",
+          "to": "https://fuites.bandcamp.com/album/soon-a-memory",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "portal",
+          "to": "/",
+          "tag": "nuxt-link",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "slug": "too-heavy-to-fly",
+      "name": "Too Heavy To Fly",
+      "artist": "Leaking Ghosts",
+      "img": "/music/releases/too-heavy-to-fly.jpeg",
+      "description": "Jonah Orion Bild-Lowrie _ Vocals, Clarinet, Rhodes, Piano, Synths<br>Vincent Paradis-Montplaisir _ Vocals, Guitar, Bass<br>Christiaan Maria Brun del Re _ Percussion<br>Rupina Tashijan _ Vocals<br>Ludovic Desert _ Saxophone (on Forgot the Leaves)<br>Faïza Fehri _ Voice (on Witness of these Walls)<br>Benjamin Muñoz _ Mastering<br><br>Released July 29, 2021",
+      "links": [
+        {
+          "text": "streaming",
+          "to": "https://open.spotify.com/album/7uNSkUyEjlsiW7NltaxrFO?si=mcAhGwKGTbKsofxJ7hn2gQ",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "buy",
+          "to": "https://fuites.bandcamp.com/album/too-heavy-to-fly",
+          "tag": "a",
+          "target": "_blank"
+        },
+        {
+          "text": "portal",
+          "to": "/",
+          "tag": "nuxt-link",
+          "disabled": true
+        }
+      ]
+    }
+  ]
+}

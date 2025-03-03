@@ -3,20 +3,16 @@
     v-slot="{ loading }"
     :force-loading="forceLoading"
     :force-disabled="forceDisabled"
-    :class="['icon-button', { active }, { disabled: forceDisabled }]"
-    :data-tooltip="tooltip">
+    :class="['icon-button', { active }, { disabled: forceDisabled }]">
 
     <DashedBorderCircle
       :active="active"
-      class="svg-border"
-      :data-tooltip="tooltip" />
+      class="svg-border" />
 
-    <SpinnerMaterialCircle
-      v-if="loading && !disableLoader"
-      :data-tooltip="tooltip" />
+    <SpinnerMaterialCircle v-if="loading && !disableLoader" />
 
-    <div v-else class="slot" :data-tooltip="tooltip">
-      <slot :loading="loading" :data-tooltip="tooltip" />
+    <div v-else class="slot">
+      <slot :loading="loading" />
     </div>
 
   </ZeroButton>
@@ -44,11 +40,6 @@ defineProps({
     type: Boolean,
     required: false,
     default: false
-  },
-  tooltip: {
-    type: String,
-    required: false,
-    default: ''
   }
 })
 </script>

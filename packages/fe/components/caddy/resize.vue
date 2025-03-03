@@ -1,21 +1,44 @@
 <template>
-  <div class="resize">
+  <div :class="['resize-tool', type]">
+    <!-- ==================================================== BUTTONS BEFORE -->
+    <div class="buttons-before">
 
-    <RadialSliderInfinite
-      ref="resizeSliderRef"
-      mode="relative"
-      :radius="thingie?.thingie_type === 'sound' ? 56 : 46"
-      class="resize-slider"
-      @add-delta="handleResize" />
+      <ButtonRetrigger
+        v-if="type === 'image'"
+        @retrigger="handleResize(0.025)">
+        <IconScaleUp />
+      </ButtonRetrigger>
 
-    <RadialSliderInfinite
-      v-if="thingie?.thingie_type === 'sound'"
-      ref="strokeSliderRef"
-      mode="relative"
-      :radius="40"
-      class="stroke-width-slider"
-      @add-delta="handleStrokeWidthResize" />
+      <template v-else>
+        <ButtonRetrigger @retrigger="handleResize(0.025)">
+          <IconScaleUpHalfsize />
+        </ButtonRetrigger>
+        <ButtonRetrigger @retrigger="handleResize(-0.025)">
+          <IconScaleDownHalfsize />
+        </ButtonRetrigger>
+      </template>
 
+    </div>
+  <!-- ==================================================== BUTTONS AFTER -->
+    <div class="buttons-after">
+
+      <ButtonRetrigger
+        v-if="type === 'image'"
+        @retrigger="handleResize(-0.025)">
+        <IconScaleDown />
+      </ButtonRetrigger>
+
+      <template v-else>
+        <ButtonRetrigger @retrigger="handleStrokeWidthResize(0.25)">
+          <IconStrokeWidthUp />
+        </ButtonRetrigger>
+        <ButtonRetrigger @retrigger="handleStrokeWidthResize(-0.25)">
+          <IconStrokeWidthDown />
+        </ButtonRetrigger>
+      </template>
+
+    </div>
+    <!-- ========================================================= TOOL ICON -->
     <ButtonIcon
       :force-disabled="true"
       class="resize-icon solid-outline">
@@ -27,6 +50,12 @@
 
 <script setup>
 // ======================================================================= Setup
+const props = defineProps({
+  type: String,
+  required: false,
+  default: 'image'
+})
+
 const emit = defineEmits(['resize-thingie', 'update-stroke-width'])
 
 // ======================================================================== Data
@@ -55,7 +84,7 @@ const handleResize = delta => {
   if (dimensions.value) {
     const width = dimensions.value.width
     const height = dimensions.value.height
-    const scale = 1 + (delta * 0.1)
+    const scale = 1 + delta
     emit('resize-thingie', {
       width: width * scale,
       height: height * scale
@@ -73,12 +102,36 @@ const handleStrokeWidthResize = delta => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.resize {
+.resize-tool {
   display: flex;
   justify-content: center;
   align-items: center;
   width: torem(152);
   height: torem(152);
+  &.image {
+    flex-direction: column;
+    .buttons-before {
+      margin-bottom: torem(21);
+    }
+    .buttons-after {
+      margin-top: torem(21);
+    }
+  }
+  &.sound {
+    flex-direction: row;
+    .buttons-before {
+      margin-right: torem(7);
+    }
+    .buttons-after {
+      margin-left: torem(7);
+    }
+    .buttons-before,
+    .buttons-after {
+      :last-child {
+        margin-top: torem(2);
+      }
+    }
+  }
 }
 
 .resize-icon {
@@ -100,5 +153,16 @@ const handleStrokeWidthResize = delta => {
 
 .stroke-width-slider {
   position: absolute;
+}
+
+.buttons-before,
+.buttons-after {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+:deep(.retrigger-button) {
+  display: flex;
 }
 </style>

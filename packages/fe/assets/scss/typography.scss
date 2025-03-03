@@ -149,6 +149,13 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 200 900;
 }
 
+// ------------------------------------------------------------- Fraunces Italic
+@font-face {
+  font-family: 'Fraunces Italic';
+  src: url('#{$fontAssetPath}/FrauncesItalic/Fraunces_9pt-Italic.ttf') format('truetype');
+  font-weight: 400;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
@@ -157,6 +164,7 @@ $fontAssetPath: '@/assets/fonts';
 @mixin fontFamily_Arvo { font-family: 'Arvo', serif; }
 @mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
 @mixin fontFamily_PTSans { font-family: 'PT Sans', sans-serif; }
+@mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
 
 // ---------------------------------------------------------------------- Sizing
 

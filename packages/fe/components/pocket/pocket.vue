@@ -1,11 +1,17 @@
 <template>
   <div id="pocket-anchor">
     <!-- ===================================================== Pocket Toggle -->
-    <ButtonStamp
-      :active="pocketOpen"
-      :stylized="buttonText"
-      :class="['text-content', { active: pocketOpen }]"
-      @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
+    <Tooltip
+      :tooltip="pocketOpen ? 'pocket-toggle-button-open' : 'pocket-toggle-button-closed'"
+      :drippy-scene="2"
+      contact="top-left"
+      class="pocket-toggle-tooltip">
+      <ButtonStamp
+        :active="pocketOpen"
+        :stylized="buttonText"
+        :class="['text-content', { active: pocketOpen }]"
+        @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
+    </Tooltip>
 
     <div :class="['pocket-container', { transform }, { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
@@ -39,12 +45,13 @@
           </v-stage>
         </ClientOnly>
         <!-- --------------------------------------------------- token input -->
-        <ButtonIcon
-          class="pocket-button token-input-toggle"
-          :data-tooltip="tokenInputToggleTooltip"
-          @clicked="tokenInputOpen = !tokenInputOpen">
-          🔑
-        </ButtonIcon>
+        <Tooltip
+          tooltip="token-input-toggle-button"
+          class="token-input-toggle">
+          <ButtonIcon class="pocket-button" @clicked="tokenInputOpen = !tokenInputOpen">
+            🔑
+          </ButtonIcon>
+        </Tooltip>
         <!-- -------------------------------------------- full screen toggle -->
         <ButtonIcon
           class="pocket-button fullscreen-toggle"
@@ -52,15 +59,19 @@
           <IconExpand />
         </ButtonIcon>
         <!-- ----------------------------------------------- uploader toggle -->
-        <ButtonIcon
-          v-if="pageExists"
-          :class="['pocket-button', 'uploader-toggle', { 'upload-ready': uploader?.status === 'ready' }]"
-          :force-loading="uploader?.status === 'initializing'"
-          :force-disabled="uploader?.status === 'uploading'"
-          :data-tooltip="uploaderToggleTooltip"
-          @clicked="pocketStore.toggleUploaderOpen({ id: pocketUploaderId })">
-          <IconPlus :data-tooltip="uploaderToggleTooltip" class="icon" />
-        </ButtonIcon>
+        <Tooltip
+          tooltip="uploader-toggle-button"
+          contact="top-right"
+          class="uploader-toggle">
+          <ButtonIcon
+            v-if="pageExists"
+            :class="['pocket-button', { 'upload-ready': uploader?.status === 'ready' }]"
+            :force-loading="uploader?.status === 'initializing'"
+            :force-disabled="uploader?.status === 'uploading'"
+            @clicked="pocketStore.toggleUploaderOpen({ id: pocketUploaderId })">
+            <IconPlus class="icon" />
+          </ButtonIcon>
+        </Tooltip>
     
       </div>
 
@@ -74,7 +85,7 @@
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { siteData, dragndrop } = storeToRefs(generalStore)
+const { dragndrop } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
@@ -98,8 +109,6 @@ const buttonText = [
   { letter: 'e', classes: 'pt-serif' },
   { letter: 't', classes: 'pt-serif bold italic' }
 ]
-const tokenInputToggleTooltip = ref('')
-const uploaderToggleTooltip = ref('')
 const pocketUploaderId = 'pocket-uploader'
 
 useHandleThingieDragEvents(pocketRef, stageRef)
@@ -136,9 +145,6 @@ const handleAuthenticateSuccess = () => {
 
 // ======================================================================= Hooks
 onMounted(() => {
-  // Set component tooltips
-  tokenInputToggleTooltip.value = siteData.value?.settings?.tooltips['token-input-toggle-button']
-  uploaderToggleTooltip.value = siteData.value?.settings?.tooltips['uploader-toggle-button']
   // Register the pocket uploader object in the pocket store
   pocketStore.registerUploader(pocketUploaderId)
 })
@@ -154,6 +160,10 @@ onMounted(() => {
   &.active {
     transform: scale(1.1) translate(torem(-8), torem(-6)) rotate(-15deg);
   }
+}
+
+.pocket-toggle-tooltip {
+  z-index: 1000000;
 }
 
 .pocket-container {
