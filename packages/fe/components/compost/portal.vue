@@ -1,11 +1,23 @@
 <template>
   <div id="compost-portal-anchor">
     <!-- ============================================= Compost Portal Toggle -->
-    <ButtonStamp
-      :active="compostPortalOpen"
-      :stylized="buttonText"
-      :class="['text-content', { active: compostPortalOpen }]"
-      @clicked="compostPortalOpen = !compostPortalOpen" />
+    <Tooltip
+      tooltip="compost-portal-toggle-button"
+      contact="top-right"
+      :drippy-scene="3"
+      class="compost-portal-tooltip">
+
+      <template #message>
+        <span>{{ `Visit the compost anytime at fuit.es/${verseName}/compost to see what is happening in there!` }}</span>
+      </template>
+
+      <ButtonStamp
+        :active="compostPortalOpen"
+        :stylized="buttonText"
+        :class="['text-content', { active: compostPortalOpen }]"
+        @clicked="compostPortalOpen = !compostPortalOpen" />
+
+    </Tooltip>
 
     <div :class="['compost-portal-container', { open: compostPortalOpen }]">
       <!-- ============================================= Background Elements -->
@@ -76,6 +88,18 @@ const verseName = computed(() => verse.value.data?.name)
   }
   .svg-border {
     transform: scaleY(-1);
+  }
+}
+
+.compost-portal-tooltip {
+  z-index: 100000;
+  :deep(.tip) {
+    min-width: torem(260);
+    span {
+      &:last-child {
+        margin-top: torem(12);
+      }
+    }
   }
 }
 

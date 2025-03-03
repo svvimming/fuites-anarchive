@@ -3,6 +3,8 @@
 export const usePocketStore = defineStore('pocket', () => {
   // ==================================================================== import
   const toasterStore = useToasterStore()
+  const generalStore = useGeneralStore()
+  const { activeModes } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
   const { verse } = storeToRefs(verseStore)
 
@@ -20,6 +22,7 @@ export const usePocketStore = defineStore('pocket', () => {
   const uploaders = ref({})
   const pocketOpen = ref(false)
   const fullscreen = ref(false)
+  const drippy = ref(0)
   
   // ================================================================== Computed
   const token = computed(() => pocket.value?.data.token)
@@ -82,6 +85,14 @@ export const usePocketStore = defineStore('pocket', () => {
   }
 
   /**
+   * @method setDrippyScene
+   */
+
+  const setDrippyScene = scene => {
+    drippy.value = scene
+  }
+
+  /**
    * @method getAuthPocket
    */
 
@@ -93,11 +104,20 @@ export const usePocketStore = defineStore('pocket', () => {
         token: incoming.token,
         localStorageAuth: incoming.localStorageAuth
       })
-      // If token is found
+      // If auth is successful
       if (response.pocket) {
         // Add a toaster message if manually entered token is retrieved
         if (response.type === 'manual-auth-success') {
           toasterStore.addMessage({ type: 'success', text: '💫 💫 💫' })
+          // Set first time landing (ftu)
+          const authCount = response.pocket.manualAuthCount
+          if (typeof authCount === 'number' && authCount < 3) {
+            setDrippyScene(1)
+            setPocketOpen(false)
+            if (!activeModes.value.tooltips) {
+              generalStore.toggleMode('tooltips')
+            }
+          }
         }
         // Set the pocket data
         useSetStoreData(pocket, {
@@ -106,9 +126,11 @@ export const usePocketStore = defineStore('pocket', () => {
           authenticated: true,
           data: response.pocket
         })
-      } else {
-        // If token is not found
-        toasterStore.addMessage({ type: 'error', text: 'Oops, try another token' })
+      } else { // If auth is not successful
+        if (response.type === 'token-not-found') {
+          // If token is not found (manual submission)
+          toasterStore.addMessage({ type: 'error', text: 'Oops, try another token' })
+        }
         useSetStoreData(pocket, {
           loading: false,
           refresh: false,
@@ -169,6 +191,7 @@ export const usePocketStore = defineStore('pocket', () => {
     uploaders,
     pocketOpen,
     fullscreen,
+    drippy,
     // ----- computed
     token,
     authenticated,
@@ -178,6 +201,7 @@ export const usePocketStore = defineStore('pocket', () => {
     toggleUploaderOpen,
     setUploader,
     togglePocketFullscreen,
+    setDrippyScene,
     getAuthPocket,
     postCreateVerse
   }

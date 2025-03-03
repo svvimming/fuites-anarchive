@@ -119,22 +119,110 @@
     ]
   },
   "tooltips": {
-    "mode-menu-toggle-button": "Settings that affect the app as a whole.",
-    "token-input-toggle-button": "Click here to submit a token.<br>A token gives access to create within a Verse.",
-    "uploader-toggle-button": "Click to toggle the file uploader where you can add new image and sound thingies."
+    "audio-toggle-button": {
+      "heading": "Audio",
+      "message": "You won't hear any of the sound thingies on this page until you turn the audio on!"
+    },
+    "pocket-toggle-button-closed": {
+      "heading": "Pocket",
+      "message": "Open your pocket to store and retrieve thingies from the current page, as well as add new thingies from your device."
+    },
+    "pocket-toggle-button-open": {
+      "heading": "Pocket",
+      "message": "Hold D while clicking and holding to drag a thingie out of the pocket onto a page.<br><br>You can also take a thingie off of a page to put it in your pocket. This way, you can save it for another time or take it to another page."
+    },
+    "settings-toggle-button": {
+      "heading": "Settings",
+      "message": "This is where you can toggle your settings and preferences for the site (like showing/hiding these tooltips) as well as switch from Explore to Edit mode."
+    },
+    "explore-mode-toggle": {
+      "heading": "Explore mode",
+      "message": "Enabling explore mode allows you to move through the site without worrying about changing anything."
+    },
+    "tooltip-mode-toggle": {
+      "heading": "Tooltips",
+      "message": "Turn off this toggle to hide tooltips."
+    },
+    "portals-mode-toggle": {
+      "heading": "Portals",
+      "message": "A portal is a passageway to another page, click on one to see where it takes you! If you don't want to see them, turn them off here."
+    },
+    "token-input-toggle-button": {
+      "heading": "Add a token",
+      "message": "Click here to submit a token. A token gives access to create within a Verse."
+    },
+    "uploader-toggle-button": {
+      "heading": "Upload a file",
+      "message": "Click to toggle the file uploader where you can add new image and sound thingies."
+    },
+    "compost-portal-toggle-button": {
+      "heading": "Compost",
+      "message": "If there is a thingie you want to discard from this page, throw it here in the compost, where someone else can grab it."
+    },
+    "multiverse-link": {
+      "heading": "Verses",
+      "message": "This leads to the multiverse where you can see the verses you have access to"
+    },
+    "thingie": {
+      "heading": "Thingie",
+      "message": "Double click on a thingie to edit it."
+    },
+    "portal": {
+      "heading": "Portal",
+      "message": "A portal is a passageway to another page, click on one to see where it takes you!<br><br>To make a new portal, a shift + click anywhere on the page will let you enter the name of an existing page you want to connect to this one."
+    },
+    "caddy-handle": {
+      "heading": "Caddy",
+      "message": "Click and drag this hand to grab and move your toolkit"
+    },
+    "caddy-trash": {
+      "heading": "Delete thingie",
+      "message": "You can use this tool to remove a thingie from fuites"
+    },
+    "caddy-layer-opacity": {
+      "heading": "Opacity/Layer",
+      "message": "Send a thingie to the back layer or move it to the top. Opacity can be changed here too"
+    },
+    "caddy-rotation": {
+      "heading": "Rotation",
+      "message": "Rotate a thingie using the radial slider"
+    },
+    "caddy-font-editor": {
+      "heading": "Fonts",
+      "message": "All font editing tools can be found here"
+    },
+    "caddy-color-selector": {
+      "heading": "Colours",
+      "message": "Use the colour picker tool to change font colours and sound thingie colours"
+    },
+    "caddy-resize": {
+      "heading": "Resize",
+      "message": "Click and hold to continuously resize. If editing a sound thingie you can also change the line width here."
+    },
+    "caddy-volume": {
+      "heading": "Volume",
+      "message": "Change the volume of a sound thingie"
+    },
+    "caddy-clip-toggle": {
+      "heading": "Clip",
+      "message": "Use the drawing you made when uploading an image as a clip path"
+    }
   },
   "landingSites": [
     {
-      "label": "portals",
-      "slug": "portals"
-    },
-    {
-      "label": "audio",
-      "slug": "audio"
+      "label": "explore mode",
+      "slug": "explore",
+      "tooltip": "explore-mode-toggle"
     },
     {
       "label": "tooltips",
-      "slug": "drippy"
+      "slug": "tooltips",
+      "tooltip": "tooltip-mode-toggle"
+    },
+    {
+      "label": "portals",
+      "slug": "portals",
+      "tooltip": "portals-mode-toggle"
     }
   ],
   "navigation": [

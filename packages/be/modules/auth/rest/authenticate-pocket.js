@@ -27,7 +27,13 @@ MC.app.get('/authenticate-pocket', async (req, res) => {
         return
       }
       if (!localStorageAuth) {
+        // Record the manual authentication timestamp
         pocket.manualAuthDate = Date.now()
+        // Increment the manual auth count
+        if (typeof pocket.manualAuthCount === 'number') {
+          pocket.manualAuthCount = pocket.manualAuthCount + 1
+        }
+        // Update the pocket document
         await pocket.save()
         SendData(res, 200, 'Pocket retrieved successfully', { type: 'manual-auth-success', pocket })
       } else if (pocket.manualAuthDate && (Date.now() - new Date(pocket.manualAuthDate).getTime()) <= 10800000) {

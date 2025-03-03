@@ -11,15 +11,12 @@ export const useGeneralStore = defineStore('general', () => {
   const sessionId = ref('')
   const dragndrop = ref(false)
   const draggingThingie = ref(false)
-  const modal = ref({
-    active: false,
-    action: '',
-    data: null
-  })
+  const mouseOverScene = ref(false)
   const activeModes = ref({
     portals: true,
     audio: false,
-    drippy: true
+    explore: false,
+    tooltips: false
   })
 
   // ================================================================== computed
@@ -39,22 +36,6 @@ export const useGeneralStore = defineStore('general', () => {
   }
 
   /**
-   * @method setModal
-   */
-
-  const setModal = incoming => {
-    modal.value = incoming
-  }
-
-  /**
-   * @method closeModal
-   */
-
-  const closeModal = () => {
-    modal.value.active = false
-  }
-
-  /**
    * @method setDragndrop
    */
 
@@ -68,6 +49,14 @@ export const useGeneralStore = defineStore('general', () => {
 
   const setDraggingThingie = incoming => {
     draggingThingie.value = incoming
+  }
+
+  /**
+   * @method setMouseOverScene
+   */
+
+  const setMouseOverScene = incoming => {
+    mouseOverScene.value = incoming 
   }
 
   /**
@@ -86,14 +75,13 @@ export const useGeneralStore = defineStore('general', () => {
     sessionId,
     dragndrop,
     draggingThingie,
-    modal,
+    mouseOverScene,
     activeModes,
     // ----- actions
     setSiteData,
-    setModal,
-    closeModal,
     setDragndrop,
     setDraggingThingie,
+    setMouseOverScene,
     toggleMode
   }
 })

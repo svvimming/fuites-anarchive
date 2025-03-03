@@ -14,15 +14,18 @@
         ref="handle"
         class="caddy-tool-button handle"
         :style="getToolTransform('handle')">
-        <ButtonIcon
-          :class="['solid-outline', { outside: selected !== 'handle' }]"
-          @clicked="handleToolClick('handle')">
-          <IconHand />
-        </ButtonIcon>
+        <Tooltip tooltip="caddy-handle" contact="bottom-right" class="handle-tooltip">
+          <ButtonIcon
+            :class="['solid-outline', { outside: selected !== 'handle' }]"
+            @clicked="handleToolClick('handle')">
+            <IconHand />
+          </ButtonIcon>
+        </Tooltip>
       </div>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
         class="caddy-tool-button z-index-2 trash-button"
+        tool="trash"
         :style="getToolTransform('trash')"
         @clicked="openDeleteThingieModal">
         <IconTrashbin class="icon" />
@@ -31,8 +34,9 @@
       <ButtonCaddy
         v-for="tool in tools"
         :key="`${tool}-button`"
+        :tool="tool"
         :selected="selected === tool"
-        class="caddy-tool-button z-index-2"
+        :class="['caddy-tool-button', 'z-index-2']"
         :style="getToolTransform(tool)"
         @clicked="handleToolClick(tool)">
         <IconFonts v-if="tool === 'font-editor'" class="icon" />
@@ -424,10 +428,19 @@ const update = useThrottleFn(data => {
   }
 }
 
+.handle-tooltip {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:deep(.tooltip) {
+  color: $woodsmoke;
+}
+
 .handle {
   display: flex;
   background-color: transparent !important;
-  z-index: 100000 !important;
+  z-index: 10000 !important;
   &:hover {
     cursor: grab;
   }
