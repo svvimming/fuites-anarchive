@@ -90,6 +90,7 @@ watch(mouseOverScene, val => {
   font-weight: 600;
   color: $blueHaze;
   opacity: 0;
+  visibility: hidden;
   transition: 200ms ease;
   filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.15));
   span {
@@ -100,6 +101,7 @@ watch(mouseOverScene, val => {
   }
   &.active {
     opacity: 1;
+    visibility: visible;
   }
 }
 </style>
