@@ -180,12 +180,15 @@ const handleMouseWheel = e => {
  */
 
 const handleMouseMove = e => {
-  if (activeModes.value.tooltips) {
-    const attrs = e.target.attrs
-    let type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : ''
-    if (mouseOverScene.value !== type) {
-      generalStore.setMouseOverScene(type)
-    }
+  const attrs = e.target.attrs
+  const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
+  const mouseOver = mouseOverScene.value
+  if (!type && mouseOver) {
+    generalStore.setMouseOverScene(false)
+  } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
+    generalStore.setMouseOverScene({ type: 'thingie', attrs })
+  } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
+    generalStore.setMouseOverScene({ type: 'portal', attrs })
   }
 }
 
@@ -194,8 +197,8 @@ const handleMouseMove = e => {
  */
 
 const handleMouseLeave = () => {
-  if (mouseOverScene.value !== '') {
-    generalStore.setMouseOverScene('')
+  if (mouseOverScene.value) {
+    generalStore.setMouseOverScene(false)
   }
 }
 

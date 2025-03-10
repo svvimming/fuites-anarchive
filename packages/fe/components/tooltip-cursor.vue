@@ -34,7 +34,7 @@ const { siteData, mouseOverScene } = storeToRefs(generalStore)
 
 // ==================================================================== Computed
 const tooltips = computed(() => siteData.value?.settings?.tooltips || {})
-const tip = computed(() => tooltips.value[mouseOverScene.value])
+const tip = computed(() => tooltips.value[mouseOverScene.value?.type])
 
 // ==================================================================== Watchers
 watch(tip, () => { setTipSides() })

@@ -1,18 +1,7 @@
 <template>
   <div ref="viewport" :class="['verse-viewport', { [`drippy-scene-${drippy}`]: drippy }]">
-    <!-- --------------------------------------------------------- To Verses -->
-    <Tooltip
-      tooltip="multiverse-link"
-      contact="bottom-right"
-      :drippy-scene="4"
-      class="to-multiverse-tooltip">
-      <ButtonIcon
-        tag="nuxt-link"
-        to="/multiverse"
-        class="to-multiverse">
-        <IconMultiverse class="icon"/>
-      </ButtonIcon>
-    </Tooltip>
+    <!-- ---------------------------------------------------------- Metadata -->
+    <VerseMetadata />
     <!-- ------------------------------------------------------ Page Creator -->
     <VersePageCreator />
     <!-- ----------------------------------------------------- Landing Sites -->
@@ -115,31 +104,11 @@ watch(drippy, (scene) => {
   }
 }
 
-.to-multiverse-tooltip {
+:deep(#verse-metadata) {
   position: absolute;
   top: torem(25);
   left: torem(25);
   z-index: 2;
-}
-
-:deep(.to-multiverse) {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  --two-tone-a: #{$blueHaze};
-  --two-tone-b: white;
-  .icon {
-    width: torem(20);
-    height: torem(20);
-    path,
-    circle {
-      stroke: $blueHaze;
-    }
-    circle {
-      fill: $blueHaze;
-    }
-  }
 }
 
 :deep(#landing-site-anchor) {
