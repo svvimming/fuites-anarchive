@@ -1,6 +1,6 @@
 <template>
   <ZeroAlert
-    mode="modal"
+    mode="alert"
     alert-id="multiverse-create-verse-alert">
 
     <div class="alert-message">
@@ -90,12 +90,8 @@ const submitCreateVerse = async () => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .alert-message {
-  position: absolute;
-  left: 50%;
-  top: 50%;
   padding: torem(16);
   border-radius: torem(20);
-  transform: translate(-50%, -50%) scale(0.8);
   transition: 300ms ease;
   background-color: $athensGray;
   max-width: torem(460);

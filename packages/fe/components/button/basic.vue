@@ -47,44 +47,38 @@ const props = defineProps({
 </script>
 
 <style lang="scss" scoped>
+// ///////////////////////////////////////////////////////////////////// General
 .basic-button {
+  position: relative;
   background-color: $gullGray;
   border-radius: torem(10);
   padding: torem(10) torem(25);
   transition: 150ms ease;
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    border-radius: torem(10);
+    opacity: 0;
+    transition: 150ms ease;
+  }
   &:hover {
-    background-color: $gullGrayDark;
+    &:before {
+      opacity: 0.2;
+    }
   }
 }
 
 .slot {
-  font-size: torem(12);
+  position: relative;
+  font-size: torem(16);
   font-weight: 600;
   line-height: 1.4;
   color: white;
-}
-
-.basic-button.theme__verse {
-  background-color: transparent;
-  border-radius: 0;
-  border-bottom: solid torem(0.5) rgba($woodsmoke, 0.5);
-  &:first-child {
-    border-top: solid torem(0.5) rgba($woodsmoke, 0.5);
-  }
-  .slot {
-    display: flex;
-    align-items: center;
-    text-align: left;
-    color: $woodsmoke;
-    // :deep(svg) {
-    //   width: torem(10);
-    //   height: torem(10);
-    //   margin-left: torem(6);
-    // }
-    // :deep(path) {
-    //   fill: $woodsmoke;
-    // }
-  }
 }
 
 .basic-button.theme__clear {

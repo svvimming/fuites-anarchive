@@ -19,9 +19,11 @@
       <DashedBorderRectangle :inherit-from="pocketRef" @loaded="transform = true" />
        <!-- ===================================================== Token Auth -->
       <Auth
+        heading="Token"
         :message="authMessage"
         :class="['auth-modal', { open: !authenticated || tokenInputOpen || !pageExists }]"
-        @authenticate-success="handleAuthenticateSuccess" />
+        @authenticate-success="handleAuthenticateSuccess"
+        @cancel-authentication="handleCancelAuthentication" />
       <!-- ========================================================== Pocket -->
       <div
         v-show="authenticated && pageExists"
@@ -140,6 +142,14 @@ const handleAuthenticateSuccess = () => {
     pocketStore.setPocketOpen(false)
   } else {
     tokenInputOpen.value = false
+  }
+}
+
+const handleCancelAuthentication = () => {
+  if (authenticated.value) {
+    tokenInputOpen.value = false
+  } else {
+    pocketStore.setPocketOpen(false)
   }
 }
 

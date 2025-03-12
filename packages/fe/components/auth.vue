@@ -1,42 +1,53 @@
 <template>
   <div class="auth-container">
     <!-- ============================================================ Prompt -->
-    <span class="title text">Add a token</span>
-    <span class="prompt text">{{ message }}</span>
-    <!-- ============================================================ Input -->
-    <div class="input-container">
+    <span class="heading">{{ heading}}</span>
+    <span class="body-text">{{ message }}</span>
+    <!-- ============================================================= Input -->
+    <span class="input-label">Token</span>
 
-      <div :class="['input-wrapper', { active: value }]">
-        <input
-          v-model="value"
-          ref="input"
-          type="email"
-          autocomplete="off"
-          class="input"
-          autocapitalize="none"
-          @keyup.enter="submit"
-          placeholder="enter token" />
-      </div>
-
-      <button
-        :class="['link', 'portal-link', 'submit', { active: !!value }]"
-        @click="submit">
-        submit
-      </button>
-
+    <div :class="['input-wrapper', { active: value }]">
+      <input
+        v-model="value"
+        ref="input"
+        type="email"
+        autocomplete="off"
+        class="input"
+        autocapitalize="none"
+        @keyup.enter="submit"
+        placeholder="enter your token" />
     </div>
+
+    <!-- =========================================================== Buttons -->
+    <div class="button-row">
+      <ButtonBasic
+        :class="['submit-button', { active: !!value }]"
+        @click="submit">
+        <span>Submit</span>
+      </ButtonBasic>
+      <ButtonBasic
+        :class="['cancel-button']"
+        @click="emit('cancel-authentication')">
+        <span>Cancel</span>
+      </ButtonBasic>
+    </div>
+
   </div>
 </template>
 
 <script setup>
 // ======================================================================= Setup
 defineProps({
+  heading: {
+    type: String,
+    required: true
+  },
   message: {
     type: String,
     required: true
   }
 })
-const emit = defineEmits(['authenticate-success'])
+const emit = defineEmits(['authenticate-success', 'cancel-authentication'])
 
 // ======================================================================== Data
 const pocketStore = usePocketStore()
@@ -60,98 +71,58 @@ const submit = async () => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.link {
-  position: relative;
-  transition: 300ms ease;
-  filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0));
-  font-size: torem(18);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
 .auth-container {
   padding: torem(16);
+  min-width: torem(350);
   border-radius: torem(20);
   background-color: $athensGray;
   @include modalShadow;
-  .title {
-    font-weight: 600;
-  }
-  .title,
-  .prompt {
-    margin-bottom: torem(10);
-  }
-  .text {
-    display: block;
-    font-size: torem(12);
-    line-height: 1.5;
-  }
-  // &.touchmode {
-  //   padding-left: 0.5rem;
-  //   .input-container {
-  //     flex-direction: row;
-  //   }
-  //   .input-wrapper {
-  //     margin: 0;
-  //   }
-  //   .input {
-  //     width: 8rem;
-  //     font-size: 1.25rem;
-  //   }
-  //   .submit {
-  //     position: relative;
-  //     margin: 0 0.5rem;
-  //     padding: 0 0.5rem;
-  //     font-size: 1rem;
-  //   }
-  // }
+}
+
+.heading {
+  display: block;
+  padding-bottom: torem(18);
+  margin-bottom: torem(18);
+  width: 100%;
+  font-weight: 600;
+  font-size: torem(20);
+  color: $drippyDark;
+  border-bottom: 1px solid rgba(#B2B9CC, 0.5);
+}
+
+.body-text {
+  display: block;
+  font-size: torem(14);
+  font-weight: 400;
+  color: $drippyDark;
+  margin-bottom: torem(18);
+}
+
+.input-label {
+  display: block;
+  font-size: torem(16);
+  font-weight: 500;
+  color: $drippyDark;
+  margin-bottom: torem(10);
 }
 
 // ////////////////////////////////////////////////////////////// authentication
-.input-container {
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  margin-right: 0.25rem;
-  width: 100%;
-}
-
 .input-wrapper {
-  flex-grow: 1;
-  margin: 0.25rem 0;
   position: relative;
-  &:after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 1px;
-    left: 0;
-    bottom: -2px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    opacity: 0;
-    transition: 200ms ease;
-  }
-  &:hover {
-    &:after {
-      opacity: 0.7;
-      width: calc(100% + 1rem);
-      left: -0.5rem;
-    }
-  }
-  &.active {
-    &:after {
-      opacity: 0.7;
-    }
-  }
+  margin-bottom: torem(18);
+  width: 100%;
+  border-radius: torem(10);
+  background-color: #DFE0E5;
+  box-shadow: inset 0 2px 4px rgba(#595555, 0.25), inset 0 -2px 0 #F6F7FA;
 }
 
 .input {
   width: 100%;
-  height: 2rem;
-  font-size: torem(18);
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  padding: torem(12) torem(20);
+  height: torem(43);
+  font-size: torem(16);
+  font-weight: 500;
+  color: $drippyDark;
 }
 
 input::-webkit-input-placeholder {
@@ -170,14 +141,24 @@ input::placeholder {
   color: $woodsmoke;
 }
 
-.submit {
-  margin: 0.25rem 0;
-  margin-left: 1.5rem;
-  text-align: left;
-  opacity: 0;
-  &.active {
-    opacity: 1;
+.button-row {
+  display: flex;
+  :deep(.basic-button) {
+    flex-grow: 1;
+    &:not(:last-child) {
+      margin-right: torem(30);
+    }
   }
+}
+
+.submit-button {
+  background-color: $kellyGreen;
+  box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
+}
+
+.cancel-button {
+  background-color: $pollyPink;
+  box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
 }
 
 </style>
