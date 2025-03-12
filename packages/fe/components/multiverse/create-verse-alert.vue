@@ -4,18 +4,21 @@
     alert-id="multiverse-create-verse-alert">
 
     <div class="alert-message">
-      <span class="title text">Create a new Verse</span>
-      <span class="prompt text">Give your new partition a name and create a page to start with.</span>
-      
+      <!-- ========================================================= Heading -->
+      <span class="heading">Create a new Verse</span>
+      <span class="body-text">Choose a name for your new partition (aka Verse) and a name for its first page:</span>
+      <!-- ====================================================== Verse Name -->
+      <span class="input-label">Verse name</span>
       <div :class="['input-wrapper', { active: verseName }]">
         <input
           v-model="verseName"
           autocomplete="off"
           class="input"
           autocapitalize="none"
-          placeholder="New verse name" />
+          placeholder="enter new verse name" />
       </div>
-
+      <!-- ======================================================= Page Name -->
+      <span class="input-label">Page name</span>
       <div :class="['input-wrapper', { active: pageName }]">
         <input
           v-model="pageName"
@@ -23,11 +26,11 @@
           autocomplete="off"
           class="input"
           autocapitalize="none"
-          placeholder="First page name" />
+          placeholder="enter first page name" />
       </div>
-
-      <span class="prompt text">Add your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
-
+      <!-- =========================================================== Token -->
+      <span class="body-text token-text">Enter your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
+      <span class="input-label">Token</span>
       <div :class="['input-wrapper', { active: tokenValue }]">
         <input
           v-model="tokenValue"
@@ -37,18 +40,19 @@
           autocapitalize="none"
           placeholder="Enter token" />
       </div>
-
+      <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
           :force-loading="pocket.refresh"
           :force-disabled="pocket.refresh"
-          :class="['link', 'portal-link', 'submit', { active: !!verseName && !!tokenValue }]"
+          :class="['submit-button', { active: !!verseName && !!tokenValue }]"
           @clicked="submitCreateVerse">
-          Submit
+          <span>Submit</span>
         </ButtonBasic>
         <ButtonBasic
-          @clicked="alertStore.closeAlert('multiverse-create-verse-alert')">
-          Cancel
+          :class="['cancel-button']"
+          @clicked="emit('close-alert')">
+          <span>Cancel</span>
         </ButtonBasic>
       </div>
     </div>
@@ -60,8 +64,8 @@
 // ====================================================================== Import
 import { useChangeCase } from '@vueuse/integrations/useChangeCase'
 
+const emit = defineEmits(['close-alert'])
 // ======================================================================== Data
-const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket, token } = storeToRefs(pocketStore)
 
@@ -80,7 +84,7 @@ const submitCreateVerse = async () => {
       firstPageName: useChangeCase(pageName.value, 'kebabCase').value
     })
     if (created) {
-      alertStore.closeAlert('multiverse-create-verse-alert')
+      emit('close-alert')
     }
   }
   /** @TODO - add incorrect token error states */
@@ -96,89 +100,97 @@ const submitCreateVerse = async () => {
   background-color: $athensGray;
   max-width: torem(460);
   @include modalShadow;
-  .title {
-    font-weight: 600;
-  }
-  .title,
-  .prompt {
-    margin-bottom: torem(10);
-  }
-  .text {
-    display: block;
-    font-size: torem(12);
-    line-height: 1.5;
-  }
 }
 
-.button-row {
-  display: flex;
-  margin-top: torem(24);
+// ////////////////////////////////////////////////////////// Modal Form Styling
+.heading {
+  display: block;
+  padding-bottom: torem(18);
+  margin-bottom: torem(18);
+  width: 100%;
+  font-weight: 600;
+  font-size: torem(20);
+  color: $drippyDark;
+  border-bottom: 1px solid rgba(#B2B9CC, 0.5);
 }
 
-// ////////////////////////////////////////////////////////////////////// Inputs
+.body-text {
+  display: block;
+  font-size: torem(14);
+  font-weight: 400;
+  color: $drippyDark;
+  margin-bottom: torem(18);
+}
+
+.input-label {
+  display: block;
+  font-size: torem(16);
+  font-weight: 500;
+  color: $drippyDark;
+  margin-bottom: torem(10);
+}
+
 .input-wrapper {
-  flex-grow: 1;
-  margin: torem(8) torem(16);
   position: relative;
-  width: 75%;
-  &:after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 1px;
-    left: 0;
-    bottom: -2px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    opacity: 0;
-    transition: 200ms ease;
-  }
-  &:hover {
-    &:after {
-      opacity: 0.7;
-      width: calc(100% + 1rem);
-      left: -0.5rem;
-    }
-  }
-  &.active {
-    &:after {
-      opacity: 0.7;
-    }
-  }
+  margin-bottom: torem(18);
+  width: 100%;
+  border-radius: torem(10);
+  background-color: #DFE0E5;
+  box-shadow: inset 0 2px 4px rgba(#595555, 0.25), inset 0 -2px 0 #F6F7FA;
 }
 
 .input {
   width: 100%;
-  height: 2rem;
+  padding: torem(12) torem(20);
+  height: torem(43);
   font-size: torem(16);
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 500;
+  color: $drippyDark;
 }
 
 input::-webkit-input-placeholder {
-  color: rgba($woodsmoke, 0.5);
+  color: rgba(#3E3F4D, 0.5);
+  font-weight: 500;
 }
 
 input::-moz-placeholder {
-  color: rgba($woodsmoke, 0.5);
+  color: rgba(#3E3F4D, 0.5);
+  font-weight: 500;
 }
 
 input::-ms-placeholder {
-  color: rgba($woodsmoke, 0.5);
+  color: rgba(#3E3F4D, 0.5);
+  font-weight: 500;
 }
 
 input::placeholder {
-  color: rgba($woodsmoke, 0.5);
+  color: rgba(#3E3F4D, 0.5);
+  font-weight: 500;
 }
 
-.submit {
-  margin-right: torem(8);
-  text-align: left;
-  opacity: 0.5;
-  pointer-events: none;
-  &.active {
-    opacity: 1;
-    pointer-events: all;
+.token-text {
+  padding-top: torem(18);
+  margin-top: torem(18);
+  border-top: 1px solid rgba(#B2B9CC, 0.5);
+}
+
+.button-row {
+  display: flex;
+  :deep(.basic-button) {
+    flex-grow: 1;
+    &:not(:last-child) {
+      margin-right: torem(30);
+    }
   }
+}
+
+.submit-button {
+  background-color: $kellyGreen;
+  box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
+}
+
+.cancel-button {
+  background-color: $pollyPink;
+  box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
 }
 </style>

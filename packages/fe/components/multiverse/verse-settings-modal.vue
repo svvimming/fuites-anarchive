@@ -1,81 +1,77 @@
 <template>
-  <div class="auth-container">
-    <!-- ============================================================ Prompt -->
-    <span class="heading">{{ heading}}</span>
-    <span class="body-text">{{ message }}</span>
-    <!-- ============================================================= Input -->
-    <span class="input-label">Token</span>
+  <ZeroAlert
+    mode="alert"
+    alert-id="multiverse-verse-settings-modal">
+    <div class="verse-settings-modal">
 
-    <div :class="['input-wrapper', { active: value }]">
-      <input
-        v-model="value"
-        ref="input"
-        type="email"
-        autocomplete="off"
-        class="input"
-        autocapitalize="none"
-        @keyup.enter="submit"
-        placeholder="enter your token" />
+      <span class="heading">Verse Settings</span>
+      <span class="body-text"></span>
+
+      <span class="input-label">Verse name</span>
+      <div :class="['input-wrapper', { active: verseName }]">
+        <input
+          v-model="verseName"
+          class="input" />
+      </div>
+      <!-- ========================================================= Buttons -->
+      <div class="button-row">
+        <ButtonBasic
+          :class="['submit-button']"
+          @clicked="submitEditVerse">
+          <span>Submit</span>
+        </ButtonBasic>
+        <ButtonBasic
+          :class="['cancel-button']"
+          @clicked="emit('close-alert')">
+          <span>Cancel</span>
+        </ButtonBasic>
+      </div>
+
     </div>
-
-    <!-- =========================================================== Buttons -->
-    <div class="button-row">
-      <ButtonBasic
-        :class="['submit-button', { active: !!value }]"
-        @click="submit">
-        <span>Submit</span>
-      </ButtonBasic>
-      <ButtonBasic
-        :class="['cancel-button']"
-        @click="emit('cancel-authentication')">
-        <span>Cancel</span>
-      </ButtonBasic>
-    </div>
-
-  </div>
+  </ZeroAlert>    
 </template>
 
 <script setup>
 // ======================================================================= Setup
-defineProps({
-  heading: {
-    type: String,
-    required: true
-  },
-  message: {
-    type: String,
-    required: true
+const props = defineProps({
+  verseId: {
+    type: [String, Boolean],
+    required: false,
+    default: false
   }
 })
-const emit = defineEmits(['authenticate-success', 'cancel-authentication'])
+
+const emit = defineEmits(['close-alert'])
 
 // ======================================================================== Data
-const pocketStore = usePocketStore()
-const { pocket } = storeToRefs(pocketStore)
-const value = ref('')
+const alertStore = useZeroAlertStore()
+const verseName = ref('')
+
+// ==================================================================== Watchers
+watch(() => props.verseId, (val) => {
+  const alert = alertStore.getAlert('multiverse-verse-settings-modal')
+  if (val) {
+    alertStore.openAlert('multiverse-verse-settings-modal')
+  } else if (alert.status === 'open') {
+    alertStore.closeAlert('multiverse-verse-settings-modal')
+  }
+})
 
 // ===================================================================== Methods
-const submit = async () => {
-  const sanitized = value.value.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
-  const joined = sanitized.join('-')
-  await pocketStore.getAuthPocket({ token: joined })
-  if (pocket.value.authenticated) {
-    emit('authenticate-success')
-    if (process.client) {
-      localStorage.setItem('fuitesAnarchiveAuthToken', joined)
-    }
-  }
-  value.value = ''
+const submitEditVerse = () => {
+  console.log('submitEditVerse')
 }
+
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.auth-container {
+.verse-settings-modal {
   padding: torem(16);
-  min-width: torem(350);
   border-radius: torem(20);
+  transition: 300ms ease;
   background-color: $athensGray;
+  max-width: torem(460);
   @include modalShadow;
 }
 
@@ -145,6 +141,12 @@ input::placeholder {
   font-weight: 500;
 }
 
+.token-text {
+  padding-top: torem(18);
+  margin-top: torem(18);
+  border-top: 1px solid rgba(#B2B9CC, 0.5);
+}
+
 .button-row {
   display: flex;
   :deep(.basic-button) {
@@ -164,5 +166,4 @@ input::placeholder {
   background-color: $pollyPink;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
 }
-
 </style>

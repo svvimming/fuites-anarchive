@@ -29,7 +29,26 @@
         @cancel-authentication="handleCloseAuthAlert" />
     </ZeroAlert>
     <!-- ================================================ Create Verse Alert -->
-    <MultiverseCreateVerseAlert />
+    <MultiverseCreateVerseAlert
+      @close-alert="handleCloseCreateVerseAlert" />
+    <!-- ============================================================ Verses -->
+    <div class="verses">
+      <ClientOnly>
+        <MultiversePortal
+          v-for="(verse, index) in verses"
+          :key="verse._id"
+          :verse="verse"
+          :to="getVersePageRoute(verse)"
+          :label-radius="positionData[index]?.labelRadius"
+          :label-angle="positionData[index]?.labelAngle"
+          :style="positionData[index]"
+          @open-verse-settings="setSettingsModalVerseId" />
+      </ClientOnly>
+    </div>
+    <!-- ============================================== Verse Settings Modal -->
+    <MultiverseVerseSettingsModal
+      :verse-id="settingsModalVerseId"
+      @close-alert="setSettingsModalVerseId(false)" />
 
   </div>
 </template>
@@ -47,6 +66,8 @@ const pocketStore = usePocketStore()
 const { pocket, authenticated } = storeToRefs(pocketStore)
 const createVerseButtonActive = ref(false)
 const enterTokenButtonActive = ref(false)
+const positionData = ref([])
+const settingsModalVerseId = ref(false)
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
 // Check local storage for auth token and try to authenticate if found
@@ -96,10 +117,38 @@ const handleCloseAuthAlert = () => {
   enterTokenButtonActive.value = false
 }
 
+const handleCloseCreateVerseAlert = () => {
+  alertStore.closeAlert('multiverse-create-verse-alert')
+  createVerseButtonActive.value = false
+}
+
 const getVersePageRoute = verse => {
   const page = verse.page_refs.find(item => item.name !== 'compost')
   return `/verse/${verse._id}/${page.name}`
 }
+
+const calculatePortalPositions = () => {
+  const length = verses.value.length
+  const intervalX = window.innerWidth / length
+  const intervalY = window.innerHeight * 0.5
+  positionData.value = Array.from({ length }, (_, index) => ({
+    left: `${(intervalX * index + Math.random() * intervalX * 0.4)}px`,
+    top: `${(intervalY * Math.sin(index) + Math.random() * intervalY * 0.3) + intervalY * 0.25}px`,
+    labelRadius: intervalY * 0.25,
+    labelAngle: -90 * Math.random() - 45
+  }))
+}
+
+const setSettingsModalVerseId = verseId => {
+  settingsModalVerseId.value = verseId
+}
+
+// ======================================================================= Hooks
+onMounted(() => {
+  nextTick(() => {
+    calculatePortalPositions()
+  })
+})
 </script>
 
 <style lang="scss" scoped>
