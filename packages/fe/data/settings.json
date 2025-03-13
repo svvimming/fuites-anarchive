@@ -45,16 +45,16 @@
       "fontFaceDeclaration": "\"Arvo\", serif"
     },
     {
-      "class": "pt-sans",
-      "display": "PT Sans",
-      "styleAttribute": "PT Sans, sans-serif",
-      "fontFaceDeclaration": "\"PT Sans\", sans-serif"
+      "class": "source-sans-pro",
+      "display": "Source Sans Pro",
+      "styleAttribute": "Source Sans Pro, sans-serif",
+      "fontFaceDeclaration": "\"Source Sans Pro\", sans-serif"
     },
     {
-      "class": "pt-serif",
-      "display": "PT Serif",
-      "styleAttribute": "PT Serif, serif",
-      "fontFaceDeclaration": "\"PT Serif\", serif"
+      "class": "source-serif-pro",
+      "display": "Source Serif Pro",
+      "styleAttribute": "Source Serif Pro, serif",
+      "fontFaceDeclaration": "\"Source Serif Pro\", serif"
     }
   ],
   "thingieEditableParams": {

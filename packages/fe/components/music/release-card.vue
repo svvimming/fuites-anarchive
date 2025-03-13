@@ -188,7 +188,7 @@ const getInfoHeight = () => {
 .artist,
 .description {
   color: white;
-  font-family: 'PT Sans', sans-serif;
+  font-family: 'Source Sans Pro', sans-serif;
   letter-spacing: 0.02em;
 }
 
@@ -228,10 +228,10 @@ const getInfoHeight = () => {
   &:not(:last-child) {
     margin-right: 1rem;
   }
-  // font-family: 'PT Sans', sans-serif ;
+  // font-family: 'Source Sans Pro', sans-serif ;
   :deep(.slot) {
     color: white !important;
-    font-family: 'PT Sans', sans-serif !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
     font-size: torem(14);
   }
   :deep(.tripe-dot-loader) {

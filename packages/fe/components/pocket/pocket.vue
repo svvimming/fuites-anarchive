@@ -104,12 +104,12 @@ const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
 const buttonText = [
-  { letter: 'p', classes: 'pt-serif italic' },
-  { letter: 'o', classes: 'pt-sans bold' },
-  { letter: 'c', classes: 'pt-serif italic' },
-  { letter: 'k', classes: 'pt-sans bold italic' },
-  { letter: 'e', classes: 'pt-serif' },
-  { letter: 't', classes: 'pt-serif bold italic' }
+  { letter: 'p', classes: 'source-serif-pro italic semibold' },
+  { letter: 'o', classes: 'source-sans-pro bold' },
+  { letter: 'c', classes: 'source-serif-pro italic semibold' },
+  { letter: 'k', classes: 'source-sans-pro bold italic' },
+  { letter: 'e', classes: 'source-serif-pro semibold' },
+  { letter: 't', classes: 'source-serif-pro bold italic' }
 ]
 const pocketUploaderId = 'pocket-uploader'
 

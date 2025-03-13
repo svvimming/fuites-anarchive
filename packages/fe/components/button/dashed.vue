@@ -97,6 +97,11 @@ const width = computed(() => {
         stroke-dashoffset: -16;
       }
     }
+    .border.flat-dash-4 {
+      :deep(.rect) {
+        stroke-dashoffset: -13;
+      }
+    }
   }
   .text {
     color: var(--two-tone-a);
@@ -122,6 +127,7 @@ const width = computed(() => {
     }
   }
 }
+
 .spinner {
   position: absolute;
   top: calc(50% - #{torem(6)}); // minus half dimension of loader
@@ -136,6 +142,12 @@ const width = computed(() => {
   font-family: 'Nanum Myeongjo', serif;
   font-weight: 700;
   transition: 200ms ease;
+}
+
+.stylized {
+  span {
+    font-size: torem(20);
+  }
 }
 
 .border {

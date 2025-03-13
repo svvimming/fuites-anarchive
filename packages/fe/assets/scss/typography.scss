@@ -77,62 +77,34 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 200 900;
 }
 
-// --------------------------------------------------------------------- PT Sans
+// ------------------------------------------------------------- Source Sans Pro
 @font-face {
-  font-family: 'PT Sans';
+  font-family: 'Source Sans Pro';
   font-style: normal;
-  src: url('#{$fontAssetPath}/PTSans/PTSans-Regular.ttf') format('truetype');
-  font-weight: 400;
+  src: url('#{$fontAssetPath}/SourceSans3/SourceSans3-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
 }
 
 @font-face {
-  font-family: 'PT Sans';
+  font-family: 'Source Sans Pro';
   font-style: italic;
-  src: url('#{$fontAssetPath}/PTSans/PTSans-Italic.ttf') format('truetype');
-  font-weight: 400;
+  src: url('#{$fontAssetPath}/SourceSans3/SourceSans3-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
 }
 
+// ------------------------------------------------------------ Source Serif Pro
 @font-face {
-  font-family: 'PT Sans';
+  font-family: 'Source Serif Pro';
   font-style: normal;
-  src: url('#{$fontAssetPath}/PTSans/PTSans-Bold.ttf') format('truetype');
-  font-weight: 700;
+  src: url('#{$fontAssetPath}/SourceSerif4/SourceSerif4-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 200 900;
 }
 
 @font-face {
-  font-family: 'PT Sans';
+  font-family: 'Source Serif Pro';
   font-style: italic;
-  src: url('#{$fontAssetPath}/PTSans/PTSans-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
-}
-
-// -------------------------------------------------------------------- PT Serif
-@font-face {
-  font-family: 'PT Serif';
-  font-style: normal;
-  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'PT Serif';
-  font-style: italic;
-  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Italic.ttf') format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'PT Serif';
-  font-style: normal;
-  src: url('#{$fontAssetPath}/PTSerif/PTSerif-Bold.ttf') format('truetype');
-  font-weight: 700;
-}
-
-@font-face {
-  font-family: 'PT Serif';
-  font-style: italic;
-  src: url('#{$fontAssetPath}/PTSerif/PTSerif-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
+  src: url('#{$fontAssetPath}/SourceSerif4/SourceSerif4-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 200 900;
 }
 
 // ---------------------------------------------------------------------- Nunito
@@ -163,7 +135,8 @@ $fontAssetPath: '@/assets/fonts';
 @mixin fontFamily_Anton { font-family: 'Anton', sans-serif; }
 @mixin fontFamily_Arvo { font-family: 'Arvo', serif; }
 @mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
-@mixin fontFamily_PTSans { font-family: 'PT Sans', sans-serif; }
+@mixin fontFamily_SourceSansPro { font-family: 'Source Sans Pro', sans-serif; }
+@mixin fontFamily_SourceSerifPro { font-family: 'Source Serif Pro', serif; }
 @mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
 
 // ---------------------------------------------------------------------- Sizing
@@ -197,10 +170,13 @@ $fontAssetPath: '@/assets/fonts';
   @include fontFamily_SourceCodePro;
 }
 
-.pt-sans {
+.source-sans-pro {
   font-weight: 400;
   font-style: normal;
-  font-family: 'PT Sans';
+  font-family: 'Source Sans Pro';
+  &.semibold {
+    font-weight: 600;
+  }
   &.bold {
     font-weight: 700;
   }
@@ -209,10 +185,13 @@ $fontAssetPath: '@/assets/fonts';
   }
 }
 
-.pt-serif {
+.source-serif-pro {
   font-weight: 400;
   font-style: normal;
-  font-family: 'PT Serif';
+  font-family: 'Source Serif Pro';
+  &.semibold {
+    font-weight: 600;
+  }
   &.bold {
     font-weight: 700;
   }

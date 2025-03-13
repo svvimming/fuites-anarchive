@@ -1,9 +1,9 @@
 <template>
-  <div class="verse-portal">
+  <div class="verse-portal" :style="colorStyles">
     <!-- --------------------------------------------------------------- Orb -->
     <div class="orb"></div>
 
-    <div class="label-container" :style="labelStyles">
+    <div :class="['label-container', `offset__${offset}`]">
       <!-- ----------------------------------------------------- Label Title -->
       <div class="verse-title">
         <span class="label">{{ verse.name }}</span>
@@ -16,8 +16,8 @@
       <!-- ------------------------------------------------------- Indicator -->
       <svg
         width="4"
-        height="81"
-        viewBox="0 0 4 81"
+        :height="height"
+        :viewBox="viewbox"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         class="indicator"
@@ -46,16 +46,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  labelRadius: {
-    type: Number,
-    required: false,
-    default: 0
-  },
-  labelAngle: {
-    type: Number,
-    required: false,
-    default: 0
-  },
   to: {
     type: String,
     required: false,
@@ -64,18 +54,46 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['open-verse-settings']) 
+const offset = ref('middle')
 
-// ==================================================================== Computed
-const labelStyles = computed(() => ({
-  left: `${(Math.cos(props.labelAngle * Math.PI / 180) * props.labelRadius) + 20}px`,
-  top: `${Math.sin(props.labelAngle * Math.PI / 180) * props.labelRadius}px`
-}))
+const height = computed(() => offset.value === 'middle' ? 50 : 76)
+const viewbox = computed(() => `0 0 4 ${height.value}`)
+
+const colorStyles = computed(() => {
+  return {
+    '--orb-primary-color': props.verse.average_colors.primary,
+    '--orb-secondary-color': props.verse.average_colors.secondary
+  }
+})
+
+const setOffsetPosition = () => {
+  const offsets = ['left', 'middle', 'right']
+  const index = Math.floor(Math.random() * 3)
+  offset.value = offsets[index]
+}
+
+onMounted(() => {
+  setOffsetPosition()
+})
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .verse-portal {
+  --orb-primary-color: #6B7080;
+  --orb-secondary-color: #E5FF00;
   position: absolute;
+  left: 0;
+  top: 50%;
+  .label {
+    filter: drop-shadow(0 0 torem(10) var(--orb-primary-color)) drop-shadow(0 0 torem(16) var(--orb-secondary-color));
+  }
+  .orb {
+    &:before {
+      background-color: var(--orb-primary-color);
+      filter: drop-shadow(0 0 torem(16) var(--orb-secondary-color));
+    }
+  }
 }
 
 .orb {
@@ -92,14 +110,28 @@ const labelStyles = computed(() => ({
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: #6B7080;
-    filter: drop-shadow(0 0 torem(16) #E5FF00);
   }
 }
 
 .label-container {
   position: absolute;
+  bottom: calc(100% + torem(50));
   transform: translate(-50%, -50%);
+  &.offset__left {
+    left: calc(50% + torem(-75));
+    .indicator {
+      transform: rotate(-39deg);
+    }
+  }
+  &.offset__middle {
+    left: 50%;
+  } 
+  &.offset__right {
+    left: calc(50% + torem(75));
+    .indicator {
+      transform: rotate(39deg);
+    }
+  }
 }
 
 .verse-title {
@@ -110,7 +142,6 @@ const labelStyles = computed(() => ({
   font-size: torem(20);
   font-family: 'Nanum Myeongjo', sans-serif;
   font-weight: 700;
-  filter: drop-shadow(0 0 torem(10) #6B7080) drop-shadow(0 0 torem(16) #E5FF00);
 }
 
 .indicator {

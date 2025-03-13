@@ -31,6 +31,16 @@ const VerseSchema = new Schema({
         default: 3
       }
     }
+  },
+  average_colors: {
+    primary: {
+      type: String,
+      required: false
+    },
+    secondary: {
+      type: String,
+      required: false
+    }
   }
 }, {
   timestamps: true,

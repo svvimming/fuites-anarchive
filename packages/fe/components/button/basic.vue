@@ -91,12 +91,12 @@ const props = defineProps({
     color: $woodsmoke;
     letter-spacing: 1px;
     transition: 150ms ease;
-    font-family: 'PT Sans';
+    font-family: 'Source Sans Pro';
   }
   &:hover {
     .slot {
       letter-spacing: 3px;
-      font-family: 'PT Serif';
+      font-family: 'Source Serif Pro';
     }
   }
 }

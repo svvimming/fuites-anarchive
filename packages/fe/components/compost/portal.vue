@@ -58,13 +58,13 @@ const { verse } = storeToRefs(verseStore)
 
 const compostPortalOpen = ref(false)
 const buttonText = [
-  { letter: 'c', classes: 'pt-serif italic' },
-  { letter: 'o', classes: 'pt-sans bold' },
-  { letter: 'm', classes: 'pt-serif italic' },
-  { letter: 'p', classes: 'pt-sans bold italic' },
-  { letter: 'o', classes: 'pt-serif' },
-  { letter: 's', classes: 'pt-serif bold italic' },
-  { letter: 't', classes: 'pt-serif italic' }
+  { letter: 'c', classes: 'source-serif-pro semibold italic' },
+  { letter: 'o', classes: 'source-sans-pro bold' },
+  { letter: 'm', classes: 'source-serif-pro semibold' },
+  { letter: 'p', classes: 'source-sans-pro bold italic' },
+  { letter: 'o', classes: 'source-serif-pro semibold' },
+  { letter: 's', classes: 'source-serif-pro semibold italic' },
+  { letter: 't', classes: 'source-sans-pro bold italic' }
 ]
 
 // ==================================================================== Computed
