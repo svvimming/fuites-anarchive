@@ -197,7 +197,7 @@
     },
     "caddy-resize": {
       "heading": "Resize",
-      "message": "Click and hold to continuously resize. If editing a sound thingie you can also change the line width here."
+      "message": "Click or hold the + and - buttons to resize. If editing a sound thingie, this tool can also serve to change the line width."
     },
     "caddy-volume": {
       "heading": "Volume",
