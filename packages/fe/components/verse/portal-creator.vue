@@ -170,7 +170,7 @@ const checkPageExists = useDebounceFn(async () => {
 
 .input {
   width: 100%;
-  font-size: torem(12);
+  font-size: torem(14);
   line-height: 1.5;
   font-weight: 500;
   letter-spacing: 0.1em;

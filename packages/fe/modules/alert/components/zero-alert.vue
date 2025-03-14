@@ -57,7 +57,6 @@ const closeAlert = () => {
   opacity: 0;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   transition: 300ms ease;
   z-index: 2;
   &.mode__modal {
@@ -74,6 +73,9 @@ const closeAlert = () => {
       height: 100%;
       background-color: rgba($woodsmoke, 0.8);
     }
+  }
+  &.mode__alert {
+    transform: translate(-50%, -50%);
   }
   &.open {
     visibility: visible;

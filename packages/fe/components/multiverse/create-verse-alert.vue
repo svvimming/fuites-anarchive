@@ -6,51 +6,46 @@
     <div class="alert-message">
       <!-- ========================================================= Heading -->
       <span class="heading">Create a new Verse</span>
-      <span class="body-text">Choose a name for your new partition (aka Verse) and a name for its first page:</span>
+      <span class="body-text">Choose a name for your new partition (aka Verse) and a name for its first page. This name will be used to identify the Verse in the URL and can't be changed once the Verse is created!</span>
       <!-- ====================================================== Verse Name -->
-      <span class="input-label">Verse name</span>
-      <div :class="['input-wrapper', { active: verseName }]">
-        <input
-          v-model="verseName"
-          autocomplete="off"
-          class="input"
-          autocapitalize="none"
-          placeholder="enter new verse name" />
-      </div>
+      <MultiverseCollisionDetectionInput
+        label-text="Verse name"
+        placeholder="enter new verse name"
+        input-id="create-verse-name-input"
+        check-collision="verse"
+        collision-mode="exclude"
+        @validation="handleInputValidation" />
       <!-- ======================================================= Page Name -->
       <span class="input-label">Page name</span>
       <div :class="['input-wrapper', { active: pageName }]">
         <input
-          v-model="pageName"
-          ref="input"
+          ref="pageNameInputRef"
           autocomplete="off"
           class="input"
           autocapitalize="none"
-          placeholder="enter first page name" />
+          placeholder="enter first page name"
+          @change="handlePageNameChange" />
       </div>
       <!-- =========================================================== Token -->
       <span class="body-text token-text">Enter your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
-      <span class="input-label">Token</span>
-      <div :class="['input-wrapper', { active: tokenValue }]">
-        <input
-          v-model="tokenValue"
-          ref="input"
-          autocomplete="off"
-          class="input"
-          autocapitalize="none"
-          placeholder="Enter token" />
-      </div>
+      <MultiverseCollisionDetectionInput
+        label-text="Token"
+        placeholder="enter token"
+        input-id="create-verse-token-input"
+        check-collision="token-current"
+        collision-mode="include"
+        @validation="handleInputValidation" />
       <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
           :force-loading="pocket.refresh"
-          :force-disabled="pocket.refresh"
-          :class="['submit-button', { active: !!verseName && !!tokenValue }]"
+          :force-disabled="!formValid || pocket.refresh"
+          class="submit-button"
           @clicked="submitCreateVerse">
           <span>Submit</span>
         </ButtonBasic>
         <ButtonBasic
-          :class="['cancel-button']"
+          class="cancel-button"
           @clicked="emit('close-alert')">
           <span>Cancel</span>
         </ButtonBasic>
@@ -69,25 +64,49 @@ const emit = defineEmits(['close-alert'])
 const pocketStore = usePocketStore()
 const { pocket, token } = storeToRefs(pocketStore)
 
-const verseName = ref('')
+const pageNameInputRef = ref(null)
 const pageName = ref('')
-const tokenValue = ref('')
+const formData = ref({
+  'create-verse-name-input': false,
+  'create-verse-page-input': false,
+  'create-verse-token-input': false
+})
+const formValid = ref(false)
 
 // ===================================================================== Methods
+const handleInputValidation = data => {
+  formData.value[data.inputId] = data
+  formValid.value = validateForm()
+}
+
+const validateForm = () => {
+  const isValid = Object.values(formData.value).every(data => data?.isValid)
+  return isValid
+}
+
+const handlePageNameChange = () => {
+  if (pageNameInputRef.value) {
+    handleInputValidation({
+      inputId: 'create-verse-page-input',
+      isValid: true,
+      value: useChangeCase(pageNameInputRef.value.value, 'kebabCase').value
+    })
+  }
+}
+
 const submitCreateVerse = async () => {
-  const sanitized = tokenValue.value.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
-  const joined = sanitized.join('-')
-  // if the current token matches the submitted token, proceed
-  if (joined === token.value) {
+  // if the current token matches the submitted token and verse name is valid, proceed
+  if (validateForm() && token.value === formData.value['create-verse-token-input'].value) {
+    const verseName = formData.value['create-verse-name-input'].value
+    const firstPageName = formData.value['create-verse-page-input'].value
     const created = await pocketStore.postCreateVerse({
-      verseName: useChangeCase(verseName.value, 'kebabCase').value,
-      firstPageName: useChangeCase(pageName.value, 'kebabCase').value
+      verseName: useChangeCase(verseName, 'kebabCase').value,
+      firstPageName: useChangeCase(firstPageName, 'kebabCase').value
     })
     if (created) {
       emit('close-alert')
     }
   }
-  /** @TODO - add incorrect token error states */
 }
 </script>
 
@@ -187,6 +206,11 @@ input::placeholder {
 .submit-button {
   background-color: $kellyGreen;
   box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
+  &.disabled {
+    pointer-events: none;
+    background-color: $gullGray;
+    box-shadow: none;
+  }
 }
 
 .cancel-button {

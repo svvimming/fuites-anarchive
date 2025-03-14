@@ -2,6 +2,7 @@
   <div class="multiverse">
     <!-- =========================================== Create New Verse Button -->
     <ButtonDashed
+      v-if="authenticated"
       :stylized="createVerseButtonText"
       :active="createVerseButtonActive"
       :flat-dashes="4"
@@ -13,7 +14,7 @@
     </ButtonDashed>
     <!-- ================================================ Enter Token Button -->
     <ButtonDashed
-      :stylized="enterTokenButtonText"
+      :stylized="authenticated ? changeTokenButtonText : enterTokenButtonText"
       :active="enterTokenButtonActive"
       :flat-dashes="4"
       class="enter-token-button"
@@ -53,7 +54,7 @@
     </div>
     <!-- ============================================== Verse Settings Modal -->
     <MultiverseVerseSettingsModal
-      :verse-id="settingsModalVerseId"
+      :verse="editingVerse"
       @close-alert="setSettingsModalVerseId(false)" />
 
   </div>
@@ -79,6 +80,7 @@ const settingsModalVerseId = ref(false)
 const versesCtnRef = ref(null)
 const randomOffsets = ref([])
 const resizeEventListener = ref(null)
+
 await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 
 const createVerseButtonText = [
@@ -108,6 +110,20 @@ const enterTokenButtonText = [
   { letter: 'e', classes: 'source-serif-pro semibold italic' },
   { letter: 'n', classes: 'source-sans-pro bold italic' }
 ]
+const changeTokenButtonText = [
+  { letter: 'c', classes: 'source-serif-pro semibold italic' },
+  { letter: 'h', classes: 'source-sans-pro bold' },
+  { letter: 'a', classes: 'source-serif-pro semibold italic' },
+  { letter: 'n', classes: 'source-sans-pro bold italic' },
+  { letter: 'g', classes: 'source-serif-pro semibold' },
+  { letter: 'e', classes: 'source-serif-pro semibold italic' },
+  { letter: ' ', classes: '' },
+  { letter: 't', classes: 'source-serif-pro italic bold' },
+  { letter: 'o', classes: 'source-serif-pro semibold italic' },
+  { letter: 'k', classes: 'source-sans-pro bold' },
+  { letter: 'e', classes: 'source-serif-pro semibold italic' },
+  { letter: 'n', classes: 'source-sans-pro bold italic' }
+]
 
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
@@ -121,6 +137,7 @@ if (process.client) {
 
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
+const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
 // const verses = computed(() => Array.from({ length: 10 }, (_, index) => index))
 // ==================================================================== Watchers
 watch(() => verses.value.length, () => {
@@ -144,6 +161,7 @@ const handleCreateNewVerseClick = () => {
     alertStore.closeAlert('multiverse-auth-alert')
     enterTokenButtonActive.value = false
   }
+  settingsModalVerseId.value = false
 }
 
 const handleEnterTokenClick = () => {
@@ -159,6 +177,7 @@ const handleEnterTokenClick = () => {
     alertStore.closeAlert('multiverse-create-verse-alert')
     createVerseButtonActive.value = false
   }
+  settingsModalVerseId.value = false
 }
 
 const handleCloseAuthAlert = () => {
@@ -173,7 +192,7 @@ const handleCloseCreateVerseAlert = () => {
 
 const getVersePageRoute = verse => {
   const page = verse.page_refs.find(item => item.name !== 'compost')
-  return `/verse/${verse._id}/${page.name}`
+  return `/${verse.name}/${page.name}`
 }
 
 const calculatePortalPositions = () => {
@@ -186,16 +205,6 @@ const generateRandomOffsets = () => {
     y: Math.random() - 0.5
   }))
 }
-//   const length = verses.value.length
-//   const intervalX = window.innerWidth / length
-//   const intervalY = window.innerHeight * 0.5
-//   positionData.value = Array.from({ length }, (_, index) => ({
-//     left: `${(intervalX * index + Math.random() * intervalX * 0.4)}px`,
-//     top: `${(intervalY * Math.sin(index) + Math.random() * intervalY * 0.3) + intervalY * 0.25}px`,
-//     labelRadius: intervalY * 0.25,
-//     labelAngle: -90 * Math.random() - 45
-//   }))
-// }
 
 const getPortalPosition = index => {
   const length = verses.value.length
@@ -213,7 +222,17 @@ const getPortalPosition = index => {
 }
 
 const setSettingsModalVerseId = verseId => {
+  // Set the verse id for the verse settings modal
   settingsModalVerseId.value = verseId
+  // Close any open alerts when a verse settings modal is opened
+  if (alertStore.getAlert('multiverse-auth-alert').status === 'open') {
+    alertStore.closeAlert('multiverse-auth-alert')
+    enterTokenButtonActive.value = false
+  }
+  if (alertStore.getAlert('multiverse-create-verse-alert').status === 'open') {
+    alertStore.closeAlert('multiverse-create-verse-alert')
+    createVerseButtonActive.value = false
+  }
 }
 
 // ======================================================================= Hooks
@@ -251,6 +270,7 @@ onBeforeUnmount(() => {
   bottom: torem(20);
   left: torem(20);
   --two-tone-a: #{$drippyCore};
+  z-index: 2;
   :deep(.icon) {
     path {
       fill: rgb(131, 147, 192);
@@ -268,16 +288,18 @@ onBeforeUnmount(() => {
   bottom: torem(20);
   right: torem(20);
   --two-tone-a: #{$billyBlue};
+  z-index: 2;
 }
 
 .icon {
   width: torem(16);
   height: torem(16);
-  margin-left: torem(10);
+  margin-left: torem(5);
 }
 
 .verses {
   position: relative;
   height: 100%;
+  z-index: 1;
 }
 </style>

@@ -19,7 +19,7 @@ MC.app.get('/authenticate-pocket', async (req, res) => {
         .findOne({ token })
         .populate({
           path: 'verses',
-          select: 'name settings average_colors',
+          select: 'name settings average_colors public',
           populate: { path: 'page_refs', select: 'name' }
         })
       if (!pocket) {

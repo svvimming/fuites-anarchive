@@ -1,13 +1,16 @@
 <template>
   <div class="verse-portal" :style="colorStyles">
     <!-- --------------------------------------------------------------- Orb -->
-    <div class="orb"></div>
+    <nuxt-link :to="to">
+      <div class="orb"></div>
+    </nuxt-link>
 
     <div :class="['label-container', `offset__${offset}`]">
       <!-- ----------------------------------------------------- Label Title -->
       <div class="verse-title">
         <span class="label">{{ verse.name }}</span>
         <ButtonIcon
+          v-if="!isPublic"
           class="verse-settings-button"
           @clicked="emit('open-verse-settings', verse._id)">
           <IconEllipsis class="icon-ellipsis" />
@@ -53,12 +56,17 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['open-verse-settings']) 
+const emit = defineEmits(['open-verse-settings'])
+
+// ======================================================================== Data
 const offset = ref('middle')
 
+// ==================================================================== Computed
 const height = computed(() => offset.value === 'middle' ? 50 : 76)
 const viewbox = computed(() => `0 0 4 ${height.value}`)
+const isPublic = computed(() => props.verse.public)
 
+// ===================================================================== Methods
 const colorStyles = computed(() => {
   return {
     '--orb-primary-color': props.verse.average_colors.primary,
@@ -72,6 +80,7 @@ const setOffsetPosition = () => {
   offset.value = offsets[index]
 }
 
+// ======================================================================= Hooks
 onMounted(() => {
   setOffsetPosition()
 })
@@ -102,6 +111,7 @@ onMounted(() => {
   height: torem(40);
   border-radius: 50%;
   filter: blur(torem(10));
+  transition: transform 200ms ease-in-out;
   &:before {
     content: '';
     position: absolute;
@@ -110,6 +120,9 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     border-radius: 50%;
+  }
+  &:hover {
+    transform: scale(1.5);
   }
 }
 
@@ -142,6 +155,7 @@ onMounted(() => {
   font-size: torem(20);
   font-family: 'Nanum Myeongjo', sans-serif;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .indicator {

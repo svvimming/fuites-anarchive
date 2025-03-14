@@ -180,6 +180,23 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method checkVerseExists
+   * @desc Checks if a verse with the given name already exists
+   * @param {String} verseName - The name of the verse to check
+   * @returns {Boolean} - True if verse exists, false otherwise
+   */
+  
+  const checkVerseExists = async verseName => {
+    try {
+      const result = await useFetchAuth('/get-verse', { verse: verseName, method: 'get' })
+      return !!result
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
    * @method postCreatePortal
    */
 
@@ -219,6 +236,7 @@ export const useVerseStore = defineStore('verse', () => {
     setColorSelectorHex,
     setPortalCreatorOpen,
     checkPageExists,
+    checkVerseExists,
     postCreatePortal
   }
 })

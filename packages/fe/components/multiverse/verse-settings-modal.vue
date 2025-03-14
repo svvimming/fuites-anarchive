@@ -3,27 +3,36 @@
     mode="alert"
     alert-id="multiverse-verse-settings-modal">
     <div class="verse-settings-modal">
-
-      <span class="heading">Verse Settings</span>
-      <span class="body-text"></span>
-
-      <span class="input-label">Verse name</span>
-      <div :class="['input-wrapper', { active: verseName }]">
-        <input
-          v-model="verseName"
-          class="input" />
+      <!-- ========================================================= Heading -->
+      <span class="heading">{{ `Settings for '${verse?.name}'` }}</span>
+      <span class="input-label">{{ `Give a token access to ${verse?.name}` }}</span>
+      <!-- ===================================================== Token Input -->
+      <div class="input-row">
+        <div :class="['input-wrapper', { error: tokenAddError }]">
+          <input
+            v-model="tokenToAdd"
+            autocomplete="off"
+            class="input"
+            autocapitalize="none"
+            placeholder="add a token" />
+          <span
+            v-if="tokenAddMessage"
+            :class="['feedback-message', { error: tokenAddError }]">
+            {{ tokenAddMessage }}
+          </span>
+        </div>
+        <ButtonBasic
+          :class="['add-token-button']"
+          @clicked="submitAddToken">
+          <span>Add</span>
+        </ButtonBasic>
       </div>
       <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
-          :class="['submit-button']"
-          @clicked="submitEditVerse">
-          <span>Submit</span>
-        </ButtonBasic>
-        <ButtonBasic
           :class="['cancel-button']"
           @clicked="emit('close-alert')">
-          <span>Cancel</span>
+          <span>Close</span>
         </ButtonBasic>
       </div>
 
@@ -34,8 +43,8 @@
 <script setup>
 // ======================================================================= Setup
 const props = defineProps({
-  verseId: {
-    type: [String, Boolean],
+  verse: {
+    type: Object,
     required: false,
     default: false
   }
@@ -45,10 +54,13 @@ const emit = defineEmits(['close-alert'])
 
 // ======================================================================== Data
 const alertStore = useZeroAlertStore()
-const verseName = ref('')
+const pocketStore = usePocketStore()
+const tokenToAdd = ref('')
+const tokenAddMessage = ref('')
+const tokenAddError = ref(false)
 
 // ==================================================================== Watchers
-watch(() => props.verseId, (val) => {
+watch(() => props.verse?._id, (val) => {
   const alert = alertStore.getAlert('multiverse-verse-settings-modal')
   if (val) {
     alertStore.openAlert('multiverse-verse-settings-modal')
@@ -58,8 +70,23 @@ watch(() => props.verseId, (val) => {
 })
 
 // ===================================================================== Methods
-const submitEditVerse = () => {
-  console.log('submitEditVerse')
+const submitAddToken = async() => {
+  tokenAddMessage.value = ''
+  tokenAddError.value = false
+  const result = await pocketStore.postAddVerseToToken({
+    verseId: props.verse._id,
+    targetToken: tokenToAdd.value
+  })
+  const type = result.type
+  if (type === 'verse-added-to-token') {
+    tokenAddMessage.value = 'Success!'
+  } else if (type === 'token-not-found') {
+    tokenAddMessage.value = 'This token doesn\'t exist, try another'
+    tokenAddError.value = true
+  } else if (type === 'token-already-has-access') {
+    tokenAddMessage.value = 'This token already has access to this verse'
+    tokenAddError.value = true
+  }
 }
 
 </script>
@@ -71,8 +98,16 @@ const submitEditVerse = () => {
   border-radius: torem(20);
   transition: 300ms ease;
   background-color: $athensGray;
+  min-width: torem(360);
   max-width: torem(460);
   @include modalShadow;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: torem(18);
 }
 
 // ////////////////////////////////////////////////////////// Modal Form Styling
@@ -105,11 +140,16 @@ const submitEditVerse = () => {
 
 .input-wrapper {
   position: relative;
-  margin-bottom: torem(18);
+  margin-right: torem(10);
   width: 100%;
   border-radius: torem(10);
   background-color: #DFE0E5;
   box-shadow: inset 0 2px 4px rgba(#595555, 0.25), inset 0 -2px 0 #F6F7FA;
+  &.error {
+    .input {
+      color: $pollyPink;
+    }
+  }
 }
 
 .input {
@@ -141,10 +181,8 @@ input::placeholder {
   font-weight: 500;
 }
 
-.token-text {
-  padding-top: torem(18);
-  margin-top: torem(18);
-  border-top: 1px solid rgba(#B2B9CC, 0.5);
+.add-token-button {
+  margin-bottom: torem(2);
 }
 
 .button-row {
@@ -157,13 +195,20 @@ input::placeholder {
   }
 }
 
-.submit-button {
-  background-color: $kellyGreen;
-  box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
-}
-
 .cancel-button {
   background-color: $pollyPink;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
+}
+
+.feedback-message {
+  position: absolute;
+  bottom: torem(-20);
+  left: torem(20);
+  font-size: torem(12);
+  color: $kellyGreen;
+  font-weight: 500;
+  &.error {
+    color: $pollyPink;
+  }
 }
 </style>

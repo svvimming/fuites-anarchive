@@ -6,17 +6,17 @@
       :drippy-scene="2"
       contact="top-left"
       class="pocket-toggle-tooltip">
-      <ButtonStamp
+      <ButtonDashed
         :active="pocketOpen"
         :stylized="buttonText"
-        :class="['text-content', { active: pocketOpen }]"
+        :flat-dashes="3"
+        :class="['pocket-toggle-button', { active: pocketOpen }]"
         @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
     </Tooltip>
 
-    <div :class="['pocket-container', { transform }, { open: pocketOpen }, { fullscreen }]">
+    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
-      <DashedBorderRectangle :inherit-from="pocketRef" @loaded="transform = true" />
        <!-- ===================================================== Token Auth -->
       <Auth
         heading="Token"
@@ -55,11 +55,11 @@
           </ButtonIcon>
         </Tooltip>
         <!-- -------------------------------------------- full screen toggle -->
-        <ButtonIcon
+        <!-- <ButtonIcon
           class="pocket-button fullscreen-toggle"
           @clicked="pocketStore.togglePocketFullscreen()">
           <IconExpand />
-        </ButtonIcon>
+        </ButtonIcon> -->
         <!-- ----------------------------------------------- uploader toggle -->
         <Tooltip
           tooltip="uploader-toggle-button"
@@ -99,7 +99,6 @@ const {
   pocketOpen,
 } = storeToRefs(pocketStore)
 
-const transform = ref(false)
 const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
@@ -163,17 +162,16 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-:deep(.button.stamp) {
-  position: relative;
-  z-index: 10;
-  transition: transform 200ms ease;
-  &.active {
-    transform: scale(1.1) translate(torem(-8), torem(-6)) rotate(-15deg);
-  }
-}
-
 .pocket-toggle-tooltip {
   z-index: 1000000;
+}
+
+.pocket-toggle-button {
+  --two-tone-a: #{$billyBlue};
+  --two-tone-b: white;
+  &.active {
+    transform: rotate(15deg);
+  }
 }
 
 .pocket-container {
@@ -188,11 +186,6 @@ onMounted(() => {
   opacity: 0;
   visibility: hidden;
   @include modalShadow;
-  &.transform {
-    transform: scale(0.1);
-    transform-origin: bottom right;
-    transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
-  }
   &.open {
     transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
     opacity: 1;

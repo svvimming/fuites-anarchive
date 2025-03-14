@@ -41,6 +41,11 @@ const VerseSchema = new Schema({
       type: String,
       required: false
     }
+  },
+  public: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 }, {
   timestamps: true,

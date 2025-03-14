@@ -6,7 +6,6 @@
       width="40"
       height="40"
       rx="20"
-      fill="white"
       stroke="#8393C0"
       stroke-width="2"
       stroke-linecap="round"

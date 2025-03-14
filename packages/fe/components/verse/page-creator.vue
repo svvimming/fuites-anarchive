@@ -68,7 +68,7 @@ onMounted(() => {
   }
   .text {
     display: block;
-    font-size: torem(12);
+    font-size: torem(14);
     line-height: 1.5;
   }
 }
@@ -104,7 +104,7 @@ onMounted(() => {
   width: unset;
   height: unset;
   .upload-prompt {
-    font-size: torem(12);
+    font-size: torem(14);
     padding-bottom: torem(42);
   }
   .metadata {

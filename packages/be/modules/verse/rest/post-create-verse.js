@@ -6,6 +6,17 @@ const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
+/**
+ * @method getRandomColor
+ * @desc Returns a random color as a hex string
+ * @returns {String}
+ */
+
+const getRandomColor = () => {
+  const randomColor = Math.floor(Math.random() * 16777215).toString(16)
+  return `#${randomColor.padStart(6, '0')}`
+}
+
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.app.post('/post-create-verse', async (req, res) => {
@@ -40,7 +51,11 @@ MC.app.post('/post-create-verse', async (req, res) => {
     // Create the new Verse
     const createdVerse = await MC.model.Verse.create({
       name: verseName,
-      page_refs: [createdPage._id, compostPage._id]
+      page_refs: [createdPage._id, compostPage._id],
+      average_colors: {
+        primary: getRandomColor(),
+        secondary: getRandomColor()
+      }
     })
     // Update the token with access to the new Verse
     const pocket = await MC.model.Pocket
@@ -49,7 +64,7 @@ MC.app.post('/post-create-verse', async (req, res) => {
       }, { new: true })
       .populate({
         path: 'verses',
-        select: 'name',
+        select: 'name settings average_colors public',
         populate: { path: 'page_refs', select: 'name' }
       })
     // Send the updated Pocket

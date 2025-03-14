@@ -72,22 +72,23 @@ const handleDeleteThingie = async () => {
   min-width: torem(340);
   padding: torem(16);
   border-radius: torem(20);
-  transform: translate(-50%, -50%) scale(0.8);
+  transform: translate(-50%, -50%);
   transition: 300ms ease;
   background-color: $athensGray;
   // box-shadow: 0 torem(6) torem(10) rgba(0, 0, 0, 0.25);
   @include modalShadow;
-  .title {
-    font-weight: 600;
-  }
   .title,
   .prompt {
     margin-bottom: torem(10);
   }
   .text {
     display: block;
-    font-size: torem(12);
+    font-size: torem(14);
     line-height: 1.5;
+  }
+  .title {
+    font-weight: 600;
+    font-size: torem(16);
   }
 }
 

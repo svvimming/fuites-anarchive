@@ -1,7 +1,9 @@
 <template>
   <div id="landing-site-anchor" ref="anchorRef">
     <!-- ========================================================== Dropdown -->
-    <DropdownSelector class="landing-sites-dropdown">
+    <DropdownSelector
+      v-if="authenticated"
+      class="landing-sites-dropdown">
       <template #toggle-button="{ togglePanel, panelOpen }">
         <Tooltip
           tooltip="settings-toggle-button"
@@ -54,6 +56,8 @@ const generalStore = useGeneralStore()
 const { siteData, activeModes } = storeToRefs(generalStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const anchorRef = ref(null)
 const dropdownOpen = ref(false)

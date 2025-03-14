@@ -74,7 +74,7 @@ const handleCloseDrippy = () => {
   }
   .text {
     display: block;
-    font-size: torem(12);
+    font-size: torem(14);
     line-height: 1.5;
   }
   .option-button {
