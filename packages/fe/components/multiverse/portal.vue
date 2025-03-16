@@ -94,9 +94,6 @@ onMounted(() => {
   position: absolute;
   left: 0;
   top: 50%;
-  .label {
-    filter: drop-shadow(0 0 torem(10) var(--orb-primary-color)) drop-shadow(0 0 torem(16) var(--orb-secondary-color));
-  }
   .orb {
     &:before {
       background-color: var(--orb-primary-color);
@@ -149,12 +146,17 @@ onMounted(() => {
 
 .verse-title {
   position: relative;
+  border-radius: torem(25);
+  background-color: $drippyCore;
+  padding: torem(8) torem(16);
 }
 
 .label {
-  font-size: torem(20);
-  font-family: 'Nanum Myeongjo', sans-serif;
-  font-weight: 700;
+  display: flex;
+  font-size: torem(16);
+  font-weight: 600;
+  line-height: 1.2;
+  color: white;
   white-space: nowrap;
 }
 
@@ -169,9 +171,12 @@ onMounted(() => {
   position: absolute;
   padding: torem(6);
   bottom: 50%;
-  left: 100%;
+  left: calc(100% - torem(15));
   width: torem(30);
   height: torem(30);
+  &:before {
+    transform: scale(0.99);
+  }
   :deep(.svg-border) {
     rect {
       x: 1.5;
@@ -179,12 +184,12 @@ onMounted(() => {
       width: torem(39);
       height: torem(39);
       stroke-width: 3;
-      stroke: $gullGray;
+      stroke: $drippyCore;
     }
   }
   .icon-ellipsis {
     :deep(circle) {
-      fill: $gullGray;
+      fill: $drippyCore;
     }
   }
 }

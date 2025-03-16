@@ -84,6 +84,9 @@ const props = defineProps({
 .basic-button.theme__clear {
   background-color: transparent;
   border-radius: 0;
+  &:before {
+    display: none;
+  }
   .slot {
     display: flex;
     align-items: center;
@@ -96,7 +99,8 @@ const props = defineProps({
   &:hover {
     .slot {
       letter-spacing: 3px;
-      font-family: 'Source Serif Pro';
+      // font-family: 'Source Serif Pro';
+      // transform: translateY(torem(-0.5));
     }
   }
 }

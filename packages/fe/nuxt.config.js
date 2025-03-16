@@ -81,7 +81,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@pinia/nuxt',
-    // '@nuxt/content',
+    '@nuxt/content',
     '@/modules/site.mjs'
   ],
   // ============================================================ [Module] Pinia
@@ -89,22 +89,16 @@ export default defineNuxtConfig({
     storesDirs: [
       './stores/**'
     ]
-  }
+  },
   // ==================================================== [Module] @nuxt/content
-  // content: {
-  //   watch: false,
-  //   markdown: {
-  //     toc: {
-  //       depth: 2,
-  //       searcthDepth: 2
-  //     }
-  //   },
-  //   sources: {
-  //     data: {
-  //       driver: 'fs',
-  //       prefix: '/data',
-  //       base: Path.resolve(__dirname, 'data')
-  //     }
-  //   }
-  // }
+  content: {
+    watch: false,
+    sources: {
+      data: {
+        driver: 'fs',
+        prefix: '/data',
+        base: Path.resolve(__dirname, 'data')
+      }
+    }
+  }
 })

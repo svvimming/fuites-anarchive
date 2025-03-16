@@ -15,21 +15,29 @@
 </template>
 
 <script setup>
+// ======================================================================= Setup
+const props = defineProps({
+  baseFontsize: {
+    type: Number,
+    required: false,
+    default: 26
+  }
+})
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)
 
 const text = 'fuit.es'
-const baseFontsize = 26
-const params = {
-  lsx: 20, // horizontal Letter spacing
-  lsy: 20, // vertical Letter spacing
-  jx: 4, // horizontal jitter
-  jy: 4, // vertical jitter
+// const baseFontsize = 26
+const params = computed(() => ({
+  lsx: props.baseFontsize * (20 / 26), // horizontal Letter spacing
+  lsy: props.baseFontsize * (20 / 26), // vertical Letter spacing
+  jx: props.baseFontsize * (4 / 26) , // horizontal jitter
+  jy: props.baseFontsize * (4 / 26), // vertical jitter
   freq: 0.25, // sin wave frequency
-  fsj: 6, // font size jitter
+  fsj: props.baseFontsize * (6 / 26), // font size jitter
   deg: 10 // 3d rotation degrees
-}
+}))
 
 // ==================================================================== Computed
 const letters = computed(() => text.split(''))
@@ -38,10 +46,10 @@ const fontfamilies = computed(() => siteData.value?.settings?.fonts?.map(font =>
 // ===================================================================== Methods
 const getFontClass = () => fontfamilies.value[Math.floor(Math.random() * fontfamilies.value.length)]
 const getLetterStyles = index => ({
-  left: `${(params.lsx * index + Math.random() * params.jx)}px`,
-  top: `${(params.lsy * Math.sin(params.freq * index) + Math.random() * params.jy)}px`,
-  fontSize: `${baseFontsize + (Math.floor(params.fsj * Math.random()))}px`,
-  transform: `rotate3d(${Math.random()}, ${Math.random()}, ${Math.random()}, ${params.deg}deg)`
+  left: `${(params.value.lsx * index + Math.random() * params.value.jx)}px`,
+  top: `${(params.value.lsy * Math.sin(params.value.freq * index) + Math.random() * params.value.jy)}px`,
+  fontSize: `${props.baseFontsize + (Math.floor(params.value.fsj * Math.random()))}px`,
+  transform: `rotate3d(${Math.random()}, ${Math.random()}, ${Math.random()}, ${params.value.deg}deg)`
 })
 
 </script>

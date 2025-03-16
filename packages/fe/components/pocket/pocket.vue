@@ -50,8 +50,11 @@
         <Tooltip
           tooltip="token-input-toggle-button"
           class="token-input-toggle">
-          <ButtonIcon class="pocket-button" @clicked="tokenInputOpen = !tokenInputOpen">
-            🔑
+          <ButtonIcon
+            :active="tokenInputOpen"
+            class="pocket-button"
+            @clicked="tokenInputOpen = !tokenInputOpen">
+            <IconKey class="key-icon"/>
           </ButtonIcon>
         </Tooltip>
         <!-- -------------------------------------------- full screen toggle -->
@@ -294,6 +297,21 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    path,
+    circle {
+      transition: 200ms ease;
+      fill: $drippyCore;
+    }
+  }
+  .pocket-button {
+    &.active {
+      :deep(.slot) {
+        path,
+        circle {
+          fill: white;
+        }
+      }
+    }
   }
 }
 
