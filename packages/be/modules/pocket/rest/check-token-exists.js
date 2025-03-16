@@ -12,7 +12,7 @@ MC.app.get('/check-token-exists', async (req, res) => {
   try {
     const token = req.query.token
     const pocket = await MC.model.Pocket.findOne({ token }).exec()
-    SendData(res, 200, 'Pocket exists', pocket ? true : false)
+    SendData(res, 200, 'Pocket exists', !!pocket)
   } catch (e) {
     console.log('============================= [Endpoint: /check-token-exists]')
     console.log(e)

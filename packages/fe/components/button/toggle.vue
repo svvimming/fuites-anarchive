@@ -17,6 +17,7 @@
 </template>
 
 <script setup>
+// ======================================================================= Setup
 const props = defineProps({
   active:  {
     type: Boolean,
@@ -28,6 +29,7 @@ const emit = defineEmits(['clicked'])
 </script>
 
 <style lang="scss" scoped>
+// /////////////////////////////////////////////////////////////////////// Style
 .toggle-button {
   display: flex;
   align-items: center;
@@ -47,9 +49,10 @@ const emit = defineEmits(['clicked'])
   width: torem(52);
   height: torem(24);
   transition: 200ms ease;
-  background-color: #AAAAAA;
+  background-color: #DFE0E5;
   border-radius: torem(12);
   margin-right: torem(12);
+  box-shadow: 0 torem(2) 0 #F6F7FA, inset 0 torem(2) torem(3) rgba(#595555, 0.25);
 }
 
 .thumbnail {
@@ -62,6 +65,7 @@ const emit = defineEmits(['clicked'])
   transform: translateX(0);
   background-color: white;
   transition: 200ms ease;
+  box-shadow: inset 0 torem(-2) torem(4) #B2B9CC, 0 torem(1) torem(2) rgba(#262222, 0.25);
 }
 
 .slot {
