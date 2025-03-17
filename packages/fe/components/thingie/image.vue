@@ -135,7 +135,7 @@ const drawImageThingieHitArea = useDebounceFn(() => {
       imgNode.value.getNode().drawHitFromCache()
     }
   })
-}, 100)
+}, 200)
 
 // ======================================================================= Hooks
 onMounted(() => { loadImage() })
