@@ -69,8 +69,8 @@ const isPublic = computed(() => props.verse.public)
 // ===================================================================== Methods
 const colorStyles = computed(() => {
   return {
-    '--orb-primary-color': props.verse.average_colors.primary,
-    '--orb-secondary-color': props.verse.average_colors.secondary
+    '--orb-primary-color': props.verse.average_colors?.primary,
+    '--orb-secondary-color': props.verse.average_colors?.secondary
   }
 })
 

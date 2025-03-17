@@ -156,12 +156,12 @@ input::placeholder {
 }
 
 .submit-button {
-  background-color: $kellyGreen;
+  background-color: $kellyGreen !important;
   box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
 }
 
 .cancel-button {
-  background-color: $pollyPink;
+  background-color: $pollyPink !important;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
 }
 

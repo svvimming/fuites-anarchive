@@ -31,7 +31,7 @@
       Info
     </ButtonBasic>
     <!-- ======================================================== Info Modal -->
-    <MultiverseInfoModal :markdown="infoMarkdown[0]" />
+    <MultiverseInfoModal v-if="Array.isArray(infoMarkdown)" :markdown="infoMarkdown[0]" />
     <!-- =========================================== Create New Verse Button -->
     <ButtonDashed
       v-if="authenticated"
