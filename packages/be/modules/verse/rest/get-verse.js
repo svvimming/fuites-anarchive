@@ -11,7 +11,10 @@ const MC = require('@Root/config')
 MC.app.get('/get-verse', async (req, res) => {
   try {
     const name = req.query.verse
-    const verse = await MC.model.Verse.findOne({ name }).exec()
+    const verse = await MC.model.Verse.findOne({ name }).populate({
+      path: 'page_refs',
+      select: 'name'
+    }).exec()
     SendData(res, 200, 'Pocket retrieved successfully', verse)
   } catch (e) {
     console.log('====================================== [Endpoint: /get-verse]')
