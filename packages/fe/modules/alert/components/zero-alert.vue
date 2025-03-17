@@ -52,16 +52,18 @@ const closeAlert = () => {
 
 <style lang="scss" scoped>
 .alert {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  top: 50%;
+  left: 50%;
+  transition: 300ms ease;
+  z-index: 2;
   &.mode__modal {
-    position: absolute;
-    visibility: hidden;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
-    transition: 300ms ease;
-    z-index: 2;
     &:before {
       content: '';
       position: absolute;
@@ -71,12 +73,15 @@ const closeAlert = () => {
       height: 100%;
       background-color: rgba($woodsmoke, 0.8);
     }
-    &.open {
-      visibility: visible;
-      opacity: 1;
-      .message {
-        transform: translate(-50%, -50%) scale(1);
-      }
+  }
+  &.mode__alert {
+    transform: translate(-50%, -50%);
+  }
+  &.open {
+    visibility: visible;
+    opacity: 1;
+    .message {
+      transform: translate(-50%, -50%) scale(1);
     }
   }
 }

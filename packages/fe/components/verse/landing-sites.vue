@@ -1,7 +1,9 @@
 <template>
   <div id="landing-site-anchor" ref="anchorRef">
     <!-- ========================================================== Dropdown -->
-    <DropdownSelector class="landing-sites-dropdown">
+    <DropdownSelector
+      v-if="authenticated"
+      class="landing-sites-dropdown">
       <template #toggle-button="{ togglePanel, panelOpen }">
         <Tooltip
           tooltip="settings-toggle-button"
@@ -23,7 +25,7 @@
               :key="mode.slug"
               :tooltip="mode.tooltip">
               <ButtonToggle :active="activeModes[mode.slug]" @clicked="handleModeClick(mode.slug)">
-                <span :class="['label', 'nanum', { active: activeModes[mode.slug] }]">
+                <span :class="['label', { active: activeModes[mode.slug] }]">
                   {{ mode.label }}
                 </span>
               </ButtonToggle>
@@ -54,6 +56,8 @@ const generalStore = useGeneralStore()
 const { siteData, activeModes } = storeToRefs(generalStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const anchorRef = ref(null)
 const dropdownOpen = ref(false)
@@ -96,7 +100,7 @@ const handleModeClick = slug => {
 
 .landing-site-toggle,
 .audio-toggle {
-  --two-tone-a: #{$gullGray};
+  --two-tone-a: #{$drippyCore};
   --two-tone-b: white;
   :deep(.slot) {
     path,
@@ -116,24 +120,52 @@ const handleModeClick = slug => {
   }
 }
 
+.landing-site-toggle {
+  &:after {
+    content: '';
+    position: absolute;
+    right: calc(100% - torem(5.5));
+    top: torem(6);
+    width: 0;
+    height: 0;
+    border-top: torem(14) solid transparent;
+    border-bottom: torem(14) solid transparent;
+    border-right: torem(14) solid white;
+    z-index: -1;
+    transition: 200ms ease-in;
+    opacity: 0;
+    transform: translateX(torem(14));
+    // background-color: var(--two-tone-b);
+  }
+  &.active {
+    &:after {
+      transition: 200ms ease;
+      transform: translateX(0);
+      opacity: 1;
+      border-right: torem(14) solid var(--two-tone-a);
+    }
+  }
+}
+
 // /////////////////////////////////////////////////////////////// Dropdown Menu
 .landing-sites-dropdown {
   position: relative;
   :deep(.panel-container) {
-    right: 0;
+    top: 0;
+    right: 100%;
     left: unset;
-    transform: translate(0, torem(12));
+    transform: translate(torem(-20), 0);
     &:not(.open) {
-      transform: translate(0, torem(20));
+      transform: translate(torem(-20), torem(8));
     }
   }
 }
 
 .mode-toggles {
   padding: torem(16);
-  border-radius: torem(10);
+  border-radius: torem(25);
   background-color: $athensGray;
-  @include modalShadow;
+  box-shadow: 0 torem(6) torem(6) rgba(#3E4559, 0.25);
   :deep(.tooltip) {
     margin-left: 0 !important;
     &:not(:last-child) {
@@ -144,20 +176,37 @@ const handleModeClick = slug => {
 
 // //////////////////////////////////////////////////////////////// Mode Toggles
 .label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: torem(16);
   line-height: 1;
-  color: #AAAAAA;
+  color: $drippyCore;
   white-space: nowrap;
   transition: 200ms ease;
-  &.active {
-    color: $effy;
-  }
 }
 
 // //////////////////////////////////////////////////////////////// Audio Toggle
 .audio-toggle {
   display: flex;
   align-items: center;
+  &:after {
+    content: '';
+    position: absolute;
+    left: calc(50% - torem(1));
+    top: torem(-7);
+    width: 0;
+    height: torem(50);
+    background-color: $pollyPink;
+    border-radius: torem(2);
+    border: torem(1) solid $pollyPink;
+    transform: rotate(45deg);
+    transform-origin: center;
+    opacity: 1;
+    transition: 200ms ease;
+  }
+  &.active {
+    &:after {
+      opacity: 0;
+    }
+  }
 }
 </style>

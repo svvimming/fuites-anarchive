@@ -1,16 +1,20 @@
 <template>
-  <svg class="svg" width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    class="svg"
+    width="40"
+    height="40"
+    viewBox="0 0 40 40"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg">
     <rect
       x="1"
       y="1"
-      width="40"
-      height="40"
-      rx="20"
-      stroke="#8393C0"
+      width="38"
+      height="38"
+      rx="19"
+      stroke="#F2A60D"
       stroke-width="2"
-      stroke-linecap="round"
-      stroke-dasharray="20 11"
-      stroke-dashoffset="9" />
+      stroke-dasharray="2 4 6  8  2.5  2 4 1.5" />
   </svg>
 </template>
 

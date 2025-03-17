@@ -15,7 +15,7 @@
     </Tooltip>
 
     <button :class="['portal-indicator', { active }]">
-      <span>
+      <span class="portal-to">
         portal to
       </span>
       <IconArrowRight class="icon"/>
@@ -62,17 +62,17 @@ watch(mouseOverScene, val => {
   display: flex;
   justify-content: center;
   align-items: center;
-  --two-tone-a: #{$blueHaze};
+  --two-tone-a: #{$drippyCore};
   --two-tone-b: white;
   .icon {
     width: torem(20);
     height: torem(20);
     path,
     circle {
-      stroke: $blueHaze;
+      stroke: $drippyCore;
     }
     circle {
-      fill: $blueHaze;
+      fill: $drippyCore;
     }
   }
 }
@@ -82,22 +82,27 @@ watch(mouseOverScene, val => {
   align-items: center;
   height: torem(40);
   padding: torem(10) torem(16);
-  border: torem(1.5) dashed $blueHaze;
   border-radius: torem(24);
   margin-left: torem(20);
-  background-color: white;
+  background-color: $athensGray;
   font-size: torem(16);
   font-weight: 600;
-  color: $blueHaze;
+  color: $drippyCore;
   opacity: 0;
   visibility: hidden;
   transition: 200ms ease;
-  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0px 6px 6px rgba(#3E4559, 0.25));
+  .portal-to {
+    font-style: italic;
+  }
   span {
     margin-bottom: torem(2);
   }
   .icon {
     margin: 0 torem(10);
+    :deep(path) {
+      stroke: $drippyCore;
+    }
   }
   &.active {
     opacity: 1;

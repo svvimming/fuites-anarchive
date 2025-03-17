@@ -69,8 +69,8 @@ const imageConfig = computed(() => ({
 }))
 
 const clipConfig = computed(() => ({
-  width: 200,
-  height: 200,
+  width: props.parentConfig.width,
+  height: props.parentConfig.height,
   image: image.value
 }))
 

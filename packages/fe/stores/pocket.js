@@ -184,6 +184,39 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method checkTokenExists
+   * @desc Checks if the supplied token exists in the database
+   * @param {String} token - The token to check
+   * @returns {Boolean} - True if token exists, false otherwise
+   */
+  
+  const checkTokenExists = async token => {
+    try {
+      const result = await useFetchAuth('/check-token-exists', { token, method: 'get' })
+      return result
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
+   * @method postAddVerseToToken
+   */
+
+  const postAddVerseToToken = async incoming => {
+    try {
+      const response = await useFetchAuth('/post-add-token-verse', Object.assign({}, incoming, {
+        method: 'post'
+      }))
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -203,7 +236,9 @@ export const usePocketStore = defineStore('pocket', () => {
     togglePocketFullscreen,
     setDrippyScene,
     getAuthPocket,
-    postCreateVerse
+    postCreateVerse,
+    checkTokenExists,
+    postAddVerseToToken
   }
 })
 

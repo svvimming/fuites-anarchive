@@ -51,6 +51,11 @@ const props = defineProps({
   thingie: {
     type: Object,
     required: true
+  },
+  forceBounds: {
+    type: [Object, Boolean],
+    required: false,
+    default: false
   }
 })
 
@@ -70,7 +75,7 @@ const loaded = ref(false)
 const selectionColor = useGetSelectionColor(props.thingie.colors)
 
 // ==================================================================== Computed
-const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
+const bounds = computed(() => props.forceBounds || page.value.data.bounds || { x: 0, y: 0 })
 const id = computed(() => props.thingie._id)
 const type = computed(() => props.thingie.thingie_type)
 const at = computed(() => props.thingie.at)

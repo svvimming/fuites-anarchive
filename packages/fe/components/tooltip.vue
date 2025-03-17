@@ -204,7 +204,7 @@ $offsetOnHover: 0rem;
   box-shadow: torem(1) torem(3) torem(5) rgba(0, 0, 0, 0.15);
   :deep(span) {
     display: block;
-    font-size: torem(12);
+    font-size: torem(14);
     line-height: normal;
     &.heading {
       font-weight: 600;
@@ -212,6 +212,7 @@ $offsetOnHover: 0rem;
     }
     &.message {
       font-weight: 500;
+      font-size: torem(14);
     }
   }
 }

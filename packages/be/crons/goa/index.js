@@ -112,6 +112,43 @@ const getPageCenterOfMass = thingies => {
 }
 
 /**
+ * @method averageHexColors
+ * @desc Takes an array of hex colors and returns their average as a hex color
+ * @param {[String]} hexColors - Array of hex color codes (with or without # prefix)
+ * @returns {String} - Averaged hex color with # prefix, or random hex color if no input
+ */
+
+const averageHexColors = hexColors => {
+  // Return random color if no colors provided
+  if (!hexColors || hexColors.length === 0) {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16)
+    return `#${randomColor.padStart(6, '0')}`
+  }
+  // Remove # prefix if present and convert to RGB components
+  const rgbColors = hexColors.map(hex => {
+    const cleanHex = hex.replace('#', '')
+    return {
+      r: parseInt(cleanHex.substring(0, 2), 16),
+      g: parseInt(cleanHex.substring(2, 4), 16),
+      b: parseInt(cleanHex.substring(4, 6), 16)
+    }
+  })
+  // Calculate average for each RGB component
+  const avgColor = rgbColors.reduce((acc, curr) => ({
+    r: acc.r + curr.r,
+    g: acc.g + curr.g,
+    b: acc.b + curr.b
+  }), { r: 0, g: 0, b: 0 })
+  // Divide by number of colors to get average
+  avgColor.r = Math.round(avgColor.r / rgbColors.length)
+  avgColor.g = Math.round(avgColor.g / rgbColors.length)
+  avgColor.b = Math.round(avgColor.b / rgbColors.length)
+  // Convert back to hex
+  const toHex = n => n.toString(16).padStart(2, '0')
+  return `#${toHex(avgColor.r)}${toHex(avgColor.g)}${toHex(avgColor.b)}`
+}
+
+/**
  * @method pagePreaccelerator
  * @param {Object} verse
  */
@@ -121,6 +158,9 @@ const pagePreaccelerator = async verse => {
     // Get all pages in this verse
     const pages = await MC.model.Page.find({ verse: verse.name })
     const len = pages.length
+    // Initialize arrays to store primary and secondary colors
+    const primaryColors = []
+    const secondaryColors = []
     // Loop through each page
     for (let i = 0; i < len; i++) {
       const page = pages[i]
@@ -129,6 +169,15 @@ const pagePreaccelerator = async verse => {
       const pageThingies = await MC.model.Thingie
         .find({ verse: verse.name, location: page.name })
         .populate({ path: 'file_ref', select: 'filename file_ext filesize' })
+      // Get all the primary and secondary colors on this page
+      pageThingies.forEach(thingie => {
+        if (thingie.colors[0]) {
+          primaryColors.push(thingie.colors[0])
+        }
+        if (thingie.colors[1]) {
+          secondaryColors.push(thingie.colors[1])
+        }
+      })
       // Get data to calculate thingie preaccelerations
       const pageCenterOfMass = getPageCenterOfMass(pageThingies)
       const thingieUpdateFloor = pageThingies.reduce((prev, curr) => (prev?.update_count || 0) < (curr?.update_count || 0) ? prev : curr, { update_count: 0 })
@@ -188,6 +237,11 @@ const pagePreaccelerator = async verse => {
         socket.emit('cron|page-state-update|initialize', updated)
       }
     }
+    // Calculate average primary and secondary colors for this verse
+    const primary = averageHexColors(primaryColors)
+    const secondary = averageHexColors(secondaryColors)
+    // Return the average colors of this verse
+    return { primary, secondary }
   } catch (e) {
     console.log('======================== [Function: GOA - pagePreaccelerator]')
     console.log(e)
@@ -203,7 +257,10 @@ const versesPreaccelerator = async () => {
     const verses = await MC.model.Verse.find({})
     const len = verses.length
     for (let i = 0; i < len; i++) {
-      await pagePreaccelerator(verses[i])
+      // Calculate preaccelerations of all thingies in this verse and return average colors of the verse
+      const verseColorResults = await pagePreaccelerator(verses[i])
+      // Update the verse with the average colors
+      await MC.model.Verse.findOneAndUpdate({ _id: verses[i]._id }, { average_colors: verseColorResults })
     }
   } catch (e) {
     console.log('====================== [function: GOA - versesPreaccelerator]')

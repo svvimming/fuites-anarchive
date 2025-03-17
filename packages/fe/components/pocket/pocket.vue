@@ -6,22 +6,24 @@
       :drippy-scene="2"
       contact="top-left"
       class="pocket-toggle-tooltip">
-      <ButtonStamp
+      <ButtonDashed
         :active="pocketOpen"
         :stylized="buttonText"
-        :class="['text-content', { active: pocketOpen }]"
+        :flat-dashes="3"
+        :class="['pocket-toggle-button', { active: pocketOpen }]"
         @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
     </Tooltip>
 
-    <div :class="['pocket-container', { transform }, { open: pocketOpen }, { fullscreen }]">
+    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
-      <DashedBorderRectangle :inherit-from="pocketRef" @loaded="transform = true" />
        <!-- ===================================================== Token Auth -->
       <Auth
+        heading="Token"
         :message="authMessage"
         :class="['auth-modal', { open: !authenticated || tokenInputOpen || !pageExists }]"
-        @authenticate-success="handleAuthenticateSuccess" />
+        @authenticate-success="handleAuthenticateSuccess"
+        @cancel-authentication="handleCancelAuthentication" />
       <!-- ========================================================== Pocket -->
       <div
         v-show="authenticated && pageExists"
@@ -35,12 +37,13 @@
         <PocketSingleFileUploader :uploader-id="pocketUploaderId" />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
-          <v-stage ref="stageRef" :config="{ width: 650, height: 400 }">
+          <v-stage ref="stageRef" :config="pocketCanvasConfig">
             <v-layer>
               <Thingie
                 v-for="thingie in pocketThingies"
                 :key="thingie._id"
-                :thingie="thingie" />
+                :thingie="thingie"
+                :force-bounds="forceBounds" />
             </v-layer>
           </v-stage>
         </ClientOnly>
@@ -48,16 +51,19 @@
         <Tooltip
           tooltip="token-input-toggle-button"
           class="token-input-toggle">
-          <ButtonIcon class="pocket-button" @clicked="tokenInputOpen = !tokenInputOpen">
-            🔑
+          <ButtonIcon
+            :active="tokenInputOpen"
+            class="pocket-button"
+            @clicked="tokenInputOpen = !tokenInputOpen">
+            <IconKey class="key-icon"/>
           </ButtonIcon>
         </Tooltip>
         <!-- -------------------------------------------- full screen toggle -->
-        <ButtonIcon
+        <!-- <ButtonIcon
           class="pocket-button fullscreen-toggle"
           @clicked="pocketStore.togglePocketFullscreen()">
           <IconExpand />
-        </ButtonIcon>
+        </ButtonIcon> -->
         <!-- ----------------------------------------------- uploader toggle -->
         <Tooltip
           tooltip="uploader-toggle-button"
@@ -81,6 +87,9 @@
 </template>
 
 <script setup>
+// ===================================================================== Imports
+import { useThrottleFn } from '@vueuse/core'
+
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
@@ -97,17 +106,21 @@ const {
   pocketOpen,
 } = storeToRefs(pocketStore)
 
-const transform = ref(false)
 const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
+const resizeEventListener = ref(false)
+const pocketCanvasConfig = ref({
+  width: 650,
+  height: 400
+})
 const buttonText = [
-  { letter: 'p', classes: 'pt-serif italic' },
-  { letter: 'o', classes: 'pt-sans bold' },
-  { letter: 'c', classes: 'pt-serif italic' },
-  { letter: 'k', classes: 'pt-sans bold italic' },
-  { letter: 'e', classes: 'pt-serif' },
-  { letter: 't', classes: 'pt-serif bold italic' }
+  { letter: 'p', classes: 'source-serif-pro italic semibold' },
+  { letter: 'o', classes: 'source-sans-pro bold' },
+  { letter: 'c', classes: 'source-serif-pro italic semibold' },
+  { letter: 'k', classes: 'source-sans-pro bold italic' },
+  { letter: 'e', classes: 'source-serif-pro semibold' },
+  { letter: 't', classes: 'source-serif-pro bold italic' }
 ]
 const pocketUploaderId = 'pocket-uploader'
 
@@ -117,6 +130,7 @@ useHandleThingieDragEvents(pocketRef, stageRef)
 const uploader = computed(() => uploaders.value[pocketUploaderId])
 const uploaderOpen = computed(() => uploader.value?.open)
 const pageExists = computed(() => page.value.data?._id && !page.value.data.doesNotExist)
+const forceBounds = computed(() => ({ x: pocketCanvasConfig.value.width, y: pocketCanvasConfig.value.height }))
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data?._id).sort((a, b) => a.zIndex - b.zIndex))
 const authMessage = computed(() => {
   if (!pocket.value.authenticated && !authenticated.value) {
@@ -143,27 +157,54 @@ const handleAuthenticateSuccess = () => {
   }
 }
 
+const handleCancelAuthentication = () => {
+  if (authenticated.value) {
+    tokenInputOpen.value = false
+  } else {
+    pocketStore.setPocketOpen(false)
+  }
+}
+
+const getPocketCanvasConfig = useThrottleFn(() => {
+  const pocketRect = pocketRef.value.getBoundingClientRect()
+  pocketCanvasConfig.value.width = Math.max(pocketRect.width, 650)
+  pocketCanvasConfig.value.height = Math.max(pocketRect.height, 400)
+}, 50)
+
 // ======================================================================= Hooks
 onMounted(() => {
   // Register the pocket uploader object in the pocket store
   pocketStore.registerUploader(pocketUploaderId)
+  // Register the resize event listener
+  resizeEventListener.value = () => { getPocketCanvasConfig() }
+  window.addEventListener('resize', resizeEventListener.value)
+  // Get the initial pocket canvas config
+  nextTick(() => {
+    setTimeout(() => {
+      getPocketCanvasConfig()
+    }, 500)
+  })
 })
 
+onUnmounted(() => {
+  if (resizeEventListener.value) {
+    window.removeEventListener('resize', resizeEventListener.value)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-:deep(.button.stamp) {
-  position: relative;
-  z-index: 10;
-  transition: transform 200ms ease;
-  &.active {
-    transform: scale(1.1) translate(torem(-8), torem(-6)) rotate(-15deg);
-  }
-}
-
 .pocket-toggle-tooltip {
   z-index: 1000000;
+}
+
+.pocket-toggle-button {
+  --two-tone-a: #{$billyBlue};
+  --two-tone-b: white;
+  &.active {
+    transform: rotate(15deg);
+  }
 }
 
 .pocket-container {
@@ -178,11 +219,6 @@ onMounted(() => {
   opacity: 0;
   visibility: hidden;
   @include modalShadow;
-  &.transform {
-    transform: scale(0.1);
-    transform-origin: bottom right;
-    transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
-  }
   &.open {
     transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
     opacity: 1;
@@ -291,6 +327,21 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    path,
+    circle {
+      transition: 200ms ease;
+      fill: $drippyCore;
+    }
+  }
+  .pocket-button {
+    &.active {
+      :deep(.slot) {
+        path,
+        circle {
+          fill: white;
+        }
+      }
+    }
   }
 }
 

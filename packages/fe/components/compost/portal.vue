@@ -11,10 +11,12 @@
         <span>{{ `Visit the compost anytime at fuit.es/${verseName}/compost to see what is happening in there!` }}</span>
       </template>
 
-      <ButtonStamp
+      <ButtonDashed
+        v-if="authenticated"
         :active="compostPortalOpen"
         :stylized="buttonText"
-        :class="['text-content', { active: compostPortalOpen }]"
+        :flat-dashes="3"
+        :class="['compost-portal-button', { active: compostPortalOpen }]"
         @clicked="compostPortalOpen = !compostPortalOpen" />
 
     </Tooltip>
@@ -55,16 +57,18 @@ const generalStore = useGeneralStore()
 const { dragndrop } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { verse } = storeToRefs(verseStore)
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 const compostPortalOpen = ref(false)
 const buttonText = [
-  { letter: 'c', classes: 'pt-serif italic' },
-  { letter: 'o', classes: 'pt-sans bold' },
-  { letter: 'm', classes: 'pt-serif italic' },
-  { letter: 'p', classes: 'pt-sans bold italic' },
-  { letter: 'o', classes: 'pt-serif' },
-  { letter: 's', classes: 'pt-serif bold italic' },
-  { letter: 't', classes: 'pt-serif italic' }
+  { letter: 'c', classes: 'source-serif-pro semibold italic' },
+  { letter: 'o', classes: 'source-sans-pro bold' },
+  { letter: 'm', classes: 'source-serif-pro semibold' },
+  { letter: 'p', classes: 'source-sans-pro bold italic' },
+  { letter: 'o', classes: 'source-serif-pro semibold' },
+  { letter: 's', classes: 'source-serif-pro semibold italic' },
+  { letter: 't', classes: 'source-sans-pro bold italic' }
 ]
 
 // ==================================================================== Computed
@@ -74,23 +78,6 @@ const verseName = computed(() => verse.value.data?.name)
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-:deep(.button.stamp) {
-  position: relative;
-  z-index: 11;
-  padding: 0 1.125rem 0.25rem 1.125rem;
-  transition: transform 200ms ease;
-  --stamp-color: #{$asparagus};
-  &.active {
-    transform: scale(1.1) translate(torem(8), torem(-6)) rotate(15deg);
-  }
-  &:before {
-    transform: scaleY(-1);
-  }
-  .svg-border {
-    transform: scaleY(-1);
-  }
-}
-
 .compost-portal-tooltip {
   z-index: 100000;
   :deep(.tip) {
@@ -100,6 +87,14 @@ const verseName = computed(() => verse.value.data?.name)
         margin-top: torem(12);
       }
     }
+  }
+}
+
+.compost-portal-button {
+  --two-tone-a: #{$kellyGreen};
+  --two-tone-b: white;
+  &.active {
+    transform: rotate(-15deg);
   }
 }
 
