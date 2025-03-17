@@ -37,12 +37,13 @@
         <PocketSingleFileUploader :uploader-id="pocketUploaderId" />
         <!-- -------------------------------------------------------- canvas -->
         <ClientOnly>
-          <v-stage ref="stageRef" :config="{ width: 650, height: 400 }">
+          <v-stage ref="stageRef" :config="pocketCanvasConfig">
             <v-layer>
               <Thingie
                 v-for="thingie in pocketThingies"
                 :key="thingie._id"
-                :thingie="thingie" />
+                :thingie="thingie"
+                :force-bounds="forceBounds" />
             </v-layer>
           </v-stage>
         </ClientOnly>
@@ -86,6 +87,9 @@
 </template>
 
 <script setup>
+// ===================================================================== Imports
+import { useThrottleFn } from '@vueuse/core'
+
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
@@ -105,6 +109,11 @@ const {
 const pocketRef = ref(null)
 const stageRef = ref(null)
 const tokenInputOpen = ref(false)
+const resizeEventListener = ref(false)
+const pocketCanvasConfig = ref({
+  width: 650,
+  height: 400
+})
 const buttonText = [
   { letter: 'p', classes: 'source-serif-pro italic semibold' },
   { letter: 'o', classes: 'source-sans-pro bold' },
@@ -121,6 +130,7 @@ useHandleThingieDragEvents(pocketRef, stageRef)
 const uploader = computed(() => uploaders.value[pocketUploaderId])
 const uploaderOpen = computed(() => uploader.value?.open)
 const pageExists = computed(() => page.value.data?._id && !page.value.data.doesNotExist)
+const forceBounds = computed(() => ({ x: pocketCanvasConfig.value.width, y: pocketCanvasConfig.value.height }))
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data?._id).sort((a, b) => a.zIndex - b.zIndex))
 const authMessage = computed(() => {
   if (!pocket.value.authenticated && !authenticated.value) {
@@ -155,12 +165,32 @@ const handleCancelAuthentication = () => {
   }
 }
 
+const getPocketCanvasConfig = useThrottleFn(() => {
+  const pocketRect = pocketRef.value.getBoundingClientRect()
+  pocketCanvasConfig.value.width = Math.max(pocketRect.width, 650)
+  pocketCanvasConfig.value.height = Math.max(pocketRect.height, 400)
+}, 50)
+
 // ======================================================================= Hooks
 onMounted(() => {
   // Register the pocket uploader object in the pocket store
   pocketStore.registerUploader(pocketUploaderId)
+  // Register the resize event listener
+  resizeEventListener.value = () => { getPocketCanvasConfig() }
+  window.addEventListener('resize', resizeEventListener.value)
+  // Get the initial pocket canvas config
+  nextTick(() => {
+    setTimeout(() => {
+      getPocketCanvasConfig()
+    }, 500)
+  })
 })
 
+onUnmounted(() => {
+  if (resizeEventListener.value) {
+    window.removeEventListener('resize', resizeEventListener.value)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
