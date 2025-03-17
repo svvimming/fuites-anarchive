@@ -65,10 +65,17 @@ const layerRef = ref(null)
 const initLayer = ref({})
 const canvasConfig = ref({ id: 'page-canvas' })
 const resizeEventListener = ref(false)
+const keyupEventListener = ref(false)
 const keydownEventListener = ref(false)
 const loadedIds = ref([])
 const pageshotReady = ref(false)
 const { initPageshot, status } = usePageshotBot(stageRef)
+const controller = ref({
+  arrowLeft: false,
+  arrowRight: false,
+  arrowUp: false,
+  arrowDown: false
+})
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -173,6 +180,14 @@ const handleMouseWheel = e => {
     x: layer.x() - e.evt.deltaX,
     y: layer.y() - e.evt.deltaY
   })
+  if (Object.values(controller.value).some(value => value)) {
+    controller.value = {
+      arrowLeft: false,
+      arrowRight: false,
+      arrowUp: false,
+      arrowDown: false
+    }
+  }
 }
 
 /**
@@ -261,6 +276,42 @@ const setCanvasDimensions = () => {
   Object.assign(canvasConfig.value, { width: window.innerWidth, height: window.innerHeight })
 }
 
+/**
+ * @method initController
+ * @desc Initializes the arrow key controller for the given key
+ */
+
+const initController = key => {
+  controller.value[key] = true
+  const moveAmount = 5
+  const moveInterval = setInterval(() => {
+    if (!controller.value[key]) {
+      clearInterval(moveInterval)
+      return
+    }
+    const layer = layerRef.value.getNode()
+    const currentX = layer.x()
+    const currentY = layer.y()
+    let newX = currentX
+    let newY = currentY
+    switch (key) {
+      case 'arrowLeft':
+        newX = currentX + moveAmount
+        break
+      case 'arrowRight':
+        newX = currentX - moveAmount
+        break
+      case 'arrowUp':
+        newY = currentY + moveAmount
+        break
+      case 'arrowDown':
+        newY = currentY - moveAmount
+        break
+    }
+    positionScene({ x: newX, y: newY })
+  }, 16)
+}
+
 // ======================================================================= Hooks
 onMounted(() => {
   // Set canvas dimensions based on current viewport dimensions
@@ -282,12 +333,17 @@ onMounted(() => {
     nextTick(() => { scaleScene(1, true) })
   }, 25)
   window.addEventListener('resize', resizeEventListener.value)
+  // Handle keydown events
   keydownEventListener.value = e => {
     const key = e.key
     const code = e.code
     const keyCode = e.keyCode
     const minus = key === '-' || code === 'Minus' || keyCode === 189
     const plus = key === '+' || code === 'Equal' || keyCode === 187
+    const arrowLeft = key === 'ArrowLeft' || code === 'ArrowLeft' || keyCode === 37
+    const arrowRight = key === 'ArrowRight' || code === 'ArrowRight' || keyCode === 39
+    const arrowUp = key === 'ArrowUp' || code === 'ArrowUp' || keyCode === 38
+    const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
     if (minus && e.metaKey) {
       e.preventDefault()
       scaleScene(-1)
@@ -296,14 +352,46 @@ onMounted(() => {
       e.preventDefault()
       scaleScene(1)
     }
+    if (arrowLeft && arrowLeft !== controller.value.arrowLeft) {
+      initController('arrowLeft')
+    }
+    if (arrowRight && arrowRight !== controller.value.arrowRight) {
+      initController('arrowRight')
+    }
+    if (arrowUp && arrowUp !== controller.value.arrowUp) {
+      initController('arrowUp')
+    }
+    if (arrowDown && arrowDown !== controller.value.arrowDown) {
+      initController('arrowDown')
+    }
   }
   window.addEventListener('keydown', keydownEventListener.value)
+  // Handle keyup events
+  keyupEventListener.value = e => {
+    const key = e.key
+    const code = e.code
+    const keyCode = e.keyCode
+    if (key === 'ArrowLeft' || code === 'ArrowLeft' || keyCode === 37) {
+      controller.value.arrowLeft = false
+    }
+    if (key === 'ArrowRight' || code === 'ArrowRight' || keyCode === 39) {
+      controller.value.arrowRight = false
+    }
+    if (key === 'ArrowUp' || code === 'ArrowUp' || keyCode === 38) {    
+      controller.value.arrowUp = false
+    }
+    if (key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40) {
+      controller.value.arrowDown = false
+    }
+  }
+  window.addEventListener('keyup', keyupEventListener.value)
 })
 
 onBeforeUnmount(() => {
   loadedIds.value = []
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)
+  window.removeEventListener('keyup', keyupEventListener.value)
 })
 </script>
 
