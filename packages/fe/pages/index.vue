@@ -31,7 +31,7 @@
       Info
     </ButtonBasic>
     <!-- ======================================================== Info Modal -->
-    <MultiverseInfoModal v-if="Array.isArray(infoMarkdown)" :markdown="infoMarkdown[0]" />
+    <MultiverseInfoModal v-if="infoMarkdown" :markdown="infoMarkdown" />
     <!-- =========================================== Create New Verse Button -->
     <ButtonDashed
       v-if="authenticated"
@@ -101,6 +101,7 @@ definePageMeta({ layout: 'multiverse' })
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket, authenticated } = storeToRefs(pocketStore)
@@ -116,9 +117,23 @@ const resizeEventListener = ref(null)
 const viewportDimensions = ref({ width: 0, height: 0 })
 
 // fetch Verse
-await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
+await useAsyncData('multiverse', async () => {
+  // Get default public verse
+  await verseStore.getVerse({ verse: 'fog' })
+  // Get info modal markdown
+  const data = await queryContent().where({ _path: '/data/info' }).find()
+  if (Array.isArray(data) && data[0]) {
+    await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
+  }
+  return true
+}, { server: false })
 // fetch Info Modal Markdown
-const { data: infoMarkdown } = await useAsyncData('info-modal-data', async () => await queryContent().where({ _path: '/data/info' }).find())
+// await useAsyncData('info-modal-data', async () => {
+//   const data = await queryContent().where({ _path: '/data/info' }).find()
+//   if (Array.isArray(data)) {
+//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
+//   }
+// })
 
 const createVerseButtonText = [
   { letter: 'c', classes: 'source-serif-pro semibold italic' },
@@ -171,7 +186,8 @@ if (process.client) {
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
-// const verses = computed(() => Array.from({ length: 10 }, (_, index) => index))
+const infoMarkdown = computed(() => siteData.value['info-markdown'])
+
 // ==================================================================== Watchers
 watch(() => verses.value.length, () => {
   nextTick(() => {
