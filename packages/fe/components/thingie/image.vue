@@ -16,9 +16,6 @@
 </template>
 
 <script setup>
-// ====================================================================== Import
-import { useDebounceFn } from '@vueuse/core'
-
 // ======================================================================= Props
 const props = defineProps({
   fileRef: {
@@ -134,16 +131,19 @@ const loadImage = () => {
  * @method drawImageThingieHitArea 
  */
 
-const drawImageThingieHitArea = useDebounceFn(() => {
+const drawImageThingieHitArea = () => {
   nextTick(() => {
     if (imgNode.value && !baseUrl.value.startsWith('https://localhost')) {
       imgNode.value.getNode().cache()
       imgNode.value.getNode().drawHitFromCache()
     }
   })
-}, 200)
+}
 
 // ======================================================================= Hooks
-onMounted(() => { loadImage() })
+onMounted(() => {
+  loadImage()
+  drawImageThingieHitArea()
+})
 
 </script>
