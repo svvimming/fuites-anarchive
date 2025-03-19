@@ -57,16 +57,12 @@ const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 
-const { data } = await useAsyncData(`page-${route.fullPath}`, async () => {
-  // Get verse
-  await verseStore.getVerse({ verse: route.params.verse })
-  // Get info modal markdown
-  const data = await queryContent().where({ _path: '/data/info' }).find()
-  if (Array.isArray(data) && data[0]) {
-    await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
-  }
-  return true
-}, { server: false })
+const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
+
+// await queryContent().where({ _path: '/data/info' }).find()
+//   if (Array.isArray(data) && data[0]) {
+//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
+//   }
 
 const pageRef = ref(null)
 const stageRef = ref(null)

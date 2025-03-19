@@ -50,7 +50,10 @@ const enterTokenButtonText = [
 
 // ===================================================================== Methods
 const toggleInfoModal = () => {
-  alertStore.openAlert('multiverse-info-modal')
+  const alert = alertStore.getAlert('multiverse-info-modal')
+  if (alert) {
+    alertStore.openAlert('multiverse-info-modal')
+  }
 }
 
 const handleEnterTokenClick = () => {

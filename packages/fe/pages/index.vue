@@ -24,7 +24,7 @@
     </div>
     <!-- ======================================================= Info Button -->
     <ButtonBasic
-      v-if="authenticated"
+      v-if="authenticated && infoMarkdown"
       theme="clear"
       class="info-button"
       @clicked="toggleInfoModal">
@@ -117,16 +117,7 @@ const resizeEventListener = ref(null)
 const viewportDimensions = ref({ width: 0, height: 0 })
 
 // fetch Verse
-await useAsyncData('multiverse', async () => {
-  // Get default public verse
-  await verseStore.getVerse({ verse: 'fog' })
-  // Get info modal markdown
-  const data = await queryContent().where({ _path: '/data/info' }).find()
-  if (Array.isArray(data) && data[0]) {
-    await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
-  }
-  return true
-}, { server: false })
+await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 // fetch Info Modal Markdown
 // await useAsyncData('info-modal-data', async () => {
 //   const data = await queryContent().where({ _path: '/data/info' }).find()
@@ -134,6 +125,12 @@ await useAsyncData('multiverse', async () => {
 //     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
 //   }
 // })
+
+// const data = await queryContent().where({ _path: '/data/info' }).find()
+//   if (Array.isArray(data) && data[0]) {
+//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
+//   }
+//   return true
 
 const createVerseButtonText = [
   { letter: 'c', classes: 'source-serif-pro semibold italic' },
