@@ -94,7 +94,13 @@ watch(() => props.clipActive, (val) => {
  */
 
 const applyClipPath = () => {
-  clipPath.value = useGetSvgPath(props.path, clipConfig.value.width, clipConfig.value.height, { closed: true })
+  clipPath.value = useGetSvgPath(props.path, {
+    closed: true,
+    rescale: {
+      x: props.parentConfig.width,
+      y: props.parentConfig.height
+    }
+  })
   if (clipPath.value && clipGroup.value) {
     clipGroupVisible.value = true
     nextTick(() => {

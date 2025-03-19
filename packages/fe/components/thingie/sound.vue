@@ -70,7 +70,7 @@ const collectorStore = useCollectorStore()
 const { editing } = storeToRefs(collectorStore)
 
 // ==================================================================== Computed
-const svgPath = computed(() => useGetSvgPath(props.path, 200, 200, { closed: false }) || '')
+const svgPath = computed(() => useGetSvgPath(props.path, { closed: false }) || '')
 const playState = computed(() => audioContext.value?.state || 'suspended')
 const opacity = computed(() => playState.value === 'running' ? 0.4 + (amplitude.value * 0.6) : 0.4)
 const color = computed(() => editing.value === props.parentConfig.thingie_id && colorSelectorHex.value.sound ? colorSelectorHex.value.sound : props.colors[props.colors.length - 1] || '#6c6575')

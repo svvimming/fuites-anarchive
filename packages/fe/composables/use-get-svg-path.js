@@ -298,12 +298,56 @@ const simplifySvgPath = (points, options = {}) => {
     return getSegmentsPathData(fit(points.map(typeof points[0].x === 'number' ? (p) => point(p.x, p.y) : (p) => point(p[0], p[1])), options.closed, options.tolerance ?? 2.5), options.closed, options.precision ?? 5);
 };
 
-export const useGetSvgPath = (pathData, width, height, options = {}) => {
+/**
+ * Maps a sequence of coordinates to specified maximum ranges
+ * @param {number[]} inputString - Array of integers where even indices are x coordinates and odd indices are y coordinates
+ * @param {number} maxX - Maximum x value to map to
+ * @param {number} maxY - Maximum y value to map to
+ * @returns {number[]} Array of mapped coordinates in the same format as input
+ */
+const useCoordinateMapper = (inputString, outputMaxX, outputMaxY) => {
+  // Extract the coordinates from the input string  
+  const coordinates = inputString.split(' ').map(Number)
+  // If there are no coordinates, return an empty array
+  if (coordinates.length === 0) return [];
+  // Initialize arrays to store x and y coordinates
+  const xValues = []
+  const yValues = []
+  // Parse the coordinates into x and y values
+  for (let i = 0; i < coordinates.length; i++) {
+      if (i % 2 === 0) { // x coordinate
+          xValues.push(coordinates[i])
+      } else { // y coordinate
+          yValues.push(coordinates[i])
+      }
+  }
+  // Find the maximum x and y values in the input coordinates
+  const inputMaxX = Math.max(...xValues)
+  const inputMaxY = Math.max(...yValues)
+  // Calculate the scaling factors for x and y coordinates
+  const scaleX = outputMaxX / inputMaxX
+  const scaleY = outputMaxY / inputMaxY
+  // Initialize an array to store the mapped coordinates
+  const mappedCoordinates = []
+  // Map the coordinates to the new range
+  for (let i = 0; i < xValues.length; i++) {
+      const x = xValues[i] * scaleX
+      const y = yValues[i] * scaleY
+      mappedCoordinates.push(x, y)
+  }
+  // Return the mapped coordinates as a string
+  return mappedCoordinates.join(' ')
+} 
+
+export const useGetSvgPath = (pathData, options = {}) => {
+  if (options.rescale) {
+    pathData = useCoordinateMapper(pathData, options.rescale.x, options.rescale.y)
+  }
   const data = []
-  const coords = pathData.split(' ').map(num => parseInt(num) / 200)
+  const coords = pathData.split(' ').map(num => parseInt(num))
   const len = coords.length
   for (let i = 0; i < len - 1; i += 2) {
-    data.push([coords[i] * width, coords[i + 1] * height])
+    data.push([coords[i], coords[i + 1]])
   }
   if (!options.hasOwnProperty('tolerance')) {
     options.tolerance = 0.001

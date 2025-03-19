@@ -92,10 +92,19 @@ const config = computed(() => ({
 }))
 
 const loadingSvg = computed(() => {
-  const path = type.value === 'text' ? 'M 4 0 H 196 C 198 0 200 2 200 4 V 196 C 200 198 198 200 196 200 H 4 C 2 200 0 198 0 196 V 4 C 0 2 2 0 4 0 Z' : useGetSvgPath(props.thingie.path_data, 200, 200, { closed: true })
+  let path = ''
+  if (type.value === 'text') {
+    path = 'M 4 0 H 196 C 198 0 200 2 200 4 V 196 C 200 198 198 200 196 200 H 4 C 2 200 0 198 0 196 V 4 C 0 2 2 0 4 0 Z'
+  } else {
+    path = useGetSvgPath(props.thingie.path_data, {
+      closed: true,
+      rescale: {
+        x: at.value.width,
+        y: at.value.height
+      }
+    })
+  }
   return {
-    scaleX: at.value.width / 200,
-    scaleY: at.value.height / 200,
     data: path,
     fill: '#c2c2c2',
     opacity: 0.25
