@@ -59,11 +59,6 @@ const { authenticated } = storeToRefs(pocketStore)
 
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
-// await queryContent().where({ _path: '/data/info' }).find()
-//   if (Array.isArray(data) && data[0]) {
-//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
-//   }
-
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)

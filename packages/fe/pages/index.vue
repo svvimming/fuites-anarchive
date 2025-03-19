@@ -101,7 +101,6 @@ definePageMeta({ layout: 'multiverse' })
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { siteData } = storeToRefs(generalStore)
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket, authenticated } = storeToRefs(pocketStore)
@@ -115,22 +114,6 @@ const versesCtnRef = ref(null)
 const randomOffsets = ref([])
 const resizeEventListener = ref(null)
 const viewportDimensions = ref({ width: 0, height: 0 })
-
-// fetch Verse
-await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
-// fetch Info Modal Markdown
-// await useAsyncData('info-modal-data', async () => {
-//   const data = await queryContent().where({ _path: '/data/info' }).find()
-//   if (Array.isArray(data)) {
-//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
-//   }
-// })
-
-// const data = await queryContent().where({ _path: '/data/info' }).find()
-//   if (Array.isArray(data) && data[0]) {
-//     await generalStore.setSiteData({ key: 'info-markdown', value: data[0] })
-//   }
-//   return true
 
 const createVerseButtonText = [
   { letter: 'c', classes: 'source-serif-pro semibold italic' },
@@ -169,7 +152,10 @@ const backgroundVerses = [
   { color: '#73E5D8', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
   { color: '#E57373', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() }
 ]
-
+// fetch Verse
+await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
+// fetch Info Markdown
+const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
 // Check local storage for auth token and try to authenticate if found
@@ -183,7 +169,7 @@ if (process.client) {
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
-const infoMarkdown = computed(() => siteData.value['info-markdown'])
+const infoMarkdown = computed(() => markdown.value.find(item => item.path === '/info'))
 
 // ==================================================================== Watchers
 watch(() => verses.value.length, () => {
