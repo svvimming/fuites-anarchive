@@ -31,8 +31,7 @@ import { useResizeObserver } from '@vueuse/core'
 import { StarterKit } from '@tiptap/starter-kit'
 import {
   Editor,
-  EditorContent,
-  Extension
+  EditorContent
 } from '@tiptap/vue-3'
 import Underline from '@tiptap/extension-underline'
 // import Strike from '@tiptap/extension-strike'
