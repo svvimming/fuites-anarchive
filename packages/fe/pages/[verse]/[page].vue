@@ -324,7 +324,7 @@ onMounted(() => {
       x: -0.5 * (bounds.value.x - canvasConfig.value.width),
       y: -0.5 * (bounds.value.y - canvasConfig.value.height)
     }
-    verseStore.updateSceneData({ initialized: true })
+    verseStore.updateSceneData(Object.assign({ initialized: true }, initLayer.value))
   }
   Object.assign(canvasConfig.value, { scaleX: sceneData.value.scale, scaleY: sceneData.value.scale })
   // Add event listeners

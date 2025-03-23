@@ -7,9 +7,6 @@
 </template>
 
 <script setup>
-// ====================================================================== Import
-import html2canvas from 'html2canvas'
-
 // ======================================================================= Setup
 const props = defineProps({
   parentConfig: {
@@ -62,36 +59,33 @@ onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
-  const div = document.createElement('div')
-  div.innerHTML = props.text
-  div.classList.add('thingie-rich-text')
-  div.style.width = `${textConfig.value.width}px`
-  div.style.height = `${textConfig.value.height}px`
-  div.style.position = 'absolute'
-  div.style.fontSize = props.text.fontsize + 'px'
-  div.style.lineHeight = 1
-  div.style.whiteSpace= 'break-spaces'
-  div.style.wordWrap = 'break-word'
-  // div.style.left = '0px'
-  // div.style.top = '0px'
-  document.body.appendChild(div)
-  html2canvas(div, {
-    width: textConfig.value.width,
-    height: textConfig.value.height,
-    scale: 4,
-    backgroundColor: 'rgba(0,0,0,0)',
-  }).then((cnv) => {
-    raster.value = cnv
+  if (process.client) {
+    const div = document.createElement('div')
+    div.innerHTML = props.text
+    div.classList.add('thingie-rich-text')
+    div.style.width = `${textConfig.value.width}px`
+    div.style.height = `${textConfig.value.height}px`
+    div.style.position = 'absolute'
+    div.style.fontSize = props.text.fontsize + 'px'
+    div.style.lineHeight = 1
+    div.style.whiteSpace= 'break-spaces'
+    div.style.wordWrap = 'break-word'
+    // div.style.left = '0px'
+    // div.style.top = '0px'
+    document.body.appendChild(div)
+    // Render div to canvas
+    const rendered = useRenderTextToCanvas(div)
+    raster.value = rendered.canvas
     key.value++
     div.remove()
     emit('loaded', true)
     // draw hit area for raster
-    // nextTick(() => {
-    //   if (imgNode.value) {
-    //     imgNode.value.getNode().cache()
-    //     imgNode.value.getNode().drawHitFromCache()
-    //   }
-    // })
-  })
+    nextTick(() => {
+      if (imgNode.value) {
+        imgNode.value.getNode().cache()
+        imgNode.value.getNode().drawHitFromCache()
+      }
+    })
+  }
 }
 </script>
