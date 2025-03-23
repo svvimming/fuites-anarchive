@@ -94,13 +94,23 @@ export const useRenderTextToCanvas = (target) => {
     }
   }
 
-  if (target) {
-    const targetRect = target.getBoundingClientRect()
-    canvas.value = document.createElement('canvas')
-    canvas.value.width = targetRect.width
-    canvas.value.height = targetRect.height
-    ctx.value = canvas.value.getContext('2d')
+  const createHiPPICanvas = (w, h, ratio) => {
+    const cnv = document.createElement('canvas')
+    cnv.width = w * ratio
+    cnv.height = h * ratio
+    cnv.style.width = w + 'px'
+    cnv.style.height = h + 'px'
+    cnv.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
+    return cnv
+  }
 
+  if (target) {
+    // Get target div dimensions
+    const targetRect = target.getBoundingClientRect()
+    // Create hi res canvas
+    canvas.value = createHiPPICanvas(targetRect.width, targetRect.height, 2)
+    ctx.value = canvas.value.getContext('2d')
+    // render childnodes to canvas
     Array.from(target.childNodes).forEach(node => {
       processNode(node);
     })
