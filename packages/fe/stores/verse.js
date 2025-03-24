@@ -97,9 +97,15 @@ export const useVerseStore = defineStore('verse', () => {
    * @method updatePage
    */
 
-  const updatePage = incoming => {
+  const updatePage = async incoming => {
     if (incoming.name === page.value.data.name && incoming.verse === verse.value.data.name) {
-      page.value.data = incoming
+      // Add filtered portals to incoming page
+      incoming.filtered_portals = await useFilterDuplicatePortals(incoming.portal_refs)
+      useSetStoreData(page, {
+        loading: false,
+        refresh: false,
+        data: incoming
+      })
     }
   }
 

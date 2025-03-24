@@ -85,7 +85,7 @@ typings/
 dist
 
 # Nuxt Content
-.data/content
+.data
 
 # vuepress build output
 .vuepress/dist

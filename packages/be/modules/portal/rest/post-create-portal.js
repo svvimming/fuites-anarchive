@@ -44,7 +44,17 @@ MC.app.post('/post-create-portal', async (req, res) => {
         { new: true }
       ).populate({
         path: 'portal_refs',
-        populate: { path: 'thingie_ref', select: 'colors' }
+        sort: { createdAt: 1 },
+        populate: [
+          {
+            path: 'thingie_ref',
+            select: 'colors'
+          },
+          {
+            path: 'vertices.page_ref',
+            select: 'print_refs'
+          }
+        ]
       })
       // Broadcast page updates to the socket connection
       MC.socket.io
