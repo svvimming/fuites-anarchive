@@ -17,8 +17,8 @@
       :config="portalConfig"
       @mouseover="hovering = true"
       @mouseout="hovering = false"
-      @mousedown="handlePortalMouseDown($event)"
-      @mouseup="handlePortalMouseUp" />
+      @mouseup="handlePortalMouseUp"
+      @dblclick="handleDoubleClick" />
 
   </v-group>
 </template>
@@ -38,7 +38,7 @@ const props = defineProps({
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
-const { baseUrl } = storeToRefs(generalStore)
+const { baseUrl, portalEditing } = storeToRefs(generalStore)
 
 const groupRef = ref(null)
 const imageRef = ref(null)
@@ -50,7 +50,6 @@ const image = ref(false)
 const hovering = ref(false)
 const animation = ref(false)
 const radius = 12 // portal radius
-const draggable = ref(false)
 
 // ==================================================================== Computed
 const verseName = computed(() => verse.value.data?.name)
@@ -66,7 +65,7 @@ const destPrintId = computed(() => {
 })
 
 const groupConfig = computed(() => ({
-  draggable: draggable.value,
+  draggable: portalEditing.value,
   x: thisVertex.value.at.x,
   y: thisVertex.value.at.y
 }))
@@ -143,25 +142,23 @@ watch(destPrintId, id => {
 
 // ===================================================================== Methods
 /**
- * @method handlePortalMouseDown
- */
-
-const handlePortalMouseDown = e => {
-  if (e.evt.shiftKey) {
-    draggable.value = true
-  }
-}
-
-/**
  * @method handlePortalMouseUp
  */
 
 const handlePortalMouseUp = async () => {
-  if (!draggable.value && verseName.value && thatVertex.value) {
+  if (verseName.value && thatVertex.value && !portalEditing.value) {
     const newRoute = `/${verseName.value}/${thatVertex.value.location}`
     await navigateTo({ path: newRoute })
-  } else {
-    draggable.value = false
+  }
+}
+
+/**
+ * @method handleDoubleClick
+ */
+
+const handleDoubleClick = () => {
+  if (portalEditing.value) {
+    console.log('portal double click')
   }
 }
 

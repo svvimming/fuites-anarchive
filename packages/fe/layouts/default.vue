@@ -50,11 +50,11 @@ watch(() => page.value.data, async () => {
    * Add keydown/up event listeners
    */
   if (!keydownEventListener.value) {
-    keydownEventListener.value = e => { setDragndropOnShift(e, true) }
+    keydownEventListener.value = e => { setInteractionModes(e, true) }
     window.addEventListener('keydown', keydownEventListener.value) 
   }
   if (!keyupEventListener.value) {
-    keyupEventListener.value = e => { setDragndropOnShift(e, false) }
+    keyupEventListener.value = e => { setInteractionModes(e, false) }
     window.addEventListener('keyup', keyupEventListener.value)  
   }
 })
@@ -92,12 +92,14 @@ watch(() => page.value.data, async () => {
 }
 
 /**
- * @method setDragndropOnShift
+ * @method setInteractionModes
  */
 
-const setDragndropOnShift = (e, val) => {
+const setInteractionModes = (e, val) => {
   const drag = e.key === 'd' || e.code === 'KeyD' || e.keyCode === 68
   if (drag) { generalStore.setDragndrop(val) }
+  const shift = e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.keyCode === 16
+  if (shift) { generalStore.setPortalEditing(val) }
 }
 
 // ======================================================================= Hooks
