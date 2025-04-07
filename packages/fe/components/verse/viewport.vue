@@ -80,6 +80,8 @@ watch(drippy, (scene) => {
   &.drippy-scene-1 {
     :deep(.first-time-user-alert) {
       z-index: 5;
+      opacity: 1 !important;
+      visibility: visible !important;
     }
   }
   &.drippy-scene-2 {
