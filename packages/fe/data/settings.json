@@ -123,6 +123,10 @@
       "heading": "Audio",
       "message": "You won't hear any of the sound thingies on this page until you turn the audio on!"
     },
+    "thingie-lock-toggle": {
+      "heading": "Unlock thingies",
+      "message": "When there are locked thingies on a page, this button appears so that you can unlock them."
+    },
     "pocket-toggle-button-closed": {
       "heading": "Pocket",
       "message": "Open your pocket to store and retrieve thingies from the current page, as well as add new thingies from your device."

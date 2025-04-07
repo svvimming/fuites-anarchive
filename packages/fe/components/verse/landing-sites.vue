@@ -34,6 +34,17 @@
         </div>
       </template>
     </DropdownSelector>
+    <!-- ====================================================== Lock Toggle -->
+    <Tooltip
+      v-if="lockedThingies.length > 0"
+      tooltip="thingie-lock-toggle">
+      <ButtonIcon
+        class="lock-toggle"
+        :active="true"
+        @click="handleUnlockPageThingies">
+        <IconLock />
+      </ButtonIcon>
+    </Tooltip>
     <!-- ====================================================== Audio Toggle -->
     <Tooltip tooltip="audio-toggle-button">
       <ButtonIcon
@@ -58,6 +69,10 @@ const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
+const verseStore = useVerseStore()
+const { page } = storeToRefs(verseStore)
+const collectorStore = useCollectorStore()
+const { thingies } = storeToRefs(collectorStore)
 
 const anchorRef = ref(null)
 const dropdownOpen = ref(false)
@@ -70,6 +85,7 @@ onClickOutside(anchorRef, () => {
 
 // ==================================================================== Computed
 const landingSites = computed(() => siteData.value?.settings?.landingSites || [])
+const lockedThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === page.value.data?.name && thingie.locked))
 
 // ==================================================================== Watchers
 watch(() => activeModes.value.audio, (val) => {
@@ -81,8 +97,25 @@ watch(() => activeModes.value.audio, (val) => {
 })
 
 // ===================================================================== Methods
+/**
+ * @method handleModeClick
+ */
+
 const handleModeClick = slug => {
   generalStore.toggleMode(slug)
+}
+
+/**
+ * @method handleUnlockPageThingies
+ */
+
+const handleUnlockPageThingies = () => {
+  const locked = lockedThingies.value.map(item => item._id)
+  const len = locked.length
+  for (let i = 0; i < len; i++) {
+    const lockedId = locked[i]
+    collectorStore.initThingieUpdate({ _id: lockedId, locked: false })
+  }
 }
 
 </script>
@@ -92,13 +125,12 @@ const handleModeClick = slug => {
 #landing-site-anchor {
   display: flex;
   :deep(.tooltip) {
-    &:last-child {
-      margin-left: torem(20);
-    }
+    margin-left: torem(20);
   }
 }
 
 .landing-site-toggle,
+.lock-toggle,
 .audio-toggle {
   --two-tone-a: #{$drippyCore};
   --two-tone-b: white;
