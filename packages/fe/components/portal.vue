@@ -1,7 +1,9 @@
 <template>
   <v-group
     ref="groupRef"
-    :config="groupConfig">
+    :config="groupConfig"
+    __use-strict-mode
+    @dragmove="drag($event)">
 
     <v-image
       v-if="image"
@@ -15,7 +17,8 @@
       :config="portalConfig"
       @mouseover="hovering = true"
       @mouseout="hovering = false"
-      @click="handlePortalClick" />
+      @mousedown="handlePortalMouseDown($event)"
+      @mouseup="handlePortalMouseUp" />
 
   </v-group>
 </template>
@@ -47,6 +50,7 @@ const image = ref(false)
 const hovering = ref(false)
 const animation = ref(false)
 const radius = 12 // portal radius
+const draggable = ref(false)
 
 // ==================================================================== Computed
 const verseName = computed(() => verse.value.data?.name)
@@ -54,6 +58,7 @@ const vertices = computed(() => props.portal.vertices)
 const colors = computed(() => props.portal.thingie_ref?.colors || [])
 const thisVertex = computed(() => vertices.value.find(vertex => vertex.location === page.value.data.name))
 const thatVertex = computed(() => vertices.value.find(vertex => vertex.location !== page.value.data.name))
+const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 
 const destPrintId = computed(() => {
   const prints = thatVertex.value.page_ref?.print_refs || []
@@ -61,6 +66,7 @@ const destPrintId = computed(() => {
 })
 
 const groupConfig = computed(() => ({
+  draggable: draggable.value,
   x: thisVertex.value.at.x,
   y: thisVertex.value.at.y
 }))
@@ -137,14 +143,53 @@ watch(destPrintId, id => {
 
 // ===================================================================== Methods
 /**
- * @method handlePortalClick
+ * @method handlePortalMouseDown
  */
 
-const handlePortalClick = async () => {
-  if (verseName.value && thatVertex.value) {
+const handlePortalMouseDown = e => {
+  if (e.evt.shiftKey) {
+    draggable.value = true
+  }
+}
+
+/**
+ * @method handlePortalMouseUp
+ */
+
+const handlePortalMouseUp = async () => {
+  if (!draggable.value && verseName.value && thatVertex.value) {
     const newRoute = `/${verseName.value}/${thatVertex.value.location}`
     await navigateTo({ path: newRoute })
-  }  
+  } else {
+    draggable.value = false
+  }
+}
+
+/**
+ * @method drag
+ */
+
+const drag = e => {
+  const attrs = e.target.attrs
+  const newVerts = []
+  for (let i = 0; i < 2; i++) {
+    const v = vertices.value[i]
+    if (v.location === page.value.data.name) {
+      newVerts.push({
+        ...v,
+        at: {
+          x: Math.max(0, Math.min(attrs.x, bounds.value.x)),
+          y: Math.max(0, Math.min(attrs.y, bounds.value.y))
+        }
+      })
+    } else {
+      newVerts.push(Object.assign({}, v))
+    }
+  }
+  verseStore.initPortalUpdate({
+    _id: props.portal._id,
+    vertices: newVerts
+  })
 }
 
 /**

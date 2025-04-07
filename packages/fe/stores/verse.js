@@ -7,6 +7,10 @@ import { useFilterDuplicatePortals } from '../composables/use-filter-duplicate-p
 export const useVerseStore = defineStore('verse', () => {
   // ==================================================================== import
   const alertStore = useZeroAlertStore()
+  const generalStore = useGeneralStore()
+  const { sessionId } = storeToRefs(generalStore)
+  const websocketStore = useWebsocketStore()
+  const { socket } = storeToRefs(websocketStore)
 
   // ===================================================================== state
   const verse = ref({
@@ -223,6 +227,34 @@ export const useVerseStore = defineStore('verse', () => {
     }
   }
 
+  /**
+   * @method initPortalUpdate
+   */
+
+  const initPortalUpdate = async incoming => {
+    // Broadcast the update to db and other clients
+    socket.value.emit('update-portal', Object.assign({}, incoming, {
+      omit_session_id: sessionId.value,
+    }))
+    // Update the store
+    const index = page.value.data.filtered_portals.findIndex(p => p._id === incoming._id)
+    if (index > -1) {
+      page.value.data.filtered_portals[index].vertices = incoming.vertices
+    }
+  }
+
+  /**
+   * @method updatePortal
+   * Update the a portal in the store: Called only when broadcast from other clients via the server
+   */
+
+  const updatePortal = async incoming => {
+    const index = page.value.data.filtered_portals.findIndex(p => p._id === incoming._id)
+    if (index > -1) {
+      page.value.data.filtered_portals[index] = incoming
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -243,7 +275,9 @@ export const useVerseStore = defineStore('verse', () => {
     setPortalCreatorOpen,
     checkPageExists,
     checkVerseExists,
-    postCreatePortal
+    postCreatePortal,
+    initPortalUpdate,
+    updatePortal
   }
 })
 
