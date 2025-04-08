@@ -88,7 +88,7 @@ const width = computed(() => {
   align-items: center;
   justify-content: center;
   height: torem(42);
-  border-radius: torem(20);
+  border-radius: torem(28);
   background-color: var(--two-tone-b);
   &:hover,
   &.active {

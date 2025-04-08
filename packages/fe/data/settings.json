@@ -210,6 +210,10 @@
     "caddy-clip-toggle": {
       "heading": "Clip",
       "message": "Use the drawing you made when uploading an image as a clip path"
+    },
+    "caddy-lock": {
+      "heading": "Lock Thingie",
+      "message": "Lock this thingie to the background. It will no longer be moveable until you unlock it."
     }
   },
   "landingSites": [

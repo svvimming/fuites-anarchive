@@ -40,9 +40,8 @@
       tooltip="thingie-lock-toggle">
       <ButtonIcon
         class="lock-toggle"
-        :active="true"
         @click="handleUnlockPageThingies">
-        <IconLock />
+        <IconUnlock />
       </ButtonIcon>
     </Tooltip>
     <!-- ====================================================== Audio Toggle -->
@@ -130,7 +129,6 @@ const handleUnlockPageThingies = () => {
 }
 
 .landing-site-toggle,
-.lock-toggle,
 .audio-toggle {
   --two-tone-a: #{$drippyCore};
   --two-tone-b: white;
