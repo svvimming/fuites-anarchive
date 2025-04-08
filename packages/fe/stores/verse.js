@@ -34,6 +34,7 @@ export const useVerseStore = defineStore('verse', () => {
 
   const textEditor = ref(false)
   const portalCreatorOpen = ref(false)
+  const portalToDelete = ref(false)
   const colorSelectorHex = ref({
     text: '',
     sound: ''
@@ -173,6 +174,14 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method setPortalToDelete
+   */
+
+  const setPortalToDelete = incoming => {
+    portalToDelete.value = incoming
+  }
+
+  /**
    * @method checkPageExists
    */
 
@@ -228,6 +237,27 @@ export const useVerseStore = defineStore('verse', () => {
   }
 
   /**
+   * @method postDeletePortal
+   */
+
+  const postDeletePortal = async () => {
+    try {
+      if (portalToDelete.value) {
+        useSetStoreData(page, { refresh: true })
+        await useFetchAuth('/post-delete-portal', {
+          portalId: portalToDelete.value,
+          verse: verse.value.data.name,
+          method: 'post'
+        })
+        useSetStoreData(page, { refresh: false })
+      }
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(page, { refresh: false })
+    }
+  }
+
+  /**
    * @method initPortalUpdate
    */
 
@@ -263,6 +293,7 @@ export const useVerseStore = defineStore('verse', () => {
     sceneData,
     textEditor,
     colorSelectorHex,
+    portalToDelete,
     portalCreatorOpen,
     // ----- actions
     getVerse,
@@ -273,9 +304,11 @@ export const useVerseStore = defineStore('verse', () => {
     setTextEditor,
     setColorSelectorHex,
     setPortalCreatorOpen,
+    setPortalToDelete,
     checkPageExists,
     checkVerseExists,
     postCreatePortal,
+    postDeletePortal,
     initPortalUpdate,
     updatePortal
   }

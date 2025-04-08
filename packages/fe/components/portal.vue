@@ -39,6 +39,7 @@ const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
 const { baseUrl, portalEditing } = storeToRefs(generalStore)
+const alertStore = useZeroAlertStore()
 
 const groupRef = ref(null)
 const imageRef = ref(null)
@@ -157,8 +158,9 @@ const handlePortalMouseUp = async () => {
  */
 
 const handleDoubleClick = () => {
-  if (portalEditing.value) {
-    console.log('portal double click')
+  if (portalEditing.value && props.portal.manual) {
+    verseStore.setPortalToDelete(props.portal._id)
+    alertStore.openAlert('delete-portal-alert')
   }
 }
 
