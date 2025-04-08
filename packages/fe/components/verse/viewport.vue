@@ -97,7 +97,7 @@ watch(drippy, (scene) => {
     }
   }
   &.drippy-scene-4 {
-    .to-multiverse-tooltip {
+    :deep(#verse-metadata) {
       z-index: 5;
     }
   }
