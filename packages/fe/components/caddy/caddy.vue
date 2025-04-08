@@ -24,11 +24,20 @@
       </div>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
-        class="caddy-tool-button z-index-2 trash-button"
+        class="caddy-tool-button z-index-2 tiny-button"
         tool="trash"
         :style="getToolTransform('trash')"
         @clicked="openDeleteThingieModal">
         <IconTrashbin class="icon" />
+      </ButtonCaddy>
+      <!-- ============================================================ Lock -->
+      <ButtonCaddy
+        v-if="thingie?.location !== 'pocket'"
+        class="caddy-tool-button z-index-2 tiny-button"
+        tool="lock"
+        :style="getToolTransform('lock')"
+        @clicked="lockThingie">
+        <IconLock class="icon" />
       </ButtonCaddy>
       <!-- ==================================================== Tool Buttons -->
       <ButtonCaddy
@@ -351,8 +360,8 @@ const getToolTransform = id => {
   if (id === selected.value) {
     return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
-  const index = id === 'trash' ? 2.5 : positions.value[id]
-  const distance = (radii[selected.value] || 60) - (id === 'trash' ? 10 : 0)
+  const index = id === 'trash' ? 2.5 : id === 'lock' ? 1.5 : positions.value[id]
+  const distance = (radii[selected.value] || 60) - (id === 'trash' || id === 'lock' ? 10 : 0)
   const phase = tools.value.length === 5 ? (Math.PI / 3.3333) : 0
   const coords = {
     x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + phase) * distance,
@@ -375,6 +384,15 @@ const getToolTransform = id => {
 
 const handleDragEnd = () => {
   setTimeout(() => { dragging.value = false }, 50)
+}
+
+/**
+ * @method lockThingie
+ */
+
+const lockThingie = () => {
+  update({ locked: true })
+  collectorStore.setEditing(false)
 }
 
 /**
@@ -488,7 +506,7 @@ const update = useThrottleFn(data => {
   }
 }
 
-.trash-button {
+.tiny-button {
   width: torem(32) !important;
   height: torem(32) !important;
   background-color: white !important;
