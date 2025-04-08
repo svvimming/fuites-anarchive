@@ -20,6 +20,8 @@
     <VerseDeleteThingieAlert />
     <!-- --------------------------------------------- First Time User Alert -->
     <VerseFirstTimeUserAlert />
+    <!-- ----------------------------------------------- Delete Portal Alert -->
+    <VerseDeletePortalAlert />
     <!-- ---------------------------------------------------- Cursor Tooltip -->
     <TooltipCursor v-if="activeModes.tooltips" />
 

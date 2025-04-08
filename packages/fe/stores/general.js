@@ -10,6 +10,7 @@ export const useGeneralStore = defineStore('general', () => {
   const siteData = ref({})
   const sessionId = ref('')
   const dragndrop = ref(false)
+  const portalEditing = ref(false)
   const draggingThingie = ref(false)
   const mouseOverScene = ref(false)
   const activeModes = ref({
@@ -44,6 +45,14 @@ export const useGeneralStore = defineStore('general', () => {
   }
 
   /**
+   * @method setPortalEditing
+   */
+
+  const setPortalEditing = incoming => {
+    portalEditing.value = incoming
+  }
+
+  /**
    * @method setDraggingThingie
    */
 
@@ -74,12 +83,14 @@ export const useGeneralStore = defineStore('general', () => {
     siteData,
     sessionId,
     dragndrop,
+    portalEditing,
     draggingThingie,
     mouseOverScene,
     activeModes,
     // ----- actions
     setSiteData,
     setDragndrop,
+    setPortalEditing,
     setDraggingThingie,
     setMouseOverScene,
     toggleMode

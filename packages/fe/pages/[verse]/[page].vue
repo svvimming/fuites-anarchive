@@ -146,7 +146,7 @@ const handleClick = e => {
       }
     }
     // Handle toggling Portal Creator
-    if (e.evt.shiftKey) {
+    if (e.evt.shiftKey && !target.attrs.hasOwnProperty('portal_id')) {
       verseStore.setPortalCreatorOpen(e)
     } else if (portalCreatorOpen.value) {
       verseStore.setPortalCreatorOpen(false)

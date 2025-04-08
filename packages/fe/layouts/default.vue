@@ -50,11 +50,11 @@ watch(() => page.value.data, async () => {
    * Add keydown/up event listeners
    */
   if (!keydownEventListener.value) {
-    keydownEventListener.value = e => { setDragndropOnShift(e, true) }
+    keydownEventListener.value = e => { setInteractionModes(e, true) }
     window.addEventListener('keydown', keydownEventListener.value) 
   }
   if (!keyupEventListener.value) {
-    keyupEventListener.value = e => { setDragndropOnShift(e, false) }
+    keyupEventListener.value = e => { setInteractionModes(e, false) }
     window.addEventListener('keyup', keyupEventListener.value)  
   }
 })
@@ -68,6 +68,7 @@ watch(() => page.value.data, async () => {
   const namespace = verse.value.data.name
   socket.emit('join-room', `${namespace}|thingies`)
   socket.emit('join-room', `${namespace}|pages`)
+  socket.emit('join-room', `${namespace}|portals`)
   socket.on('module|update-thingie|payload', (data) => {
     // If the update originated from this session and was updating a thingie 'at'
     // property, don't update in the store - it was already done by the page
@@ -83,15 +84,22 @@ watch(() => page.value.data, async () => {
   socket.on('module|post-update-page|payload', (data) => {
     verseStore.updatePage(data.page)
   })
+  socket.on('module|update-portal|payload', (data) => {
+    // If the update originated from this session, ignore
+    if (data.omit_session_id === sessionId.value) { return }
+    verseStore.updatePortal(data.portal)
+  })
 }
 
 /**
- * @method setDragndropOnShift
+ * @method setInteractionModes
  */
 
-const setDragndropOnShift = (e, val) => {
+const setInteractionModes = (e, val) => {
   const drag = e.key === 'd' || e.code === 'KeyD' || e.keyCode === 68
   if (drag) { generalStore.setDragndrop(val) }
+  const shift = e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.keyCode === 16
+  if (shift) { generalStore.setPortalEditing(val) }
 }
 
 // ======================================================================= Hooks

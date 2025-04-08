@@ -1,7 +1,9 @@
 <template>
   <v-group
     ref="groupRef"
-    :config="groupConfig">
+    :config="groupConfig"
+    __use-strict-mode
+    @dragmove="drag($event)">
 
     <v-image
       v-if="image"
@@ -15,7 +17,8 @@
       :config="portalConfig"
       @mouseover="hovering = true"
       @mouseout="hovering = false"
-      @click="handlePortalClick" />
+      @mouseup="handlePortalMouseUp"
+      @dblclick="handleDoubleClick" />
 
   </v-group>
 </template>
@@ -35,7 +38,8 @@ const props = defineProps({
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
-const { baseUrl } = storeToRefs(generalStore)
+const { baseUrl, portalEditing } = storeToRefs(generalStore)
+const alertStore = useZeroAlertStore()
 
 const groupRef = ref(null)
 const imageRef = ref(null)
@@ -54,6 +58,7 @@ const vertices = computed(() => props.portal.vertices)
 const colors = computed(() => props.portal.thingie_ref?.colors || [])
 const thisVertex = computed(() => vertices.value.find(vertex => vertex.location === page.value.data.name))
 const thatVertex = computed(() => vertices.value.find(vertex => vertex.location !== page.value.data.name))
+const bounds = computed(() => page.value.data.bounds || { x: 0, y: 0 })
 
 const destPrintId = computed(() => {
   const prints = thatVertex.value.page_ref?.print_refs || []
@@ -61,6 +66,7 @@ const destPrintId = computed(() => {
 })
 
 const groupConfig = computed(() => ({
+  draggable: portalEditing.value,
   x: thisVertex.value.at.x,
   y: thisVertex.value.at.y
 }))
@@ -137,14 +143,52 @@ watch(destPrintId, id => {
 
 // ===================================================================== Methods
 /**
- * @method handlePortalClick
+ * @method handlePortalMouseUp
  */
 
-const handlePortalClick = async () => {
-  if (verseName.value && thatVertex.value) {
+const handlePortalMouseUp = async () => {
+  if (verseName.value && thatVertex.value && !portalEditing.value) {
     const newRoute = `/${verseName.value}/${thatVertex.value.location}`
     await navigateTo({ path: newRoute })
-  }  
+  }
+}
+
+/**
+ * @method handleDoubleClick
+ */
+
+const handleDoubleClick = () => {
+  if (portalEditing.value && props.portal.manual) {
+    verseStore.setPortalToDelete(props.portal._id)
+    alertStore.openAlert('delete-portal-alert')
+  }
+}
+
+/**
+ * @method drag
+ */
+
+const drag = e => {
+  const attrs = e.target.attrs
+  const newVerts = []
+  for (let i = 0; i < 2; i++) {
+    const v = vertices.value[i]
+    if (v.location === page.value.data.name) {
+      newVerts.push({
+        ...v,
+        at: {
+          x: Math.max(0, Math.min(attrs.x, bounds.value.x)),
+          y: Math.max(0, Math.min(attrs.y, bounds.value.y))
+        }
+      })
+    } else {
+      newVerts.push(Object.assign({}, v))
+    }
+  }
+  verseStore.initPortalUpdate({
+    _id: props.portal._id,
+    vertices: newVerts
+  })
 }
 
 /**
