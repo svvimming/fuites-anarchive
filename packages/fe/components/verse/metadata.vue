@@ -8,7 +8,7 @@
       class="to-multiverse-tooltip">
       <ButtonIcon
         tag="nuxt-link"
-        to="/multiverse"
+        to="/"
         class="to-multiverse">
         <IconMultiverse class="icon"/>
       </ButtonIcon>

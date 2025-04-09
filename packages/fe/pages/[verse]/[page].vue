@@ -102,7 +102,7 @@ watch(data, async (val) => {
       // Fetch thingies
       await collectorStore.getThingies()
     } else {
-      await navigateTo('/multiverse')
+      await navigateTo('/')
     }
   }
 }, { immediate: true })
