@@ -65,7 +65,7 @@ const emit = defineEmits(['record-load'])
 const generalStore = useGeneralStore()
 const { dragndrop } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
-const { page } = storeToRefs(verseStore)
+const { page, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { editing } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
@@ -162,8 +162,10 @@ const wheel = e => {
     const attrs = e.target.attrs
     const width = attrs.width || at.value.width
     const height = attrs.height || at.value.height
-    const newWidth = Math.max(width - e.evt.deltaY, 1)
-    const newHeight = Math.max(height - (e.evt.deltaY * (height / width)), 1)
+    const min = 0.0059 * bounds.value.x * (1 / sceneData.value.scale)
+    const aspect = height / width
+    const newWidth = Math.max(width - e.evt.deltaY, min)
+    const newHeight = Math.max(height - (e.evt.deltaY * aspect), min * aspect)
     update({
       at: {
         x: Math.max(0, Math.min(at.value.x, bounds.value.x)),
