@@ -116,8 +116,8 @@ const finalizeUpload = async () => {
     path_data: bicho.value,
     location,
     at: {
-      x: Math.random() * 650,
-      y: Math.random() * 400,
+      x: 650 * 0.5,
+      y: 400 * 0.5,
       width: 80,
       height: 80,
       rotation: 0
