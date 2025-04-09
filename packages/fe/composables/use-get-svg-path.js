@@ -350,7 +350,7 @@ export const useGetSvgPath = (pathData, options = {}) => {
     data.push([coords[i], coords[i + 1]])
   }
   if (!options.hasOwnProperty('tolerance')) {
-    options.tolerance = 0.001
+    options.tolerance = 2.5
   }
   return data.length ? simplifySvgPath(data, options) : false
 }
