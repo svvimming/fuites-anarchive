@@ -73,7 +73,7 @@ const { editing } = storeToRefs(collectorStore)
 const svgPath = computed(() => useGetSvgPath(props.path, { closed: false }) || '')
 const playState = computed(() => audioContext.value?.state || 'suspended')
 const opacity = computed(() => playState.value === 'running' ? 0.4 + (amplitude.value * 0.6) : 0.4)
-const color = computed(() => editing.value === props.parentConfig.thingie_id && colorSelectorHex.value.sound ? colorSelectorHex.value.sound : props.colors[props.colors.length - 1] || '#6c6575')
+const color = computed(() => editing.value === props.parentConfig.thingie_id && colorSelectorHex.value.sound ? colorSelectorHex.value.sound : props.colors[props.colors.length - 1] || '#46424d')
 const pathConfig = computed(() => ({
   thingie_id: props.parentConfig.thingie_id,
   scaleX: props.parentConfig.width / 200,

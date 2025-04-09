@@ -6,7 +6,7 @@ const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
-const { GetThingieConsistencies } = require('@Module_Utilities')
+const { GetThingieConsistencies, HexToHsl, HslToHex } = require('@Module_Utilities')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -32,7 +32,10 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       }, { colors: 1 }, {
         sort: { 'last_update.timestamp': -1 }
       })
-      body.colors = lastThingie.colors.slice(0, 1)
+      body.colors = lastThingie.colors.slice(0, 1).map(hex => {
+        const hsl = HexToHsl(hex)
+        return HslToHex(hsl.h, hsl.s, Math.min(hsl.l, 50))
+      })
     }
     // Create thingie
     const created = await MC.model.Thingie.create({

@@ -150,7 +150,7 @@ const ThingieSchema = new Schema({
   stroke_width: {
     type: Number,
     required: false,
-    default: 3
+    default: 10
   },
   /** Image and Sound */
   path_data: {
