@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /generate-invite')
+console.log('💡 [endpoint] /post-generate-invite')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -8,7 +8,7 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.post('/generate-invite', async (req, res) => {
+MC.app.post('/post-generate-invite', async (req, res) => {
   try {
     const body = req.body
     const verses = body.verses.split(',')
