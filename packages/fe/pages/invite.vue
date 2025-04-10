@@ -53,7 +53,7 @@
         <!-- ------------------------------------------------ Add Token Form -->
         <div v-if="inputMode === 'add-token'" class="form-container">
           <span class="input-label">Token</span>
-          <div :class="['input-wrapper', { active: value }]">
+          <div :class="['input-wrapper', { active: existingToken }]">
             <input
               v-model="existingToken"
               ref="input"
@@ -66,13 +66,13 @@
         </div>
         <!-- ------------------------------------------- Generate Token Form -->
         <div v-if="inputMode === 'generate-token'" class="form-container generate-form">
-          <div :class="['input-wrapper', { active: value }]">
+          <div :class="['input-wrapper', { active: newToken }]">
             <input
               v-model="newToken"
               ref="input"
               type="email"
               autocomplete="off"
-              class="input"
+              class="input new-token"
               autocapitalize="none"
               placeholder="create a new token"
               readonly />
@@ -108,6 +108,7 @@ const route = useRoute()
 const id = route.query.id
 const pocketStore = usePocketStore()
 const { invite } = storeToRefs(pocketStore)
+const { $diceware } = useNuxtApp()
 
 const inputMode = ref('uninitialized')
 const existingToken = ref('')
@@ -142,8 +143,8 @@ const ctaText = computed(() => {
  * @method generateToken
  */
 
-const generateToken = () => {
-  console.log('generateToken')
+const generateToken = async () => {
+  newToken.value = await $diceware(3)
 }
 
 /**
@@ -251,5 +252,10 @@ input::-ms-placeholder {
 input::placeholder {
   color: rgba(#3E3F4D, 0.5);
   font-weight: 500;
+}
+
+.new-token {
+  font-family: 'Courier Prime', monospace;
+  text-align: center;
 }
 </style>
