@@ -19,6 +19,11 @@ export const usePocketStore = defineStore('pocket', () => {
       verses: []
     }
   })
+  const invite = ref({
+    loading: false,
+    refresh: false,
+    data: {}
+  })
   const uploaders = ref({})
   const pocketOpen = ref(false)
   const fullscreen = ref(false)
@@ -217,10 +222,36 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method getInvite
+   */
+
+  const getInvite = async incoming => {
+    try {
+      useSetStoreData(invite, { loading: true })
+      const response = await useFetchAuth('/get-invite', Object.assign({}, incoming, {
+        method: 'get'
+      }))
+      useSetStoreData(invite, {
+        loading: false,
+        refresh: false,
+        data: response
+      })
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(invite, {
+        loading: false,
+        refresh: false,
+        data: {}
+      })
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     pocket,
+    invite,
     uploaders,
     pocketOpen,
     fullscreen,
@@ -238,7 +269,8 @@ export const usePocketStore = defineStore('pocket', () => {
     getAuthPocket,
     postCreateVerse,
     checkTokenExists,
-    postAddVerseToToken
+    postAddVerseToToken,
+    getInvite
   }
 })
 

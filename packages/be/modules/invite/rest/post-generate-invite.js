@@ -35,9 +35,8 @@ MC.app.post('/post-generate-invite', async (req, res) => {
       expires_at: expiresAt,
       created_by: createdBy
     })
-    console.log('created', created)
 
-    const data = { url: `${MC.frontendUrl}/?invite=${created._id}` }
+    const data = { url: `${MC.frontendUrl}/invite?id=${created._id}` }
     // Send response
     SendData(res, 200, 'Invite successfully created', data)
   } catch (e) {
