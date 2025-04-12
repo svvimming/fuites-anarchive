@@ -1,4 +1,4 @@
-console.log('💡 [endpoint] /post-create-pocket')
+console.log('💡 [endpoint] /post-generate-invite')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
@@ -9,54 +9,41 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-MC.app.post('/post-create-pocket', async (req, res) => {
+MC.app.post('/post-accept-invite', async (req, res) => {
   try {
     const body = req.body
     const inviteId = body.invite_id
     const token = body.token
 
     // Validate required fields
-    if (!inviteId) {
-      return SendData(res, 400, 'Invite ID is required')
+    if (!token) {
+      return SendData(res, 400, 'Token is required')
     }
-
     // Find invite
     const invite = await MC.model.Invite.findById(inviteId)
     if (!invite) {
       return SendData(res, 404, 'Invite not found')
     }
-
-    // Check if invite is expired
-    if (invite.status === 'expired' || new Date() > invite.expires_at) {
-      if (invite.status !== 'expired') {
-        invite.status = 'expired'
-        await invite.save()
-      }
-      return SendData(res, 400, 'Invite has expired')
+    // Check if invite is pending
+    if (invite.status !== 'pending') {
+      return SendData(res, 400, 'Invite is either already accepted or expired')
     }
-
-    // Check if invite is already accepted
-    if (invite.status === 'accepted') {
-      return SendData(res, 400, 'Invite has already been accepted')
-    }
-
-    // Create pocket
+    // Get pocket to add verses to
     const hashedToken = await Bcrypt.hash(token, 10)
-    await MC.model.Pocket.create({
-      verses: invite.verses,
-      token: hashedToken
-    })
+    const pocket = await MC.model.Pocket.findOne({ token: hashedToken })
+    if (!pocket) {
+      return SendData(res, 400, 'Invalid token')
+    }
+    // Add verses to pocket
+    pocket.verses.push(...invite.verses)
+    await pocket.save()
     // Update invite status
     invite.status = 'accepted'
     await invite.save()
-
-    // Return invite status
-    SendData(res, 200, 'Token successfully generated', {
-      message: 'Token successfully generated',
-      status: 'success'
-    })
+    // Return success
+    return SendData(res, 200, 'Invite accepted')
   } catch (e) {
-    console.log('============================= [Endpoint: /post-create-pocket]')
+    console.log('============================ [Endpoint: /post-accept-invite]')
     console.log(e)
     SendData(res, 500, 'Something went wrong. Please try again.')
   }

@@ -247,6 +247,30 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method postAcceptInvite
+   */
+
+  const postAcceptInvite = async incoming => {
+    const type = incoming.submit_type
+    try {
+      let response = false
+      if (type === 'add-token') {
+        response = await useFetchAuth('/post-accept-invite', Object.assign({}, incoming, {
+          method: 'post'
+        }))
+      } else if (type === 'generate-token') {
+        response = await useFetchAuth('/post-create-pocket', Object.assign({}, incoming, {
+          method: 'post'
+        }))
+      }
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -270,7 +294,8 @@ export const usePocketStore = defineStore('pocket', () => {
     postCreateVerse,
     checkTokenExists,
     postAddVerseToToken,
-    getInvite
+    getInvite,
+    postAcceptInvite
   }
 })
 

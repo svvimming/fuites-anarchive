@@ -1,6 +1,6 @@
 <template>
   <div class="page-invite">
-    <div class="message">
+    <div :class="['message', inputMode, { success }]">
       <!-- ========================================================== Loader -->
       <template v-if="inviteStatus === 'loading'">
         <div class="spinner-container">
@@ -29,10 +29,13 @@
           <div class="invite-description">
             <span class="text">You've been invited to</span>
             <span class="text verse-names">{{ readableVerseNames }}</span>
-            <span class="text">on fuit.es. To join, you'll need a token.</span>
+            <span class="text">on fuit.es. To join, you'll need a token: </span>
           </div>
-          <div class="cta-text text">
-            {{ ctaText }}
+          <div
+            v-if="ctaText"
+            :key="ctaText"
+            class="cta-message">
+            <span class="text">{{ ctaText }}</span>
           </div>
           <div v-if="inputMode === 'uninitialized'" class="button-row">
             <ButtonBasic
@@ -51,8 +54,9 @@
           </div> -->
         </div>
         <!-- ------------------------------------------------ Add Token Form -->
-        <div v-if="inputMode === 'add-token'" class="form-container">
-          <span class="input-label">Token</span>
+        <div
+          v-if="inputMode === 'add-token'"
+          class="form-container">
           <div :class="['input-wrapper', { active: existingToken }]">
             <input
               v-model="existingToken"
@@ -65,7 +69,9 @@
           </div>
         </div>
         <!-- ------------------------------------------- Generate Token Form -->
-        <div v-if="inputMode === 'generate-token'" class="form-container generate-form">
+        <div
+          v-if="inputMode === 'generate-token'"
+          class="form-container generate-form">
           <div :class="['input-wrapper', { active: newToken }]">
             <input
               v-model="newToken"
@@ -78,18 +84,45 @@
               readonly />
           </div>
           <ButtonBasic
+            :force-disabled="submitting || success"
             :class="['generate-token-button']"
             @clicked="generateToken">
             <span>Generate</span>
           </ButtonBasic>
+          <span :class="['warning-text', { active: newToken }]">
+            {{ warningText }}
+          </span>
         </div>
         <!-- ------------------------------------------------- Accept Button -->
-        <div v-if="inputMode !== 'uninitialized'" class="button-row">
+        <div
+          v-if="inputMode !== 'uninitialized' && !success"
+          class="button-row finalize">
           <ButtonBasic
-            :class="['accept-button']"
+            :class="['submit-button', { disabled: disableSubmit }]"
+            :force-loading="submitting"
+            :force-disabled="disableSubmit"
             @clicked="submitAcceptInvite">
             <span>Accept</span>
           </ButtonBasic>
+          <ButtonBasic
+            :class="['cancel-button']"
+            @clicked="inputMode = 'uninitialized'">
+            <span>Cancel</span>
+          </ButtonBasic>
+        </div>
+        <!-- ----------------------------------------------- Success Message -->
+        <div v-if="success" class="success-message">
+          <span class="text">{{ successMessage }}</span>
+          <br>
+          <span class="text">Navigate home where you can enter your token and view your verses.</span>
+          <div class="button-row success">
+            <ButtonBasic
+              tag="nuxt-link"
+              to="/"
+            :class="['home-button']">
+              <span>Go Home</span>
+            </ButtonBasic>
+          </div>
         </div>
       </template>
 
@@ -113,6 +146,8 @@ const { $diceware } = useNuxtApp()
 const inputMode = ref('uninitialized')
 const existingToken = ref('')
 const newToken = ref('')
+const submitting = ref(false)
+const success = ref(false)
 
 // fetch Invite
 await useAsyncData('invite', async () => await pocketStore.getInvite({ invite_id: id }), { server: false })
@@ -125,19 +160,10 @@ const readableVerseNames = computed(() => {
   const len = names.length
   return len > 1 ? `${names.slice(0, len - 1).join(', ')} and ${names[len - 1]}` : names[0]
 })
-const ctaText = computed(() => {
-  switch (inputMode.value) {
-    case 'uninitialized':
-      return 'If you already have one, click add token. If not, you can make a new token using the token generator.'
-    case 'add-token':
-      return 'Add your token below.'
-    case 'generate-token':
-      return 'Using the token generator below, you can create one. Once you\'ve found one you like, click accept to finalize.'
-    default:
-      return ''
-  }
-})
-
+const ctaText = computed(() => SettingsData.invitePage.ctaText[inputMode.value])
+const warningText = computed(() => SettingsData.invitePage.warningText)
+const disableSubmit = computed(() => (inputMode.value === 'add-token' && !existingToken.value) || (inputMode.value === 'generate-token' && !newToken.value))
+const successMessage = computed(() => SettingsData.invitePage.successMessage[inputMode.value])
 // =================================================================== Methods
 /**
  * @method generateToken
@@ -152,7 +178,19 @@ const generateToken = async () => {
  */
 
 const submitAcceptInvite = async () => {
-  console.log('submitAcceptInvite')
+  if (!['add-token', 'generate-token'].includes(inputMode.value)) { return }
+  const token = inputMode.value === 'add-token' ? existingToken.value : newToken.value
+  submitting.value = true
+  const result = await pocketStore.postAcceptInvite({
+    invite_id: id,
+    submit_type: inputMode.value,
+    token
+  })
+  console.log('result', result)
+  submitting.value = false
+  if (result?.status === 'success') {
+    success.value = true
+  }
 }
 
 </script>
@@ -163,7 +201,8 @@ const submitAcceptInvite = async () => {
   position: absolute;
   left: 50%;
   top: 50%;
-  padding: torem(16);
+  width: torem(560);
+  padding: torem(24);
   border-radius: torem(20);
   transform: translate(-50%, -50%) scale(0.8);
   transition: 300ms ease;
@@ -180,21 +219,83 @@ const submitAcceptInvite = async () => {
       margin-right: torem(8);
     }
   }
+  &.uninitialized {
+    max-height: torem(248);
+  }
+  &.add-token {
+    max-height: torem(300);
+    &.success {
+      max-height: torem(370);
+    }
+  }
+  &.generate-token {
+    max-height: torem(412);
+    &.success {
+      max-height: torem(500);
+    }
+  }
+  &.add-token,
+  &.generate-token {
+    .cta-message,
+    .form-container,
+    .finalize,
+    .success-message {
+      animation: fadeIn 150ms ease-out 0.3s forwards;
+      opacity: 0;
+    }
+  }
 }
 
 .text {
-  font-size: torem(14);
+  font-size: torem(16);
   line-height: 1.5;
 }
 
 .verse-names {
   font-weight: 600;
+  font-style: italic;
   margin: 0 torem(4);
 }
 
 .warning-text {
+  margin-top: torem(16);
   font-weight: 600;
   color: $pollyPink;
+  opacity: 0;
+  transition: 150ms ease;
+  &.active {
+    opacity: 1;
+  }
+}
+
+.invite-description {
+  line-height: 1;
+  margin-bottom: torem(24);
+}
+
+.cta-message {
+  line-height: 1;
+}
+
+.cta-message,
+.button-row,
+.form-container {
+  padding: 0 torem(16);
+}
+
+.cta-message {
+  .text {
+    font-weight: 500;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 // ////////////////////////////////////////////////////////////////////// Inputs
@@ -257,5 +358,44 @@ input::placeholder {
 .new-token {
   font-family: 'Courier Prime', monospace;
   text-align: center;
+}
+
+.button-row {
+  display: flex;
+  margin-top: torem(24);
+  :deep(.basic-button) {
+    flex-grow: 1;
+    &:not(:last-child) {
+      margin-right: torem(30);
+    }
+  }
+  &.success {
+    justify-content: center;
+    :deep(.basic-button) {
+      flex-grow: 0;
+      display: block;
+      width: fit-content;
+    }
+  }
+}
+
+.submit-button {
+  background-color: $kellyGreen !important;
+  box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
+  &.disabled {
+    background-color: rgba($gullGray, 0.5) !important;
+    box-shadow: 0 2px 8px rgba($gullGray, 0.5);
+    pointer-events: none;
+  }
+}
+
+.cancel-button {
+  background-color: $pollyPink !important;
+  box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
+}
+
+.success-message {
+  text-align: center;
+  margin-top: torem(32);
 }
 </style>
