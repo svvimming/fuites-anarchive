@@ -1,6 +1,8 @@
 <template>
   <div class="page-invite">
-    <div :class="['message', inputMode, { success }]">
+    <div
+      :class="['message', { [inputMode]: initialHeight }, { feedback: result }]"
+      :style="{ '--initial-height': `${initialHeight}px` }">
       <!-- ========================================================== Loader -->
       <template v-if="inviteStatus === 'loading'">
         <div class="spinner-container">
@@ -26,7 +28,7 @@
         <!-- ------------------------------------------------ Pending Header -->
         <div class="pending-container">
           <span class="title text">Welcome!</span>
-          <div class="invite-description">
+          <div ref="description" class="invite-description">
             <span class="text">You've been invited to</span>
             <span class="text verse-names">{{ readableVerseNames }}</span>
             <span class="text">on fuit.es. To join, you'll need a token: </span>
@@ -84,7 +86,7 @@
               readonly />
           </div>
           <ButtonBasic
-            :force-disabled="submitting || success"
+            :force-disabled="submitting || result"
             :class="['generate-token-button']"
             @clicked="generateToken">
             <span>Generate</span>
@@ -95,7 +97,7 @@
         </div>
         <!-- ------------------------------------------------- Accept Button -->
         <div
-          v-if="inputMode !== 'uninitialized' && !success"
+          v-if="inputMode !== 'uninitialized' && !result"
           class="button-row finalize">
           <ButtonBasic
             :class="['submit-button', { disabled: disableSubmit }]"
@@ -111,16 +113,27 @@
           </ButtonBasic>
         </div>
         <!-- ----------------------------------------------- Success Message -->
-        <div v-if="success" class="success-message">
-          <span class="text">{{ successMessage }}</span>
+        <div v-if="result" class="success-message">
+          <span class="text">{{ result.status === 'success' ? successMessage : result.message }}</span>
           <br>
-          <span class="text">Navigate home where you can enter your token and view your verses.</span>
-          <div class="button-row success">
+          <span
+            v-if="result.status === 'success'"
+            class="text">
+            Navigate home where you can enter your token and view your verses.
+          </span>
+          <div class="button-row feedback">
             <ButtonBasic
+              v-if="result.status === 'success'"
               tag="nuxt-link"
               to="/"
-            :class="['home-button']">
+              :class="['home-button']">
               <span>Go Home</span>
+            </ButtonBasic>
+            <ButtonBasic
+              v-else
+              :class="['try-again-button']"
+              @clicked="resetInviteForm">
+              <span>Try Again</span>
             </ButtonBasic>
           </div>
         </div>
@@ -142,12 +155,14 @@ const id = route.query.id
 const pocketStore = usePocketStore()
 const { invite } = storeToRefs(pocketStore)
 const { $diceware } = useNuxtApp()
+const description = ref(null)
+const initialHeight = ref(false)
 
 const inputMode = ref('uninitialized')
 const existingToken = ref('')
 const newToken = ref('')
 const submitting = ref(false)
-const success = ref(false)
+const result = ref(null)
 
 // fetch Invite
 await useAsyncData('invite', async () => await pocketStore.getInvite({ invite_id: id }), { server: false })
@@ -164,6 +179,14 @@ const ctaText = computed(() => SettingsData.invitePage.ctaText[inputMode.value])
 const warningText = computed(() => SettingsData.invitePage.warningText)
 const disableSubmit = computed(() => (inputMode.value === 'add-token' && !existingToken.value) || (inputMode.value === 'generate-token' && !newToken.value))
 const successMessage = computed(() => SettingsData.invitePage.successMessage[inputMode.value])
+
+watch(() => inviteVerses.value.length, (val) => {
+  if (val > 0) {
+    nextTick(() => {
+      initialHeight.value = description.value?.getBoundingClientRect().height
+    })
+  }
+})
 // =================================================================== Methods
 /**
  * @method generateToken
@@ -181,16 +204,23 @@ const submitAcceptInvite = async () => {
   if (!['add-token', 'generate-token'].includes(inputMode.value)) { return }
   const token = inputMode.value === 'add-token' ? existingToken.value : newToken.value
   submitting.value = true
-  const result = await pocketStore.postAcceptInvite({
+  const data = await pocketStore.postAcceptInvite({
     invite_id: id,
     submit_type: inputMode.value,
     token
   })
-  console.log('result', result)
   submitting.value = false
-  if (result?.status === 'success') {
-    success.value = true
+  if (data?.status) {
+    result.value = data
   }
+}
+
+const resetInviteForm = () => {
+  inputMode.value = 'uninitialized'
+  existingToken.value = ''
+  newToken.value = ''
+  submitting.value = false
+  result.value = null
 }
 
 </script>
@@ -198,6 +228,7 @@ const submitAcceptInvite = async () => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .message {
+  --initial-height: torem(214);
   position: absolute;
   left: 50%;
   top: 50%;
@@ -220,18 +251,18 @@ const submitAcceptInvite = async () => {
     }
   }
   &.uninitialized {
-    max-height: torem(248);
+    max-height: var(--initial-height);
   }
   &.add-token {
-    max-height: torem(300);
-    &.success {
-      max-height: torem(370);
+    max-height: calc(var(--initial-height) + torem(270));
+    &.feedback {
+      max-height: calc(var(--initial-height) + torem(350));
     }
   }
   &.generate-token {
-    max-height: torem(412);
-    &.success {
-      max-height: torem(500);
+    max-height: calc(var(--initial-height) + torem(400));
+    &.feedback {
+      max-height: calc(var(--initial-height) + torem(480));
     }
   }
   &.add-token,
@@ -369,7 +400,7 @@ input::placeholder {
       margin-right: torem(30);
     }
   }
-  &.success {
+  &.feedback {
     justify-content: center;
     :deep(.basic-button) {
       flex-grow: 0;
@@ -379,6 +410,7 @@ input::placeholder {
   }
 }
 
+.home-button,
 .submit-button {
   background-color: $kellyGreen !important;
   box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);

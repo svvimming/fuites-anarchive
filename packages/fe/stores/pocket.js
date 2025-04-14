@@ -256,9 +256,11 @@ export const usePocketStore = defineStore('pocket', () => {
     try {
       let response = false
       if (type === 'add-token') {
+        console.log(incoming)
         response = await useFetchAuth('/post-accept-invite', Object.assign({}, incoming, {
           method: 'post'
         }))
+        console.log(response)
       } else if (type === 'generate-token') {
         response = await useFetchAuth('/post-create-pocket', Object.assign({}, incoming, {
           method: 'post'
