@@ -2,6 +2,7 @@ console.log('💡 [endpoint] /check-token-exists')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
+const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
@@ -11,7 +12,8 @@ const MC = require('@Root/config')
 MC.app.get('/check-token-exists', async (req, res) => {
   try {
     const token = req.query.token
-    const pocket = await MC.model.Pocket.findOne({ token }).exec()
+    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const pocket = await MC.model.Pocket.findOne({ token: hashedToken }).exec()
     SendData(res, 200, 'Pocket exists', !!pocket)
   } catch (e) {
     console.log('============================= [Endpoint: /check-token-exists]')

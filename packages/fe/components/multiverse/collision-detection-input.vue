@@ -42,7 +42,7 @@ const props = defineProps({
     required: true,
     default: 'verse',
     validator: (value) => {
-      return ['token', 'token-current', 'verse', 'page'].includes(value)
+      return ['token', 'verse', 'page'].includes(value)
     }
   },
   collisionMode: {
@@ -84,7 +84,6 @@ const messages = {
 // ===================================================================== Methods
 // Debounce the validation check to avoid too many API calls
 const debouncedCheck = useDebounceFn(async (value) => {
-  const messageKey = props.checkCollision === 'token-current' ? 'token' : props.checkCollision
   if (!value) {
     error.value = ''
     emit('validation', { inputId: props.inputId, isValid: false, value })
@@ -93,7 +92,7 @@ const debouncedCheck = useDebounceFn(async (value) => {
 
   const kebabCase = useChangeCase(value, 'kebabCase').value
   if (kebabCase !== value) {
-    error.value = messages[messageKey].case
+    error.value = messages[props.checkCollision].case
     emit('validation', { inputId: props.inputId, isValid: false, value })
     return
   }
@@ -101,9 +100,6 @@ const debouncedCheck = useDebounceFn(async (value) => {
   isChecking.value = true
   let collision = false
   switch (props.checkCollision) {
-    case 'token-current':
-      collision = token.value === kebabCase
-      break
     case 'token':
       collision = await pocketStore.checkTokenExists(kebabCase)
       break
@@ -119,7 +115,7 @@ const debouncedCheck = useDebounceFn(async (value) => {
   const result = props.collisionMode === 'include' ? !collision : collision
 
   if (result) {
-    error.value = messages[messageKey][props.collisionMode]
+    error.value = messages[props.checkCollision][props.collisionMode]
     emit('validation', { inputId: props.inputId, isValid: false, value })
   } else {
     error.value = ''

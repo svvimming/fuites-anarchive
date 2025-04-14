@@ -32,7 +32,7 @@
         label-text="Token"
         placeholder="enter token"
         input-id="create-verse-token-input"
-        check-collision="token-current"
+        check-collision="token"
         collision-mode="include"
         @validation="handleInputValidation" />
       <!-- ========================================================= Buttons -->
