@@ -33,12 +33,21 @@
 const route = useRoute()
 const pocketStore = usePocketStore()
 const { uploaders, authenticated } = storeToRefs(pocketStore)
+const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
 const modalUploaderId = 'new-page-modal-uploader'
 
 // ==================================================================== Computed
 const uploader = computed(() => uploaders.value[modalUploaderId])
-const newPageTitle = computed(() => `'${route.params.page}' doesn't seem to exist yet!`)
-const newPageMessage = computed(() => authenticated.value ? `You can create a new page called ${route.params.page} by uploading a thingie below:` : `You can create a new page called '${route.params.page}' but first, you'll need to enter a token using the pocket.`)
+const alertData = computed(() => siteData.value?.settings?.pageCreatorAlert)
+const newPageTitle = computed(() => alertData.value?.title?.replace('<page-name>', route.params.page))
+const newPageMessage = computed(() => {
+  if (typeof alertData.value === 'object') {
+    const key = authenticated.value ? 'messageAuthenticated' : 'messageUnauthenticated'
+    return alertData.value[key]?.replace('<page-name>', route.params.page)
+  }
+  return ''
+})
 
 // ======================================================================= Hooks
 onMounted(() => {
