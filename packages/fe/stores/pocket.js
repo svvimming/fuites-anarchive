@@ -223,6 +223,25 @@ export const usePocketStore = defineStore('pocket', () => {
   }
 
   /**
+   * @method postGenerateInvite
+   */
+
+  const postGenerateInvite = async incoming => {
+    try {
+      const response = await useFetchAuth('/post-generate-invite', Object.assign({}, incoming, {
+        generate_allowed: false,
+        created_by: token.value,
+        hashed: true,
+        method: 'post'
+      }))
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
    * @method getInvite
    */
 
@@ -296,6 +315,7 @@ export const usePocketStore = defineStore('pocket', () => {
     postCreateVerse,
     checkTokenExists,
     postAddVerseToToken,
+    postGenerateInvite,
     getInvite,
     postAcceptInvite
   }

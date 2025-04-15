@@ -20,7 +20,7 @@ MC.app.post('/post-generate-invite', async (req, res) => {
       return SendData(res, 400, 'Creator identifier is required')
     }
     // Hash creator identifier
-    const hashedToken = createHash('sha256').update(createdBy).digest('hex')
+    const hashedToken = body.hashed ? createdBy : createHash('sha256').update(createdBy).digest('hex')
     // Validate required fields
     if (!verses || !Array.isArray(verses) || verses.length === 0) {
       return SendData(res, 400, 'At least one verse must be specified')
