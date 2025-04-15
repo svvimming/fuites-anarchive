@@ -61,24 +61,21 @@
           class="form-container">
           <div :class="['input-wrapper', { active: existingToken }]">
             <input
-              v-model="existingToken"
-              ref="input"
-              type="email"
+              ref="existingTokenInputRef"
               autocomplete="off"
               class="input"
               autocapitalize="none"
-              placeholder="enter your token" />
+              placeholder="enter your token"
+              @input="handleExistingTokenInput" />
           </div>
         </div>
         <!-- ------------------------------------------- Generate Token Form -->
         <div
-          v-if="inputMode === 'generate-token'"
+          v-if="inputMode === 'generate-token' && generateAllowed"
           class="form-container generate-form">
           <div :class="['input-wrapper', { active: newToken }]">
             <input
               v-model="newToken"
-              ref="input"
-              type="email"
               autocomplete="off"
               class="input new-token"
               autocapitalize="none"
@@ -107,6 +104,7 @@
             <span>Accept</span>
           </ButtonBasic>
           <ButtonBasic
+            v-if="generateAllowed"
             :class="['cancel-button']"
             @clicked="inputMode = 'uninitialized'">
             <span>Cancel</span>
@@ -159,10 +157,12 @@ const description = ref(null)
 const initialHeight = ref(false)
 
 const inputMode = ref('uninitialized')
+const existingTokenInputRef = ref(null)
 const existingToken = ref('')
 const newToken = ref('')
 const submitting = ref(false)
 const result = ref(null)
+const generateAllowed = ref(true)
 
 // fetch Invite
 await useAsyncData('invite', async () => await pocketStore.getInvite({ invite_id: id }), { server: false })
@@ -182,6 +182,10 @@ const successMessage = computed(() => SettingsData.invitePage.successMessage[inp
 
 watch(() => inviteVerses.value.length, (val) => {
   if (val > 0) {
+    if (invite.value.data.hasOwnProperty('generate_allowed') && !invite.value.data.generate_allowed) {
+      inputMode.value = 'add-token'
+      generateAllowed.value = false
+    }
     nextTick(() => {
       initialHeight.value = description.value?.getBoundingClientRect().height
     })
@@ -223,12 +227,20 @@ const resetInviteForm = () => {
   result.value = null
 }
 
+const handleExistingTokenInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
+  }
+  existingToken.value = sanitized
+}
+
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .message {
-  --initial-height: torem(214);
+  --initial-height: torem(230);
   position: absolute;
   left: 50%;
   top: 50%;
@@ -251,7 +263,7 @@ const resetInviteForm = () => {
     }
   }
   &.uninitialized {
-    max-height: var(--initial-height);
+    max-height: calc(var(--initial-height) + torem(230));
   }
   &.add-token {
     max-height: calc(var(--initial-height) + torem(270));

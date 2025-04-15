@@ -31,6 +31,11 @@ const InviteSchema = new Schema({
   created_by: {
     type: String,
     required: true
+  },
+  generate_allowed: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 }, {
   timestamps: true,
