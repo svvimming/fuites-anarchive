@@ -6,22 +6,21 @@
     <!-- ============================================================= Input -->
     <span class="input-label">Token</span>
 
-    <div :class="['input-wrapper', { active: value }]">
+    <div class="input-wrapper">
       <input
-        v-model="value"
-        ref="input"
-        type="email"
+        ref="inputRef"
         autocomplete="off"
         class="input"
         autocapitalize="none"
+        placeholder="enter your token"
         @keyup.enter="submit"
-        placeholder="enter your token" />
+        @input="handleTokenInput" />
     </div>
 
     <!-- =========================================================== Buttons -->
     <div class="button-row">
       <ButtonBasic
-        :class="['submit-button', { active: !!value }]"
+        class="submit-button"
         @click="submit">
         <span>Submit</span>
       </ButtonBasic>
@@ -52,20 +51,26 @@ const emit = defineEmits(['authenticate-success', 'cancel-authentication'])
 // ======================================================================== Data
 const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
-const value = ref('')
+const inputRef = ref(null)
 
 // ===================================================================== Methods
+const handleTokenInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
+  }
+}
+
 const submit = async () => {
-  const sanitized = value.value.replaceAll(' ', '-').split('-').filter(word => word !== '-').map(word => word.toLowerCase())
-  const joined = sanitized.join('-')
-  await pocketStore.getAuthPocket({ token: joined })
+  const token = inputRef.value.value
+  await pocketStore.getAuthPocket({ token })
   if (pocket.value.authenticated) {
     emit('authenticate-success')
     if (process.client) {
-      localStorage.setItem('fuitesAnarchiveAuthToken', joined)
+      localStorage.setItem('fuitesAnarchiveAuthToken', token)
     }
   }
-  value.value = ''
+  inputRef.value.value = ''
 }
 </script>
 

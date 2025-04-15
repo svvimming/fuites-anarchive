@@ -19,6 +19,11 @@ export const usePocketStore = defineStore('pocket', () => {
       verses: []
     }
   })
+  const invite = ref({
+    loading: false,
+    refresh: false,
+    data: {}
+  })
   const uploaders = ref({})
   const pocketOpen = ref(false)
   const fullscreen = ref(false)
@@ -217,10 +222,81 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method postGenerateInvite
+   */
+
+  const postGenerateInvite = async incoming => {
+    try {
+      const response = await useFetchAuth('/post-generate-invite', Object.assign({}, incoming, {
+        generate_allowed: false,
+        created_by: token.value,
+        hashed: true,
+        method: 'post'
+      }))
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
+  /**
+   * @method getInvite
+   */
+
+  const getInvite = async incoming => {
+    try {
+      useSetStoreData(invite, { loading: true })
+      const response = await useFetchAuth('/get-invite', Object.assign({}, incoming, {
+        method: 'get'
+      }))
+      useSetStoreData(invite, {
+        loading: false,
+        refresh: false,
+        data: response
+      })
+    } catch (e) {
+      useHandleFetchError(e)
+      useSetStoreData(invite, {
+        loading: false,
+        refresh: false,
+        data: {}
+      })
+    }
+  }
+
+  /**
+   * @method postAcceptInvite
+   */
+
+  const postAcceptInvite = async incoming => {
+    const type = incoming.submit_type
+    try {
+      let response = false
+      if (type === 'add-token') {
+        console.log(incoming)
+        response = await useFetchAuth('/post-accept-invite', Object.assign({}, incoming, {
+          method: 'post'
+        }))
+        console.log(response)
+      } else if (type === 'generate-token') {
+        response = await useFetchAuth('/post-create-pocket', Object.assign({}, incoming, {
+          method: 'post'
+        }))
+      }
+      return response
+    } catch (e) {
+      useHandleFetchError(e)
+      return false
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
     pocket,
+    invite,
     uploaders,
     pocketOpen,
     fullscreen,
@@ -238,7 +314,10 @@ export const usePocketStore = defineStore('pocket', () => {
     getAuthPocket,
     postCreateVerse,
     checkTokenExists,
-    postAddVerseToToken
+    postAddVerseToToken,
+    postGenerateInvite,
+    getInvite,
+    postAcceptInvite
   }
 })
 

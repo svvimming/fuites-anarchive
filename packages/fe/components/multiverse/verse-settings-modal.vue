@@ -5,26 +5,36 @@
     <div class="verse-settings-modal">
       <!-- ========================================================= Heading -->
       <span class="heading">{{ `Settings for '${verse?.name}'` }}</span>
-      <span class="input-label">{{ `Give a token access to ${verse?.name}` }}</span>
+      <span class="input-label">{{ `Generate an invite link for ${verse?.name}` }}</span>
       <!-- ===================================================== Token Input -->
       <div class="input-row">
-        <div :class="['input-wrapper', { error: tokenAddError }]">
+        <div class="input-wrapper">
           <input
-            v-model="tokenToAdd"
+            v-model="inviteUrl"
             autocomplete="off"
             class="input"
             autocapitalize="none"
-            placeholder="add a token" />
-          <span
+            placeholder="generate an invite link"
+            readonly />
+          <!-- <span
             v-if="tokenAddMessage"
             :class="['feedback-message', { error: tokenAddError }]">
             {{ tokenAddMessage }}
-          </span>
+          </span> -->
         </div>
         <ButtonBasic
-          :class="['add-token-button']"
-          @clicked="submitAddToken">
-          <span>Add</span>
+          v-if="!inviteUrl"
+          :force-loading="generating"
+          :force-disabled="generating"
+          :class="['add-token-button', { disabled: generating }]"
+          @clicked="submitGenerateInvite">
+          <span>Generate</span>
+        </ButtonBasic>
+        <ButtonBasic
+          v-else-if="isSupported"
+          :class="['copy-button']"
+          @clicked="copy(inviteUrl)">
+          <span>{{ copied ? 'Copied!' : 'Copy' }}</span>
         </ButtonBasic>
       </div>
       <!-- ========================================================= Buttons -->
@@ -41,6 +51,9 @@
 </template>
 
 <script setup>
+// ===================================================================== Imports
+import { useClipboard } from '@vueuse/core'
+
 // ======================================================================= Setup
 const props = defineProps({
   verse: {
@@ -55,14 +68,16 @@ const emit = defineEmits(['close-alert'])
 // ======================================================================== Data
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const tokenToAdd = ref('')
-const tokenAddMessage = ref('')
-const tokenAddError = ref(false)
+const inviteUrl = ref('')
+const generating = ref(false)
+const { copy, copied, isSupported } = useClipboard({ source: inviteUrl })
 
 // ==================================================================== Watchers
 watch(() => props.verse?._id, (val) => {
   const alert = alertStore.getAlert('multiverse-verse-settings-modal')
   if (val) {
+    inviteUrl.value = ''
+    generating.value = false
     alertStore.openAlert('multiverse-verse-settings-modal')
   } else if (alert.status === 'open') {
     alertStore.closeAlert('multiverse-verse-settings-modal')
@@ -70,23 +85,15 @@ watch(() => props.verse?._id, (val) => {
 })
 
 // ===================================================================== Methods
-const submitAddToken = async() => {
-  tokenAddMessage.value = ''
-  tokenAddError.value = false
-  const result = await pocketStore.postAddVerseToToken({
-    verseId: props.verse._id,
-    targetToken: tokenToAdd.value
+const submitGenerateInvite = async() => {
+  generating.value = true
+  const result = await pocketStore.postGenerateInvite({
+    verses: props.verse.name
   })
-  const type = result.type
-  if (type === 'verse-added-to-token') {
-    tokenAddMessage.value = 'Success!'
-  } else if (type === 'token-not-found') {
-    tokenAddMessage.value = 'This token doesn\'t exist, try another'
-    tokenAddError.value = true
-  } else if (type === 'token-already-has-access') {
-    tokenAddMessage.value = 'This token already has access to this verse'
-    tokenAddError.value = true
+  if (result) {
+    inviteUrl.value = result.url
   }
+  generating.value = false
 }
 
 </script>
@@ -98,15 +105,16 @@ const submitAddToken = async() => {
   border-radius: torem(20);
   transition: 300ms ease;
   background-color: $athensGray;
-  min-width: torem(360);
-  max-width: torem(460);
+  min-width: torem(500);
+  max-width: torem(560);
   @include modalShadow;
 }
 
 .input-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  // justify-content: space-between;
   margin-bottom: torem(18);
 }
 
@@ -141,6 +149,7 @@ const submitAddToken = async() => {
 .input-wrapper {
   position: relative;
   margin-right: torem(10);
+  margin-bottom: torem(10);
   width: 100%;
   border-radius: torem(10);
   background-color: #DFE0E5;
@@ -183,6 +192,9 @@ input::placeholder {
 
 .add-token-button {
   margin-bottom: torem(2);
+  &.disabled {
+    pointer-events: none;
+  }
 }
 
 .button-row {
