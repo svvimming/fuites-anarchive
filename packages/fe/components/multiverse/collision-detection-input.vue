@@ -60,7 +60,6 @@ const emit = defineEmits(['validation'])
 // ======================================================================== Data
 const verseStore = useVerseStore()
 const pocketStore = usePocketStore()
-const { token } = storeToRefs(pocketStore)
 const error = ref('')
 const modelValue = ref('')
 const isChecking = ref(false)

@@ -17,24 +17,26 @@
         @validation="handleInputValidation" />
       <!-- ======================================================= Page Name -->
       <span class="input-label">Page name</span>
-      <div :class="['input-wrapper', { active: pageName }]">
+      <div class="input-wrapper">
         <input
           ref="pageNameInputRef"
           autocomplete="off"
           class="input"
           autocapitalize="none"
           placeholder="enter first page name"
-          @change="handlePageNameChange" />
+          @input="handlePageNameInput" />
       </div>
       <!-- =========================================================== Token -->
       <span class="body-text token-text">Enter your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
-      <MultiverseCollisionDetectionInput
-        label-text="Token"
-        placeholder="enter token"
-        input-id="create-verse-token-input"
-        check-collision="token"
-        collision-mode="include"
-        @validation="handleInputValidation" />
+      <div class="input-wrapper">
+        <input
+          ref="tokenInputRef"
+          autocomplete="off"
+          class="input"
+          autocapitalize="none"
+          placeholder="enter token"
+          @input="handleTokenInput" />
+      </div>
       <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
@@ -65,7 +67,7 @@ const pocketStore = usePocketStore()
 const { pocket, token } = storeToRefs(pocketStore)
 
 const pageNameInputRef = ref(null)
-const pageName = ref('')
+const tokenInputRef = ref(null)
 const formData = ref({
   'create-verse-name-input': false,
   'create-verse-page-input': false,
@@ -84,19 +86,39 @@ const validateForm = () => {
   return isValid
 }
 
-const handlePageNameChange = () => {
-  if (pageNameInputRef.value) {
-    handleInputValidation({
-      inputId: 'create-verse-page-input',
-      isValid: true,
-      value: useChangeCase(pageNameInputRef.value.value, 'kebabCase').value
-    })
+const handlePageNameInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
   }
+  handleInputValidation({
+    inputId: 'create-verse-page-input',
+    isValid: sanitized.length > 0,
+    value: sanitized
+  })
+}
+
+const handleTokenInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
+  }
+  handleInputValidation({
+    inputId: 'create-verse-token-input',
+    isValid: sanitized.length > 0,
+    value: sanitized
+  })
 }
 
 const submitCreateVerse = async () => {
+  // hash the submitted token
+  const submittedToken = formData.value['create-verse-token-input'].value
+  const hashedToken = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(submittedToken))
+  const hashedTokenHex = Array.from(new Uint8Array(hashedToken))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
   // if the current token matches the submitted token and verse name is valid, proceed
-  if (validateForm() && token.value === formData.value['create-verse-token-input'].value) {
+  if (validateForm() && token.value === hashedTokenHex) {
     const verseName = formData.value['create-verse-name-input'].value
     const firstPageName = formData.value['create-verse-page-input'].value
     const created = await pocketStore.postCreateVerse({
