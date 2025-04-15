@@ -29,6 +29,7 @@
       :path="thingie.path_data"
       :colors="thingie.colors"
       :position="thingie.at"
+      :location="thingie.location"
       :stroke-width="thingie.stroke_width" />
 
     <ThingieText

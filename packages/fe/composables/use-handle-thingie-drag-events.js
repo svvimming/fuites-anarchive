@@ -96,7 +96,8 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
           _id: thingie._id,
           location: targetLocation,
           record_new_location: true,
-          at
+          at,
+          ...(targetLocation === 'pocket' && { pocket_ref: pocket.value.data._id })
         }, true)
         handleOffset.value = { x: 0, y: 0 }
         // If the page being dropped onto is metastable, trigger a tip

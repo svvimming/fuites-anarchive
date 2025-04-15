@@ -240,5 +240,10 @@
       "add-token": "Success! Your token has been added to the verses above.",
       "generate-token": "Success! Your token was created and added to the verses above."
     }
+  },
+  "pageCreatorAlert": {
+    "title": "'<page-name>' doesn't seem to exist yet!",
+    "messageAuthenticated": "You can create a new page called '<page-name>' by uploading a thingie below:",
+    "messageUnauthenticated": "You can create a new page called '<page-name>' but first, you'll need to enter a token using the pocket."
   }
 }

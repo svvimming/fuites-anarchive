@@ -46,6 +46,10 @@ const props = defineProps({
       x: 0, y: 0
     })
   },
+  location: {
+    type: String,
+    required: true
+  },
   strokeWidth: {
     type: Number,
     required: false,
@@ -126,6 +130,7 @@ const calculateMouseDistance = e => {
  */
 
 const initSoundThingie = () => {
+  if (props.location === 'pocket') { return }
   player.value = document.createElement('audio')
   player.value.crossOrigin = 'anonymous'
   player.value.loop = true

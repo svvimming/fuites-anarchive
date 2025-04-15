@@ -1,9 +1,9 @@
 <template>
   <div ref="viewport" :class="['verse-viewport', { [`drippy-scene-${drippy}`]: drippy }]">
-    <!-- ---------------------------------------------------------- Metadata -->
-    <VerseMetadata />
     <!-- ------------------------------------------------------ Page Creator -->
     <VersePageCreator />
+    <!-- ---------------------------------------------------------- Metadata -->
+    <VerseMetadata />
     <!-- ----------------------------------------------------- Landing Sites -->
     <VerseLandingSites />
     <!-- ------------------------------------------------------------ Pocket -->
