@@ -17,10 +17,11 @@
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
           @dblclick="handleDoubleClick($event)"
+          @mousemove="handleMouseMove($event)"
+          @mouseleave="handleMouseLeave($event)"
           @touchstart="handleTouchStart($event)"
           @touchmove="handleTouchMove($event)"
-          @mousemove="handleMouseMove($event)"
-          @mouseleave="handleMouseLeave($event)">
+          @touchend="handleTouchEnd($event)">
           <v-layer ref="layerRef" :config="initLayer">
 
             <Thingie
@@ -72,13 +73,14 @@ const keydownEventListener = ref(false)
 const loadedIds = ref([])
 const pageshotReady = ref(false)
 const { initPageshot, status } = usePageshotBot(stageRef)
+const touchLast = ref({ x: 0, y: 0 })
+const lastTouchDistance = ref(0)
 const controller = ref({
   arrowLeft: false,
   arrowRight: false,
   arrowUp: false,
   arrowDown: false
 })
-const touchLast = ref({ x: 0, y: 0 })
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -198,9 +200,11 @@ const handleMouseWheel = e => {
  */
 
 const handleTouchStart = e => {
-  const touchPoints = e.evt.touches
-  const touchPoint1 = touchPoints[0]
-  touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+  if (!activeModes.value.mobileEdit) {
+    const touchPoints = e.evt.touches
+    const touchPoint1 = touchPoints[0]
+    touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+  }
 }
 
 /**
@@ -208,17 +212,43 @@ const handleTouchStart = e => {
  */
 
 const handleTouchMove = e => {
-  e.evt.preventDefault()
-  const layer = layerRef.value.getNode()
-  const touchPoints = e.evt.touches
-  const touchPoint1 = touchPoints[0]
-  const deltaX = touchLast.value.x - touchPoint1.clientX
-  const deltaY = touchLast.value.y - touchPoint1.clientY
-  positionScene({
-    x: layer.x() - deltaX,
-    y: layer.y() - deltaY
-  })
-  touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+  if (!activeModes.value.mobileEdit) {
+    e.evt.preventDefault()
+    const layer = layerRef.value.getNode()
+    const touchPoints = e.evt.touches
+    const touch1 = touchPoints[0]
+    const touch2 = touchPoints[1]
+    if (touch1 && touch2) {
+      const p1 = { x: touch1.clientX, y: touch1.clientY }
+      const p2 = { x: touch2.clientX, y: touch2.clientY }
+      // Calculate distance between touch points
+      const distance = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+      if (!lastTouchDistance.value) {
+        lastTouchDistance.value = distance
+        return
+      }
+      // Handle scaling
+      const delta = distance - lastTouchDistance.value
+      scaleScene(delta * 0.01)
+      lastTouchDistance.value = distance
+    } else if (touch1) {
+      const deltaX = touchLast.value.x - touch1.clientX
+      const deltaY = touchLast.value.y - touch1.clientY
+      positionScene({
+        x: layer.x() - deltaX,
+        y: layer.y() - deltaY
+      })
+      touchLast.value = { x: touch1.clientX, y: touch1.clientY }
+    }
+  }
+}
+
+/**
+ * @method handleTouchEnd
+ */
+
+const handleTouchEnd = () => {
+  lastTouchDistance.value = 0
 }
 
 /**
@@ -273,12 +303,11 @@ const positionScene = position => {
  * @desc Zoom the page in and out
  */
 
-const scaleScene = (dir, noScale = false) => {
+const scaleScene = (delta = 0) => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
   const limits = bounds.value
   const oldScale = stage.scaleX()
-  const scaleBy = noScale ? 1 : 1.01
   const canvasCenter = {
     x: stage.width() * 0.5,
     y: stage.height() * 0.5
@@ -287,7 +316,7 @@ const scaleScene = (dir, noScale = false) => {
     x: (canvasCenter.x - stage.x()) / oldScale,
     y: (canvasCenter.y - stage.y()) / oldScale
   }
-  const ratio = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy
+  const ratio = oldScale * (1 + delta)
   // Calculate the new scale. Limit it to be no less that the larger of the two ratios; view width / page width, or, view height / page height
   const newScale = Math.max(ratio, Math.max(stage.width() / limits.x, stage.height() / limits.y))
   stage.scale({ x: newScale, y: newScale })
@@ -361,7 +390,7 @@ onMounted(() => {
   // Add event listeners
   resizeEventListener.value = useThrottleFn(() => {
     setCanvasDimensions()
-    nextTick(() => { scaleScene(1, true) })
+    nextTick(() => { scaleScene(0) })
   }, 25)
   window.addEventListener('resize', resizeEventListener.value)
   // Handle keydown events
@@ -377,11 +406,11 @@ onMounted(() => {
     const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
     if (minus && e.metaKey) {
       e.preventDefault()
-      scaleScene(-1)
+      scaleScene(-0.01)
     }
     if (plus && e.metaKey) {
       e.preventDefault()
-      scaleScene(1)
+      scaleScene(0.01)
     }
     if (arrowLeft && arrowLeft !== controller.value.arrowLeft) {
       initController('arrowLeft')

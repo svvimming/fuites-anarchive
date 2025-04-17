@@ -5,7 +5,10 @@
     __use-strict-mode
     @dragmove="drag($event)"
     @dblclick="doubleClick"
-    @wheel="wheel($event)">
+    @dbltap="doubleTap"
+    @wheel="wheel($event)"
+    @touchmove="handleTouchMove($event)"
+    @touchend="handleTouchEnd($event)">
 
     <v-path
       v-if="!loaded && type !== 'sound'"
@@ -64,7 +67,7 @@ const emit = defineEmits(['record-load'])
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { dragndrop, activeModes, small } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
@@ -74,6 +77,9 @@ const { authenticated } = storeToRefs(pocketStore)
 
 const loaded = ref(false)
 const selectionColor = useGetSelectionColor(props.thingie.colors)
+const lastTouchDistance = ref(0)
+const lastTouchAngle = ref(0)
+const forceDisableDrag = ref(false)
 
 // ==================================================================== Computed
 const bounds = computed(() => props.forceBounds || page.value.data.bounds || { x: 0, y: 0 })
@@ -83,10 +89,11 @@ const at = computed(() => props.thingie.at)
 const opacity = computed(() => props.thingie.opacity || 1)
 const editMode = computed(() => editing.value === props.thingie._id)
 const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {} )
+const draggable = computed(() => authenticated.value && !dragndrop.value && (!small.value || activeModes.value.mobileEdit))
 const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
-  draggable: authenticated.value && !dragndrop.value,
+  draggable: draggable.value && !forceDisableDrag.value,
   listening: !props.thingie.locked,
   opacity: opacity.value,
   offsetX: at.value.width * 0.5,
@@ -153,6 +160,16 @@ const doubleClick = () => {
 }
 
 /**
+ * @method doubleTap
+ */
+
+const doubleTap = () => {
+  if (activeModes.value.mobileEdit) {
+    doubleClick()
+  }
+}
+
+/**
  * @method wheel
  */
 
@@ -177,6 +194,67 @@ const wheel = e => {
       }
     })
   }
+}
+
+/**
+ * @method handleTouchMove
+ */
+
+const handleTouchMove = e => {
+  if (activeModes.value.mobileEdit && editMode.value) {
+    e.evt.preventDefault()
+    const touch1 = e.evt.touches[0]
+    const touch2 = e.evt.touches[1]
+    if (touch1 && !touch2 && forceDisableDrag.value) {
+      forceDisableDrag.value = false
+      return
+    }
+    if (touch1 && touch2) {
+      if (!forceDisableDrag.value) { forceDisableDrag.value = true }
+      const p1 = { x: touch1.clientX, y: touch1.clientY }
+      const p2 = { x: touch2.clientX, y: touch2.clientY }
+      
+      // Calculate current angle between touch points
+      const currentAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI)
+      
+      // Calculate distance between touch points
+      const distance = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+      
+      if (!lastTouchDistance.value) {
+        lastTouchDistance.value = distance
+        lastTouchAngle.value = currentAngle
+        return
+      }
+      
+      // Calculate rotation change
+      const rotationDelta = currentAngle - lastTouchAngle.value
+      lastTouchAngle.value = currentAngle
+      
+      // Handle scaling
+      const delta = distance - lastTouchDistance.value
+      lastTouchDistance.value = distance
+
+      const currentWidth = at.value.width
+      const currentHeight = at.value.height
+      update({
+        at: Object.assign({}, at.value, {
+          width: currentWidth + delta,
+          height: currentHeight + (delta * currentHeight / currentWidth),
+          ...(Math.abs(rotationDelta) > 1 && { rotation: at.value.rotation + rotationDelta })
+        })
+      })
+    }
+  }
+}
+
+/**
+ * @method handleTouchEnd
+ */
+
+const handleTouchEnd = () => {
+  lastTouchDistance.value = 0
+  lastTouchAngle.value = 0
+  forceDisableDrag.value = false
 }
 
 /**
