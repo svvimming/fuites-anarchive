@@ -17,6 +17,8 @@
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
           @dblclick="handleDoubleClick($event)"
+          @touchstart="handleTouchStart($event)"
+          @touchmove="handleTouchMove($event)"
           @mousemove="handleMouseMove($event)"
           @mouseleave="handleMouseLeave($event)">
           <v-layer ref="layerRef" :config="initLayer">
@@ -76,6 +78,7 @@ const controller = ref({
   arrowUp: false,
   arrowDown: false
 })
+const touchLast = ref({ x: 0, y: 0 })
 
 useHandleThingieDragEvents(pageRef, stageRef)
 
@@ -188,6 +191,34 @@ const handleMouseWheel = e => {
       arrowDown: false
     }
   }
+}
+
+/**
+ * @method handleTouchStart
+ */
+
+const handleTouchStart = e => {
+  const touchPoints = e.evt.touches
+  const touchPoint1 = touchPoints[0]
+  touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+}
+
+/**
+ * @method handleTouchMove
+ */
+
+const handleTouchMove = e => {
+  e.evt.preventDefault()
+  const layer = layerRef.value.getNode()
+  const touchPoints = e.evt.touches
+  const touchPoint1 = touchPoints[0]
+  const deltaX = touchLast.value.x - touchPoint1.clientX
+  const deltaY = touchLast.value.y - touchPoint1.clientY
+  positionScene({
+    x: layer.x() - deltaX,
+    y: layer.y() - deltaY
+  })
+  touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
 }
 
 /**

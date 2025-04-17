@@ -1,0 +1,523 @@
+{
+  "verse": {
+    "settings": {
+        "tunneler": {
+            "portalChainLength": 3
+        }
+    },
+    "average_colors": {
+        "primary": "#9e7a6d",
+        "secondary": "#9a867f"
+    },
+    "_id": "66f9db9ed883c52fcc3e1136",
+    "name": "fog",
+    "page_refs": [
+        {
+            "_id": "66f9eca4d883c52fcc43b373",
+            "name": "portal"
+        },
+        {
+            "_id": "674e10c1d883c52fccb252c8",
+            "name": "joy"
+        },
+        {
+            "_id": "675c3ee3d883c52fcc589d53",
+            "name": "compost"
+        },
+        {
+            "_id": "6766eee7045085504c513138",
+            "name": "oro"
+        },
+        {
+            "_id": "6766f5836ecfdc0d3aabd939",
+            "name": "mochi"
+        },
+        {
+            "_id": "6766f693a85dd0f6e51f4de2",
+            "name": "gyoza"
+        },
+        {
+            "_id": "6766f8c10ef65b69e98049dd",
+            "name": "turron"
+        },
+        {
+            "_id": "6766faaa0ef65b69e9804d0a",
+            "name": "hi"
+        },
+        {
+            "_id": "676d30f0e7e5977a87957c00",
+            "name": "oh"
+        },
+        {
+            "_id": "676d312ee7e5977a87957c18",
+            "name": "my"
+        },
+        {
+            "_id": "679b832b9235ba9a8fbbae94",
+            "name": "ilks-naiad"
+        },
+        {
+            "_id": "679b865565bf0eb66ff9f119",
+            "name": "naiad-indian-khaki"
+        }
+    ],
+    "updatedAt": "2025-03-13T02:32:55.465Z",
+    "public": true
+  },
+  "page": {
+    "bounds": {
+        "x": 2732,
+        "y": 2000
+    },
+    "temperature": 0,
+    "_id": "674e10c1d883c52fccb252c8",
+    "name": "joy",
+    "verse": "fog",
+    "initiator_token": "aa-ee-oo",
+    "portal_refs": [
+        {
+            "manual": false,
+            "_id": "67533e195879c967fa68a002",
+            "thingie_ref": {
+                "_id": "672d0173d0ae8bd0bd248121",
+                "colors": [
+                    "#BC6234",
+                    "#402D20",
+                    "#6C2C19"
+                ]
+            },
+            "verse_ref": "66f9db9ed883c52fcc3e1136",
+            "verse": "fog",
+            "vertices": [
+                {
+                    "at": {
+                        "x": 335.81974566288,
+                        "y": 393.092882789686
+                    },
+                    "location": "portal",
+                    "page_ref": {
+                        "_id": "66f9eca4d883c52fcc43b373",
+                        "print_refs": [
+                            "675334ca7f4dc565ad6b8d34",
+                            "6785647090ea91db6c853849",
+                            "678564aa90ea91db6c853862",
+                            "67856a7590ea91db6c8538c7",
+                            "67856a9290ea91db6c8538e4",
+                            "67856b3a90ea91db6c8538fd",
+                            "6785703390ea91db6c853948",
+                            "6785721f90ea91db6c853957",
+                            "6785724290ea91db6c853970",
+                            "6785726690ea91db6c85397f",
+                            "6785728b90ea91db6c85398e",
+                            "67858cd290ea91db6c853a75",
+                            "67858cd990ea91db6c853a88",
+                            "67858d3c90ea91db6c853a97",
+                            "67858df290ea91db6c853aa6",
+                            "67858df990ea91db6c853ab5",
+                            "67858fac90ea91db6c853ac4",
+                            "67858ff090ea91db6c853ad3",
+                            "6786693c61ecd0a755ca8be7",
+                            "6786694c61ecd0a755ca8c00",
+                            "678669f161ecd0a755ca8cb2",
+                            "678669f961ecd0a755ca8cba",
+                            "67bf1e2116db827f009df099"
+                        ]
+                    }
+                },
+                {
+                    "at": {
+                        "x": 352.81974566288,
+                        "y": 204.09288278968597
+                    },
+                    "location": "joy",
+                    "page_ref": {
+                        "_id": "674e10c1d883c52fccb252c8",
+                        "print_refs": []
+                    }
+                }
+            ],
+            "createdAt": "2024-12-06T18:10:33.495Z",
+            "updatedAt": "2025-04-08T03:53:06.937Z",
+            "__v": 0
+        }
+    ],
+    "state": "clumping",
+    "print_refs": [],
+    "init_screencap": false,
+    "updatedAt": "2025-04-08T03:50:46.306Z",
+    "filtered_portals": [
+        {
+            "manual": false,
+            "_id": "67533e195879c967fa68a002",
+            "thingie_ref": {
+                "_id": "672d0173d0ae8bd0bd248121",
+                "colors": [
+                    "#BC6234",
+                    "#402D20",
+                    "#6C2C19"
+                ]
+            },
+            "verse_ref": "66f9db9ed883c52fcc3e1136",
+            "verse": "fog",
+            "vertices": [
+                {
+                    "at": {
+                        "x": 335.81974566288,
+                        "y": 393.092882789686
+                    },
+                    "location": "portal",
+                    "page_ref": {
+                        "_id": "66f9eca4d883c52fcc43b373",
+                        "print_refs": [
+                            "675334ca7f4dc565ad6b8d34",
+                            "6785647090ea91db6c853849",
+                            "678564aa90ea91db6c853862",
+                            "67856a7590ea91db6c8538c7",
+                            "67856a9290ea91db6c8538e4",
+                            "67856b3a90ea91db6c8538fd",
+                            "6785703390ea91db6c853948",
+                            "6785721f90ea91db6c853957",
+                            "6785724290ea91db6c853970",
+                            "6785726690ea91db6c85397f",
+                            "6785728b90ea91db6c85398e",
+                            "67858cd290ea91db6c853a75",
+                            "67858cd990ea91db6c853a88",
+                            "67858d3c90ea91db6c853a97",
+                            "67858df290ea91db6c853aa6",
+                            "67858df990ea91db6c853ab5",
+                            "67858fac90ea91db6c853ac4",
+                            "67858ff090ea91db6c853ad3",
+                            "6786693c61ecd0a755ca8be7",
+                            "6786694c61ecd0a755ca8c00",
+                            "678669f161ecd0a755ca8cb2",
+                            "678669f961ecd0a755ca8cba",
+                            "67bf1e2116db827f009df099"
+                        ]
+                    }
+                },
+                {
+                    "at": {
+                        "x": 352.81974566288,
+                        "y": 204.09288278968597
+                    },
+                    "location": "joy",
+                    "page_ref": {
+                        "_id": "674e10c1d883c52fccb252c8",
+                        "print_refs": []
+                    }
+                }
+            ],
+            "createdAt": "2024-12-06T18:10:33.495Z",
+            "updatedAt": "2025-04-08T03:53:06.937Z",
+            "__v": 0
+        }
+    ]
+  },
+  "thingies": [
+    {
+        "last_update": {
+            "token": "aa-ee-oo",
+            "timestamp": "1742401955743"
+        },
+        "at": {
+            "x": 1089,
+            "y": 1026,
+            "width": 85.10172746355667,
+            "height": 302.6370420473674,
+            "rotation": 0
+        },
+        "locked": false,
+        "_id": "67d7817cbd22c8ff9d1d7f16",
+        "file_ref": {
+            "_id": "67d7817cbd22c8ff9d1d7f11",
+            "filename": "Captura de Pantalla 2025-03-16 a las 21.56.56.png",
+            "file_ext": "png"
+        },
+        "pocket_ref": "66f9dfe0d883c52fcc3f7bc6",
+        "verse": "fog",
+        "location": "joy",
+        "location_history": [
+            {
+                "at": {
+                    "x": 245.1612943443056,
+                    "y": 234.0115683605295
+                },
+                "location": "pocket"
+            },
+            {
+                "at": {
+                    "x": 908,
+                    "y": 768
+                },
+                "location": "joy"
+            }
+        ],
+        "thingie_type": "image",
+        "creator_token": "aa-ee-oo",
+        "zIndex": 1,
+        "opacity": 1,
+        "dragging": false,
+        "update_count": 947,
+        "preacceleration": 0,
+        "consistencies": [
+            "lola",
+            "all",
+            "prim"
+        ],
+        "colors": [
+            "#ECE4EC",
+            "#F0E4EC",
+            "#F0E4EC"
+        ],
+        "css": [],
+        "clip": true,
+        "gain": 1,
+        "stroke_width": 3,
+        "path_data": "177 122 178 123 188 119 210 94 212 61 203 46 179 29 155 18 135 18 120 24 108 38 114 61 122 68 122 68 90 48 55 38 39 35 28 36 20 45 14 62 11 80 12 94 27 108 39 120 46 147 31 184 11 199 9 200 11 226 38 253 64 261 77 261 95 255 105 248 136 225 177 234 195 255 210 260 227 256 237 241 239 218 239 205 236 196 235 184 241 175 251 168 253 152 241 129 205 133 175 183 168 214 156 218 141 209 136 202 137 188 143 174 160 166 188 167 200 167 203 152 200 147 198 147 196 147 194 143 186 137 176 137 161 143 148 148 141 149 135 141 133 126 140 118 150 115 159 115 166 115 170 115",
+        "text": "",
+        "createdAt": "2025-03-17T01:57:16.573Z",
+        "updatedAt": "2025-03-19T16:32:35.743Z",
+        "__v": 0
+    },
+    {
+        "last_update": {
+            "token": "aa-ee-oo",
+            "timestamp": "1742405563704"
+        },
+        "at": {
+            "x": 978,
+            "y": 721,
+            "width": 359.0324057186954,
+            "height": 359.0324057186954,
+            "rotation": 0
+        },
+        "locked": false,
+        "_id": "67daef58a517f93e13c6dc61",
+        "file_ref": {
+            "_id": "67daef57a517f93e13c6dc5b",
+            "filename": "Carretera de Granada Dilar.m4a",
+            "file_ext": "m4a"
+        },
+        "pocket_ref": "66f9dfe0d883c52fcc3f7bc6",
+        "verse": "fog",
+        "location": "joy",
+        "location_history": [
+            {
+                "at": {
+                    "x": 407.0059747447322,
+                    "y": 314.2935180241202
+                },
+                "location": "pocket"
+            },
+            {
+                "at": {
+                    "x": 753,
+                    "y": 269
+                },
+                "location": "joy"
+            }
+        ],
+        "thingie_type": "sound",
+        "creator_token": "aa-ee-oo",
+        "zIndex": 1,
+        "opacity": 1,
+        "dragging": false,
+        "update_count": 1271,
+        "preacceleration": 0,
+        "consistencies": [],
+        "colors": [
+            "#ECE4EC",
+            "#231b71"
+        ],
+        "css": [],
+        "clip": false,
+        "gain": 1,
+        "stroke_width": 3,
+        "path_data": "170 46 162 45 71 52 41 68 68 88 121 99 145 110 148 124 133 132 98 128 70 121 59 121 59 144 74 171 109 170 103 179 47 191 30 212 39 233 78 236 122 231 156 230 175 222 183 208 183 185 160 166 134 158 124 157 121 150 136 146 161 146 182 139 191 134 198 123 199 105 194 95 182 88 172 83 172 77 191 73 201 68 205 58 197 51 185 49",
+        "text": "",
+        "createdAt": "2025-03-19T16:22:48.595Z",
+        "updatedAt": "2025-03-19T17:32:43.704Z",
+        "__v": 0
+    },
+    {
+        "last_update": {
+            "token": "aa-ee-oo",
+            "timestamp": "1744211900165"
+        },
+        "at": {
+            "x": 1314,
+            "y": 881,
+            "width": 563.5202601291239,
+            "height": 563.5202601291239,
+            "rotation": 0
+        },
+        "locked": false,
+        "_id": "67daf1b0a517f93e13c6df8e",
+        "file_ref": {
+            "_id": "67daf1afa517f93e13c6df89",
+            "filename": "original_8ca4c4ec4feedebb981a71b514471db3.jpeg",
+            "file_ext": "jpeg"
+        },
+        "pocket_ref": "66f9dfe0d883c52fcc3f7bc6",
+        "verse": "fog",
+        "location": "joy",
+        "location_history": [
+            {
+                "at": {
+                    "x": 86.15864383338467,
+                    "y": 162.42461586623403
+                },
+                "location": "pocket"
+            },
+            {
+                "at": {
+                    "x": 620,
+                    "y": 308
+                },
+                "location": "joy"
+            }
+        ],
+        "thingie_type": "image",
+        "creator_token": "aa-ee-oo",
+        "zIndex": 1,
+        "opacity": 1,
+        "dragging": false,
+        "update_count": 3946,
+        "preacceleration": 0,
+        "consistencies": [
+            "woodsmoke",
+            "smoked",
+            "thatch",
+            "waterloo ",
+            "looter",
+            "retool"
+        ],
+        "colors": [
+            "#151617",
+            "#BD9D9B",
+            "#797C90"
+        ],
+        "css": [],
+        "clip": true,
+        "gain": 1,
+        "stroke_width": 3,
+        "path_data": "218 68 195 49 170 43 140 41 114 42 96 47 81 56 69 69 62 80 56 94 54 104 54 119 54 135 58 142 69 147 78 151 88 152 101 152 116 153 129 156 138 167 140 176 139 182 136 189 120 196 103 200 87 205 80 211 81 224 95 240 110 247 134 250 164 251 185 245 205 234 217 219 221 205 220 188 216 172 210 154 203 142 202 134 209 124 218 115 227 105 233 97 234 90 227 79 221 73 218 70",
+        "text": "",
+        "createdAt": "2025-03-19T16:32:48.061Z",
+        "updatedAt": "2025-04-09T15:18:20.165Z",
+        "__v": 0
+    },
+    {
+        "last_update": {
+            "token": "aa-ee-oo",
+            "timestamp": "1742405102639"
+        },
+        "at": {
+            "x": 1180,
+            "y": 1021,
+            "width": 568.4163246154785,
+            "height": 40.05618394941292,
+            "rotation": 0
+        },
+        "locked": false,
+        "_id": "67daf1e0a517f93e13c6e017",
+        "file_ref": {
+            "_id": "67daf1e0a517f93e13c6e012",
+            "filename": "Captura de Pantalla 2025-03-19 a las 12.33.14.png",
+            "file_ext": "png"
+        },
+        "pocket_ref": "66f9dfe0d883c52fcc3f7bc6",
+        "verse": "fog",
+        "location": "joy",
+        "location_history": [
+            {
+                "at": {
+                    "x": 459.86068714438585,
+                    "y": 167.40512430492433
+                },
+                "location": "pocket"
+            },
+            {
+                "at": {
+                    "x": 1467,
+                    "y": 659
+                },
+                "location": "joy"
+            }
+        ],
+        "thingie_type": "image",
+        "creator_token": "aa-ee-oo",
+        "zIndex": 1,
+        "opacity": 1,
+        "dragging": false,
+        "update_count": 258,
+        "preacceleration": 0,
+        "consistencies": [
+            "black",
+            "night rider",
+            "dithering"
+        ],
+        "colors": [
+            "#040404",
+            "#080404",
+            "#080404"
+        ],
+        "css": [],
+        "clip": true,
+        "gain": 1,
+        "stroke_width": 3,
+        "path_data": "249 153 249 147 245 123 235 91 228 64 223 51 219 41 213 30 206 19 201 14 196 13 192 31 191 60 191 78 191 90 189 101 185 125 180 138 175 144 173 146 167 131 161 96 157 70 152 50 146 34 140 24 135 21 131 25 121 64 119 97 120 121 120 135 118 149 115 164 114 167 109 164 88 130 76 79 70 43 67 31 65 28 63 25 59 22 54 21 45 41 42 82 42 126 42 148 41 153 41 154 40 154 40 155 39 156 36 159 32 158 23 133 22 91 23 74 23 71 19 59 11 46 8 43 5 41 1 41 0 51 0 64 0 74 2 82 5 95 6 111 8 139 8 162 8 175 7 187 6 196 4 205 4 216 4 230 4 243 5 251 11 257 17 260 19 254 22 241 25 225 27 219 33 221 37 230 44 243 48 254 50 267 52 271 55 271 62 266 67 243 69 208 69 188 69 177 72 175 78 177 82 200 82 204 90 224 101 245 106 256 111 260 117 263 123 256 131 233 133 211 133 178 133 164 134 155 135 146 137 143 141 144 153 175 160 227 160 250 161 260 162 263 165 267 166 268 172 260 182 246 189 223 195 185 201 164 201 161 205 158 218 157 223 182 222 215 221 231 221 240 229 244 241 246 249 243 257 235 260 219 260 201 262 178 263 149 264 129 268 113 269 102 265 91 261 84 258 82 254 81 252 90 251 98 251 103 251 111 251 122 251 130 250 133 249 136 249 141 248 146 248 148",
+        "text": "",
+        "createdAt": "2025-03-19T16:33:36.599Z",
+        "updatedAt": "2025-03-19T17:25:02.639Z",
+        "__v": 0
+    },
+    {
+        "last_update": {
+            "token": "aa-ee-oo",
+            "timestamp": "1742430659330"
+        },
+        "at": {
+            "x": 1354,
+            "y": 1232,
+            "width": 250,
+            "height": 120,
+            "rotation": 0
+        },
+        "locked": false,
+        "_id": "67db31979e862461d9bad3c7",
+        "pocket_ref": "66f9dfe0d883c52fcc3f7bc6",
+        "verse": "fog",
+        "location": "joy",
+        "location_history": [
+            {
+                "at": {
+                    "x": 1358,
+                    "y": 1235
+                },
+                "location": "joy"
+            }
+        ],
+        "thingie_type": "text",
+        "creator_token": "aa-ee-oo",
+        "zIndex": 1,
+        "opacity": 1,
+        "dragging": false,
+        "update_count": 55,
+        "preacceleration": 0,
+        "consistencies": [],
+        "colors": [
+            "#2f2d36",
+            "#343043"
+        ],
+        "css": [],
+        "clip": false,
+        "gain": 1,
+        "stroke_width": 3,
+        "text": "<p>      <span style=\"color: rgb(47, 45, 54)\"> </span><span style=\"font-family: &quot;Nanum Myeongjo&quot;, serif; font-size: 14px; color: rgb(52, 48, 67)\">     hi there this</span></p><p><br></p><p>                         <span style=\"font-family: &quot;Source Code Pro&quot;, monospace\"><strong><em> </em></strong></span><span style=\"font-family: &quot;Source Code Pro&quot;, monospace; color: rgb(151, 112, 168)\"><strong><em> is a big</em></strong></span></p><p><br></p><p><br></p><p><span style=\"font-family: &quot;Source Serif Pro&quot;, serif; font-size: 20px; color: rgb(123, 38, 159)\"><strong>old test</strong></span></p>",
+        "createdAt": "2025-03-19T21:05:27.453Z",
+        "updatedAt": "2025-03-20T00:30:59.330Z",
+        "__v": 0
+    }
+  ]
+}

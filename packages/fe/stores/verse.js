@@ -1,5 +1,6 @@
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
+import MockData from '@/data/mock.json' /** @TODO remove mock data */
 import { useFilterDuplicatePortals } from '../composables/use-filter-duplicate-portals.js'
 
 // ////////////////////////////////////////////////////////////////////// Export
@@ -49,7 +50,9 @@ export const useVerseStore = defineStore('verse', () => {
   const getVerse = async incoming => {
     try {
       useSetStoreData(verse, { loading: true })
-      const response = await useFetchAuth('/get-verse', { verse: incoming.verse, method: 'get' })
+      /** @TODO replace with actual fetch */
+      // const response = await useFetchAuth('/get-verse', { verse: incoming.verse, method: 'get' })
+      const response = MockData.verse
       useSetStoreData(verse, {
         loading: false,
         refresh: false,
@@ -74,7 +77,9 @@ export const useVerseStore = defineStore('verse', () => {
   const getPage = async incoming => {
     try {
       useSetStoreData(page, { loading: true })
-      const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
+      /** @TODO replace with actual fetch */
+      // const response = await useFetchAuth('/get-page', { verse: incoming.verse || verse.value.data.name, page: incoming.page, method: 'get' })
+      const response = MockData.page
       // Add filtered portals to response object
       if (response) {
         response.filtered_portals = await useFilterDuplicatePortals(response.portal_refs)

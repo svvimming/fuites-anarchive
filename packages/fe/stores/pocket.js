@@ -31,7 +31,8 @@ export const usePocketStore = defineStore('pocket', () => {
   
   // ================================================================== Computed
   const token = computed(() => pocket.value?.data.token)
-  const authenticated = computed(() => pocket.value.authenticated && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
+  /** @TODO replace authenticated with actual check */
+  const authenticated = ref(true) //computed(() => pocket.value.authenticated && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
   
   // =================================================================== actions
 

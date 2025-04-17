@@ -34,7 +34,11 @@
         </div>
       </template>
     </DropdownSelector>
-    <!-- ====================================================== Lock Toggle -->
+    <!-- ========================================================= Edit Mode -->
+    <!-- <ButtonIcon>
+    
+    </ButtonIcon> -->
+    <!-- ======================================================= Lock Toggle -->
     <Tooltip
       v-if="lockedThingies.length > 0"
       tooltip="thingie-lock-toggle">
