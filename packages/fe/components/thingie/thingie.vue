@@ -120,6 +120,9 @@ const loadingSvg = computed(() => {
   }
 })
 
+watch(draggable, val => {
+  console.log('thingie.draggable', val)
+}, { immediate: true })
 // ===================================================================== Methods
 /**
  * @method handleSetLoaded
