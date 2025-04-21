@@ -5,10 +5,7 @@
     __use-strict-mode
     @dragmove="drag($event)"
     @dblclick="doubleClick"
-    @dbltap="doubleTap"
-    @wheel="wheel($event)"
-    @touchmove="handleTouchMove($event)"
-    @touchend="handleTouchEnd($event)">
+    @wheel="wheel($event)">
 
     <v-path
       v-if="!loaded && type !== 'sound'"
@@ -120,6 +117,9 @@ const loadingSvg = computed(() => {
   }
 })
 
+// @dbltap="doubleTap"
+// @touchmove="handleTouchMove($event)"
+// @touchend="handleTouchEnd($event)"
 watch(draggable, val => {
   console.log('thingie.draggable', val)
 }, { immediate: true })
