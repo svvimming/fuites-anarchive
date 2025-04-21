@@ -157,14 +157,14 @@ export const useCollectorStore = defineStore('collector', () => {
           token: token.value
         }
       })
-      // socket.value.emit('update-thingie', updateAt)
+      socket.value.emit('update-thingie', updateAt)
       updateThingie(updateAt)
     } else {
-      // socket.value.emit('update-thingie', Object.assign({}, update, {
-      //   last_update: {
-      //     token: token.value
-      //   }
-      // }))
+      socket.value.emit('update-thingie', Object.assign({}, update, {
+        last_update: {
+          token: token.value
+        }
+      }))
     }
   }
 
