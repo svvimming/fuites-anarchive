@@ -34,7 +34,14 @@
         </div>
       </template>
     </DropdownSelector>
-    <!-- ====================================================== Lock Toggle -->
+    <!-- ========================================================= Edit Mode -->
+    <ButtonIcon
+      :active="activeModes.mobileEdit"
+      class="mobile-edit-mode-toggle margin-left-gap"
+      @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
+      <IconPencil />
+    </ButtonIcon>
+    <!-- ======================================================= Lock Toggle -->
     <Tooltip
       v-if="lockedThingies.length > 0"
       tooltip="thingie-lock-toggle">
@@ -123,6 +130,7 @@ const handleUnlockPageThingies = () => {
 // ///////////////////////////////////////////////////////////////////// General
 #landing-site-anchor {
   display: flex;
+  .margin-left-gap,
   :deep(.tooltip) {
     margin-left: torem(20);
   }
@@ -173,6 +181,30 @@ const handleUnlockPageThingies = () => {
       transform: translateX(0);
       opacity: 1;
       border-right: torem(14) solid var(--two-tone-a);
+    }
+  }
+}
+
+.mobile-edit-mode-toggle {
+  --two-tone-a: #{$drippyCore};
+  --two-tone-b: white;
+  display: none;
+  transition: 200ms ease;
+  @include small {
+    display: block;
+  }
+  :deep(.slot) {
+    path {
+      transition: 200ms ease;
+      stroke: var(--two-tone-a);
+      stroke-width: 2;
+    }
+  }
+  &.active {
+    :deep(.slot) {
+      path {
+        stroke: var(--two-tone-b);
+      }
     }
   }
 }

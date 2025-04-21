@@ -1,12 +1,14 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 import { v4 } from 'uuid'
+import { useBelowSmall } from '@/composables/use-below-small'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useGeneralStore = defineStore('general', () => {
   // ===================================================================== state
   const config = useRuntimeConfig()
+  const { small } = useBelowSmall()
   const siteData = ref({})
   const sessionId = ref('')
   const dragndrop = ref(false)
@@ -17,11 +19,17 @@ export const useGeneralStore = defineStore('general', () => {
     portals: true,
     audio: false,
     explore: false,
-    tooltips: false
+    tooltips: false,
+    mobileEdit: false
   })
 
   // ================================================================== computed
   const baseUrl = computed(() => config.public.backendUrl)
+
+  // ================================================================== watchers
+  watch(small, (val) => {
+    if (!val) { setMode('mobileEdit', false) }
+  })
 
   // ===================================================================== Hooks
   onMounted(() => { sessionId.value = v4() })
@@ -76,6 +84,14 @@ export const useGeneralStore = defineStore('general', () => {
     activeModes.value[key] = !activeModes.value[key]
   }
 
+  /**
+   * @method setMode
+   */
+
+  const setMode = (key, val) => {
+    activeModes.value[key] = val
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -87,13 +103,15 @@ export const useGeneralStore = defineStore('general', () => {
     draggingThingie,
     mouseOverScene,
     activeModes,
+    small,
     // ----- actions
     setSiteData,
     setDragndrop,
     setPortalEditing,
     setDraggingThingie,
     setMouseOverScene,
-    toggleMode
+    toggleMode,
+    setMode
   }
 })
 

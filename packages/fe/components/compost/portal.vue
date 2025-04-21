@@ -16,8 +16,16 @@
         :active="compostPortalOpen"
         :stylized="buttonText"
         :flat-dashes="3"
-        :class="['compost-portal-button', { active: compostPortalOpen }]"
+        :class="['compost-portal-button', 'desktop', { active: compostPortalOpen }]"
         @clicked="compostPortalOpen = !compostPortalOpen" />
+
+      <ButtonIcon
+        v-if="authenticated"
+        :active="compostPortalOpen"
+        :class="['compost-portal-button', 'mobile', { active: compostPortalOpen }]"
+        @clicked="compostPortalOpen = !compostPortalOpen">
+        <IconRecycle />
+      </ButtonIcon>
 
     </Tooltip>
 
@@ -95,6 +103,28 @@ const verseName = computed(() => verse.value.data?.name)
   --two-tone-b: white;
   &.active {
     transform: rotate(-15deg);
+  }
+  &.desktop {
+    @include small {
+      display: none;
+    }
+  }
+  &.mobile {
+    display: none;
+    --two-tone-a: #{$kellyGreen};
+    --two-tone-b: white;
+    :deep(path) {
+      stroke: var(--two-tone-a);
+    }
+    &.active {
+      transform: none;
+      :deep(path) {
+        stroke: var(--two-tone-b);
+      }
+    }
+    @include small {
+      display: flex;
+    }
   }
 }
 
