@@ -138,6 +138,7 @@ const handleSetLoaded = val => {
  */
 
 const drag = e => {
+  console.log('thingie.drag', e)
   if (authenticated.value) {
     const attrs = e.target.attrs
     update({

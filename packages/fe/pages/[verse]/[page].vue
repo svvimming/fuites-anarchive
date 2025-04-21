@@ -135,6 +135,7 @@ const handleRecordLoad = id => {
  */
 
 const handleClick = e => {
+  console.log('handle stage click', e)
   if (authenticated.value) {
     // Handle closing Caddy/Thingie editing
     const target = e.target
