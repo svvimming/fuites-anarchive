@@ -2,7 +2,7 @@
 // -----------------------------------------------------------------------------
 import { defineStore } from 'pinia'
 import { useFetchAuth } from '../composables/use-fetch-auth'
-import MockData from '@/data/mock.json' /** @TODO remove mock data */
+
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useCollectorStore = defineStore('collector', () => {
@@ -42,14 +42,12 @@ export const useCollectorStore = defineStore('collector', () => {
   const getThingies = async () => {
     try {
       useSetStoreData(thingies, { loading: true })
-      /** @TODO replace with actual fetch */
-      // const response = await useFetchAuth('/get-thingies', {
-      //   location: page.value.data?.name,
-      //   verse: verse.value.data.name,
-      //   pocketId: pocket.value.data?._id,
-      //   method: 'get'
-      // })
-      const response = MockData.thingies
+      const response = await useFetchAuth('/get-thingies', {
+        location: page.value.data?.name,
+        verse: verse.value.data.name,
+        pocketId: pocket.value.data?._id,
+        method: 'get'
+      })
       useSetStoreData(thingies, {
         loading: false,
         refresh: false,
