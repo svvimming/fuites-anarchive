@@ -120,14 +120,6 @@ const loadingSvg = computed(() => {
   }
 })
 
-watch(draggable, val => {
-  console.log('thingie.draggable', val)
-}, { immediate: true })
-
-watch(() => props.thingie.locked, val => {
-  console.log('thingie.locked', val)
-}, { immediate: true })
-
 // ===================================================================== Methods
 /**
  * @method handleSetLoaded
@@ -143,7 +135,6 @@ const handleSetLoaded = val => {
  */
 
 const drag = e => {
-  console.log('thingie.drag', e)
   if (authenticated.value) {
     const attrs = e.target.attrs
     update({
