@@ -80,7 +80,7 @@ watch(editing, (newId, oldId) => {
     handleSubmit({
       _id: id.value,
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
-      text: text.replaceAll('<p></p>', '<p><br></p>'),
+      text: text,
       ...(pushColor && {
         colors: colors.value.concat([colorSelectorHex.value.text])
       })
@@ -90,7 +90,7 @@ watch(editing, (newId, oldId) => {
   if (editingThingie && editingThingie.thingie_type === 'text') {
     rect.value = { ...editingThingie.at }
     id.value = editingThingie._id
-    const content = editingThingie.text.replaceAll('<p><br></p>', '<p></p>')
+    const content = editingThingie.text
     textEditor.value.commands.setContent(content, false, { preserveWhitespace: 'full' })
     setTimeout(() => {
       textEditor.value.commands.focus()

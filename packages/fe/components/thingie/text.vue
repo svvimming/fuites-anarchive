@@ -73,19 +73,31 @@ const rasterizeText = () => {
     // div.style.left = '0px'
     // div.style.top = '0px'
     document.body.appendChild(div)
-    // Render div to canvas
-    const rendered = useRenderTextToCanvas(div)
-    raster.value = rendered.canvas
-    key.value++
-    div.remove()
-    emit('loaded', true)
-    // draw hit area for raster
-    nextTick(() => {
-      if (imgNode.value) {
-        imgNode.value.getNode().cache()
-        imgNode.value.getNode().drawHitFromCache()
-      }
+    
+    const dimensions = { width: textConfig.value.width, height: textConfig.value.height }
+    const canvas = useGetHiPPICanvas(dimensions)
+    const foreignObjectSvg = useGetForeignObject(div.innerHTML, dimensions)
+    const svgBlob = new Blob([foreignObjectSvg], { type: 'image/svg+xml;charset=utf-8' })
+    const svgObjectUrl = URL.createObjectURL(svgBlob)
+
+    const svg = new Image()
+    svg.addEventListener('load', function() {
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(svg, 0, 0)
+      URL.revokeObjectURL(svgObjectUrl)
+      raster.value = canvas
+      key.value++
+      div.remove()
+      emit('loaded', true)
+      // draw hit area for raster
+      // nextTick(() => {
+      //   if (imgNode.value) {
+      //     imgNode.value.getNode().cache()
+      //     imgNode.value.getNode().drawHitFromCache()
+      //   }
+      // })
     })
+    svg.src = svgObjectUrl
   }
 }
 </script>
