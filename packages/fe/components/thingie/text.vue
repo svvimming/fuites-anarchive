@@ -35,6 +35,8 @@ const emit = defineEmits(['loaded'])
 const key = ref(0)
 const raster = ref(false)
 const imgNode = ref(null)
+const generalStore = useGeneralStore()
+const { baseUrl } = storeToRefs(generalStore)
 
 // ==================================================================== Computed
 const textConfig = computed(() => ({
@@ -59,24 +61,10 @@ onMounted(() => { rasterizeText() })
 
 // ===================================================================== Methods
 const rasterizeText = () => {
-  if (process.client) {
-    const div = document.createElement('div')
-    div.innerHTML = props.text
-    div.classList.add('thingie-rich-text')
-    div.style.width = `${textConfig.value.width}px`
-    div.style.height = `${textConfig.value.height}px`
-    div.style.position = 'absolute'
-    div.style.fontSize = props.text.fontsize + 'px'
-    div.style.lineHeight = 1
-    div.style.whiteSpace= 'break-spaces'
-    div.style.wordWrap = 'break-word'
-    // div.style.left = '0px'
-    // div.style.top = '0px'
-    document.body.appendChild(div)
-    
+  if (process.client) {    
     const dimensions = { width: textConfig.value.width, height: textConfig.value.height }
     const canvas = useGetHiPPICanvas(dimensions)
-    const foreignObjectSvg = useGetForeignObject(div.innerHTML, dimensions)
+    const foreignObjectSvg = useGetForeignObject(props.text, dimensions)
     const svgBlob = new Blob([foreignObjectSvg], { type: 'image/svg+xml;charset=utf-8' })
     const svgObjectUrl = URL.createObjectURL(svgBlob)
 
@@ -87,15 +75,14 @@ const rasterizeText = () => {
       URL.revokeObjectURL(svgObjectUrl)
       raster.value = canvas
       key.value++
-      div.remove()
       emit('loaded', true)
       // draw hit area for raster
-      // nextTick(() => {
-      //   if (imgNode.value) {
-      //     imgNode.value.getNode().cache()
-      //     imgNode.value.getNode().drawHitFromCache()
-      //   }
-      // })
+      nextTick(() => {
+        if (imgNode.value && !baseUrl.value.startsWith('https://localhost')) {
+          imgNode.value.getNode().cache()
+          imgNode.value.getNode().drawHitFromCache()
+        }
+      })
     })
     svg.src = svgObjectUrl
   }
