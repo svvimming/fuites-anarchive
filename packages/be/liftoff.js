@@ -48,21 +48,3 @@ try {
 } catch (e) {
   console.log(e)
 }
-
-// const reformatTextThingieContent = async () => {
-//   try {
-//     const textThingies = await MC.model.Thingie.find({ thingie_type: 'text' })
-//     const len = textThingies.length
-//     for (let i = 0; i < len; i++) {
-//       const textThingie = textThingies[i]
-//       const content = textThingie.text
-//       const newContent = content.replaceAll('<br>', '')
-//       textThingie.text = newContent
-//       await textThingie.save()
-//     }
-//   } catch (e) {
-//     console.log(e)
-//   }
-// }
-
-// reformatTextThingieContent()
