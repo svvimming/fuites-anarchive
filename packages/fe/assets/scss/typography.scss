@@ -49,6 +49,13 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 400;
 }
 
+// ------------------------------------------------------------------------ Arvo
+@font-face {
+  font-family: 'Arvo';
+  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
 // ----------------------------------------------------------------------- Anton
 @font-face {
   font-family: 'Anton';
@@ -253,10 +260,6 @@ h6, .h6 {
 }
 
 .thingie-rich-text {
-  line-height: 1;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
   p,
   div,
   li {

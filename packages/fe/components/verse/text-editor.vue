@@ -4,7 +4,7 @@
     :class="{ active: id }"
     :style="{
       left: `${(rect.x + sceneData.x - 6) * sceneData.scale - rect.width * 0.5}px`,
-      top: `${(rect.y + sceneData.y - 6) * sceneData.scale - rect.height * 0.5}px`,
+      top: `${(rect.y + sceneData.y + 6) * sceneData.scale - rect.height * 0.5}px`,
       transform: `scale(${sceneData.scale}) rotate(${rotation}deg)`,
       '--highlight-color': highlight
     }">
@@ -80,7 +80,7 @@ watch(editing, (newId, oldId) => {
     handleSubmit({
       _id: id.value,
       at: Object.assign({}, rect.value, { rotation: rotation.value }),
-      text: text,
+      text: text.replaceAll('<p></p>', '<p><br></p>'),
       ...(pushColor && {
         colors: colors.value.concat([colorSelectorHex.value.text])
       })
@@ -90,7 +90,7 @@ watch(editing, (newId, oldId) => {
   if (editingThingie && editingThingie.thingie_type === 'text') {
     rect.value = { ...editingThingie.at }
     id.value = editingThingie._id
-    const content = editingThingie.text
+    const content = editingThingie.text.replaceAll('<p><br></p>', '<p></p>')
     textEditor.value.commands.setContent(content, false, { preserveWhitespace: 'full' })
     setTimeout(() => {
       textEditor.value.commands.focus()
