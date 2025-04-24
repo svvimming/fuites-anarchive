@@ -48,7 +48,8 @@
       "class": "source-sans-pro",
       "display": "Source Sans Pro",
       "styleAttribute": "Source Sans Pro, sans-serif",
-      "fontFaceDeclaration": "\"Source Sans Pro\", sans-serif"
+      "fontFaceDeclaration": "\"Source Sans Pro\", sans-serif",
+      "default": true
     },
     {
       "class": "source-serif-pro",
