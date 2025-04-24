@@ -111,7 +111,7 @@ export const useRenderTextElementToCanvas = (canvas, element, config) => {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const len = line.length
-    const lineHeight = line.reduce((max, el) => Math.max(max, el.height || 0), 0)
+    const lineHeight = (line.reduce((max, el) => Math.max(max, el.height || 0), 0)) * 1.2
     currentX = 0
     currentY += lineHeight
     for (let j = 0; j < len; j++) {
