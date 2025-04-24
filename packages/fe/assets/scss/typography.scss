@@ -16,25 +16,6 @@ $fontAssetPath: '@/assets/fonts';
 }
 
 // ---------------------------------------------------------------- Merriweather
-// @font-face {
-//   font-family: 'Merriweather';
-//   src: url('#{$fontAssetPath}/Merriweather/Merriweather-Regular.ttf') format('truetype');
-//   font-weight: 400;
-// }
-
-// @font-face {
-//   font-family: 'Merriweather';
-//   src: url('#{$fontAssetPath}/Merriweather/Merriweather-Italic.ttf') format('truetype');
-//   font-style: italic;
-//   font-weight: 400;
-// }
-
-// @font-face {
-//   font-family: 'Merriweather';
-//   src: url('#{$fontAssetPath}/Merriweather/Merriweather-Bold.ttf') format('truetype');
-//   font-weight: 700;
-// }
-
 @font-face {
   font-family: 'Merriweather';
   src: url('#{$fontAssetPath}/Merriweather/Merriweather-VariableFont_opsz,wdth,wght.ttf') format('truetype');
@@ -52,13 +33,6 @@ $fontAssetPath: '@/assets/fonts';
 @font-face {
   font-family: 'Courier Prime';
   src: url('#{$fontAssetPath}/CourierPrime/CourierPrime-Regular.ttf') format('truetype');
-  font-weight: 400;
-}
-
-// ------------------------------------------------------------------------ Arvo
-@font-face {
-  font-family: 'Arvo';
-  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
   font-weight: 400;
 }
 
