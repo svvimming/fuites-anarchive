@@ -1,5 +1,7 @@
 <template>
   <div id="landing-site-anchor" ref="anchorRef">
+    <!-- =============================================== Recording Indicator -->
+    <VerseRecordingIndicator v-if="activeModes.record" />
     <!-- ========================================================== Dropdown -->
     <DropdownSelector
       v-if="authenticated"

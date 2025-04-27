@@ -24,6 +24,8 @@
     <VerseDeletePortalAlert />
     <!-- ---------------------------------------------------- Cursor Tooltip -->
     <TooltipCursor v-if="activeModes.tooltips" />
+    <!-- ---------------------------------------- Create Sound Thingie Alert -->
+    <VerseCreateSoundThingieAlert />
 
   </div>
 </template>

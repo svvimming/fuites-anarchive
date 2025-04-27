@@ -64,7 +64,7 @@ const emit = defineEmits(['record-load'])
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { dragndrop, activeModes } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
@@ -87,7 +87,7 @@ const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
   draggable: authenticated.value && !dragndrop.value,
-  listening: !props.thingie.locked,
+  listening: !props.thingie.locked && !activeModes.value.record,
   opacity: opacity.value,
   offsetX: at.value.width * 0.5,
   offsetY: at.value.height * 0.5 

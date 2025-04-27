@@ -17,7 +17,8 @@ export const useGeneralStore = defineStore('general', () => {
     portals: true,
     audio: false,
     explore: false,
-    tooltips: false
+    tooltips: false,
+    record: false
   })
 
   // ================================================================== computed
