@@ -129,7 +129,6 @@ const handleIncrementVolume = val => {
 const initAudioBufferArray = () => {
   const bufferLength = analyser.value.frequencyBinCount
   audioBufferArray.value = new Uint8Array(bufferLength)
-  console.log(audioBufferArray.value)
 }
 
 /**

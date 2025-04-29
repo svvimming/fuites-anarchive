@@ -134,7 +134,8 @@ const initSoundThingie = () => {
   player.value = document.createElement('audio')
   player.value.crossOrigin = 'anonymous'
   player.value.loop = true
-  player.value.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
+  const path = ['/music/8-fevr-1657.mp3', '/music/63be.mp3']
+  player.value.src = path[Math.floor(Math.random() * path.length)] //`${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
   source.value = audioContext.value.createMediaElementSource(player.value)
   gainNode.value = audioContext.value.createGain()
   gainNode.value.gain.value = 0

@@ -62,7 +62,6 @@ const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 const mixerStore = useMixerStore()
 const { recording } = storeToRefs(mixerStore)
-const alertStore = useZeroAlertStore()
 
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
@@ -262,7 +261,6 @@ const handleMouseMove = useThrottleFn(e => {
 const handleMouseUp = e => {
   if (recording.value.state === 'recording') {
     mixerStore.setRecordingState('complete')
-    alertStore.openAlert('create-sound-thingie-alert')
   }
 }
 
