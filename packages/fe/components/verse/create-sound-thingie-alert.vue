@@ -7,8 +7,21 @@
       <span class="title text">Create Sound Thingie</span>
       <span class="prompt text">Are you happy with the path you just drew?</span>
       <div class="sound-path-preview">
-        <svg v-if="path" width="100%" height="100%" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <path :d="path" fill="none" stroke="black" stroke-width="2" />
+        <svg
+          v-if="path"
+          width="100%"
+          height="100%"
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+          class="svg-path-preview"
+          :style="{ opacity }">
+          <path
+            :d="path"
+            fill="none"
+            stroke="black"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </div>
       <div class="button-row">
@@ -34,9 +47,13 @@ const { recording } = storeToRefs(mixerStore)
 const alertStore = useZeroAlertStore()
 const path = ref('')
 const { normalizePathData } = useNormalizePathData()
+const audioBufferArray = ref(false)
+const requestId = ref(false)
+const opacity = ref(0)
 
 // ==================================================================== Computed
 const open = computed(() => alertStore.getAlert('create-sound-thingie-alert')?.status === 'open')
+const playbackAnalyser = computed(() => recording.value.playbackAnalyser)
 
 // ===================================================================== Watchers
 watch(open, (value) => {
@@ -44,14 +61,16 @@ watch(open, (value) => {
     // playback the sound thingie just created
     mixerStore.playRecording()
     // get the path data from the recording
-    const normalized = normalizePathData(recording.value.path, {
-      outputMinX: 0,
-      outputMaxX: 200,
-      outputMinY: 0,
-      outputMaxY: 200
-    })
+    const normalized = normalizePathData(recording.value.path, { containerMax: 200 })
     // convert the path data to an svg path
     path.value = useGetSvgPath(normalized.join(' '), { closed: false }) || ''
+  }
+})
+
+watch(playbackAnalyser, (value) => {
+  if (value) {
+    initAudioBufferArray()
+    calculateOutputLevel()
   }
 })
 
@@ -74,6 +93,36 @@ const handleCancel = () => {
   alertStore.closeAlert('create-sound-thingie-alert')
   mixerStore.stopPlayback()
   mixerStore.resetRecording()
+  if (requestId.value) {
+    cancelAnimationFrame(requestId.value)
+    audioBufferArray.value = false
+    opacity.value = 0
+  }
+}
+
+/**
+ * @method initAudioBufferArray
+ */
+
+ const initAudioBufferArray = () => {
+  if (!playbackAnalyser.value) return
+  const bufferLength = playbackAnalyser.value.frequencyBinCount
+  audioBufferArray.value = new Uint8Array(bufferLength)
+}
+
+/**
+ * @method calculateOutputLevel
+ */
+
+const calculateOutputLevel = () => {
+  if (!playbackAnalyser.value || !audioBufferArray.value) return
+  playbackAnalyser.value.getByteFrequencyData(audioBufferArray.value)
+  let sum = 0
+  for (const amplitude of audioBufferArray.value) {
+    sum += amplitude * amplitude
+  }
+  opacity.value = 0.025 * Math.sqrt(sum / audioBufferArray.value.length)
+  requestId.value = requestAnimationFrame(calculateOutputLevel)
 }
 </script>
 
@@ -93,11 +142,11 @@ const handleCancel = () => {
   
   .title {
     font-weight: 600;
+    margin-bottom: torem(10);
   }
   
-  .title,
   .prompt {
-    margin-bottom: torem(10);
+    margin-bottom: torem(20);
   }
   
   .text {
@@ -108,9 +157,14 @@ const handleCancel = () => {
 }
 
 .sound-path-preview {
+  padding: 0 torem(42);
+  margin-bottom: torem(20);
   width: 100%;
   height: 100%;
-  margin-bottom: torem(10);
+}
+
+.svg-path-preview {
+  overflow: visible;
 }
 
 .button-row {

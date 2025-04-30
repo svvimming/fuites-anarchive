@@ -17,6 +17,7 @@ export const useMixerStore = defineStore('mixer', () => {
     id: null,
     audioBuffer: null,
     playbackSource: false,
+    playbackAnalyser: false,
     state: 'waiting'
   })
 
@@ -138,7 +139,8 @@ export const useMixerStore = defineStore('mixer', () => {
     
     // Store the source for later stopping
     recording.value.playbackSource = source
-    
+    recording.value.playbackAnalyser = recordingAudioCtx.createAnalyser()
+    source.connect(recording.value.playbackAnalyser)
     // Play the audio
     source.start(0)
     
@@ -156,7 +158,9 @@ export const useMixerStore = defineStore('mixer', () => {
     if (recording.value.playbackSource) {
       // stop the recording playback
       recording.value.playbackSource.stop()
+      recording.value.playbackAnalyser.disconnect()
       recording.value.playbackSource = false
+      recording.value.playbackAnalyser = false
     }
     if (audioContext.value) {
       // resume the page audio context

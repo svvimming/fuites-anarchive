@@ -2,9 +2,7 @@
  * Composable for normalizing path data coordinates to a specified output range
  * @param {number[]} pathData - Flat array of coordinates [x1, y1, x2, y2, ...]
  * @param {Object} options - Normalization options
- * @param {number} options.outputMinX - Desired minimum x value in output
- * @param {number} options.outputMaxX - Desired maximum x value in output
- * @param {number} options.outputMinY - Desired minimum y value in output
+ * @param {number} options.containerMax - Desired maximum length of the square container
  * @returns {number[]} Normalized path data in the same format
  */
 export const useNormalizePathData = () => {
@@ -32,25 +30,26 @@ export const useNormalizePathData = () => {
       maxY = Math.max(maxY, y)
     }
 
-    // Calculate the largest dimension difference
     const xRange = maxX - minX
     const yRange = maxY - minY
-    const maxRange = Math.max(xRange, yRange)
+    const { containerMax = 200 } = options
 
-    const {
-      outputMinX = 0,
-      outputMaxX = maxRange,
-      outputMinY = 0,
-      outputMaxY = maxRange
-    } = options
+    const xOutputRange = xRange > yRange ? containerMax : (xRange / yRange) * containerMax
+    const yOutputRange = yRange > xRange ? containerMax : (yRange / xRange) * containerMax
+    const xOutputOffset = xRange > yRange ? 0 : (containerMax - xOutputRange) / 2
+    const yOutputOffset = yRange > xRange ? 0 : (containerMax - yOutputRange) / 2
+    const xOutputMin = xOutputOffset
+    const xOutputMax = xOutputOffset + xOutputRange
+    const yOutputMin = yOutputOffset
+    const yOutputMax = yOutputOffset + yOutputRange
 
     return pathData.map((value, index) => {
       if (index % 2 === 0) {
         // X coordinate
-        return normalizeValue(value, minX, maxX, outputMinX, outputMaxX)
+        return normalizeValue(value, minX, maxX, xOutputMin, xOutputMax)
       } else {
         // Y coordinate
-        return normalizeValue(value, minY, maxY, outputMinY, outputMaxY)
+        return normalizeValue(value, minY, maxY, yOutputMin, yOutputMax)
       }
     })
   }
