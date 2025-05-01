@@ -94,7 +94,7 @@ const config = computed(() => ({
   ...at.value,
   thingie_id: id.value,
   draggable: draggable.value && !forceDisableDrag.value,
-  listening: !props.thingie.locked,
+  listening: !props.thingie.locked && !activeModes.value.record,
   opacity: opacity.value,
   offsetX: at.value.width * 0.5,
   offsetY: at.value.height * 0.5 

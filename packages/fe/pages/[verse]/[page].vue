@@ -17,7 +17,9 @@
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
           @dblclick="handleDoubleClick($event)"
+          @mousedown="handleMouseDown($event)"
           @mousemove="handleMouseMove($event)"
+          @mouseup="handleMouseUp($event)"
           @mouseleave="handleMouseLeave($event)"
           @touchstart="handleTouchStart($event)"
           @touchmove="handleTouchMove($event)"
@@ -29,6 +31,8 @@
               :key="thingie._id"
               :thingie="thingie"
               @record-load="handleRecordLoad" />
+
+            <RecordingPath />
 
             <Portal
               v-if="portalsActive"
@@ -59,6 +63,8 @@ const generalStore = useGeneralStore()
 const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
+const mixerStore = useMixerStore()
+const { recording } = storeToRefs(mixerStore)
 
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
@@ -135,7 +141,7 @@ const handleRecordLoad = id => {
  */
 
 const handleClick = e => {
-  if (authenticated.value) {
+  if (authenticated.value && !activeModes.value.record) {
     // Handle closing Caddy/Thingie editing
     const target = e.target
     const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
@@ -165,7 +171,7 @@ const handleClick = e => {
 
 const handleDoubleClick = e => {
   const target = e.target
-  if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas') {
+  if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && !activeModes.value.record) {
     collectorStore.addNewTextThingie({
       x: e.evt.clientX,
       y: e.evt.clientY
@@ -192,6 +198,84 @@ const handleMouseWheel = e => {
       arrowUp: false,
       arrowDown: false
     }
+  }
+}
+
+/**
+ * @method handleMouseDown
+ * @desc Records mouse coordinates when record mode is enabled
+ */
+
+const handleMouseDown = e => {
+  if (activeModes.value.record) {
+    const stage = stageRef.value.getNode()
+    const point = stage.getPointerPosition()
+    const layer = layerRef.value.getNode()
+    const scale = stage.scaleX()
+    
+    // Convert coordinates to account for layer position and scale
+    const x = (point.x - layer.x()) / scale
+    const y = (point.y - layer.y()) / scale
+    
+    // Add coordinates to recording path using the mixer store method
+    mixerStore.addToRecordingPath(x, y)
+    // Set recording state to recording
+    mixerStore.setRecordingState('recording')
+  }
+}
+
+/**
+ * @method handleMouseMove
+ */
+
+const handleMouseMove = useThrottleFn(e => {
+  const attrs = e.target.attrs
+  const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
+  const mouseOver = mouseOverScene.value
+
+  // Handle recording path coordinates
+  if (activeModes.value.record && recording.value.state === 'recording') {
+    const stage = stageRef.value.getNode()
+    const point = stage.getPointerPosition()
+    const layer = layerRef.value.getNode()
+    const scale = stage.scaleX()
+    
+    // Convert coordinates to account for layer position and scale
+    const x = (point.x - layer.x()) / scale
+    const y = (point.y - layer.y()) / scale
+    
+    // Add coordinates to recording path
+    mixerStore.addToRecordingPath(x, y)
+  }
+
+  // Handle mouse over scene state
+  if (!type && mouseOver) {
+    generalStore.setMouseOverScene(false)
+  } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
+    generalStore.setMouseOverScene({ type: 'thingie', attrs })
+  } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
+    generalStore.setMouseOverScene({ type: 'portal', attrs })
+  }
+}, 10)
+
+/**
+ * @method handleMouseUp
+ * @desc Completes the recording when mouse is released
+ */
+
+const handleMouseUp = e => {
+  if (recording.value.state === 'recording') {
+    mixerStore.setRecordingState('complete')
+  }
+}
+
+/**
+ * @method handleMouseLeave
+ */
+
+const handleMouseLeave = () => {
+  if (mouseOverScene.value) {
+    generalStore.setMouseOverScene(false)
   }
 }
 
@@ -249,33 +333,6 @@ const handleTouchMove = e => {
 
 const handleTouchEnd = () => {
   lastTouchDistance.value = 0
-}
-
-/**
- * @method handleMouseMove
- */
-
-const handleMouseMove = e => {
-  const attrs = e.target.attrs
-  const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
-  const mouseOver = mouseOverScene.value
-  if (!type && mouseOver) {
-    generalStore.setMouseOverScene(false)
-  } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
-    generalStore.setMouseOverScene({ type: 'thingie', attrs })
-  } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
-    generalStore.setMouseOverScene({ type: 'portal', attrs })
-  }
-}
-
-/**
- * @method handleMouseLeave
- */
-
-const handleMouseLeave = () => {
-  if (mouseOverScene.value) {
-    generalStore.setMouseOverScene(false)
-  }
 }
 
 /**

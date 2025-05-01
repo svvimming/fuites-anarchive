@@ -20,13 +20,20 @@ export const useGeneralStore = defineStore('general', () => {
     audio: false,
     explore: false,
     tooltips: false,
+    record: false,
     mobileEdit: false
   })
 
-  // ================================================================== computed
+  // ================================================================== Computed
   const baseUrl = computed(() => config.public.backendUrl)
 
-  // ================================================================== watchers
+  // ================================================================== Watchers
+  watch(() => activeModes.value.record, (val) => {
+    if (val && !activeModes.value.audio) {
+      setMode('audio', true)
+    }
+  })
+
   watch(small, (val) => {
     if (!val) { setMode('mobileEdit', false) }
   })
