@@ -281,6 +281,7 @@ export const useMixerStore = defineStore('mixer', () => {
     // calculate sound thingie at and path data
     const rect = calculatePathRanges(recording.value.path)
     const normalized = normalizePathData(recording.value.path, { containerMax: 200, centerPath: true })
+    const strokeWidth = (200 / Math.max(rect.xRange, rect.yRange)) * 10
     // create the sound thingie
     await collectorStore.postCreateThingie({
       file_id: recording.value.fileId,
@@ -288,6 +289,7 @@ export const useMixerStore = defineStore('mixer', () => {
       path_data: normalized.join(' '),
       location: page.value.data.name,
       colors: [recording.value.color],
+      stroke_width: strokeWidth,
       at: {
         x: rect.minX + (rect.xRange / 2),
         y: rect.minY + (rect.yRange / 2),

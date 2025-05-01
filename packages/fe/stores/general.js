@@ -21,8 +21,15 @@ export const useGeneralStore = defineStore('general', () => {
     record: false
   })
 
-  // ================================================================== computed
+  // ================================================================== Computed
   const baseUrl = computed(() => config.public.backendUrl)
+
+  // ================================================================== Watchers
+  watch(() => activeModes.value.record, (val) => {
+    if (val && !activeModes.value.audio) {
+      setMode('audio', true)
+    }
+  })
 
   // ===================================================================== Hooks
   onMounted(() => { sessionId.value = v4() })
@@ -77,6 +84,14 @@ export const useGeneralStore = defineStore('general', () => {
     activeModes.value[key] = !activeModes.value[key]
   }
 
+  /**
+   * @method setMode
+   */
+
+  const setMode = (key, val) => {
+    activeModes.value[key] = val
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -94,7 +109,8 @@ export const useGeneralStore = defineStore('general', () => {
     setPortalEditing,
     setDraggingThingie,
     setMouseOverScene,
-    toggleMode
+    toggleMode,
+    setMode
   }
 })
 
