@@ -18,7 +18,7 @@
           <path
             :d="path"
             fill="none"
-            stroke="black"
+            :stroke="recording.color"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round" />
@@ -26,14 +26,17 @@
       </div>
       <div class="button-row">
         <ButtonBasic
+          :force-disabled="recording.uploadStatus === 'uploading'"
+          :force-loading="recording.uploadStatus === 'uploading'"
           class="confirm-button"
           @clicked="handleConfirm">
-          Yes, create sound thingie
+          <span class="text">Yes, Create<br>Sound Thingie</span>
         </ButtonBasic>
         <ButtonBasic
+          :force-disabled="recording.uploadStatus === 'uploading'"
           class="cancel-button"
           @clicked="handleCancel">
-          No, try again
+          <span class="text">No, Try again</span>
         </ButtonBasic>
       </div>
     </div>
@@ -46,7 +49,7 @@ const mixerStore = useMixerStore()
 const { recording } = storeToRefs(mixerStore)
 const alertStore = useZeroAlertStore()
 const path = ref('')
-const { normalizePathData } = useNormalizePathData()
+const { normalizePathData } = useTransformPathData()
 const audioBufferArray = ref(false)
 const requestId = ref(false)
 const opacity = ref(0)
@@ -61,7 +64,10 @@ watch(open, (value) => {
     // playback the sound thingie just created
     mixerStore.playRecording()
     // get the path data from the recording
-    const normalized = normalizePathData(recording.value.path, { containerMax: 200 })
+    const normalized = normalizePathData(recording.value.path, {
+      containerMax: 200,
+      centerPath: true
+    })
     // convert the path data to an svg path
     path.value = useGetSvgPath(normalized.join(' '), { closed: false }) || ''
   }
@@ -80,9 +86,13 @@ watch(playbackAnalyser, (value) => {
  */
 
 const handleConfirm = () => {
-  // TODO: Handle sound thingie creation
-  // mixerStore.setRecordingState('waiting')
-  console.log('handleConfirm')
+  mixerStore.initUploadRecording()
+  mixerStore.stopRecordingPlayback()
+  if (requestId.value) {
+    cancelAnimationFrame(requestId.value)
+    audioBufferArray.value = false
+    opacity.value = 0
+  }
 }
 
 /**
@@ -91,7 +101,7 @@ const handleConfirm = () => {
 
 const handleCancel = () => {
   alertStore.closeAlert('create-sound-thingie-alert')
-  mixerStore.stopPlayback()
+  mixerStore.stopRecordingPlayback()
   mixerStore.resetRecording()
   if (requestId.value) {
     cancelAnimationFrame(requestId.value)
@@ -157,10 +167,13 @@ const calculateOutputLevel = () => {
 }
 
 .sound-path-preview {
-  padding: 0 torem(42);
+  padding: torem(20) torem(42);
   margin-bottom: torem(20);
   width: 100%;
   height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: torem(4);
+  @include focusBoxShadowSmall;
 }
 
 .svg-path-preview {
@@ -177,6 +190,7 @@ const calculateOutputLevel = () => {
 
 .confirm-button,
 .cancel-button {
+  flex-grow: 1;
   min-width: torem(120);
 }
 

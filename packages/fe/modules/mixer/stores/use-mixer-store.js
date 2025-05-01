@@ -1,12 +1,25 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 import { defineStore } from 'pinia'
+import { useTransformPathData } from '../../../composables/use-transform-path-data'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useMixerStore = defineStore('mixer', () => {
-  // =================================================================== imports
+  // ===================================================================== setup
   const alertStore = useZeroAlertStore()
+  const collectorStore = useCollectorStore()
+  const { thingies } = storeToRefs(collectorStore)
+  const pocketStore = usePocketStore()
+  const { token } = storeToRefs(pocketStore)
+  const verseStore = useVerseStore()
+  const { page } = storeToRefs(verseStore)
+  const websocketStore = useWebsocketStore()
+  const { socket } = storeToRefs(websocketStore)
+  const { calculatePathRanges, normalizePathData } = useTransformPathData()
+
+  const { $bus } = useNuxtApp()
+
   // ===================================================================== state
   const audioContext = ref(false)
   const mixer = ref(false)
@@ -18,8 +31,18 @@ export const useMixerStore = defineStore('mixer', () => {
     audioBuffer: null,
     playbackSource: false,
     playbackAnalyser: false,
-    state: 'waiting'
+    color: '#000',
+    state: 'waiting',
+    uploadProgress: 0,
+    uploadStatus: 'waiting',
+    fileId: null
   })
+
+  // Upload related refs
+  const fileReader = ref(null)
+  const nextChunkPayload = ref(null)
+  const place = ref(0)
+  const goal = ref(0)
 
   // =================================================================== actions
   /**
@@ -58,7 +81,11 @@ export const useMixerStore = defineStore('mixer', () => {
       id: null,
       audioBuffer: null,
       playbackSource: false,
-      state: 'waiting'
+      color: '#000',
+      state: 'waiting',
+      uploadProgress: 0,
+      uploadStatus: 'waiting',
+      fileId: null
     }
   }
 
@@ -106,7 +133,8 @@ export const useMixerStore = defineStore('mixer', () => {
       }
       // Start recording
       mediaRecorder.value.start()
-
+      // Get a color for the new recording sound path
+      recording.value.color = getRecordingColor()
     } else if (state === 'complete' && mediaRecorder.value) {
       // Stop the recording
       mediaRecorder.value.stop()
@@ -151,10 +179,10 @@ export const useMixerStore = defineStore('mixer', () => {
   }
 
   /**
-   * @method stopPlayback
+   * @method stopRecordingPlayback
    * @desc Stops the current playback of the recorded audio
    */
-  const stopPlayback = () => {
+  const stopRecordingPlayback = () => {
     if (recording.value.playbackSource) {
       // stop the recording playback
       recording.value.playbackSource.stop()
@@ -167,6 +195,136 @@ export const useMixerStore = defineStore('mixer', () => {
       audioContext.value.resume()
     }
   }
+
+  /**
+   * @method getRecordingColor
+   * @desc Gets the color of the last thingie updated by the current user. Uses client side thingies array to avoid extra server call
+   * @returns {string} Color in hex format
+   */
+  const getRecordingColor = () => {
+    const lastThingie = thingies.value.data
+      .filter(item => item.last_update.token === token.value)
+      .reduce((latest, current) => {
+        if (!latest || !latest.last_update) return current
+        if (!current.last_update) return latest
+        return current.last_update.timestamp > latest.last_update.timestamp ? current : latest
+      }, null)
+    return lastThingie?.colors[0] || '#000'
+  }
+
+  /**
+   * @method initUploadRecording
+   * @desc Initiates the upload of the recorded audio to the server
+   */
+  const initUploadRecording = () => {
+    if (!recording.value.audioBuffer) {
+      console.warn('No audio buffer available to upload')
+      return
+    }
+
+    recording.value.uploadStatus = 'uploading'
+    const blob = recording.value.audioBuffer
+    const filename = `recording-${Date.now()}.ogg`
+    const filesize = blob.size
+    const mimetype = blob.type
+
+    // Initialize the upload
+    socket.value.emit('module|file-upload-initialize|payload', {
+      socket_id: socket.value.id,
+      uploader_id: 'audio-recording',
+      filename,
+      filesize,
+      mimetype
+    })
+  }
+
+  /**
+   * @method uploadNextChunk
+   * @desc Handles uploading the next chunk of the audio file
+   * @param {Object} data - Chunk upload data from server
+   */
+  const uploadNextChunk = data => {
+    if (!recording.value.fileId) {
+      recording.value.fileId = data.file_id
+    }
+
+    place.value = data.place
+    goal.value = data.goal
+    const chunksize = data.chunksize
+    const index = place.value * chunksize
+    const chunk = recording.value.audioBuffer.slice(index, index + Math.min(chunksize, (recording.value.audioBuffer.size - index)))
+
+    recording.value.uploadProgress = ((place.value / goal.value) * 100).toFixed(0)
+
+    nextChunkPayload.value = {
+      socket_id: socket.value.id,
+      uploader_id: 'audio-recording',
+      file_id: recording.value.fileId,
+      file_ext: data.file_ext,
+      place: place.value,
+      goal: goal.value
+    }
+
+    fileReader.value.readAsArrayBuffer(chunk)
+  }
+
+  /**
+   * @method handleUploadComplete
+   * @desc Handles the completion of the audio upload
+   */
+  const handleUploadComplete = async () => {
+    // reset the upload progress
+    recording.value.uploadProgress = 100
+    place.value = 0
+    nextChunkPayload.value = null
+
+    // calculate sound thingie at and path data
+    const rect = calculatePathRanges(recording.value.path)
+    const normalized = normalizePathData(recording.value.path, { containerMax: 200, centerPath: true })
+    // create the sound thingie
+    await collectorStore.postCreateThingie({
+      file_id: recording.value.fileId,
+      thingie_type: 'sound',
+      path_data: normalized.join(' '),
+      location: page.value.data.name,
+      colors: [recording.value.color],
+      at: {
+        x: rect.minX + (rect.xRange / 2),
+        y: rect.minY + (rect.yRange / 2),
+        width: rect.xRange,
+        height: rect.xRange, // height = width because the path container is square
+        rotation: 0
+      }
+    })
+    // set the recording upload status to complete
+    recording.value.uploadStatus = 'complete'
+    // reset the recording
+    alertStore.closeAlert('create-sound-thingie-alert')
+    resetRecording()
+  }
+
+  /**
+   * @method setupFileUpload
+   * @desc Sets up the file reader and socket listeners for file upload
+   * @param {Object} websocket - The websocket instance
+   */
+  const setupFileUpload = websocket => {
+    fileReader.value = new FileReader()
+    fileReader.value.onload = (e) => {
+      websocket.emit('module|file-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
+    }
+    websocket.on('audio-recording|file-upload-chunk|payload', uploadNextChunk)
+    websocket.on('audio-recording|file-upload-complete|payload', handleUploadComplete)
+  }
+
+  // ==================================================================== Socket
+  // Add socket connection handler
+  $bus.$on('socket.io-connected', setupFileUpload)
+
+  // Remove socket connection handler
+  onBeforeUnmount(() => {
+    $bus.$off('socket.io-connected', setupFileUpload)
+  })
 
   // ==================================================================== return
   return {
@@ -182,6 +340,7 @@ export const useMixerStore = defineStore('mixer', () => {
     setRecordingState,
     resetRecording,
     playRecording,
-    stopPlayback
+    stopRecordingPlayback,
+    initUploadRecording
   }
 })

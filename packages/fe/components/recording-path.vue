@@ -16,8 +16,8 @@ const config = computed(() => {
   if (!path.value.length) return null
   return {
     points: path.value,
-    stroke: '#000000',
-    strokeWidth: 2,
+    stroke: recording.value.color,
+    strokeWidth: 10,
     lineCap: 'round',
     lineJoin: 'round'
   }
