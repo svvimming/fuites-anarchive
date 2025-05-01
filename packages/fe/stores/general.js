@@ -1,12 +1,14 @@
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 import { v4 } from 'uuid'
+import { useBelowSmall } from '@/composables/use-below-small'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
 export const useGeneralStore = defineStore('general', () => {
   // ===================================================================== state
   const config = useRuntimeConfig()
+  const { small } = useBelowSmall()
   const siteData = ref({})
   const sessionId = ref('')
   const dragndrop = ref(false)
@@ -18,7 +20,8 @@ export const useGeneralStore = defineStore('general', () => {
     audio: false,
     explore: false,
     tooltips: false,
-    record: false
+    record: false,
+    mobileEdit: false
   })
 
   // ================================================================== Computed
@@ -29,6 +32,10 @@ export const useGeneralStore = defineStore('general', () => {
     if (val && !activeModes.value.audio) {
       setMode('audio', true)
     }
+  })
+
+  watch(small, (val) => {
+    if (!val) { setMode('mobileEdit', false) }
   })
 
   // ===================================================================== Hooks
@@ -103,6 +110,7 @@ export const useGeneralStore = defineStore('general', () => {
     draggingThingie,
     mouseOverScene,
     activeModes,
+    small,
     // ----- actions
     setSiteData,
     setDragndrop,

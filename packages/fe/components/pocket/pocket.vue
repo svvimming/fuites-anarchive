@@ -6,12 +6,21 @@
       :drippy-scene="2"
       contact="top-left"
       class="pocket-toggle-tooltip">
+
       <ButtonDashed
         :active="pocketOpen"
         :stylized="buttonText"
         :flat-dashes="3"
-        :class="['pocket-toggle-button', { active: pocketOpen }]"
+        :class="['pocket-toggle-button', 'desktop', { active: pocketOpen }]"
         @clicked="pocketStore.setPocketOpen(!pocketOpen)" />
+
+      <ButtonIcon
+        :active="pocketOpen"
+        :class="['pocket-toggle-button', 'mobile', { active: pocketOpen }]"
+        @clicked="pocketStore.setPocketOpen(!pocketOpen)">
+        <IconPocket />
+      </ButtonIcon>
+      
     </Tooltip>
 
     <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
@@ -204,6 +213,28 @@ onUnmounted(() => {
   --two-tone-b: white;
   &.active {
     transform: rotate(15deg);
+  }
+  &.desktop {
+    @include small {
+      display: none;
+    }
+  }
+  &.mobile {
+    display: none;
+    --two-tone-a: #{$billyBlue};
+    --two-tone-b: white;
+    :deep(path) {
+      stroke: var(--two-tone-a);
+    }
+    &.active {
+      transform: none;
+      :deep(path) {
+        stroke: var(--two-tone-b);
+      }
+    }
+    @include small {
+      display: flex;
+    }
   }
 }
 

@@ -2,6 +2,7 @@ console.log('💡 [endpoint] /post-add-token-verse')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
+const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
@@ -12,7 +13,8 @@ MC.app.post('/post-add-token-verse', async (req, res) => {
   try {
     const token = req.body.targetToken
     const verseId = req.body.verseId
-    const exists = await MC.model.Pocket.findOne({ token }).exec()
+    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const exists = await MC.model.Pocket.findOne({ token: hashedToken }).exec()
     if (!exists) {
       SendData(res, 200, 'This token does not exist', { type: 'token-not-found', pocket: false })
       return
@@ -22,7 +24,7 @@ MC.app.post('/post-add-token-verse', async (req, res) => {
       return
     }
     const pocket = await MC.model.Pocket
-      .findOneAndUpdate({ token }, {
+      .findOneAndUpdate({ token: hashedToken }, {
         $push: {
           verses: verseId
         }
