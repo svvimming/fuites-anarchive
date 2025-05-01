@@ -39,6 +39,7 @@ import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
 import FontSize from 'tiptap-extension-font-size'
 import { Color } from '@tiptap/extension-color'
+import Link from '@tiptap/extension-link'
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
@@ -162,7 +163,11 @@ onMounted(async () => {
       TextStyle,
       FontFamily,
       FontSize,
-      Color
+      Color,
+      Link.configure({
+        openOnClick: false,
+        defaultProtocol: 'https'
+      })
     ],
     parseOptions: {
       preserveWhitespace: 'full'

@@ -64,7 +64,8 @@ const rasterizeText = () => {
     div.innerHTML = props.text
     const canvas = useGetHiPPICanvas({ width: textConfig.value.width, height: textConfig.value.height })
     const render = useRenderTextElementToCanvas(canvas, div, textConfig.value)
-    raster.value = render
+    console.log(render)
+    raster.value = render.canvas
     key.value++
     div.remove()
     emit('loaded', true)

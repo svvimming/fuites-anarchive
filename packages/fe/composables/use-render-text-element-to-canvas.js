@@ -28,7 +28,8 @@ const handleTextNode = (node, ctx, collector) => {
     underline: !!collector.underline,
     color: collector.color || '#000000',
     width: textMetrics.width,
-    height: textMetrics.fontBoundingBoxAscent
+    height: textMetrics.fontBoundingBoxAscent,
+    link: collector.link || null
   }
 }
 
@@ -72,6 +73,9 @@ const handleNode = (node, ctx, collector = {}) => {
     case 'u':
       collector = Object.assign({}, collector, { underline: true })
       break
+    case 'a':
+      collector = Object.assign({}, collector, { link: node.href })
+      break
   }
 
   const innerNodes = node.childNodes
@@ -106,6 +110,7 @@ export const useRenderTextElementToCanvas = (canvas, element, config) => {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  const externalLinks = []
   let currentX = 0
   let currentY = 0
   for (let i = 0; i < lines.length; i++) {
@@ -118,6 +123,10 @@ export const useRenderTextElementToCanvas = (canvas, element, config) => {
       const el = line[j]
 
       if (el.br) { continue }
+
+      if (el.link) {
+        externalLinks.push({ url: el.link, text: el.text })
+      }
       
       // Set text properties
       ctx.font = 'normal 16px Source Sans Pro, sans-serif'
@@ -153,5 +162,5 @@ export const useRenderTextElementToCanvas = (canvas, element, config) => {
     }
   }
 
-  return canvas
+  return { canvas, externalLinks }
 }
