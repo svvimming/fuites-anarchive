@@ -39,6 +39,13 @@
         @clicked="lockThingie">
         <IconLock class="icon" />
       </ButtonCaddy>
+      <!-- ===================================================== Link Editor -->
+      <CaddyLinkEditor
+        :active="selected === 'font-editor'"
+        :initial-url="thingie?.link || ''"
+        class="caddy-tool-button z-index-2"
+        :style="getToolTransform('link-editor')"
+        @update-link="updateTextThingieLink" />
       <!-- ==================================================== Tool Buttons -->
       <ButtonCaddy
         v-for="tool in tools"
@@ -328,6 +335,16 @@ const handleGainUpdate = val => {
 }
 
 /**
+ * @method updateTextThingieLink
+ */
+
+const updateTextThingieLink = val => {
+  if (thingie.value) {
+    update({ link: val })
+  }
+}
+
+/**
  * @method openDeleteThingieModal
  */
 
@@ -360,8 +377,20 @@ const getToolTransform = id => {
   if (id === selected.value) {
     return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
-  const index = id === 'trash' ? 2.5 : id === 'lock' ? 1.5 : positions.value[id]
-  const distance = (radii[selected.value] || 60) - (id === 'trash' || id === 'lock' ? 10 : 0)
+  let index = positions.value[id]
+  switch (id) {
+    case 'trash':
+      index = 2.5
+      break
+    case 'lock':
+      index = 1.5
+      break
+    case 'link-editor':
+      index = 0.5
+      break
+  }
+  // const index = id === 'trash' ? 2.5 : id === 'lock' ? 1.5 : positions.value[id]
+  const distance = (radii[selected.value] || 60) - (['trash', 'lock', 'link-editor'].includes(id) ? 10 : 0)
   const phase = tools.value.length === 5 ? (Math.PI / 3.3333) : 0
   const coords = {
     x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + phase) * distance,

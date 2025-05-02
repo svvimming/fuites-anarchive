@@ -163,6 +163,10 @@ const ThingieSchema = new Schema({
     required: false,
     default: ''
   },
+  link: {
+    type: String,
+    required: false
+  },
   locked: {
     type: Boolean,
     required: false,
