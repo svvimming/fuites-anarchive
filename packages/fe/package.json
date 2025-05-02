@@ -20,7 +20,7 @@
     "@tiptap/extension-bold": "^2.10.2",
     "@tiptap/extension-color": "^2.10.2",
     "@tiptap/extension-font-family": "^2.10.2",
-    "@tiptap/extension-link": "^2.11.9",
+    "@tiptap/extension-link": "^2.9.1",
     "@tiptap/extension-strike": "^2.10.2",
     "@tiptap/extension-table": "^2.9.1",
     "@tiptap/extension-table-cell": "^2.9.1",
