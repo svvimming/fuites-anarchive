@@ -36,7 +36,8 @@ const contacts = {
   'resize': 'top-right',
   'volume': 'bottom-right',
   'clip-toggle': 'bottom-right',
-  'lock': 'bottom-left'
+  'lock': 'bottom-left',
+  'link-editor': 'bottom-right'
 }
 
 </script>

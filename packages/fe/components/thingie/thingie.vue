@@ -90,6 +90,7 @@ const type = computed(() => props.thingie.thingie_type)
 const at = computed(() => props.thingie.at)
 const opacity = computed(() => props.thingie.opacity || 1)
 const editMode = computed(() => editing.value === props.thingie._id)
+const extLinkEnabled = computed(() => type.value === 'text' && props.thingie.link && activeModes.value.externalLinks)
 const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {} )
 const draggable = computed(() => authenticated.value && !dragndrop.value && (!small.value || activeModes.value.mobileEdit))
 const config = computed(() => ({
@@ -156,16 +157,17 @@ const drag = e => {
  */
 
 const handleClick = () => {
-  if (type.value === 'text' && props.thingie.link) {
-    console.log(props.thingie.link)
+  if (extLinkEnabled.value) {
+    window.open(props.thingie.link, '_blank')
   }
 }
 
 /**
  * @method doubleClick
  */
+
 const doubleClick = () => {
-  if (authenticated.value && editing.value !== props.thingie._id) {
+  if (authenticated.value && editing.value !== props.thingie._id && !extLinkEnabled.value) {
     collectorStore.setEditing(props.thingie._id)
   }
 }

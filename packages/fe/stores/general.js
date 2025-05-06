@@ -21,7 +21,8 @@ export const useGeneralStore = defineStore('general', () => {
     explore: false,
     tooltips: false,
     record: false,
-    mobileEdit: false
+    mobileEdit: false,
+    externalLinks: true
   })
 
   // ================================================================== Computed
@@ -36,6 +37,10 @@ export const useGeneralStore = defineStore('general', () => {
 
   watch(small, (val) => {
     if (!val) { setMode('mobileEdit', false) }
+  })
+
+  watch(() => activeModes.value.externalLinks, (val) => {
+    console.log('externalLinks', val)
   })
 
   // ===================================================================== Hooks

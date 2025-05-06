@@ -131,6 +131,8 @@ export const usePocketStore = defineStore('pocket', () => {
           authenticated: true,
           data: response.pocket
         })
+        // Turn off external links mode if auth is successful
+        generalStore.setMode('externalLinks', false)
       } else { // If auth is not successful
         if (response.type === 'token-not-found') {
           // If token is not found (manual submission)
@@ -146,6 +148,8 @@ export const usePocketStore = defineStore('pocket', () => {
             verses: []
           }
         })
+        // Turn on external links mode if auth is not successful
+        generalStore.setMode('externalLinks', true)
       }
     } catch (e) {
       useHandleFetchError(e)
