@@ -4,6 +4,7 @@
     :config="config"
     __use-strict-mode
     @dragmove="drag($event)"
+    @click="handleClick"
     @dblclick="doubleClick"
     @wheel="wheel($event)">
 
@@ -35,6 +36,7 @@
     <ThingieText
       v-if="type === 'text'"
       :text="thingie.text"
+      :link="thingie.link || ''"
       :parent-config="config"
       :options="highlight"
       :hidden="editMode"
@@ -143,9 +145,18 @@ const drag = e => {
 }
 
 /**
- * @method doubleClick
+ * @method handleClick
  */
 
+const handleClick = () => {
+  if (type.value === 'text' && props.thingie.link) {
+    console.log(props.thingie.link)
+  }
+}
+
+/**
+ * @method doubleClick
+ */
 const doubleClick = () => {
   if (authenticated.value && editing.value !== props.thingie._id) {
     collectorStore.setEditing(props.thingie._id)
