@@ -58,7 +58,8 @@ MC.app.post('/post-create-thingie', async (req, res) => {
       text: body.text,
       consistencies: [],
       colors: body.colors ? body.colors : [],
-      path_data: body.path_data
+      path_data: body.path_data,
+      stroke_width: body.stroke_width || 10
     })
     await created.populate({
       path: 'file_ref',

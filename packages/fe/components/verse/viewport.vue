@@ -24,6 +24,8 @@
     <VerseDeletePortalAlert />
     <!-- ---------------------------------------------------- Cursor Tooltip -->
     <TooltipCursor v-if="activeModes.tooltips" />
+    <!-- ---------------------------------------- Create Sound Thingie Alert -->
+    <VerseCreateSoundThingieAlert />
 
   </div>
 </template>
@@ -113,6 +115,10 @@ watch(drippy, (scene) => {
   top: torem(25);
   left: torem(25);
   z-index: 2;
+  @include small {
+    top: torem(14);
+    left: torem(14);
+  }
 }
 
 :deep(#landing-site-anchor) {
@@ -120,6 +126,10 @@ watch(drippy, (scene) => {
   top: torem(25);
   right: torem(25);
   z-index: 2;
+  @include small {
+    top: torem(14);
+    right: torem(14);
+  }
 }
 
 :deep(#pocket-anchor) {
@@ -127,6 +137,10 @@ watch(drippy, (scene) => {
   bottom: torem(25);
   right: torem(25);
   z-index: 2;
+  @include small {
+    bottom: torem(14);
+    right: torem(14);
+  }
 }
 
 :deep(#compost-portal-anchor) {
@@ -134,6 +148,10 @@ watch(drippy, (scene) => {
   bottom: torem(25);
   left: torem(25);
   z-index: 3;
+  @include small {
+    bottom: torem(14);
+    left: torem(14);
+  }
 }
 
 :deep(.first-time-user-alert) {

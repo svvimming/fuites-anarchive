@@ -8,7 +8,7 @@ import { useFetchAuth } from '../composables/use-fetch-auth'
 export const useCollectorStore = defineStore('collector', () => {
   // =================================================================== imports
   const generalStore = useGeneralStore()
-  const { sessionId } = storeToRefs(generalStore)
+  const { sessionId, activeModes } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
   const { verse, page, sceneData } = storeToRefs(verseStore)
   const pocketStore = usePocketStore()
@@ -25,6 +25,13 @@ export const useCollectorStore = defineStore('collector', () => {
 
   const editing = ref(false)
   const deleted = ref([])
+
+  // ================================================================== watchers
+  watch(() => activeModes.value.mobileEdit, (val) => {
+    if (!val) {
+      editing.value = false
+    }
+  })
 
   // =================================================================== actions
 

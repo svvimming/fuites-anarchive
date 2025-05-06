@@ -227,9 +227,26 @@
       "label": "portals",
       "slug": "portals",
       "tooltip": "portals-mode-toggle"
+    },
+    {
+      "label": "record",
+      "slug": "record",
+      "tooltip": "record-mode-toggle"
     }
   ],
-  "infoModalMarkdown": "## about fuit.es\n\nFuit.es aims to provide a creative online space, a platform for collective processes designed with the 'Anarchive' as its operational concept; an archive which promotes the continual evolution and variation of its documents rather than their mere preservation.\n\nEach individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as “thingies”. Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at contact@fuit.es, we would be happy to make you a token.\n\n###### *We acknowledge the support of the Canada Council for the Arts.*\n###### *Nous remercions le Conseil des arts du Canada de son soutien.*",
+  "infoModalMarkdown": "## about fuit.es\n\nFuit.es aims to provide a creative online space, a platform for collective processes designed with the 'Anarchive' as its operational concept; an archive which promotes the continual evolution and variation of its documents rather than their mere preservation.\n\nEach individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as \"thingies\". Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at contact@fuit.es, we would be happy to make you a token.\n\n###### *We acknowledge the support of the Canada Council for the Arts.*\n###### *Nous remercions le Conseil des arts du Canada de son soutien.*",
+  "invitePage": {
+    "ctaText": {
+      "uninitialized": "If you already have one, click add token. If not, you can make a new token using the token generator.",
+      "add-token": "Add your token below.",
+      "generate-token": "Using the token generator below, you can create a token. Once you've found one you like, save it somewhere safe and click accept to finalize."
+    },
+    "warningText": "Warning! make sure to copy your token as it will not be shown again.",
+    "successMessage": {
+      "add-token": "Success! Your token has been added to the verses above.",
+      "generate-token": "Success! Your token was created and added to the verses above."
+    }
+  },
   "pageCreatorAlert": {
     "title": "'<page-name>' doesn't seem to exist yet!",
     "messageAuthenticated": "You can create a new page called '<page-name>' by uploading a thingie below:",

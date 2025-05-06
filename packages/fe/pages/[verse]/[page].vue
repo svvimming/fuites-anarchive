@@ -17,8 +17,13 @@
           @wheel="handleMouseWheel($event)"
           @click="handleClick($event)"
           @dblclick="handleDoubleClick($event)"
+          @mousedown="handleMouseDown($event)"
           @mousemove="handleMouseMove($event)"
-          @mouseleave="handleMouseLeave($event)">
+          @mouseup="handleMouseUp($event)"
+          @mouseleave="handleMouseLeave($event)"
+          @touchstart="handleTouchStart($event)"
+          @touchmove="handleTouchMove($event)"
+          @touchend="handleTouchEnd($event)">
           <v-layer ref="layerRef" :config="initLayer">
 
             <Thingie
@@ -26,6 +31,8 @@
               :key="thingie._id"
               :thingie="thingie"
               @record-load="handleRecordLoad" />
+
+            <RecordingPath />
 
             <Portal
               v-if="portalsActive"
@@ -56,6 +63,8 @@ const generalStore = useGeneralStore()
 const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
+const mixerStore = useMixerStore()
+const { recording } = storeToRefs(mixerStore)
 
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
@@ -70,6 +79,8 @@ const keydownEventListener = ref(false)
 const loadedIds = ref([])
 const pageshotReady = ref(false)
 const { initPageshot, status } = usePageshotBot(stageRef)
+const touchLast = ref({ x: 0, y: 0 })
+const lastTouchDistance = ref(0)
 const controller = ref({
   arrowLeft: false,
   arrowRight: false,
@@ -130,7 +141,7 @@ const handleRecordLoad = id => {
  */
 
 const handleClick = e => {
-  if (authenticated.value) {
+  if (authenticated.value && !activeModes.value.record) {
     // Handle closing Caddy/Thingie editing
     const target = e.target
     const targetIsThingie = target.attrs.hasOwnProperty('thingie_id')
@@ -160,7 +171,7 @@ const handleClick = e => {
 
 const handleDoubleClick = e => {
   const target = e.target
-  if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas') {
+  if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && !activeModes.value.record) {
     collectorStore.addNewTextThingie({
       x: e.evt.clientX,
       y: e.evt.clientY
@@ -191,19 +202,70 @@ const handleMouseWheel = e => {
 }
 
 /**
+ * @method handleMouseDown
+ * @desc Records mouse coordinates when record mode is enabled
+ */
+
+const handleMouseDown = e => {
+  if (activeModes.value.record) {
+    const stage = stageRef.value.getNode()
+    const point = stage.getPointerPosition()
+    const layer = layerRef.value.getNode()
+    const scale = stage.scaleX()
+    
+    // Convert coordinates to account for layer position and scale
+    const x = (point.x - layer.x()) / scale
+    const y = (point.y - layer.y()) / scale
+    
+    // Add coordinates to recording path using the mixer store method
+    mixerStore.addToRecordingPath(x, y)
+    // Set recording state to recording
+    mixerStore.setRecordingState('recording')
+  }
+}
+
+/**
  * @method handleMouseMove
  */
 
-const handleMouseMove = e => {
+const handleMouseMove = useThrottleFn(e => {
   const attrs = e.target.attrs
   const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
   const mouseOver = mouseOverScene.value
+
+  // Handle recording path coordinates
+  if (activeModes.value.record && recording.value.state === 'recording') {
+    const stage = stageRef.value.getNode()
+    const point = stage.getPointerPosition()
+    const layer = layerRef.value.getNode()
+    const scale = stage.scaleX()
+    
+    // Convert coordinates to account for layer position and scale
+    const x = (point.x - layer.x()) / scale
+    const y = (point.y - layer.y()) / scale
+    
+    // Add coordinates to recording path
+    mixerStore.addToRecordingPath(x, y)
+  }
+
+  // Handle mouse over scene state
   if (!type && mouseOver) {
     generalStore.setMouseOverScene(false)
   } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
     generalStore.setMouseOverScene({ type: 'thingie', attrs })
   } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
     generalStore.setMouseOverScene({ type: 'portal', attrs })
+  }
+}, 10)
+
+/**
+ * @method handleMouseUp
+ * @desc Completes the recording when mouse is released
+ */
+
+const handleMouseUp = e => {
+  if (recording.value.state === 'recording') {
+    mixerStore.setRecordingState('complete')
   }
 }
 
@@ -215,6 +277,62 @@ const handleMouseLeave = () => {
   if (mouseOverScene.value) {
     generalStore.setMouseOverScene(false)
   }
+}
+
+/**
+ * @method handleTouchStart
+ */
+
+const handleTouchStart = e => {
+  if (!activeModes.value.mobileEdit) {
+    const touchPoints = e.evt.touches
+    const touchPoint1 = touchPoints[0]
+    touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+  }
+}
+
+/**
+ * @method handleTouchMove
+ */
+
+const handleTouchMove = e => {
+  if (!activeModes.value.mobileEdit) {
+    e.evt.preventDefault()
+    const layer = layerRef.value.getNode()
+    const touchPoints = e.evt.touches
+    const touch1 = touchPoints[0]
+    const touch2 = touchPoints[1]
+    if (touch1 && touch2) {
+      const p1 = { x: touch1.clientX, y: touch1.clientY }
+      const p2 = { x: touch2.clientX, y: touch2.clientY }
+      // Calculate distance between touch points
+      const distance = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+      if (!lastTouchDistance.value) {
+        lastTouchDistance.value = distance
+        return
+      }
+      // Handle scaling
+      const delta = distance - lastTouchDistance.value
+      scaleScene(delta * 0.01)
+      lastTouchDistance.value = distance
+    } else if (touch1) {
+      const deltaX = touchLast.value.x - touch1.clientX
+      const deltaY = touchLast.value.y - touch1.clientY
+      positionScene({
+        x: layer.x() - deltaX,
+        y: layer.y() - deltaY
+      })
+      touchLast.value = { x: touch1.clientX, y: touch1.clientY }
+    }
+  }
+}
+
+/**
+ * @method handleTouchEnd
+ */
+
+const handleTouchEnd = () => {
+  lastTouchDistance.value = 0
 }
 
 /**
@@ -242,12 +360,11 @@ const positionScene = position => {
  * @desc Zoom the page in and out
  */
 
-const scaleScene = (dir, noScale = false) => {
+const scaleScene = (delta = 0) => {
   const stage = stageRef.value.getNode()
   const layer = layerRef.value.getNode()
   const limits = bounds.value
   const oldScale = stage.scaleX()
-  const scaleBy = noScale ? 1 : 1.01
   const canvasCenter = {
     x: stage.width() * 0.5,
     y: stage.height() * 0.5
@@ -256,7 +373,7 @@ const scaleScene = (dir, noScale = false) => {
     x: (canvasCenter.x - stage.x()) / oldScale,
     y: (canvasCenter.y - stage.y()) / oldScale
   }
-  const ratio = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy
+  const ratio = oldScale * (1 + delta)
   // Calculate the new scale. Limit it to be no less that the larger of the two ratios; view width / page width, or, view height / page height
   const newScale = Math.max(ratio, Math.max(stage.width() / limits.x, stage.height() / limits.y))
   stage.scale({ x: newScale, y: newScale })
@@ -330,7 +447,7 @@ onMounted(() => {
   // Add event listeners
   resizeEventListener.value = useThrottleFn(() => {
     setCanvasDimensions()
-    nextTick(() => { scaleScene(1, true) })
+    nextTick(() => { scaleScene(0) })
   }, 25)
   window.addEventListener('resize', resizeEventListener.value)
   // Handle keydown events
@@ -346,11 +463,11 @@ onMounted(() => {
     const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
     if (minus && e.metaKey) {
       e.preventDefault()
-      scaleScene(-1)
+      scaleScene(-0.01)
     }
     if (plus && e.metaKey) {
       e.preventDefault()
-      scaleScene(1)
+      scaleScene(0.01)
     }
     if (arrowLeft && arrowLeft !== controller.value.arrowLeft) {
       initController('arrowLeft')

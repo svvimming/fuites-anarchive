@@ -71,7 +71,7 @@ const props = defineProps({
 
 // ======================================================================== Data
 const route = useRoute()
-const bicho = ref([])
+const bicho = ref('')
 const alertStore = useZeroAlertStore()
 const collectorStore = useCollectorStore()
 const verseStore = useVerseStore()
