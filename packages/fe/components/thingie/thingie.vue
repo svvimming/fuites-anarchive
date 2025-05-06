@@ -1,6 +1,7 @@
 <template>
   <v-group
     v-if="id !== 'new-text-thingie'"
+    ref="groupRef"
     :config="config"
     __use-strict-mode
     @dragmove="drag($event)"
@@ -9,7 +10,9 @@
     @wheel="wheel($event)"
     @dbltap="doubleTap"
     @touchmove="handleTouchMove($event)"
-    @touchend="handleTouchEnd($event)">
+    @touchend="handleTouchEnd($event)"
+    @mouseover="hovering = true"
+    @mouseout="hovering = false">
 
     <v-path
       v-if="!loaded && type !== 'sound'"
@@ -82,6 +85,8 @@ const selectionColor = useGetSelectionColor(props.thingie.colors)
 const lastTouchDistance = ref(0)
 const lastTouchAngle = ref(0)
 const forceDisableDrag = ref(false)
+const hovering = ref(false)
+const groupRef = ref(null)
 
 // ==================================================================== Computed
 const bounds = computed(() => props.forceBounds || page.value.data.bounds || { x: 0, y: 0 })
@@ -91,7 +96,7 @@ const at = computed(() => props.thingie.at)
 const opacity = computed(() => props.thingie.opacity || 1)
 const editMode = computed(() => editing.value === props.thingie._id)
 const extLinkEnabled = computed(() => type.value === 'text' && props.thingie.link && activeModes.value.externalLinks)
-const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {} )
+const highlight = computed(() => editMode.value ? { shadowColor: selectionColor, shadowBlur: 10 } : {})
 const draggable = computed(() => authenticated.value && !dragndrop.value && (!small.value || activeModes.value.mobileEdit))
 const config = computed(() => ({
   ...at.value,
@@ -120,6 +125,22 @@ const loadingSvg = computed(() => {
     data: path,
     fill: '#c2c2c2',
     opacity: 0.25
+  }
+})
+
+// ==================================================================== Watchers
+watch(hovering, (val) => {
+  if (extLinkEnabled.value) {
+    const group = groupRef.value.getNode()
+    const layer = group.getLayer()
+    const canvas = layer.getNativeCanvasElement()
+    canvas.style.cursor = val ? 'pointer' : 'default'
+    group.to({
+      scaleX: val ? 1.1 : 1,
+      scaleY: val ? 1.1 : 1,
+      duration: 0.15,
+      easing: Konva.Easings.EaseInOut
+    })
   }
 })
 
@@ -277,4 +298,5 @@ const handleTouchEnd = () => {
 const update = useThrottleFn(data => {
   collectorStore.initThingieUpdate(Object.assign(data, { _id: id.value }))
 }, 5)
+
 </script>

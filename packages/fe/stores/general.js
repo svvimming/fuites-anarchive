@@ -39,10 +39,6 @@ export const useGeneralStore = defineStore('general', () => {
     if (!val) { setMode('mobileEdit', false) }
   })
 
-  watch(() => activeModes.value.externalLinks, (val) => {
-    console.log('externalLinks', val)
-  })
-
   // ===================================================================== Hooks
   onMounted(() => { sessionId.value = v4() })
 
