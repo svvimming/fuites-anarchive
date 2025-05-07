@@ -152,6 +152,14 @@
       "heading": "Portals",
       "message": "A portal is a passageway to another page, click on one to see where it takes you! If you don't want to see them, turn them off here."
     },
+    "record-mode-toggle": {
+      "heading": "Record mode",
+      "message": "When enabled, you can draw a path on the page to create a new sound thingie with the audio triggered by your drawing."
+    },
+    "external-links-mode-toggle": {
+      "heading": "Enable external links",
+      "message": "When enabled, clicking on a text thingie with an external link will navigate to the link rather than edit the text."
+    },
     "token-input-toggle-button": {
       "heading": "Add a token",
       "message": "Click here to submit a token. A token gives access to create within a Verse."
@@ -215,6 +223,10 @@
     "caddy-lock": {
       "heading": "Lock Thingie",
       "message": "Lock this thingie to the background. It will no longer be moveable until you unlock it."
+    },
+    "caddy-link-editor": {
+      "heading": "Add a link",
+      "message": "You can add an external link to a text thingie with this tool."
     }
   },
   "landingSites": [
@@ -232,6 +244,11 @@
       "label": "record",
       "slug": "record",
       "tooltip": "record-mode-toggle"
+    },
+    {
+      "label": "external links",
+      "slug": "externalLinks",
+      "tooltip": "external-links-mode-toggle"
     }
   ],
   "infoModalMarkdown": "## about fuit.es\n\nFuit.es aims to provide a creative online space, a platform for collective processes designed with the 'Anarchive' as its operational concept; an archive which promotes the continual evolution and variation of its documents rather than their mere preservation.\n\nEach individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as \"thingies\". Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at contact@fuit.es, we would be happy to make you a token.\n\n###### *We acknowledge the support of the Canada Council for the Arts.*\n###### *Nous remercions le Conseil des arts du Canada de son soutien.*",

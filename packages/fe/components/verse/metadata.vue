@@ -16,10 +16,10 @@
 
     <button :class="['portal-indicator', { active }]">
       <span class="portal-to">
-        portal to
+        {{ isLink ? 'link to' : 'portal to' }}
       </span>
       <IconArrowRight class="icon"/>
-      <span v-if="destination">
+      <span v-if="destination" class="destination">
         {{ destination }}
       </span>
     </button>
@@ -33,12 +33,18 @@ const generalStore = useGeneralStore()
 const { mouseOverScene } = storeToRefs(generalStore)
 const destination = ref(false)
 const active = ref(false)
+const isLink = ref(false)
 
 // ==================================================================== Watchers
 watch(mouseOverScene, val => {
   if (val?.type === 'portal') {
     destination.value = val.attrs.destination
     active.value = true
+    isLink.value = false
+  } else if (val?.type === 'thingie' && val.attrs.link) {
+    destination.value = val.attrs.link
+    active.value = true
+    isLink.value = true
   } else if (destination.value) {
     active.value = false
   }
@@ -94,6 +100,12 @@ watch(mouseOverScene, val => {
   filter: drop-shadow(0px 6px 6px rgba(#3E4559, 0.25));
   .portal-to {
     font-style: italic;
+  }
+  .destination {
+    max-width: 40ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   span {
     margin-bottom: torem(2);
