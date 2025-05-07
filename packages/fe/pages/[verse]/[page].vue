@@ -121,7 +121,7 @@ watch(data, async (val) => {
 watch(loadedIds, (ids) => {
   pageshotReady.value = textImageIds.value.every(id => ids.includes(id))
   if (page.value?.data?.init_screencap && pageshotReady.value && status.value !== 'complete') {
-    initPageshot()
+    initPageshot({ destination: 'server' })
   }
 }, { deep: true })
 
@@ -461,6 +461,8 @@ onMounted(() => {
     const arrowRight = key === 'ArrowRight' || code === 'ArrowRight' || keyCode === 39
     const arrowUp = key === 'ArrowUp' || code === 'ArrowUp' || keyCode === 38
     const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
+    const print = e.key === 'p' || e.code === 'KeyP' || e.keyCode === 80
+    // Handle zooming
     if (minus && e.metaKey) {
       e.preventDefault()
       scaleScene(-0.01)
@@ -469,6 +471,7 @@ onMounted(() => {
       e.preventDefault()
       scaleScene(0.01)
     }
+    // Handle panning with arrow keys
     if (arrowLeft && arrowLeft !== controller.value.arrowLeft) {
       initController('arrowLeft')
     }
@@ -480,6 +483,10 @@ onMounted(() => {
     }
     if (arrowDown && arrowDown !== controller.value.arrowDown) {
       initController('arrowDown')
+    }
+    // Handle downloading a screenshot of the page
+    if (print && e.shiftKey) {
+      initPageshot({ destination: 'client' })
     }
   }
   window.addEventListener('keydown', keydownEventListener.value)
