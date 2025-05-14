@@ -176,6 +176,10 @@
       "heading": "Portal",
       "message": "A portal is a passageway to another page, click on one to see where it takes you!<br><br>To make a new portal, a shift + click anywhere on the page will let you enter the name of an existing page you want to connect to this one."
     },
+    "canvas": {
+      "heading": "Page",
+      "message": "You can navigate around the page by scrolling or using the arrow keys. To zoom in and out, hold shift and use the + and - keys."
+    },
     "caddy-handle": {
       "heading": "Caddy",
       "message": "Click and drag this hand to grab and move your toolkit"

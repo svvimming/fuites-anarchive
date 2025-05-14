@@ -196,10 +196,17 @@ const handleMouseWheel = e => {
 
 const handleMouseMove = e => {
   const attrs = e.target.attrs
-  const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
+  const type = attrs.hasOwnProperty('thingie_id') ?
+                'thingie' :
+                attrs.hasOwnProperty('portal_id') ?
+                  'portal' :
+                  attrs.id === 'page-canvas' ?
+                    'canvas' : false
   const mouseOver = mouseOverScene.value
   if (!type && mouseOver) {
     generalStore.setMouseOverScene(false)
+  } else if (type === 'canvas' && mouseOver?.type !== 'canvas') {
+    generalStore.setMouseOverScene({ type: 'canvas', attrs })
   } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
     generalStore.setMouseOverScene({ type: 'thingie', attrs })
   } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
@@ -344,11 +351,11 @@ onMounted(() => {
     const arrowRight = key === 'ArrowRight' || code === 'ArrowRight' || keyCode === 39
     const arrowUp = key === 'ArrowUp' || code === 'ArrowUp' || keyCode === 38
     const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
-    if (minus && e.metaKey) {
+    if (minus && e.shiftKey) {
       e.preventDefault()
       scaleScene(-1)
     }
-    if (plus && e.metaKey) {
+    if (plus && e.shiftKey) {
       e.preventDefault()
       scaleScene(1)
     }
