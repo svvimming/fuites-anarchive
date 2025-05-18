@@ -5,9 +5,9 @@
       <div class="slider-wrapper">
         <RadialSliderBounded
           ref="opacitySliderRef"
-          :input-range="[20, 160]"
+          :input-range="[10, 170]"
           :output-range="[0.1, 1]"
-          :include-thumb-bounds="true"
+          :include-track-styles="true"
           @degree-change="handleDegreeChange" />
       </div>
     </div>
@@ -89,7 +89,7 @@ const handleDegreeChange = val => {
   width: torem(50);
   transform: translate(0, -50%);
   padding: torem(8) 0 torem(8) torem(10);
-  overflow: hidden;
+  // overflow: hidden;
 }
 
 .layer-tool {
