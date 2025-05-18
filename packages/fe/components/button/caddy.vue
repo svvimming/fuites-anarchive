@@ -150,8 +150,8 @@ const recessed = computed(() => props.forcePressed || props.selected)
 }
 
 .icon-button {
-  width: torem(52);
-  height: torem(52);
+  width: 100%;
+  height: 100%;
 }
 
 .slot {

@@ -153,8 +153,8 @@ const radii = {
   'rotation': 86,
   'resize': 86,
   'clip-toggle': 60,
-  'font-editor': 86,
-  'color-selector': 86,
+  'font-editor': 90,
+  'color-selector': 90,
   'volume': 86
 }
 const positions = ref({
@@ -176,7 +176,7 @@ const type = computed(() => thingie.value?.thingie_type)
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
-const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 30}px` }))
+const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 40}px` }))
 
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
