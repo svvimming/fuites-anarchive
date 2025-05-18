@@ -52,7 +52,7 @@
         :class="['caddy-tool-button', 'z-index-2']"
         :style="getToolTransform(tool)"
         @clicked="handleToolClick(tool)">
-        <IconFonts v-if="tool === 'font-editor'" class="icon fonts" />
+        <IconFonts v-if="tool === 'font-editor'" class="icon" />
         <IconColorPicker v-if="tool === 'color-selector'" class="icon" />
         <IconRotation v-if="tool === 'rotation'" class="icon" />
         <IconLayerOpacity v-if="tool === 'layer-opacity'" class="icon" />
