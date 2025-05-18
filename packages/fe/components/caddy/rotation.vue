@@ -5,11 +5,13 @@
       ref="slider"
       @degree-change="handleDegreeChange" />
 
-    <ButtonIcon
+    <ButtonCaddy
       :force-disabled="true"
-      class="rotation-icon solid-outline">
+      :force-pressed="true"
+      tool="rotation"
+      class="rotation-icon">
       <IconRotation class="icon" />
-    </ButtonIcon>
+    </ButtonCaddy>
 
   </div>
 </template>
@@ -58,12 +60,12 @@ const handleDegreeChange = deg => {
   width: torem(52);
   height: torem(52);
   transform: translate(-50%, -50%);
-  --two-tone-a: #{$stormGray};
-  --two-tone-b: white;
   .icon {
+    width: torem(20);
+    height: torem(20);
     :deep(rect),
     :deep(path) {
-      stroke: $stormGray;
+      stroke: white;
     }
   }
 }

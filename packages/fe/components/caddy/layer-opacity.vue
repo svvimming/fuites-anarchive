@@ -25,11 +25,13 @@
       </button>
     </div>
 
-    <ButtonIcon
+    <ButtonCaddy
       :force-disabled="true"
-      class="layer-opacity-icon solid-outline">
-      <IconLayerOpacityInverse class="icon" />
-    </ButtonIcon>
+      :force-pressed="true"
+      tool="layer-opacity"
+      class="layer-opacity-icon">
+      <IconLayerOpacity class="icon" />
+    </ButtonCaddy>
     
   </div>
 </template>
@@ -114,7 +116,9 @@ const handleDegreeChange = val => {
   width: torem(52);
   height: torem(52);
   transform: translate(-50%, -50%);
-  --two-tone-a: #{$stormGray};
-  --two-tone-b: white;
+  .icon {
+    width: torem(20);
+    height: torem(20);
+  }
 }
 </style>

@@ -39,11 +39,13 @@
 
     </div>
     <!-- ========================================================= TOOL ICON -->
-    <ButtonIcon
+    <ButtonCaddy
       :force-disabled="true"
-      class="resize-icon solid-outline">
+      :force-pressed="true"
+      tool="resize"
+      class="resize-icon">
       <IconScale class="icon" />
-    </ButtonIcon>
+    </ButtonCaddy>
 
   </div>
 </template>
@@ -141,12 +143,12 @@ const handleStrokeWidthResize = delta => {
   width: torem(52);
   height: torem(52);
   transform: translate(-50%, -50%);
-  --two-tone-a: #{$stormGray};
-  --two-tone-b: white;
   .icon {
+    width: torem(20);
+    height: torem(20);
     :deep(rect),
     :deep(path) {
-      stroke: $stormGray;
+      stroke: white;
     }
   }
 }
