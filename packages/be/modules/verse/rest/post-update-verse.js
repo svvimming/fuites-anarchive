@@ -13,7 +13,7 @@ MC.app.post('/post-update-verse', async (req, res) => {
     const body = req.body
     const verseId = body._id
     const verseUpdates = {}
-    
+
     // List of properties that can be updated
     const properties = ['settings']
 
