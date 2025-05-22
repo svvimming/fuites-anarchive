@@ -268,5 +268,66 @@
     "title": "'<page-name>' doesn't seem to exist yet!",
     "messageAuthenticated": "You can create a new page called '<page-name>' by uploading a thingie below:",
     "messageUnauthenticated": "You can create a new page called '<page-name>' but first, you'll need to open the pocket and enter a token."
+  },
+  "verseSettings": {
+    "invite": {
+      "heading": "Generate an invite link for <<verse-name>>",
+      "description": "Send this link to a collaborator so they can join this verse. Using the link, they'll be able to add their token to this verse."
+    },
+    "crons": {
+      "heading": "Cron settings",
+      "available": [
+        {
+          "name": "fuitesbot",
+          "label": "Fuitesbot",
+          "description": "The fuitesbot likes to stir things up when they've become too still.",
+          "settings": [
+            {
+              "label": "Overflow Intensity",
+              "name": "overflowIntensity",
+              "description": "When a page is too full, it 'tips' over, creating a new page. The fuitesbot redistributes thingies into this new page and any connected pages. Set the intensity of this behaviour here.",
+              "min": 0,
+              "max": 10,
+              "step": 1,
+              "default": 1
+            }
+          ]
+        },
+        {
+          "name": "compost",
+          "label": "Compost",
+          "description": "The compost is a place for leftover thingies. When a page is created, a thingie from the compost will be added to the new page.",
+          "settings": [
+            {
+              "label": "Grace period",
+              "name": "gracePeriod",
+              "description": "The amount of time a thingie can be in the compost before it is deleted from the site.",
+              "min": 1,
+              "max": 180,
+              "step": 1,
+              "default": 30,
+              "unit": "days"
+            }
+          ]
+        },
+        {
+          "name": "tunneler",
+          "label": "Tunneler",
+          "description": "When a thingie moves from one page to another, the tunneler connects those pages by a portal.",
+          "settings": [
+            {
+              "label": "Portal chain length",
+              "name": "portalChainLength",
+              "description": "How far back in the history of a thingie's locations the tunneler will look to keep connections between pages. For example, if set to 5, the last 5 pages a thingie has been on will be connected in the order they were visited.",
+              "min": 1,
+              "max": 10,
+              "step": 1,
+              "default": 3,
+              "unit": "pages"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

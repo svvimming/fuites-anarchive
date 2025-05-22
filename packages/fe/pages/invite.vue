@@ -220,7 +220,11 @@ const submitAcceptInvite = async () => {
 }
 
 const resetInviteForm = () => {
-  inputMode.value = 'uninitialized'
+  if (invite.value.data.hasOwnProperty('generate_allowed') && !invite.value.data.generate_allowed) {
+    inputMode.value = 'add-token'
+  } else {
+    inputMode.value = 'uninitialized'
+  }
   existingToken.value = ''
   newToken.value = ''
   submitting.value = false

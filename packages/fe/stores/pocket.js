@@ -279,11 +279,9 @@ export const usePocketStore = defineStore('pocket', () => {
     try {
       let response = false
       if (type === 'add-token') {
-        console.log(incoming)
         response = await useFetchAuth('/post-accept-invite', Object.assign({}, incoming, {
           method: 'post'
         }))
-        console.log(response)
       } else if (type === 'generate-token') {
         response = await useFetchAuth('/post-create-pocket', Object.assign({}, incoming, {
           method: 'post'
@@ -293,6 +291,19 @@ export const usePocketStore = defineStore('pocket', () => {
     } catch (e) {
       useHandleFetchError(e)
       return false
+    }
+  }
+
+  /**
+   * @method updatePocketVerses
+   * @param {Object} incoming - An incoming verse document
+   */
+
+  const updatePocketVerses = async incoming => {
+    if (pocket.value.data.verses.some(vrs => vrs._id === incoming._id)) {
+      pocket.value.data.verses = pocket.value.data.verses.map(vrs => 
+        vrs._id === incoming._id ? incoming : vrs
+      )
     }
   }
 
@@ -321,7 +332,8 @@ export const usePocketStore = defineStore('pocket', () => {
     postAddVerseToToken,
     postGenerateInvite,
     getInvite,
-    postAcceptInvite
+    postAcceptInvite,
+    updatePocketVerses
   }
 })
 

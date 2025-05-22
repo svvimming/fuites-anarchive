@@ -285,6 +285,31 @@ export const useVerseStore = defineStore('verse', () => {
     }
   }
 
+  /**
+   * @method postUpdateVerseSettings
+   */
+
+  const postUpdateVerseSettings = async incoming => {
+    try {
+      await useFetchAuth('/post-update-verse', Object.assign({}, incoming, {
+        method: 'post'
+      }))
+    } catch (e) {
+      useHandleFetchError(e)
+    }
+  }
+
+  /**
+   * @method updateVerse
+   * @param {Object} incoming - An incoming verse document
+   */
+
+  const updateVerse = async incoming => {
+    if (verse.value.data._id === incoming._id) {
+      useSetStoreData(verse, { data: incoming })
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -310,7 +335,9 @@ export const useVerseStore = defineStore('verse', () => {
     postCreatePortal,
     postDeletePortal,
     initPortalUpdate,
-    updatePortal
+    updatePortal,
+    postUpdateVerseSettings,
+    updateVerse
   }
 })
 

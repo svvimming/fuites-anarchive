@@ -27,11 +27,11 @@ if (process.client && window.matchMedia('(prefers-color-scheme: dark)').matches)
 const { $io, $bus } = useNuxtApp()
 
 // ======================================================================== Data
-
 const generalStore = useGeneralStore()
 const { sessionId, draggingThingie } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
+const pocketStore = usePocketStore()
 const collectorStore = useCollectorStore()
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
@@ -66,9 +66,12 @@ watch(() => page.value.data, async () => {
 
  const handleWebsocketConnected = socket => {
   const namespace = verse.value.data.name
+  // Join rooms
   socket.emit('join-room', `${namespace}|thingies`)
   socket.emit('join-room', `${namespace}|pages`)
   socket.emit('join-room', `${namespace}|portals`)
+  socket.emit('join-room', 'multiverse')
+  // Listen for events
   socket.on('module|update-thingie|payload', (data) => {
     // If the update originated from this session and was updating a thingie 'at'
     // property, don't update in the store - it was already done by the page
@@ -83,6 +86,10 @@ watch(() => page.value.data, async () => {
   })
   socket.on('module|post-update-page|payload', (data) => {
     verseStore.updatePage(data.page)
+  })
+  socket.on('module|post-update-verse|payload', (data) => {
+    verseStore.updateVerse(data.verse)
+    pocketStore.updatePocketVerses(data.verse)
   })
   socket.on('module|update-portal|payload', (data) => {
     // If the update originated from this session, ignore

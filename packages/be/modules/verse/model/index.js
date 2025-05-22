@@ -30,6 +30,20 @@ const VerseSchema = new Schema({
         required: false,
         default: 3
       }
+    },
+    fuitesbot: {
+      overflowIntensity: {
+        type: Number,
+        required: false,
+        default: 1
+      }
+    },
+    compost: {
+      gracePeriod: {
+        type: Number,
+        required: false,
+        default: 30 // 30 days
+      }
     }
   },
   average_colors: {
