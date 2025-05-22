@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /post-add-token-verse')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -13,7 +16,8 @@ MC.app.post('/post-add-token-verse', async (req, res) => {
   try {
     const token = req.body.targetToken
     const verseId = req.body.verseId
-    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
     const exists = await MC.model.Pocket.findOne({ token: hashedToken }).exec()
     if (!exists) {
       SendData(res, 200, 'This token does not exist', { type: 'token-not-found', pocket: false })
