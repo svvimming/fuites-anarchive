@@ -272,7 +272,7 @@
   "verseSettings": {
     "invite": {
       "heading": "Generate an invite link for <<verse-name>>",
-      "description": "Send this link to a collaborator so they can join this verse. Using the link, they'll be able to add their token to this verse or generate a new token if they don't already have one."
+      "description": "Send this link to a collaborator so they can join this verse. Using the link, they'll be able to add their token to this verse."
     },
     "crons": {
       "heading": "Cron settings",
