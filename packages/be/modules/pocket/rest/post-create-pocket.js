@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /post-create-pocket')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -47,7 +50,8 @@ MC.app.post('/post-create-pocket', async (req, res) => {
     }
 
     // Create pocket
-    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
     await MC.model.Pocket.create({
       verses: invite.verses,
       token: hashedToken

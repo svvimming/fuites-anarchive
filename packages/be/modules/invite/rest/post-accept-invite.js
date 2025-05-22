@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /post-generate-invite')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -32,7 +35,8 @@ MC.app.post('/post-accept-invite', async (req, res) => {
       })
     }
     // Get pocket to add verses to
-    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
     const pocket = await MC.model.Pocket.findOne({ token: hashedToken })
     if (!pocket) {
       return SendData(res, 200, 'Invalid token', {

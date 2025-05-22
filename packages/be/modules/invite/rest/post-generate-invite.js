@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /post-generate-invite')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -20,7 +23,8 @@ MC.app.post('/post-generate-invite', async (req, res) => {
       return SendData(res, 400, 'Creator identifier is required')
     }
     // Hash creator identifier
-    const hashedToken = body.hashed ? createdBy : createHash('sha256').update(createdBy).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = body.hashed ? createdBy : createHash('sha256').update(createdBy + salt).digest('hex')
     // Validate required fields
     if (!verses || !Array.isArray(verses) || verses.length === 0) {
       return SendData(res, 400, 'At least one verse must be specified')

@@ -26,6 +26,11 @@
           placeholder="enter first page name"
           @input="handlePageNameInput" />
       </div>
+      <span
+        v-if="errorMessage.code === 'page-name-collision'"
+        class="error-message">
+        {{ errorMessage.message }}
+      </span>
       <!-- =========================================================== Token -->
       <span class="body-text token-text">Enter your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
       <div class="input-wrapper">
@@ -37,6 +42,11 @@
           placeholder="enter token"
           @input="handleTokenInput" />
       </div>
+      <span
+        v-if="errorMessage.code === 'token-mismatch'"
+        class="error-message">
+        {{ errorMessage.message }}
+      </span>
       <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
@@ -64,7 +74,7 @@ import { useChangeCase } from '@vueuse/integrations/useChangeCase'
 const emit = defineEmits(['close-alert'])
 // ======================================================================== Data
 const pocketStore = usePocketStore()
-const { pocket, token } = storeToRefs(pocketStore)
+const { pocket } = storeToRefs(pocketStore)
 
 const pageNameInputRef = ref(null)
 const tokenInputRef = ref(null)
@@ -74,6 +84,7 @@ const formData = ref({
   'create-verse-token-input': false
 })
 const formValid = ref(false)
+const errorMessage = ref({})
 
 // ===================================================================== Methods
 const handleInputValidation = data => {
@@ -111,22 +122,21 @@ const handleTokenInput = (event) => {
 }
 
 const submitCreateVerse = async () => {
-  // hash the submitted token
-  const submittedToken = formData.value['create-verse-token-input'].value
-  const hashedToken = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(submittedToken))
-  const hashedTokenHex = Array.from(new Uint8Array(hashedToken))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
   // if the current token matches the submitted token and verse name is valid, proceed
-  if (validateForm() && token.value === hashedTokenHex) {
+  if (validateForm()) {
     const verseName = formData.value['create-verse-name-input'].value
     const firstPageName = formData.value['create-verse-page-input'].value
+    const submittedToken = formData.value['create-verse-token-input'].value
     const created = await pocketStore.postCreateVerse({
       verseName: useChangeCase(verseName, 'kebabCase').value,
-      firstPageName: useChangeCase(firstPageName, 'kebabCase').value
+      firstPageName: useChangeCase(firstPageName, 'kebabCase').value,
+      token: submittedToken
     })
-    if (created) {
+    if (created?.status === 'success') {
+      errorMessage.value = {}
       emit('close-alert')
+    } else if (created?.status === 'error') {
+      errorMessage.value = created
     }
   }
 }
@@ -238,5 +248,13 @@ input::placeholder {
 .cancel-button {
   background-color: $pollyPink;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
+}
+
+.error-message {
+  display: block;
+  font-size: torem(14);
+  font-weight: 500;
+  color: $pollyPink;
+  transform: translateY(torem(-16));
 }
 </style>

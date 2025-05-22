@@ -176,16 +176,20 @@ export const usePocketStore = defineStore('pocket', () => {
       const response = await useFetchAuth('/post-create-verse', Object.assign({}, {
         verseName: incoming.verseName,
         firstPageName: incoming.firstPageName,
+        token: incoming.token,
         pocketId: pocket.value.data._id,
         method: 'post'
       }))
-      useSetStoreData(pocket, {
-        loading: false,
-        refresh: false,
-        authenticated: true,
-        data: response
-      })
-      return pocket
+      if (response.status === 'success') {
+        useSetStoreData(pocket, {
+          loading: false,
+          refresh: false,
+          authenticated: true,
+          data: response.pocket
+        })
+      }
+      useSetStoreData(pocket, { refresh: false })
+      return response
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(pocket, { refresh: false })
