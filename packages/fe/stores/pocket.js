@@ -296,6 +296,19 @@ export const usePocketStore = defineStore('pocket', () => {
     }
   }
 
+  /**
+   * @method updatePocketVerses
+   * @param {Object} incoming - An incoming verse document
+   */
+
+  const updatePocketVerses = async incoming => {
+    if (pocket.value.data.verses.some(vrs => vrs._id === incoming._id)) {
+      pocket.value.data.verses = pocket.value.data.verses.map(vrs => 
+        vrs._id === incoming._id ? incoming : vrs
+      )
+    }
+  }
+
   // ==================================================================== return
   return {
     // ----- state
@@ -321,7 +334,8 @@ export const usePocketStore = defineStore('pocket', () => {
     postAddVerseToToken,
     postGenerateInvite,
     getInvite,
-    postAcceptInvite
+    postAcceptInvite,
+    updatePocketVerses
   }
 })
 
