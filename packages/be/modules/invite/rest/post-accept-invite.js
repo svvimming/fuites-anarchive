@@ -27,7 +27,7 @@ MC.app.post('/post-accept-invite', async (req, res) => {
     // Check if invite is pending
     if (invite.status !== 'pending') {
       return SendData(res, 200, 'Invite is either already accepted or expired', {
-        message: `Whoops, it looks likethis invite is ${invite.status === 'expired' ? 'expired' : 'already accepted'}`,
+        message: `Whoops, it looks like this invite is ${invite.status === 'expired' ? 'expired' : 'already accepted'}`,
         status: 'error'
       })
     }
@@ -37,6 +37,16 @@ MC.app.post('/post-accept-invite', async (req, res) => {
     if (!pocket) {
       return SendData(res, 200, 'Invalid token', {
         message: 'Whoops, it looks like this token is invalid.',
+        status: 'error'
+      })
+    }
+    // Check if pocket already has verses
+    const duplicateVerses = invite.verses.filter(verse =>
+      pocket.verses.some(pocketVerse => pocketVerse.toString() === verse.toString())
+    )
+    if (duplicateVerses.length > 0) {
+      return SendData(res, 200, 'Duplicate verses found', {
+        message: 'Your token already has access to this verse.',
         status: 'error'
       })
     }
