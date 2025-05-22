@@ -132,10 +132,10 @@ const submitCreateVerse = async () => {
       firstPageName: useChangeCase(firstPageName, 'kebabCase').value,
       token: submittedToken
     })
-    if (created.status === 'success') {
+    if (created?.status === 'success') {
       errorMessage.value = {}
       emit('close-alert')
-    } else if (created.status === 'error') {
+    } else if (created?.status === 'error') {
       errorMessage.value = created
     }
   }
