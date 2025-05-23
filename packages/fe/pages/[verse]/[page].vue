@@ -230,7 +230,12 @@ const handleMouseDown = e => {
 
 const handleMouseMove = useThrottleFn(e => {
   const attrs = e.target.attrs
-  const type = attrs.hasOwnProperty('thingie_id') ? 'thingie' : attrs.hasOwnProperty('portal_id') ? 'portal' : false
+  const type = attrs.hasOwnProperty('thingie_id') ?
+                'thingie' :
+                attrs.hasOwnProperty('portal_id') ?
+                  'portal' :
+                  attrs.id === 'page-canvas' ?
+                    'canvas' : false
   const mouseOver = mouseOverScene.value
 
   // Handle recording path coordinates
@@ -251,6 +256,8 @@ const handleMouseMove = useThrottleFn(e => {
   // Handle mouse over scene state
   if (!type && mouseOver) {
     generalStore.setMouseOverScene(false)
+  } else if (type === 'canvas' && mouseOver?.type !== 'canvas') {
+    generalStore.setMouseOverScene({ type: 'canvas', attrs })
   } else if (type === 'thingie' && mouseOver?.attrs?.thingie_id !== attrs.thingie_id) {
     generalStore.setMouseOverScene({ type: 'thingie', attrs })
   } else if (type === 'portal' && mouseOver?.attrs?.portal_id !== attrs.portal_id) {
@@ -463,11 +470,11 @@ onMounted(() => {
     const arrowDown = key === 'ArrowDown' || code === 'ArrowDown' || keyCode === 40
     const print = e.key === 'p' || e.code === 'KeyP' || e.keyCode === 80
     // Handle zooming
-    if (minus && e.metaKey) {
+    if (minus && e.shiftKey) {
       e.preventDefault()
       scaleScene(-0.01)
     }
-    if (plus && e.metaKey) {
+    if (plus && e.shiftKey) {
       e.preventDefault()
       scaleScene(0.01)
     }
