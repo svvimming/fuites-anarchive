@@ -10,7 +10,7 @@
       <div class="verse-title">
         <span class="label">{{ verse.name }}</span>
         <ButtonIcon
-          v-if="!isPublic"
+          v-if="authenticated"
           class="verse-settings-button"
           @clicked="emit('open-verse-settings', verse._id)">
           <IconEllipsis class="icon-ellipsis" />
@@ -60,11 +60,12 @@ const emit = defineEmits(['open-verse-settings'])
 
 // ======================================================================== Data
 const offset = ref('middle')
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const height = computed(() => offset.value === 'middle' ? 50 : 76)
 const viewbox = computed(() => `0 0 4 ${height.value}`)
-const isPublic = computed(() => props.verse.public)
 
 // ===================================================================== Methods
 const colorStyles = computed(() => {
@@ -81,9 +82,7 @@ const setOffsetPosition = () => {
 }
 
 // ======================================================================= Hooks
-onMounted(() => {
-  setOffsetPosition()
-})
+onMounted(() => { setOffsetPosition() })
 </script>
 
 <style lang="scss" scoped>

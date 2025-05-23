@@ -10,18 +10,15 @@
 
     <div id="caddy" :class="['caddy', `selected__${selected}`]" :style="caddyStyles">
       <!-- ========================================================== Handle -->
-      <div
+      <ButtonCaddy
         ref="handle"
+        tool="handle"
+        :force-pressed="true"
         class="caddy-tool-button handle"
-        :style="getToolTransform('handle')">
-        <Tooltip tooltip="caddy-handle" contact="bottom-right" class="handle-tooltip">
-          <ButtonIcon
-            :class="['solid-outline', { outside: selected !== 'handle' }]"
-            @clicked="handleToolClick('handle')">
-            <IconHand />
-          </ButtonIcon>
-        </Tooltip>
-      </div>
+        :style="getToolTransform('handle')"
+        @clicked="handleToolClick('handle')">
+        <IconHand class="icon" />
+      </ButtonCaddy>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
         class="caddy-tool-button z-index-2 tiny-button"
@@ -39,6 +36,13 @@
         @clicked="lockThingie">
         <IconLock class="icon" />
       </ButtonCaddy>
+      <!-- ===================================================== Link Editor -->
+      <CaddyLinkEditor
+        :active="selected === 'font-editor'"
+        :initial-url="thingie?.link || ''"
+        class="caddy-tool-button z-index-2"
+        :style="getToolTransform('link-editor')"
+        @update-link="updateTextThingieLink" />
       <!-- ==================================================== Tool Buttons -->
       <ButtonCaddy
         v-for="tool in tools"
@@ -149,8 +153,8 @@ const radii = {
   'rotation': 86,
   'resize': 86,
   'clip-toggle': 60,
-  'font-editor': 86,
-  'color-selector': 86,
+  'font-editor': 90,
+  'color-selector': 90,
   'volume': 86
 }
 const positions = ref({
@@ -172,7 +176,7 @@ const type = computed(() => thingie.value?.thingie_type)
 const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
-const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 30}px` }))
+const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 40}px` }))
 
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
@@ -328,6 +332,16 @@ const handleGainUpdate = val => {
 }
 
 /**
+ * @method updateTextThingieLink
+ */
+
+const updateTextThingieLink = val => {
+  if (thingie.value) {
+    update({ link: val })
+  }
+}
+
+/**
  * @method openDeleteThingieModal
  */
 
@@ -360,8 +374,20 @@ const getToolTransform = id => {
   if (id === selected.value) {
     return { '--tool-offset-x': '0px', '--tool-offset-y': '0px' }
   }
-  const index = id === 'trash' ? 2.5 : id === 'lock' ? 1.5 : positions.value[id]
-  const distance = (radii[selected.value] || 60) - (id === 'trash' || id === 'lock' ? 10 : 0)
+  let index = positions.value[id]
+  switch (id) {
+    case 'trash':
+      index = 2.5
+      break
+    case 'lock':
+      index = 1.5
+      break
+    case 'link-editor':
+      index = 0.5
+      break
+  }
+  // const index = id === 'trash' ? 2.5 : id === 'lock' ? 1.5 : positions.value[id]
+  const distance = (radii[selected.value] || 60) - (['trash', 'lock', 'link-editor'].includes(id) ? 10 : 0)
   const phase = tools.value.length === 5 ? (Math.PI / 3.3333) : 0
   const coords = {
     x: Math.cos((index * 2 * Math.PI / (tools.value.length)) + phase) * distance,
@@ -446,38 +472,9 @@ const update = useThrottleFn(data => {
   }
 }
 
-.handle-tooltip {
-  width: 100% !important;
-  height: 100% !important;
-}
-
+// ///////////////////////////////////////////////////////////////////// Buttons
 :deep(.tooltip) {
   color: $woodsmoke;
-}
-
-.handle {
-  display: flex;
-  background-color: transparent !important;
-  z-index: 10000 !important;
-  &:hover {
-    cursor: grab;
-  }
-  &:active {
-    cursor: grabbing;
-  }
-  :deep(.icon-button) {
-    width: 100% !important;
-    height: 100% !important;
-    --two-tone-a: #{$stormGray};
-    --two-tone-b: white;
-    &.outside {
-      .svg-border {
-        rect {
-          stroke-dasharray: none;
-        }
-      }
-    }
-  }
 }
 
 .caddy-tool-button {
@@ -504,18 +501,34 @@ const update = useThrottleFn(data => {
       transform: scale(1.1);
     }
   }
+  :deep(.icon) {
+    width: torem(20);
+    height: torem(24);
+  }
+}
+
+.handle {
+  z-index: 10000 !important;
+  :deep(.icon-button) {
+    &:hover {
+      cursor: grab;
+    }
+    &:active {
+      cursor: grabbing;
+    }
+  }
 }
 
 .tiny-button {
   width: torem(32) !important;
   height: torem(32) !important;
-  background-color: white !important;
   border-radius: 50%;
-  border: solid torem(3) $stormGray;
   z-index: 4 !important;
   .icon {
     transition: 150ms ease;
     transform: scale(0.9);
+    width: torem(20);
+    height: torem(20);
   }
   &:hover {
     .icon {
@@ -524,6 +537,7 @@ const update = useThrottleFn(data => {
   }
 }
 
+// /////////////////////////////////////////////////////////////////////// Tools
 .caddy-tool {
   position: absolute;
   left: 50%;

@@ -25,15 +25,16 @@ export const usePageshotBot = stageRef => {
   // =================================================================== Methods
   /**
    * @method initPageshot
+   * @param {Object} options - The options for the pageshot
+   * @param {string} options.destination - The destination to upload the print to
    */
 
-  const initPageshot = () => {
+  const initPageshot = options => {
+    const { destination } = options
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
-    // Get the stage layer
     const layers = stage.value.getLayers()
-    // Record old scene position
     const pos = layers[0].position()
-    // Reposition it at 0,0
+    // Reposition layer at 0,0
     layers[0].position({ x: 0, y: 0 })
     // Clone the stage
     cloned.value = stage.value.clone()
@@ -46,7 +47,19 @@ export const usePageshotBot = stageRef => {
     layers[0].position(pos)
     // Export canvas & initiate upload
     cloned.value.toBlob({
-      callback: (data) => { blob.value = data; uploadPrint() },
+      callback: (data) => {
+        // Set the blob
+        blob.value = data
+        // If the destination is server, upload the print
+        if (destination === 'server') {
+          uploadPrint()
+        } else if (destination === 'client') {
+          // If the destination is client, download the print
+          downloadPrint()
+        } else {
+          console.error('Invalid destination', destination)
+        }
+      },
       type: 'image/png',
       quality: 1.0
     })
@@ -134,6 +147,28 @@ export const usePageshotBot = stageRef => {
     if (cloned.value) {
       cloned.value.destroy()
       cloned.value = null
+    }
+  }
+
+  /**
+   * @method downloadPrint
+   */
+
+  const downloadPrint = () => {
+    if (blob.value) {
+      const url = URL.createObjectURL(blob.value)
+      const link = document.createElement('a')
+      link.href = url
+      const date = new Date()
+      const formattedDate = date.toISOString()
+        .replace(/[:.]/g, '-')
+        .replace('T', '_')
+        .slice(0, 16)
+      link.download = `${verse.value.data.name}_${page.value.data.name}_${formattedDate}.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
     }
   }
 

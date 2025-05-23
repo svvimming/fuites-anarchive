@@ -17,24 +17,36 @@
         @validation="handleInputValidation" />
       <!-- ======================================================= Page Name -->
       <span class="input-label">Page name</span>
-      <div :class="['input-wrapper', { active: pageName }]">
+      <div class="input-wrapper">
         <input
           ref="pageNameInputRef"
           autocomplete="off"
           class="input"
           autocapitalize="none"
           placeholder="enter first page name"
-          @change="handlePageNameChange" />
+          @input="handlePageNameInput" />
       </div>
+      <span
+        v-if="errorMessage.code === 'page-name-collision'"
+        class="error-message">
+        {{ errorMessage.message }}
+      </span>
       <!-- =========================================================== Token -->
       <span class="body-text token-text">Enter your token to finalize creation of the new Verse. The token submitted must match the current session token.</span>
-      <MultiverseCollisionDetectionInput
-        label-text="Token"
-        placeholder="enter token"
-        input-id="create-verse-token-input"
-        check-collision="token-current"
-        collision-mode="include"
-        @validation="handleInputValidation" />
+      <div class="input-wrapper">
+        <input
+          ref="tokenInputRef"
+          autocomplete="off"
+          class="input"
+          autocapitalize="none"
+          placeholder="enter token"
+          @input="handleTokenInput" />
+      </div>
+      <span
+        v-if="errorMessage.code === 'token-mismatch'"
+        class="error-message">
+        {{ errorMessage.message }}
+      </span>
       <!-- ========================================================= Buttons -->
       <div class="button-row">
         <ButtonBasic
@@ -62,16 +74,17 @@ import { useChangeCase } from '@vueuse/integrations/useChangeCase'
 const emit = defineEmits(['close-alert'])
 // ======================================================================== Data
 const pocketStore = usePocketStore()
-const { pocket, token } = storeToRefs(pocketStore)
+const { pocket } = storeToRefs(pocketStore)
 
 const pageNameInputRef = ref(null)
-const pageName = ref('')
+const tokenInputRef = ref(null)
 const formData = ref({
   'create-verse-name-input': false,
   'create-verse-page-input': false,
   'create-verse-token-input': false
 })
 const formValid = ref(false)
+const errorMessage = ref({})
 
 // ===================================================================== Methods
 const handleInputValidation = data => {
@@ -84,27 +97,46 @@ const validateForm = () => {
   return isValid
 }
 
-const handlePageNameChange = () => {
-  if (pageNameInputRef.value) {
-    handleInputValidation({
-      inputId: 'create-verse-page-input',
-      isValid: true,
-      value: useChangeCase(pageNameInputRef.value.value, 'kebabCase').value
-    })
+const handlePageNameInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
   }
+  handleInputValidation({
+    inputId: 'create-verse-page-input',
+    isValid: sanitized.length > 0,
+    value: sanitized
+  })
+}
+
+const handleTokenInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
+  }
+  handleInputValidation({
+    inputId: 'create-verse-token-input',
+    isValid: sanitized.length > 0,
+    value: sanitized
+  })
 }
 
 const submitCreateVerse = async () => {
   // if the current token matches the submitted token and verse name is valid, proceed
-  if (validateForm() && token.value === formData.value['create-verse-token-input'].value) {
+  if (validateForm()) {
     const verseName = formData.value['create-verse-name-input'].value
     const firstPageName = formData.value['create-verse-page-input'].value
+    const submittedToken = formData.value['create-verse-token-input'].value
     const created = await pocketStore.postCreateVerse({
       verseName: useChangeCase(verseName, 'kebabCase').value,
-      firstPageName: useChangeCase(firstPageName, 'kebabCase').value
+      firstPageName: useChangeCase(firstPageName, 'kebabCase').value,
+      token: submittedToken
     })
-    if (created) {
+    if (created?.status === 'success') {
+      errorMessage.value = {}
       emit('close-alert')
+    } else if (created?.status === 'error') {
+      errorMessage.value = created
     }
   }
 }
@@ -216,5 +248,13 @@ input::placeholder {
 .cancel-button {
   background-color: $pollyPink;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
+}
+
+.error-message {
+  display: block;
+  font-size: torem(14);
+  font-weight: 500;
+  color: $pollyPink;
+  transform: translateY(torem(-16));
 }
 </style>

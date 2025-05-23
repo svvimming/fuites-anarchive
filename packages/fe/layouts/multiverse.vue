@@ -21,6 +21,49 @@ if (process.client && window.matchMedia('(prefers-color-scheme: dark)').matches)
     ]
   })
 }
+
+const { $io, $bus } = useNuxtApp()
+
+// ======================================================================== Data
+const pocketStore = usePocketStore()
+const { authenticated } = storeToRefs(pocketStore)
+const verseStore = useVerseStore()
+const websocketStore = useWebsocketStore()
+const { socket } = storeToRefs(websocketStore)
+
+// ==================================================================== Watchers
+watch(authenticated, async (val) => {
+  /**
+   * Initialize websocket connection to backend
+   */
+  if (val && !socket.value?.connected) {
+    await $io.connect()
+  }
+})
+
+// ===================================================================== Methods
+/**
+ * @method handleWebsocketConnected
+ */
+
+ const handleWebsocketConnected = socket => {
+  // Join rooms
+  socket.emit('join-room', 'multiverse')
+  // Listen for events
+  socket.on('module|post-update-verse|payload', (data) => {
+    verseStore.updateVerse(data.verse)
+    pocketStore.updatePocketVerses(data.verse)
+  })
+}
+
+
+// ======================================================================= Hooks
+// The following is emitted in websocket plugin in websocket zero-core module
+$bus.$on('socket.io-connected', handleWebsocketConnected)
+
+onBeforeUnmount(() => {
+  $bus.$off('socket.io-connected', handleWebsocketConnected)
+})
 </script>
 
 <style lang="scss" scoped>

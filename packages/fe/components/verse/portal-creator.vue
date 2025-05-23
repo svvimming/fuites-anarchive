@@ -12,10 +12,10 @@
         ref="input"
         autocomplete="off"
         autocapitalize="none"
-        pattern="^[A-Za-z0-9\-._~]+$"
         placeholder="Enter a destination"
         :disabled="page.refresh"
         :class="['input', 'courier', { submitting: page.refresh }]"
+        @input="handleInput"
         @keyup.enter="submit" />
     </div>
 
@@ -101,6 +101,14 @@ const checkPageExists = useDebounceFn(async () => {
   }
   checking.value = false
 })
+
+const handleInput = (event) => {
+  const sanitized = event.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+  if (sanitized !== event.target.value) {
+    event.target.value = sanitized
+  }
+  to.value = sanitized
+}
 </script>
 
 <style lang="scss" scoped>

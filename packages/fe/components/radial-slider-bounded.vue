@@ -8,9 +8,14 @@
     <div
       ref="track"
       class="track"
-      :style="thumbBounds">
-      <div class="cover"></div>
-      <div class="thumb" :style="thumbStyles"></div>
+      :style="trackStyles">
+
+      <SvgCaddyBoundedRadialSlider v-if="includeTrackStyles" class="svg-track" />
+
+      <div class="thumb" :style="thumbStyles">
+        <SvgRadialSliderThumb class="thumb-icon" />
+      </div>
+
     </div>
 
   </div>
@@ -38,7 +43,7 @@ const props = defineProps({
     required: false,
     default: () => [0, 360]
   },
-  includeThumbBounds: {
+  includeTrackStyles: {
     type: Boolean,
     required: false,
     default: false
@@ -51,14 +56,15 @@ const track = ref(null)
 const { elementX, elementY } = useMouseInElement(track)
 const { pressed } = useMousePressed({ target: track })
 const theta = ref(0)
-const thumbBounds = ref({})
+const trackStyles = ref({})
+const borderWidth = 5
 
 // ==================================================================== Computed
 const lowerBound = computed(() => props.inputRange[0] * (Math.PI / 180) - Math.PI)
 const upperBound = computed(() => props.inputRange[1] * (Math.PI / 180) - Math.PI)
 const thumbStyles = computed(() => ({
-  left: `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.cos(theta.value + Math.PI / 2))}px`,
-  top: `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.sin(theta.value + Math.PI / 2))}px`
+  left: `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.cos(theta.value + Math.PI / 2))}px`,
+  top: `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.sin(theta.value + Math.PI / 2))}px`
 }))
 
 // ==================================================================== Watchers
@@ -74,12 +80,13 @@ watch([elementX, elementY], () => {
 })
 
 onMounted(() => {
-  if (props.includeThumbBounds) {
-    thumbBounds.value = {
-      '--upper-bound-left': `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.cos(upperBound.value + Math.PI / 2))}px`,
-      '--upper-bound-top': `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.sin(upperBound.value + Math.PI / 2))}px`,
-      '--lower-bound-left': `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.cos(lowerBound.value + Math.PI / 2))}px`,
-      '--lower-bound-top': `${props.radius - 3 + ((props.radius - 1.5) * -1 * Math.sin(lowerBound.value + Math.PI / 2))}px`
+  if (props.includeTrackStyles) {
+    trackStyles.value = {
+      '--border-stroke-width': `${borderWidth}px`,
+      '--upper-bound-left': `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.cos(upperBound.value + Math.PI / 2))}px`,
+      '--upper-bound-top': `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.sin(upperBound.value + Math.PI / 2))}px`,
+      '--lower-bound-left': `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.cos(lowerBound.value + Math.PI / 2))}px`,
+      '--lower-bound-top': `${props.radius - borderWidth + ((props.radius - (borderWidth / 2)) * -1 * Math.sin(lowerBound.value + Math.PI / 2))}px`
     }
   }
 })
@@ -103,62 +110,44 @@ defineExpose({ setTheta })
   --upper-bound-top: -999px;
   --lower-bound-left: -999px;
   --lower-bound-top: -999px;
+  --border-stroke-width: torem(5);
   position: absolute;
   left: 50%;
   top: 50%;
   width: 100%;
   height: 100%;
   transform: translate(-50%, -50%);
-  border: solid torem(3) $texasRose;
+  border: solid var(--border-stroke-width) transparent;
   border-radius: 50%;
-  &:before,
-  &:after {
-    content:  '';
+  .svg-track {
     position: absolute;
-    width: torem(12);
-    height: torem(12);
-    border: solid torem(2) $texasRose;
-    border-radius: 50%;
-    z-index: 3;
-    transform: translate(-50%, -50%);
-  }
-  &:before {
-    background-color: $texasRose;
-    left: var(--upper-bound-left);
-    top: var(--upper-bound-top);
-  }
-  &:after {
-    background-color: $stormGray;
-    left: var(--lower-bound-left);
-    top: var(--lower-bound-top);
+    top: calc(var(--border-stroke-width) * -1 - torem(4));
+    left: calc(var(--border-stroke-width) * -2 + torem(4));
+    height: calc(100% + (var(--border-stroke-width) * 2) + torem(8));
   }
   &:hover {
     cursor: pointer;
   }
 }
 
-.cover {
-  position: absolute;
-  width: 6px;
-  top: -4px;
-  left: calc(50% - 10px);
-  height: calc(100% + 8px);
-  background-color: $stormGray;
-  z-index: 2;
-}
+
 
 .thumb {
   position: absolute;
   width: torem(18);
   height: torem(18);
-  background-color: white;
-  border: solid torem(3) $stormGray;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  z-index: 4;
   transition: transform 150ms ease;
+  z-index: 100;
   &:hover {
     transform: translate(-50%, -50%) scale(1.1);
+  }
+  .thumb-icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 }
 </style>
