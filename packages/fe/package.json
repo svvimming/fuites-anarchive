@@ -12,7 +12,6 @@
     "upgrade-nuxt": "nuxi upgrade --force"
   },
   "dependencies": {
-    "@lukeed/csprng": "^1.1.0",
     "@nuxt/content": "^3.3.0",
     "@nuxt/eslint": "^0.5.5",
     "@nuxt/eslint-config": "^0.5.0",
