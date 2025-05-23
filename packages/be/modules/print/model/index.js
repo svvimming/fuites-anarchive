@@ -29,6 +29,10 @@ const PrintSchema = new Schema({
     type: String,
     required: true
   },
+  file_url: {
+    type: String,
+    required: false
+  },
   upload_status: { // 0 = in progress, 1 = complete, 2 = error
     type: Number,
     required: true,
