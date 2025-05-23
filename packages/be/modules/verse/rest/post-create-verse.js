@@ -41,8 +41,9 @@ MC.app.post('/post-create-verse', async (req, res) => {
       return
     }
     // Check if the first page name collides with the compost or pocket
-    if (firstPageName === 'compost' || firstPageName === 'pocket') {
-      SendData(res, 200, 'Can\'t create a page named after the compost or the pocket.', { message: 'Can\'t create a page named after the compost or the pocket.', status: 'error', code: 'page-name-collision' })
+    const reservedPageNames = ['compost', 'pocket', 'invite', 'terms', 'community-guidelines']
+    if (reservedPageNames.includes(firstPageName)) {
+      SendData(res, 200, 'Can\'t create a page named after a reserved route.', { message: 'Can\'t create a page named after a reserved route.', status: 'error', code: 'page-name-collision' })
       return
     }
     // Check if this Verse already exists
