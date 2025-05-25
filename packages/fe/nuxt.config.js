@@ -29,9 +29,7 @@ export default defineNuxtConfig({
       serverEnv: env,
       siteUrl: baseUrls.client,
       backendUrl: baseUrls.backend,
-      websocketUrl: baseUrls.websocket,
-      doSpacesBucketName: process.env.DO_SPACES_BUCKET_NAME,
-      doSpacesEndpoint: process.env.DO_SPACES_ENDPOINT
+      websocketUrl: baseUrls.websocket
     }
   },
   // ======================================================== Development Server

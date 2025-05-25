@@ -124,8 +124,7 @@ const loadImage = () => {
   img.onerror = function () {
     emit('loaded', true)
   }
-  img.src = baseUrl.value.startsWith('https://localhost') ?
-    `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}` : props.fileRef.file_url
+  img.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
 }
 
 /**

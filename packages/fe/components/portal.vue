@@ -35,7 +35,6 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
-const config = useRuntimeConfig()
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
@@ -208,9 +207,7 @@ const loadImage = () => {
     imageLoadError.value = true
     imageLoading.value = false
   }
-  img.src = baseUrl.value.startsWith('https://localhost') ?
-    `${baseUrl.value}/prints/${destPrintId.value}.png` :
-    `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/prints/${destPrintId.value}.png`
+  img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
 }
 
 /**

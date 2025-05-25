@@ -45,7 +45,7 @@ MC.socket.listeners.push({
       .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
       .populate({
         path: 'file_ref',
-        select: 'filename file_ext file_url'
+        select: 'filename file_ext'
       })
     const data = { thingie: updated }
     // If present, record the client session ID to omit updating on that frontend

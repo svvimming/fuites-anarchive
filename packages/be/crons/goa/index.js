@@ -168,7 +168,7 @@ const pagePreaccelerator = async verse => {
       // Get all the thingies on this page
       const pageThingies = await MC.model.Thingie
         .find({ verse: verse.name, location: page.name })
-        .populate({ path: 'file_ref', select: 'filename file_ext filesize file_url' })
+        .populate({ path: 'file_ref', select: 'filename file_ext filesize' })
       // Get all the primary and secondary colors on this page
       pageThingies.forEach(thingie => {
         if (thingie.colors[0]) {

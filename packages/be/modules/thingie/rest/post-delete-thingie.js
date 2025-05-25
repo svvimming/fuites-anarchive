@@ -3,20 +3,13 @@ console.log('💡 [endpoint] /post-delete-thingie')
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 const Path = require('path')
-const AWS = require('aws-sdk')
-require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
+const Fs = require('fs-extra')
 
 const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
-// Configure AWS S3 client for DigitalOcean Spaces
-const s3 = new AWS.S3({
-  endpoint: process.env.DO_SPACES_ENDPOINT,
-  accessKeyId: process.env.DO_SPACES_KEY,
-  secretAccessKey: process.env.DO_SPACES_SECRET,
-  region: process.env.DO_SPACES_REGION
-})
+const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -35,23 +28,22 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
       if (!upload) {
         throw new Error('File does not exist!')
       }
-      await MC.model.Upload.deleteOne(upload)
-      await MC.model.Thingie.deleteOne(thingie)
-      console.log(`Deleted upload document ${fileId} and thingie document ${thingieId}.`)
-      // Delete file from DigitalOcean Spaces
-      try {
-        await s3.deleteObject({
-          Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `uploads/${fileId}.${fileExt}`
-        }).promise()
-        console.log(`Deleted ${fileId}.${fileExt} from DigitalOcean Spaces`)
-      } catch (err) {
-        console.log(`Error deleting file ${fileId}.${fileExt} from DigitalOcean Spaces:`, err)
-      }
+      const deletedUpload = await MC.model.Upload.deleteOne(upload)
+      const deletedThingie = await MC.model.Thingie.deleteOne(thingie)
+      console.log(deletedUpload)
+      console.log(deletedThingie)
+      Fs.unlink(`${UPLOADS_DIR}/${fileId}.${fileExt}`, (err) => {
+        if (err) {
+          console.log(err)
+        } else {
+          console.log(`deleted ${fileId}.${fileExt}`)
+        }
+      })
     } else {
       const deletedTextThingie = await MC.model.Thingie.deleteOne(thingie)
       console.log(deletedTextThingie)
     }
+    console.log(`deleted file ${thingieId}`)
     MC.socket.io
       .to(`${verse}|thingies`)
       .emit('module|post-delete-thingie|payload', { _id: thingieId })
