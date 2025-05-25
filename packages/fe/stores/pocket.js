@@ -176,16 +176,20 @@ export const usePocketStore = defineStore('pocket', () => {
       const response = await useFetchAuth('/post-create-verse', Object.assign({}, {
         verseName: incoming.verseName,
         firstPageName: incoming.firstPageName,
+        token: incoming.token,
         pocketId: pocket.value.data._id,
         method: 'post'
       }))
-      useSetStoreData(pocket, {
-        loading: false,
-        refresh: false,
-        authenticated: true,
-        data: response
-      })
-      return pocket
+      if (response.status === 'success') {
+        useSetStoreData(pocket, {
+          loading: false,
+          refresh: false,
+          authenticated: true,
+          data: response.pocket
+        })
+      }
+      useSetStoreData(pocket, { refresh: false })
+      return response
     } catch (e) {
       useHandleFetchError(e)
       useSetStoreData(pocket, { refresh: false })
@@ -279,11 +283,9 @@ export const usePocketStore = defineStore('pocket', () => {
     try {
       let response = false
       if (type === 'add-token') {
-        console.log(incoming)
         response = await useFetchAuth('/post-accept-invite', Object.assign({}, incoming, {
           method: 'post'
         }))
-        console.log(response)
       } else if (type === 'generate-token') {
         response = await useFetchAuth('/post-create-pocket', Object.assign({}, incoming, {
           method: 'post'
@@ -293,6 +295,19 @@ export const usePocketStore = defineStore('pocket', () => {
     } catch (e) {
       useHandleFetchError(e)
       return false
+    }
+  }
+
+  /**
+   * @method updatePocketVerses
+   * @param {Object} incoming - An incoming verse document
+   */
+
+  const updatePocketVerses = async incoming => {
+    if (pocket.value.data.verses.some(vrs => vrs._id === incoming._id)) {
+      pocket.value.data.verses = pocket.value.data.verses.map(vrs => 
+        vrs._id === incoming._id ? incoming : vrs
+      )
     }
   }
 
@@ -321,7 +336,8 @@ export const usePocketStore = defineStore('pocket', () => {
     postAddVerseToToken,
     postGenerateInvite,
     getInvite,
-    postAcceptInvite
+    postAcceptInvite,
+    updatePocketVerses
   }
 })
 

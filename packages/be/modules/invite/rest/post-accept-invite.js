@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /post-generate-invite')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -27,16 +30,27 @@ MC.app.post('/post-accept-invite', async (req, res) => {
     // Check if invite is pending
     if (invite.status !== 'pending') {
       return SendData(res, 200, 'Invite is either already accepted or expired', {
-        message: `Whoops, it looks likethis invite is ${invite.status === 'expired' ? 'expired' : 'already accepted'}`,
+        message: `Whoops, it looks like this invite is ${invite.status === 'expired' ? 'expired' : 'already accepted'}`,
         status: 'error'
       })
     }
     // Get pocket to add verses to
-    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
     const pocket = await MC.model.Pocket.findOne({ token: hashedToken })
     if (!pocket) {
       return SendData(res, 200, 'Invalid token', {
         message: 'Whoops, it looks like this token is invalid.',
+        status: 'error'
+      })
+    }
+    // Check if pocket already has verses
+    const duplicateVerses = invite.verses.filter(verse =>
+      pocket.verses.some(pocketVerse => pocketVerse.toString() === verse.toString())
+    )
+    if (duplicateVerses.length > 0) {
+      return SendData(res, 200, 'Duplicate verses found', {
+        message: 'Your token already has access to this verse.',
         status: 'error'
       })
     }

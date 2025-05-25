@@ -4,8 +4,11 @@ console.log('💡 [endpoint] /authenticate')
 // -----------------------------------------------------------------------------
 const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -13,7 +16,8 @@ MC.app.get('/authenticate-pocket', async (req, res) => {
   try {
     const token = req.query.token
     const localStorageAuth = req.query.localStorageAuth
-    const hashedToken = createHash('sha256').update(token).digest('hex')
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
     const pocket = await MC.model.Pocket
       .findOne({ token: hashedToken })
       .populate({

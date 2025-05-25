@@ -106,22 +106,18 @@ const submit = () => {
 .tiny-button {
   width: torem(32);
   height: torem(32);
-  background-color: $shark;
   border-radius: 50%;
-  border: solid torem(3) $stormGray;
   transition: 150ms ease;
   .icon {
     transition: 150ms ease;
     transform: scale(0.9);
   }
   &:hover {
-    background-color: #3f424d;
     .icon {
       transform: scale(1);
     }
   }
   &.open {
-    background-color: #3f424d;
     .icon {
       transform: scale(1);
     }

@@ -2,10 +2,16 @@ console.log('💡 [endpoint] /post-create-verse')
 
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
+const { createHash } = require('node:crypto')
 const { SendData } = require('@Module_Utilities')
+const Path = require('path')
 
 const MC = require('@Root/config')
 
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
+
+// /////////////////////////////////////////////////////////////////// Functions
+// -----------------------------------------------------------------------------
 /**
  * @method getRandomColor
  * @desc Returns a random color as a hex string
@@ -25,15 +31,25 @@ MC.app.post('/post-create-verse', async (req, res) => {
     const pocketId = body.pocketId
     const verseName = body.verseName
     const firstPageName = body.firstPageName
+    const token = body.token
+    // Check if the token matches the current session
+    const salt = process.env.TOKEN_SALT_SECRET
+    const hashedToken = createHash('sha256').update(token + salt).digest('hex')
+    const checkPocketMatchesToken = await MC.model.Pocket.findOne({ _id: pocketId, token: hashedToken })
+    if (!checkPocketMatchesToken) {
+      SendData(res, 200, 'The token you provided does not match the current session.', { message: 'The token you provided does not match the current session.', status: 'error', code: 'token-mismatch' })
+      return
+    }
     // Check if the first page name collides with the compost or pocket
-    if (firstPageName === 'compost' || firstPageName === 'pocket') {
-      SendData(res, 400, 'Can\'t create a page named after the compost or the pocket.', false)
+    const reservedPageNames = ['compost', 'pocket', 'invite', 'terms', 'community-guidelines']
+    if (reservedPageNames.includes(firstPageName)) {
+      SendData(res, 200, 'Can\'t create a page named after a reserved route.', { message: 'Can\'t create a page named after a reserved route.', status: 'error', code: 'page-name-collision' })
       return
     }
     // Check if this Verse already exists
     const verseAlreadyExists = await MC.model.Verse.findOne({ name: verseName })
     if (verseAlreadyExists) {
-      SendData(res, 400, 'A verse with this name already exists!', false)
+      SendData(res, 200, 'A verse with this name already exists!', { message: 'A verse with this name already exists!', status: 'error', code: 'verse-already-exists' })
       return
     }
     // Create the new Page
@@ -68,7 +84,7 @@ MC.app.post('/post-create-verse', async (req, res) => {
         populate: { path: 'page_refs', select: 'name' }
       })
     // Send the updated Pocket
-    SendData(res, 200, 'Verse succesfully created', pocket)
+    SendData(res, 200, 'Verse succesfully created', { message: 'Verse succesfully created', status: 'success', pocket })
   } catch (e) {
     console.log('=============================== [Endpoint: /post-create-verse]')
     console.log(e)
