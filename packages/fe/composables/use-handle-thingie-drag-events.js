@@ -51,6 +51,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
         // Handle creating a ghost image for dragging
         const dataUrl = hit.toDataURL({ mimeType: 'image/png', pixelRatio: 1 })
         const ghost = document.createElement('img')
+        ghost.crossOrigin = 'anonymous'
         ghost.src = dataUrl
         ghost.dataset.thingieId = thingie._id
         ghost.classList.add('ghost-image')

@@ -46,6 +46,7 @@ const props = defineProps({
 const emit = defineEmits(['loaded'])
 
 // ======================================================================== Data
+const config = useRuntimeConfig()
 const image = ref(false)
 const canvas = ref(false)
 const clipPath = ref(false)
@@ -114,6 +115,7 @@ const applyClipPath = () => {
 
 const loadImage = () => {
   const img = document.createElement('img')
+  img.crossOrigin = 'anonymous'
   img.onload = function () {
     emit('loaded', true)
     image.value = img
@@ -124,7 +126,8 @@ const loadImage = () => {
   img.onerror = function () {
     emit('loaded', true)
   }
-  img.src = `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}`
+  const fileRef = props.fileRef
+  img.src = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
 }
 
 /**
@@ -133,7 +136,7 @@ const loadImage = () => {
 
 const drawImageThingieHitArea = () => {
   nextTick(() => {
-    if (imgNode.value && !baseUrl.value.startsWith('https://localhost')) {
+    if (imgNode.value && config.public.serverEnv !== 'development') {
       imgNode.value.getNode().cache()
       imgNode.value.getNode().drawHitFromCache()
     }

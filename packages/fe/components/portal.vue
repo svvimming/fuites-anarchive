@@ -35,6 +35,7 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
+const config = useRuntimeConfig()
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
@@ -198,6 +199,7 @@ const drag = e => {
 const loadImage = () => {
   imageLoading.value = true
   const img = document.createElement('img')
+  img.crossOrigin = 'anonymous'
   img.onload = function () {
     imageLoadError.value = false
     imageLoading.value = false
@@ -207,7 +209,14 @@ const loadImage = () => {
     imageLoadError.value = true
     imageLoading.value = false
   }
-  img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
+  const env = config.public.serverEnv
+  if (env === 'development') {
+    img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
+  } else if (env === 'stable') {
+    img.src = `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/stable/prints/${destPrintId.value}.png`
+  } else {
+    img.src = `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/prints/${destPrintId.value}.png`
+  }
 }
 
 /**

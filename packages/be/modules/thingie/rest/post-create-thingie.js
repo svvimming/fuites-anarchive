@@ -63,7 +63,7 @@ MC.app.post('/post-create-thingie', async (req, res) => {
     })
     await created.populate({
       path: 'file_ref',
-      select: 'filename file_ext'
+      select: 'filename file_ext file_url'
     })
     // Broadcast created thingie to socket
     MC.socket.io.to(`${created.verse}|thingies`).emit('module|post-create-thingie|payload', created)
