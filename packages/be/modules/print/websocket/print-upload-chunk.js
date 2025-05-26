@@ -27,6 +27,7 @@ MC.socket.listeners.push({
   name: 'module|print-upload-chunk|payload',
   async handler (data) {
     try {
+      const env = process.env.SERVER_ENV
       const socket = GetSocket(data.socket_id)
       const chunk = data.chunk
       const printId = data.file_id
@@ -39,7 +40,7 @@ MC.socket.listeners.push({
         const fileContent = await Fs.readFile(`${TMP_PRINTS_DIR}/${printId}`)
         await s3.putObject({
           Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `prints/${printId}.${fileExt}`,
+          Key: `${env === 'stable' ? 'stable/' : ''}prints/${printId}.${fileExt}`,
           Body: fileContent,
           ACL: 'public-read'
         }).promise()
@@ -50,7 +51,11 @@ MC.socket.listeners.push({
         const print = await MC.model.Print.findById(printId)
         print.upload_status = 1
         // Store the file URL in the database
-        print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${printId}.${fileExt}`
+        if (env === 'stable') {
+          print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${printId}.${fileExt}`
+        } else if (env === 'production') {
+          print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${printId}.${fileExt}`
+        }
         await print.save()
 
         // Add print ref to the relevant Page

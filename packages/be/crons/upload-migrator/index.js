@@ -59,6 +59,7 @@ const s3 = new AWS.S3({
 const migrateServerUploadsToSpacesBucket = async () => {
   const uploads = await MC.model.Upload.find({})
   const len = uploads.length
+  const env = process.env.SERVER_ENV
   for (let i = 0; i < len; i++) {
     const upload = uploads[i]
     const fileId = upload._id.toString()
@@ -79,10 +80,15 @@ const migrateServerUploadsToSpacesBucket = async () => {
       ACL: 'public-read'
     }).promise()
     // Update upload doc with DO Spaces URL
-    upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
+    if (env === 'stable') {
+      upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
+    } else if (env === 'production') {
+      upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
+    }
     await upload.save()
+    const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
     // console.log(`URL: ${upload.file_url} added to upload doc. Finished ${i + 1} of ${len}.`)
-    console.log(`Upload ${`https://stable.fuit.es/api/uploads/${fileId}.${fileExt}`} migrated to ${upload.file_url}. Finished ${i + 1} of ${len}.`)
+    console.log(`Upload ${`https://${domain}/api/uploads/${fileId}.${fileExt}`} migrated to ${upload.file_url}. Finished ${i + 1} of ${len}.`)
   }
 }
 
@@ -93,6 +99,7 @@ const migrateServerUploadsToSpacesBucket = async () => {
 const migrateServerPrintsToSpacesBucket = async () => {
   const prints = await MC.model.Print.find({})
   const len = prints.length
+  const env = process.env.SERVER_ENV
   for (let i = 0; i < len; i++) {
     const print = prints[i]
     const fileId = print._id.toString()
@@ -113,10 +120,15 @@ const migrateServerPrintsToSpacesBucket = async () => {
       ACL: 'public-read'
     }).promise()
     // Update print doc with DO Spaces URL
-    print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${fileId}.${fileExt}`
+    if (env === 'stable') {
+      print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${fileId}.${fileExt}`
+    } else if (env === 'production') {
+      print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${fileId}.${fileExt}`
+    }
     await print.save()
+    const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
     // console.log(`URL: ${print.file_url} added to print doc. Finished ${i + 1} of ${len}.`)
-    console.log(`Print ${`https://stable.fuit.es/api/prints/${fileId}.${fileExt}`} migrated to ${print.file_url}. Finished ${i + 1} of ${len}.`)
+    console.log(`Print ${`https://${domain}/api/prints/${fileId}.${fileExt}`} migrated to ${print.file_url}. Finished ${i + 1} of ${len}.`)
   }
 }
 
