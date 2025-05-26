@@ -30,6 +30,11 @@ const PocketSchema = new Schema({
     type: Number,
     required: false,
     default: 0
+  },
+  version: {
+    type: Number,
+    required: false,
+    default: 1
   }
 }, {
   timestamps: true,

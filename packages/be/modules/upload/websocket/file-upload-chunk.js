@@ -4,13 +4,22 @@ console.log('⚡️ [websocket] module|file-upload-chunk|payload')
 // -----------------------------------------------------------------------------
 const Path = require('path')
 const Fs = require('fs-extra')
+const AWS = require('aws-sdk')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 const { GetSocket } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
 const TMP_UPLOADS_DIR = Path.resolve(`${MC.packageRoot}/tmp/uploads`)
-const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
+
+// Configure AWS S3 client for DigitalOcean Spaces
+const s3 = new AWS.S3({
+  endpoint: process.env.DO_SPACES_ENDPOINT,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET,
+  region: process.env.DO_SPACES_REGION
+})
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -18,6 +27,7 @@ MC.socket.listeners.push({
   name: 'module|file-upload-chunk|payload',
   async handler (data) {
     try {
+      const env = process.env.SERVER_ENV
       const socket = GetSocket(data.socket_id)
       const uploaderId = data.uploader_id
       const chunk = data.chunk
@@ -27,9 +37,24 @@ MC.socket.listeners.push({
       file.write(chunk)
       file.end()
       if (data.place > data.goal) {
-        await Fs.move(`${TMP_UPLOADS_DIR}/${fileId}`, `${UPLOADS_DIR}/${fileId}.${fileExt}`)
+        // Upload to DigitalOcean Spaces
+        const fileContent = await Fs.readFile(`${TMP_UPLOADS_DIR}/${fileId}`)
+        await s3.putObject({
+          Bucket: process.env.DO_SPACES_BUCKET_NAME,
+          Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`,
+          Body: fileContent,
+          ACL: 'public-read'
+        }).promise()
+        // Clean up temporary file
+        await Fs.remove(`${TMP_UPLOADS_DIR}/${fileId}`)
+        // Update upload status to 1 (completed) and set file_url to the DigitalOcean Spaces URL
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
+        if (env === 'stable') {
+          upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
+        } else if (env === 'production') {
+          upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
+        }
         await upload.save()
         // File upload complete
         return socket.emit(`${uploaderId}|file-upload-complete|payload`)
