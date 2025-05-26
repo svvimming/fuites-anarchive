@@ -10,6 +10,8 @@ const { SendData } = require('@Module_Utilities')
 
 const MC = require('@Root/config')
 
+const LOCAL_UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
+
 // Configure AWS S3 client for DigitalOcean Spaces
 const s3 = new AWS.S3({
   endpoint: process.env.DO_SPACES_ENDPOINT,
@@ -17,12 +19,14 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.DO_SPACES_SECRET,
   region: process.env.DO_SPACES_REGION
 })
-
+const BUCKET_NAME = process.env.DO_SPACES_BUCKET_NAME
+// base url DO spaces key
+const env = process.env.SERVER_ENV
+const bucketDir = env === 'stable' ? 'stable/uploads' : 'uploads'
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
 MC.app.post('/post-delete-thingie', async (req, res) => {
   try {
-    const env = process.env.SERVER_ENV
     const verse = req.body.verse
     const thingieId = req.body.thingieId
     const thingie = await MC.model.Thingie.findById(thingieId)
@@ -39,15 +43,28 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
       await MC.model.Upload.deleteOne(upload)
       await MC.model.Thingie.deleteOne(thingie)
       console.log(`Deleted upload document ${fileId} and thingie document ${thingieId}.`)
-      // Delete file from DigitalOcean Spaces
-      try {
-        await s3.deleteObject({
-          Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`
-        }).promise()
-        console.log(`Deleted ${fileId}.${fileExt} from DigitalOcean Spaces`)
-      } catch (err) {
-        console.log(`Error deleting file ${fileId}.${fileExt} from DigitalOcean Spaces:`, err)
+      // Development environment
+      if (env === 'development') {
+        // Delete file from local uploads directory
+        Fs.unlink(`${LOCAL_UPLOADS_DIR}/${fileId}.${fileExt}`, (err) => {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log(`Deleted ${fileId}.${fileExt} from local uploads directory.`)
+          }
+        })
+      // Production and Stable environments
+      } else {
+        // Delete file from DigitalOcean Spaces
+        try {
+          await s3.deleteObject({
+            Bucket: BUCKET_NAME,
+            Key: `${bucketDir}/${fileId}.${fileExt}`
+          }).promise()
+          console.log(`Deleted ${bucketDir}/${fileId}.${fileExt} from DigitalOcean Spaces.`)
+        } catch (err) {
+          console.log(`Error deleting file ${bucketDir}/${fileId}.${fileExt} from DigitalOcean Spaces:`, err)
+        }
       }
     } else {
       const deletedTextThingie = await MC.model.Thingie.deleteOne(thingie)

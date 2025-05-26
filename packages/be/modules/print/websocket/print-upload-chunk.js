@@ -12,6 +12,7 @@ const { GetSocket } = require('@Module_Utilities')
 const MC = require('@Root/config')
 
 const TMP_PRINTS_DIR = Path.resolve(`${MC.packageRoot}/tmp/prints`)
+const LOCAL_PRINTS_DIR = Path.resolve(`${MC.publicRoot}/prints`)
 
 // Configure AWS S3 client for DigitalOcean Spaces
 const s3 = new AWS.S3({
@@ -20,6 +21,11 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.DO_SPACES_SECRET,
   region: process.env.DO_SPACES_REGION
 })
+const BUCKET_NAME = process.env.DO_SPACES_BUCKET_NAME
+// base url for prints in DO Spaces
+const env = process.env.SERVER_ENV
+const bucketDir = env === 'stable' ? 'stable/prints' : 'prints'
+const s3bucketUrl = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/${bucketDir}`
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -27,7 +33,6 @@ MC.socket.listeners.push({
   name: 'module|print-upload-chunk|payload',
   async handler (data) {
     try {
-      const env = process.env.SERVER_ENV
       const socket = GetSocket(data.socket_id)
       const chunk = data.chunk
       const printId = data.file_id
@@ -35,12 +40,30 @@ MC.socket.listeners.push({
       const file = Fs.createWriteStream(`${TMP_PRINTS_DIR}/${printId}`, { flags: 'a' })
       file.write(chunk)
       file.end()
+      // If the goal is passed, write the file on the server or DO Spaces
       if (data.place > data.goal) {
+        // Development environment
+        if (env === 'development') {
+          await Fs.move(`${TMP_PRINTS_DIR}/${printId}`, `${LOCAL_PRINTS_DIR}/${printId}.${fileExt}`)
+          const print = await MC.model.Print.findById(printId)
+          print.upload_status = 1
+          await print.save()
+          // Add print ref to the relevant Page
+          await MC.model.Page.findOneAndUpdate({ _id: print.page_ref }, {
+            init_screencap: false,
+            $push: {
+              print_refs: print._id
+            }
+          })
+          // File upload complete
+          return socket.emit('module|print-upload-complete|payload')
+        }
+        // Production and Stable environments
         // Upload to DigitalOcean Spaces
         const fileContent = await Fs.readFile(`${TMP_PRINTS_DIR}/${printId}`)
         await s3.putObject({
-          Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `${env === 'stable' ? 'stable/' : ''}prints/${printId}.${fileExt}`,
+          Bucket: BUCKET_NAME,
+          Key: `${bucketDir}/${printId}.${fileExt}`,
           Body: fileContent,
           ACL: 'public-read'
         }).promise()
@@ -51,13 +74,8 @@ MC.socket.listeners.push({
         const print = await MC.model.Print.findById(printId)
         print.upload_status = 1
         // Store the file URL in the database
-        if (env === 'stable') {
-          print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${printId}.${fileExt}`
-        } else if (env === 'production') {
-          print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${printId}.${fileExt}`
-        }
+        print.file_url = `${s3bucketUrl}/${printId}.${fileExt}`
         await print.save()
-
         // Add print ref to the relevant Page
         await MC.model.Page.findOneAndUpdate({ _id: print.page_ref }, {
           init_screencap: false,

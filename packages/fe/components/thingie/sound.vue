@@ -58,6 +58,7 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
+const config = useConfig()
 const source = ref(false)
 const player = ref(false)
 const gainNode = ref(false)
@@ -134,8 +135,8 @@ const initSoundThingie = () => {
   player.value = document.createElement('audio')
   player.value.crossOrigin = 'anonymous'
   player.value.loop = true
-  player.value.src = baseUrl.value.startsWith('https://localhost') ?
-    `${baseUrl.value}/uploads/${props.fileRef._id}.${props.fileRef.file_ext}` : props.fileRef.file_url
+  const fileRef = props.fileRef
+  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
   source.value = audioContext.value.createMediaElementSource(player.value)
   gainNode.value = audioContext.value.createGain()
   gainNode.value.gain.value = 0

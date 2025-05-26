@@ -199,6 +199,7 @@ const drag = e => {
 const loadImage = () => {
   imageLoading.value = true
   const img = document.createElement('img')
+  img.crossOrigin = 'anonymous'
   img.onload = function () {
     imageLoadError.value = false
     imageLoading.value = false
@@ -213,12 +214,9 @@ const loadImage = () => {
     img.src = `${baseUrl.value}/prints/${destPrintId.value}.png`
   } else if (env === 'stable') {
     img.src = `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/stable/prints/${destPrintId.value}.png`
-  } else if (env === 'production') {
+  } else {
     img.src = `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/prints/${destPrintId.value}.png`
   }
-  // img.src = baseUrl.value.startsWith('https://localhost') ?
-  //   `${baseUrl.value}/prints/${destPrintId.value}.png` :
-  //   `https://${config.public.doSpacesBucketName}.${config.public.doSpacesEndpoint}/prints/${destPrintId.value}.png`
 }
 
 /**

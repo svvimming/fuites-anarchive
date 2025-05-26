@@ -12,6 +12,7 @@ const { GetSocket } = require('@Module_Utilities')
 const MC = require('@Root/config')
 
 const TMP_UPLOADS_DIR = Path.resolve(`${MC.packageRoot}/tmp/uploads`)
+const LOCAL_UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
 
 // Configure AWS S3 client for DigitalOcean Spaces
 const s3 = new AWS.S3({
@@ -20,6 +21,11 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.DO_SPACES_SECRET,
   region: process.env.DO_SPACES_REGION
 })
+const BUCKET_NAME = process.env.DO_SPACES_BUCKET_NAME
+// base url for uploads in DO Spaces
+const env = process.env.SERVER_ENV
+const bucketDir = env === 'stable' ? 'stable/uploads' : 'uploads'
+const s3bucketUrl = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/${bucketDir}`
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
@@ -27,7 +33,6 @@ MC.socket.listeners.push({
   name: 'module|file-upload-chunk|payload',
   async handler (data) {
     try {
-      const env = process.env.SERVER_ENV
       const socket = GetSocket(data.socket_id)
       const uploaderId = data.uploader_id
       const chunk = data.chunk
@@ -36,12 +41,23 @@ MC.socket.listeners.push({
       const file = Fs.createWriteStream(`${TMP_UPLOADS_DIR}/${fileId}`, { flags: 'a' })
       file.write(chunk)
       file.end()
+      // If the goal is passed, write the file on the server or DO Spaces
       if (data.place > data.goal) {
+        // Development environment
+        if (env === 'development') {
+          await Fs.move(`${TMP_UPLOADS_DIR}/${fileId}`, `${LOCAL_UPLOADS_DIR}/${fileId}.${fileExt}`)
+          const upload = await MC.model.Upload.findById(fileId)
+          upload.upload_status = 1
+          await upload.save()
+          // File upload complete
+          return socket.emit(`${uploaderId}|file-upload-complete|payload`)
+        }
+        // Production and Stable environments
         // Upload to DigitalOcean Spaces
         const fileContent = await Fs.readFile(`${TMP_UPLOADS_DIR}/${fileId}`)
         await s3.putObject({
-          Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`,
+          Bucket: BUCKET_NAME,
+          Key: `${bucketDir}/${fileId}.${fileExt}`,
           Body: fileContent,
           ACL: 'public-read'
         }).promise()
@@ -50,11 +66,7 @@ MC.socket.listeners.push({
         // Update upload status to 1 (completed) and set file_url to the DigitalOcean Spaces URL
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
-        if (env === 'stable') {
-          upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
-        } else if (env === 'production') {
-          upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
-        }
+        upload.file_url = `${s3bucketUrl}/${fileId}.${fileExt}`
         await upload.save()
         // File upload complete
         return socket.emit(`${uploaderId}|file-upload-complete|payload`)
