@@ -22,6 +22,7 @@ const s3 = new AWS.S3({
 // -----------------------------------------------------------------------------
 MC.app.post('/post-delete-thingie', async (req, res) => {
   try {
+    const env = process.env.SERVER_ENV
     const verse = req.body.verse
     const thingieId = req.body.thingieId
     const thingie = await MC.model.Thingie.findById(thingieId)
@@ -42,7 +43,7 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
       try {
         await s3.deleteObject({
           Bucket: process.env.DO_SPACES_BUCKET_NAME,
-          Key: `uploads/${fileId}.${fileExt}`
+          Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`
         }).promise()
         console.log(`Deleted ${fileId}.${fileExt} from DigitalOcean Spaces`)
       } catch (err) {
