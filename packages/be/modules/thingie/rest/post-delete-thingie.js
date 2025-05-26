@@ -3,8 +3,7 @@ console.log('💡 [endpoint] /post-delete-thingie')
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 const Path = require('path')
-const AWS = require('aws-sdk')
-require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
+const Fs = require('fs-extra')
 
 const { SendData } = require('@Module_Utilities')
 
@@ -70,6 +69,7 @@ MC.app.post('/post-delete-thingie', async (req, res) => {
       const deletedTextThingie = await MC.model.Thingie.deleteOne(thingie)
       console.log(deletedTextThingie)
     }
+    console.log(`deleted file ${thingieId}`)
     MC.socket.io
       .to(`${verse}|thingies`)
       .emit('module|post-delete-thingie|payload', { _id: thingieId })
