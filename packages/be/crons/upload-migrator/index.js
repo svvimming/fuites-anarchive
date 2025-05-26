@@ -75,7 +75,7 @@ const migrateServerUploadsToSpacesBucket = async () => {
     const fileContent = await Fs.readFile(filePath)
     await s3.putObject({
       Bucket: process.env.DO_SPACES_BUCKET_NAME,
-      Key: `uploads/${fileId}.${fileExt}`,
+      Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`,
       Body: fileContent,
       ACL: 'public-read'
     }).promise()
@@ -115,7 +115,7 @@ const migrateServerPrintsToSpacesBucket = async () => {
     const fileContent = await Fs.readFile(filePath)
     await s3.putObject({
       Bucket: process.env.DO_SPACES_BUCKET_NAME,
-      Key: `prints/${fileId}.${fileExt}`,
+      Key: `${env === 'stable' ? 'stable/' : ''}prints/${fileId}.${fileExt}`,
       Body: fileContent,
       ACL: 'public-read'
     }).promise()
