@@ -4,6 +4,8 @@ console.log('⚡️ [websocket] module|print-upload-chunk|payload')
 // -----------------------------------------------------------------------------
 const Path = require('path')
 const Fs = require('fs-extra')
+const AWS = require('aws-sdk')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 const { GetSocket } = require('@Module_Utilities')
 
@@ -72,7 +74,7 @@ MC.socket.listeners.push({
         const print = await MC.model.Print.findById(printId)
         print.upload_status = 1
         // Store the file URL in the database
-        print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${printId}.${fileExt}`
+        print.file_url = `${s3bucketUrl}/${printId}.${fileExt}`
         await print.save()
         // Add print ref to the relevant Page
         await MC.model.Page.findOneAndUpdate({ _id: print.page_ref }, {

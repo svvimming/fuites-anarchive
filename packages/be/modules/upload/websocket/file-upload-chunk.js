@@ -4,6 +4,8 @@ console.log('⚡️ [websocket] module|file-upload-chunk|payload')
 // -----------------------------------------------------------------------------
 const Path = require('path')
 const Fs = require('fs-extra')
+const AWS = require('aws-sdk')
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
 
 const { GetSocket } = require('@Module_Utilities')
 
@@ -64,7 +66,7 @@ MC.socket.listeners.push({
         // Update upload status to 1 (completed) and set file_url to the DigitalOcean Spaces URL
         const upload = await MC.model.Upload.findById(fileId)
         upload.upload_status = 1
-        upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
+        upload.file_url = `${s3bucketUrl}/${fileId}.${fileExt}`
         await upload.save()
         // File upload complete
         return socket.emit(`${uploaderId}|file-upload-complete|payload`)

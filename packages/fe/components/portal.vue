@@ -35,6 +35,7 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
+const config = useRuntimeConfig()
 const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const generalStore = useGeneralStore()
