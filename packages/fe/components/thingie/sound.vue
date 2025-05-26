@@ -58,7 +58,7 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
-const config = useConfig()
+const config = useRuntimeConfig()
 const source = ref(false)
 const player = ref(false)
 const gainNode = ref(false)

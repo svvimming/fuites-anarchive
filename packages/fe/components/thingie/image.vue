@@ -46,7 +46,7 @@ const props = defineProps({
 const emit = defineEmits(['loaded'])
 
 // ======================================================================== Data
-const config = useConfig()
+const config = useRuntimeConfig()
 const image = ref(false)
 const canvas = ref(false)
 const clipPath = ref(false)
