@@ -4,13 +4,13 @@ const ModuleAlias = require('module-alias')
 const Path = require('path')
 const Fs = require('fs-extra')
 const Express = require('express')
-const AWS = require('aws-sdk')
+// const AWS = require('aws-sdk')
 require('dotenv').config({ path: Path.resolve(__dirname, '../../.env') })
 
 const MC = require('../../config')
 
-const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
-const PRINTS_DIR = Path.resolve(`${MC.publicRoot}/prints`)
+// const UPLOADS_DIR = Path.resolve(`${MC.publicRoot}/uploads`)
+// const PRINTS_DIR = Path.resolve(`${MC.publicRoot}/prints`)
 
 // ///////////////////////////////////////////////////////////////////// Aliases
 ModuleAlias.addAliases({
@@ -45,91 +45,95 @@ require('@Module_Print')
 MC.app = Express()
 
 // Configure AWS S3 client for DigitalOcean Spaces
-const s3 = new AWS.S3({
-  endpoint: process.env.DO_SPACES_ENDPOINT,
-  accessKeyId: process.env.DO_SPACES_KEY,
-  secretAccessKey: process.env.DO_SPACES_SECRET,
-  region: process.env.DO_SPACES_REGION
-})
+// const s3 = new AWS.S3({
+//   endpoint: process.env.DO_SPACES_ENDPOINT,
+//   accessKeyId: process.env.DO_SPACES_KEY,
+//   secretAccessKey: process.env.DO_SPACES_SECRET,
+//   region: process.env.DO_SPACES_REGION
+// })
 
-/**
- * @method migrateServerUploadsToSpacesBucket
- */
+// /**
+//  * @method migrateServerUploadsToSpacesBucket
+//  */
 
-const migrateServerUploadsToSpacesBucket = async () => {
-  const uploads = await MC.model.Upload.find({})
-  const len = uploads.length
-  const env = process.env.SERVER_ENV
-  for (let i = 0; i < len; i++) {
-    const upload = uploads[i]
-    const fileId = upload._id.toString()
-    const fileExt = upload.file_ext
-    const filePath = `${UPLOADS_DIR}/${fileId}.${fileExt}`
-    // Check if file exists before proceeding
-    const fileExists = await Fs.pathExists(filePath)
-    if (!fileExists) {
-      console.log(`File not found: ${filePath}`)
-      continue
-    }
+// const migrateServerUploadsToSpacesBucket = async () => {
+//   const uploads = await MC.model.Upload.find({})
+//   const len = uploads.length
+//   const env = process.env.SERVER_ENV
+//   for (let i = 0; i < len; i++) {
+//     const upload = uploads[i]
+//     const fileId = upload._id.toString()
+//     const fileExt = upload.file_ext
+//     const filePath = `${UPLOADS_DIR}/${fileId}.${fileExt}`
+//     // Check if file exists before proceeding
+//     const fileExists = await Fs.pathExists(filePath)
+//     if (!fileExists) {
+//       console.log(`File not found: ${filePath}`)
+//       continue
+//     }
 
-    const fileContent = await Fs.readFile(filePath)
-    await s3.putObject({
-      Bucket: process.env.DO_SPACES_BUCKET_NAME,
-      Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`,
-      Body: fileContent,
-      ACL: 'public-read'
-    }).promise()
-    // Update upload doc with DO Spaces URL
-    if (env === 'stable') {
-      upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
-    } else if (env === 'production') {
-      upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
-    }
-    await upload.save()
-    const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
-    // console.log(`URL: ${upload.file_url} added to upload doc. Finished ${i + 1} of ${len}.`)
-    console.log(`Upload ${`https://${domain}/api/uploads/${fileId}.${fileExt}`} migrated to ${upload.file_url}. Finished ${i + 1} of ${len}.`)
-  }
-}
+//     const fileContent = await Fs.readFile(filePath)
+//     await s3.putObject({
+//       Bucket: process.env.DO_SPACES_BUCKET_NAME,
+//       Key: `${env === 'stable' ? 'stable/' : ''}uploads/${fileId}.${fileExt}`,
+//       Body: fileContent,
+//       ACL: 'public-read'
+//     }).promise()
+//     // Update upload doc with DO Spaces URL
+//     if (env === 'stable') {
+//       upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/uploads/${fileId}.${fileExt}`
+//     } else if (env === 'production') {
+//       upload.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/uploads/${fileId}.${fileExt}`
+//     }
+//     await upload.save()
+//     const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
+//     // console.log(`URL: ${upload.file_url} added to upload doc. Finished ${i + 1} of ${len}.`)
+//     console.log(`Upload ${`https://${domain}/api/uploads/${fileId}.${fileExt}`} migrated to ${upload.file_url}. Finished ${i + 1} of ${len}.`)
+//   }
+// }
 
-/**
- * @method migrateServerPrintsToSpacesBucket
- */
+// /**
+//  * @method migrateServerPrintsToSpacesBucket
+//  */
 
-const migrateServerPrintsToSpacesBucket = async () => {
-  const prints = await MC.model.Print.find({})
-  const len = prints.length
-  const env = process.env.SERVER_ENV
-  for (let i = 0; i < len; i++) {
-    const print = prints[i]
-    const fileId = print._id.toString()
-    const fileExt = print.file_ext
-    const filePath = `${PRINTS_DIR}/${fileId}.${fileExt}`
-    // Check if file exists before proceeding
-    const fileExists = await Fs.pathExists(filePath)
-    if (!fileExists) {
-      console.log(`File not found: ${filePath}`)
-      continue
-    }
+// const migrateServerPrintsToSpacesBucket = async () => {
+//   const prints = await MC.model.Print.find({})
+//   const len = prints.length
+//   const env = process.env.SERVER_ENV
+//   for (let i = 0; i < len; i++) {
+//     const print = prints[i]
+//     const fileId = print._id.toString()
+//     const fileExt = print.file_ext
+//     const filePath = `${PRINTS_DIR}/${fileId}.${fileExt}`
+//     // Check if file exists before proceeding
+//     const fileExists = await Fs.pathExists(filePath)
+//     if (!fileExists) {
+//       console.log(`File not found: ${filePath}`)
+//       continue
+//     }
 
-    const fileContent = await Fs.readFile(filePath)
-    await s3.putObject({
-      Bucket: process.env.DO_SPACES_BUCKET_NAME,
-      Key: `${env === 'stable' ? 'stable/' : ''}prints/${fileId}.${fileExt}`,
-      Body: fileContent,
-      ACL: 'public-read'
-    }).promise()
-    // Update print doc with DO Spaces URL
-    if (env === 'stable') {
-      print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${fileId}.${fileExt}`
-    } else if (env === 'production') {
-      print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${fileId}.${fileExt}`
-    }
-    await print.save()
-    const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
-    // console.log(`URL: ${print.file_url} added to print doc. Finished ${i + 1} of ${len}.`)
-    console.log(`Print ${`https://${domain}/api/prints/${fileId}.${fileExt}`} migrated to ${print.file_url}. Finished ${i + 1} of ${len}.`)
-  }
+//     const fileContent = await Fs.readFile(filePath)
+//     await s3.putObject({
+//       Bucket: process.env.DO_SPACES_BUCKET_NAME,
+//       Key: `${env === 'stable' ? 'stable/' : ''}prints/${fileId}.${fileExt}`,
+//       Body: fileContent,
+//       ACL: 'public-read'
+//     }).promise()
+//     // Update print doc with DO Spaces URL
+//     if (env === 'stable') {
+//       print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/stable/prints/${fileId}.${fileExt}`
+//     } else if (env === 'production') {
+//       print.file_url = `https://${process.env.DO_SPACES_BUCKET_NAME}.${process.env.DO_SPACES_ENDPOINT}/prints/${fileId}.${fileExt}`
+//     }
+//     await print.save()
+//     const domain = env === 'stable' ? 'stable.fuit.es' : 'fuit.es'
+//     // console.log(`URL: ${print.file_url} added to print doc. Finished ${i + 1} of ${len}.`)
+//     console.log(`Print ${`https://${domain}/api/prints/${fileId}.${fileExt}`} migrated to ${print.file_url}. Finished ${i + 1} of ${len}.`)
+//   }
+// }
+
+const copyServerAssetsToLocal = async () => {
+  
 }
 
 // ///////////////////////////////////////////////////////////////////////// Run
@@ -137,10 +141,10 @@ const migrateServerPrintsToSpacesBucket = async () => {
 MC.app.on('mongoose-connected', async () => {
   try {
     console.log('------------------------------- Beginning upload migration')
-    await migrateServerUploadsToSpacesBucket()
+    // await migrateServerUploadsToSpacesBucket()
     console.log('------------------------------- Uploads successfully migrated')
     console.log('------------------------------- Beginning print migration')
-    await migrateServerPrintsToSpacesBucket()
+    // await migrateServerPrintsToSpacesBucket()
     console.log('------------------------------- Prints successfully migrated')
     console.log('------------------------------- Migration completed')
     process.exit(0)
