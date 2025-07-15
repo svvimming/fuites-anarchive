@@ -15,7 +15,10 @@
     <!-- ------------------------------------------------------- Text Editor -->
     <VerseTextEditor />
     <!-- ------------------------------------------------------------- Caddy -->
-    <ClientOnly><Caddy :container="viewport" /></ClientOnly>
+    <ClientOnly>
+      <Caddy v-if="!small" :container="viewport" />
+      <CaddyMobile v-else />
+    </ClientOnly>
     <!-- ---------------------------------------------- Delete Thingie Alert -->
     <VerseDeleteThingieAlert />
     <!-- --------------------------------------------- First Time User Alert -->
@@ -34,7 +37,7 @@
 // ======================================================================== Data
 const route = useRoute()
 const generalStore = useGeneralStore()
-const { activeModes } = storeToRefs(generalStore)
+const { activeModes, small } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { drippy } = storeToRefs(pocketStore)
 const alertStore = useZeroAlertStore()
