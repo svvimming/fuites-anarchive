@@ -17,13 +17,14 @@
       <ButtonIcon
         :active="pocketOpen"
         :class="['pocket-toggle-button', 'mobile', { active: pocketOpen }]"
-        @clicked="pocketStore.setPocketOpen(!pocketOpen)">
-        <IconPocket />
+        @clicked="handleMobilePocketToggle">
+        <IconPocket v-if="authenticated" class="icon" />
+        <IconKey v-else class="icon" />
       </ButtonIcon>
       
     </Tooltip>
 
-    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
+    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen: small }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
        <!-- ===================================================== Token Auth -->
@@ -67,12 +68,6 @@
             <IconKey class="key-icon"/>
           </ButtonIcon>
         </Tooltip>
-        <!-- -------------------------------------------- full screen toggle -->
-        <!-- <ButtonIcon
-          class="pocket-button fullscreen-toggle"
-          @clicked="pocketStore.togglePocketFullscreen()">
-          <IconExpand />
-        </ButtonIcon> -->
         <!-- ----------------------------------------------- uploader toggle -->
         <Tooltip
           tooltip="uploader-toggle-button"
@@ -103,14 +98,13 @@ import { useThrottleFn } from '@vueuse/core'
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { dragndrop, small } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
 const {
   pocket,
   uploaders,
-  fullscreen,
   authenticated,
   pocketOpen,
 } = storeToRefs(pocketStore)
@@ -172,6 +166,15 @@ const handleCancelAuthentication = () => {
   } else {
     pocketStore.setPocketOpen(false)
   }
+}
+
+const handleMobilePocketToggle = () => {
+  pocketStore.setPocketOpen(!pocketOpen.value)
+  // if (authenticated.value) {
+  //   pocketStore.setPocketOpen(!pocketOpen)
+  // } else {
+  //   tokenInputOpen.value = true
+  // }
 }
 
 const getPocketCanvasConfig = useThrottleFn(() => {
@@ -242,8 +245,8 @@ onUnmounted(() => {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: max(33.9vw, torem(650));
-  height: max(20.83vw, torem(400));
+  width: 100%;
+  height: 100%;
   border-radius: torem(25);
   overflow: hidden;
   z-index: 1;
@@ -251,14 +254,19 @@ onUnmounted(() => {
   visibility: hidden;
   @include modalShadow;
   &.open {
-    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
+    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
     opacity: 1;
     visibility: visible;
     transform: scale(1);
-  }
-  &.fullscreen {
-    width: calc(100vw - torem(50));
-    height: calc(100vh - torem(50));
+    width: max(33.9vw, torem(650));
+    height: max(20.83vw, torem(400));
+    &.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
@@ -276,6 +284,9 @@ onUnmounted(() => {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+  @include small {
+    min-width: torem(300);
+  }
 }
 
 :deep(.turbulence) {
@@ -287,6 +298,9 @@ onUnmounted(() => {
   overflow: hidden;
   opacity: 0.95;
   background-color: white;
+  @include small {
+    display: none;
+  }
 }
 
 :deep(.svg-border-rectangle) {
@@ -340,13 +354,6 @@ onUnmounted(() => {
       transform: rotate(45deg);
     }
   }
-}
-
-.fullscreen-toggle {
-  position: absolute !important;
-  left: torem(12);
-  top: torem(12);
-  z-index: 101;
 }
 
 .token-input-toggle {
