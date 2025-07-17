@@ -85,7 +85,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
         // Calculate dropped thingie new position based on drop coords
         let coords
         if (targetLocation === 'pocket') {
-          const pocket = document.getElementById('pocket')
+          const pocket = document.getElementById('pocket-canvas')
           const rect = pocket.getBoundingClientRect()
           coords = { x: e.clientX - handleOffset.value.x - rect.x, y: e.clientY - handleOffset.value.y - rect.y }
         } else {
@@ -153,6 +153,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   // ===================================================================== Hooks
   onMounted(() => {
     nextTick(() => {
+      if (!element.value) return
       dragstartEventListener.value = e => { handleDragStart(e) }
       dragendEventListener.value = e => { handleDragEnd(e) }
       dragoverEventListener.value = e => { handleDragOver(e) }
