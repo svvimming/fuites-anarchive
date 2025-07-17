@@ -129,7 +129,7 @@ watch(loadedIds, (ids) => {
 watch(editing, id => {
   if (small.value && id) {
     const editingData = thingies.value.data.find(item => item._id === id)
-    if (editingData) {
+    if (editingData && editingData.location !== 'pocket') {
       const at = editingData.at
       const hw = (window.innerWidth * 0.5) / sceneData.value.scale
       const hh = (window.innerHeight * 0.366) / sceneData.value.scale
@@ -454,6 +454,8 @@ const initController = key => {
 
 // ======================================================================= Hooks
 onMounted(() => {
+  // Add no-scroll class to body
+  document.body.classList.add('no-scroll')
   // Set canvas dimensions based on current viewport dimensions
   setCanvasDimensions()
   // Initialize scene position and scale
@@ -535,6 +537,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (document.body.classList.contains('no-scroll')) {
+    document.body.classList.remove('no-scroll')
+  }
   loadedIds.value = []
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)

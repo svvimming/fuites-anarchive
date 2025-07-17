@@ -17,7 +17,7 @@
       <ButtonIcon
         :active="pocketOpen"
         :class="['pocket-toggle-button', 'mobile', { active: pocketOpen }]"
-        @clicked="handleMobilePocketToggle">
+        @clicked="pocketStore.setPocketOpen(!pocketOpen)">
         <IconPocket v-if="authenticated" class="icon" />
         <IconKey v-else class="icon" />
       </ButtonIcon>
@@ -168,15 +168,6 @@ const handleCancelAuthentication = () => {
   }
 }
 
-const handleMobilePocketToggle = () => {
-  pocketStore.setPocketOpen(!pocketOpen.value)
-  // if (authenticated.value) {
-  //   pocketStore.setPocketOpen(!pocketOpen)
-  // } else {
-  //   tokenInputOpen.value = true
-  // }
-}
-
 const getPocketCanvasConfig = useThrottleFn(() => {
   const pocketRect = pocketRef.value.getBoundingClientRect()
   pocketCanvasConfig.value.width = Math.max(pocketRect.width, 650)
@@ -266,6 +257,8 @@ onUnmounted(() => {
       left: 0;
       width: 100%;
       height: 100%;
+      background-color: rgba(#2C2E35, 0.8);
+      border-radius: 0;
     }
   }
 }
@@ -316,6 +309,9 @@ onUnmounted(() => {
   @include modalShadow;
   width: 100%;
   height: 100%;
+  @include small {
+    filter: none;
+  }
 }
 
 :deep(.triple-dot-loader) {
@@ -353,6 +349,10 @@ onUnmounted(() => {
     .icon {
       transform: rotate(45deg);
     }
+  }
+  @include small {
+    left: 50%;
+    transform: translate(-50%, 0);
   }
 }
 
