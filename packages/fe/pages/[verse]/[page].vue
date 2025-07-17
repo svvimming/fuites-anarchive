@@ -60,7 +60,7 @@ const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
+const { dragndrop, small, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 const mixerStore = useMixerStore()
@@ -124,6 +124,22 @@ watch(loadedIds, (ids) => {
     initPageshot({ destination: 'server' })
   }
 }, { deep: true })
+
+// position scene to center on editing thingie on mobile devices
+watch(editing, id => {
+  if (small.value && id) {
+    const editingData = thingies.value.data.find(item => item._id === id)
+    if (editingData) {
+      const at = editingData.at
+      const hw = (window.innerWidth * 0.5) / sceneData.value.scale
+      const hh = (window.innerHeight * 0.366) / sceneData.value.scale
+      positionScene({
+        x: -1 * at.x + hw,
+        y: -1 * at.y + hh
+      })
+    }
+  }
+})
 
 // ===================================================================== Methods
 /**
