@@ -54,6 +54,11 @@ const props = defineProps({
     type: Number,
     required: false,
     default: 3
+  },
+  forceOpacity: {
+    type: [Number, Boolean],
+    required: false,
+    default: false
   }
 })
 
@@ -86,7 +91,7 @@ const pathConfig = computed(() => ({
   data: svgPath.value,
   stroke: color.value,
   strokeWidth: props.strokeWidth,
-  opacity: opacity.value,
+  opacity: props.forceOpacity || opacity.value,
   ...props.options
 }))
 const shadowConfig = computed(() => ({

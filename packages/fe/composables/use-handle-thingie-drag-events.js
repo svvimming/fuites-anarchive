@@ -149,7 +149,6 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
     }
   }
 
-
   // ===================================================================== Hooks
   onMounted(() => {
     nextTick(() => {
