@@ -1,86 +1,80 @@
 <template>
-  <div
-    id="pocket-carousel"
-    ref="carouselRef">
+  <div class="pocket-carousel-container">
+    <!-- --------------------------------------------------- Carousel Canvas -->
+    <div
+      id="pocket-carousel"
+      ref="carouselRef">
+      <button
+        @click="handleSwipe(1)">
+        forward
+      </button>
+      <button
+        @click="handleSwipe(-1)">
+        backward
+      </button>
+      <ClientOnly>
+        <v-stage ref="stageRef" :config="carouselConfig">
+          <v-layer>
+            <v-group
+              ref="carouselGroupRef"
+              :config="{ x: 150, y: 0 }">
+              <template
+                v-for="thingie in orderedThingies"
+                :key="thingie._id">
+                <v-group
+                  ref="thingieRefs"
+                  :config="{
+                    _id: thingie._id,
+                    x: 0,
+                    y: ids.indexOf(thingie._id) * thingieHeight / 2,
+                    offsetX: thingieWidth / 2,
+                    offsetY: thingieHeight / 2
+                  }">
 
-    <button
-      @click="handleSwipe(1)">
-      forward
-    </button>
+                  <ThingieImage
+                    v-if="thingie.thingie_type === 'image'"
+                    :file-ref="thingie.file_ref"
+                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
+                    :clip-active="thingie.clip"
+                    :path="thingie.path_data" />
 
-    <button
-      @click="handleSwipe(-1)">
-      backward
-    </button>
+                  <ThingieSound
+                    v-if="thingie.thingie_type === 'sound'"
+                    :file-ref="thingie.file_ref"
+                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
+                    :gain="thingie.gain || 1"
+                    :path="thingie.path_data"
+                    :colors="thingie.colors"
+                    :position="thingie.at"
+                    :location="thingie.location"
+                    :stroke-width="thingie.stroke_width"
+                    :force-opacity="1" />
 
-    <ClientOnly>
-      <v-stage ref="stageRef" :config="carouselConfig">
-        <v-layer>
+                  <ThingieText
+                    v-if="thingie.thingie_type === 'text'"
+                    :text="thingie.text"
+                    :link="thingie.link || ''"
+                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }" />
 
-          <v-group
-            ref="carouselGroupRef"
-            :config="{ x: 150, y: 0 }">
-            <template
-              v-for="thingie in orderedThingies"
-              :key="thingie._id">
+                </v-group>
+              </template>
+            </v-group>
+          </v-layer>
+        </v-stage>
+      </ClientOnly>
+    </div>
+    <!-- -------------------------------------------------- Thingie Controls -->
+    <ButtonIcon
+      :class="['compost-button']"
+      @clicked="sendThingieToCompost">
+      <IconRecycle />
+    </ButtonIcon>
 
-              <!-- <v-rect
-                ref="thingieRefs"
-                :config="{
-                  _id: thingie._id,
-                  width: 50,
-                  height: 50,
-                  fill: 'red',
-                  x: 0,
-                  y: ids.indexOf(thingie._id) * 25,
-                  offsetX: 25,
-                  offsetY: 25
-                }" /> -->
-
-              <v-group
-                ref="thingieRefs"
-                :config="{
-                  _id: thingie._id,
-                  x: 0,
-                  y: ids.indexOf(thingie._id) * thingieHeight / 2,
-                  offsetX: thingieWidth / 2,
-                  offsetY: thingieHeight / 2
-                }">
-
-                <ThingieImage
-                  v-if="thingie.thingie_type === 'image'"
-                  :file-ref="thingie.file_ref"
-                  :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
-                  :clip-active="thingie.clip"
-                  :path="thingie.path_data" />
-
-                <ThingieSound
-                  v-if="thingie.thingie_type === 'sound'"
-                  :file-ref="thingie.file_ref"
-                  :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
-                  :gain="thingie.gain || 1"
-                  :path="thingie.path_data"
-                  :colors="thingie.colors"
-                  :position="thingie.at"
-                  :location="thingie.location"
-                  :stroke-width="thingie.stroke_width"
-                  :force-opacity="1" />
-
-                <ThingieText
-                  v-if="thingie.thingie_type === 'text'"
-                  :text="thingie.text"
-                  :link="thingie.link || ''"
-                  :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }" />
-
-              </v-group>
-             
-
-            </template>
-          </v-group>
-
-        </v-layer>
-      </v-stage>
-    </ClientOnly>
+    <ButtonIcon
+      :class="['page-button']"
+      @clicked="sendThingieToPage">
+      <IconExpand />
+    </ButtonIcon>
 
   </div>
 </template>
@@ -95,7 +89,9 @@ const props = defineProps({
 })
 
 // ======================================================================== Data
-// const collectorStore = useCollectorStore()
+const collectorStore = useCollectorStore()
+const verseStore = useVerseStore()
+const { sceneData, page } = storeToRefs(verseStore)
 const carouselRef = ref(null)
 const thingieRefs = ref(null)
 const stageRef = ref(null)
@@ -133,7 +129,49 @@ const handleSwipe = dir => {
   } else {
     centerIndex.value = Math.max(0, centerIndex.value - 1)
   }
-  // collectorStore.setEditing(ids.value[centerIndex.value])
+}
+
+/**
+ * @method sendThingieToPage
+ */
+
+const sendThingieToPage = () => {
+  const thingie = props.pocketThingies[centerIndex.value]
+  const at = Object.assign({}, thingie.at, {
+    x: -1 * sceneData.value.x + (window.innerWidth * 0.5) / sceneData.value.scale,
+    y: -1 * sceneData.value.y + (window.innerHeight * 0.5) / sceneData.value.scale
+  })
+  if (page.value.data?.name) {
+    collectorStore.initThingieUpdate({
+      _id: thingie._id,
+      location: page.value.data.name,
+      record_new_location: true,
+      at
+    }, true)
+    // handle page creation functions
+    // if (page.value.data?.state === 'metastable' && !['pocket', 'compost'].includes(targetLocation)) {
+    //   createNewPageFromThingie(thingie, at)
+    // }
+  }
+}
+
+
+/**
+ * @method sendThingieToCompost
+ */
+
+const sendThingieToCompost = () => {
+  const thingie = props.pocketThingies[centerIndex.value]
+  const at = Object.assign({}, thingie.at, {
+    x: Math.random() * (2732 - thingie.at.width) + (0.5 * thingie.at.width),
+    y: Math.random() * (2000 - thingie.at.height) + (0.5 * thingie.at.height)
+  })
+  collectorStore.initThingieUpdate({
+    _id: thingie._id,
+    location: 'compost',
+    record_new_location: true,
+    at
+  }, true)
 }
 
 /**
@@ -234,10 +272,52 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
+.pocket-carousel-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
 #pocket-carousel {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+
+.compost-button {
+  --two-tone-a: #{$kellyGreen} !important;
+  --two-tone-b: white;
+  position: absolute;
+  left: torem(12);
+  bottom: torem(12);
+  :deep(path) {
+    stroke: var(--two-tone-a);
+  }
+  &.active {
+    transform: none;
+    :deep(path) {
+      stroke: var(--two-tone-b);
+    }
+  }
+}
+
+.page-button {
+  --two-tone-a: #{$drippyCore};
+  --two-tone-b: white;
+  position: absolute;
+  left: torem(12);
+  top: torem(12);
+  :deep(path) {
+    stroke: var(--two-tone-a);
+  }
+  &.active {
+    transform: none;
+    :deep(path) {
+      stroke: var(--two-tone-b);
+    }
+  }
 }
 </style>
