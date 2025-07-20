@@ -139,6 +139,7 @@ const verseName = computed(() => verse.value.data?.name)
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  backdrop-filter: blur(10px);
   transform: scale(0.1);
   transform-origin: bottom left;
   transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
@@ -158,7 +159,7 @@ const verseName = computed(() => verse.value.data?.name)
   left: torem(3);
   border-radius: torem(25);
   overflow: hidden;
-  opacity: 0.95;
+  opacity: 0.85;
   background-color: white;
   transform: scaleX(-1);
 }

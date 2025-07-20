@@ -182,6 +182,12 @@ const initCreatePage = async firstThingie => {
   opacity: 0;
   transform: scale(0.9);
   transition: 200ms ease;
+  @include small {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 .upload-prompt {
@@ -200,6 +206,14 @@ const initCreatePage = async firstThingie => {
   left: torem(24);
   max-width: torem(140);
   transform: translate(0, -50%);
+  @include small {
+    position: relative;
+    left: unset;
+    top: unset;
+    transform: none;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
 }
 
 :deep(.filename) {
@@ -215,6 +229,10 @@ const initCreatePage = async firstThingie => {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   overflow: hidden;
+  @include small {
+    padding: 0;
+    margin-right: 0;
+  }
 }
 
 :deep(.filesize),
@@ -236,6 +254,9 @@ const initCreatePage = async firstThingie => {
     &:not(:last-child) {
       margin-right: 0.375rem;
     }
+  }
+  @include small {
+    justify-content: center;
   }
 }
 

@@ -36,37 +36,43 @@ const canvas = ref(null)
 const coords = ref([])
 const resizing = ref(false)
 const canvasWidth = ref(200)
-const pocketStore = usePocketStore()
-const { fullscreen } = storeToRefs(pocketStore)
+const resizeEventListener = ref(false)
 
 // ======================================================================= Hooks
 onMounted(() => {
   nextTick(() => {
     initCanvas()
+    resizeEventListener.value = useThrottleFn(() => { setCanvasDimensions() }, 20)
+    window.addEventListener('resize', resizeEventListener.value)
   })
 })
 
-// ==================================================================== Watchers
-watch(fullscreen, () => {
-  resizing.value = true
-  setTimeout(() => {
-    resizing.value = false
-    nextTick(() => { initCanvas() })
-  }, 450) // The time it takes for the pocket resize animation to end
+onBeforeUnmount(() => {
+  if (resizeEventListener.value) {
+    window.removeEventListener('resize', resizeEventListener.value)
+  }
 })
 
 // ===================================================================== Methods
 const initCanvas = () => {
   if (canvas.value && ctn.value) {
-    const rect = ctn.value.getBoundingClientRect()
-    canvasWidth.value = rect.height // set the width and height based on the canvas height so the canvas is square
-    canvas.value.width = rect.height
-    canvas.value.height = rect.height
-    const ctx = canvas.value.getContext('2d')
-    ctx.lineWidth = 1
-    canvas.value.addEventListener('mousedown', mousedown)
-    canvas.value.addEventListener('touchstart', touchstart)
+    nextTick(() => {
+      setCanvasDimensions()
+      const ctx = canvas.value.getContext('2d')
+      ctx.lineWidth = 1
+      canvas.value.addEventListener('mousedown', mousedown)
+      canvas.value.addEventListener('touchstart', touchstart)
+    })
   }
+}
+
+const setCanvasDimensions = () => {
+  const rect = ctn.value.getBoundingClientRect()
+  console.log(rect)
+  canvasWidth.value = window.matchMedia('(max-width: 40rem)').matches ? 300 :
+                        window.matchMedia('(max-wdith: 53.125rem)').matches ? 450 : rect.height // set the width and height based on the canvas height so the canvas is square
+  canvas.value.width = canvasWidth.value
+  canvas.value.height = canvasWidth.value
 }
 
 const drawBichoPath = close => {
@@ -109,7 +115,7 @@ const touchstart = () => {
 }
 
 const touchmove = e => {
-  e.preventDefault()
+  // e.preventDefault()
   if (e.touches.length > 0) {
     const rect = canvas.value.getBoundingClientRect()
     const x = Math.max(padding, Math.min(canvasWidth.value + padding, e.touches[0].clientX - rect.left))
@@ -124,7 +130,7 @@ const touchend = () => {
   document.ontouchend = null
   if (coords.value.length) {
     drawBichoPath(true)
-    const path = coords.value.map(num => Math.round(num)).join(' ')
+    const path = coords.value.map(num => Math.round((200 / canvasWidth.value) * num)).join(' ')
     emit('path-completed', path)
   }
 }
@@ -138,6 +144,15 @@ const touchend = () => {
   flex-grow: 1;
   width: 100%;
   height: 100%;
+  @include small {
+    width: torem(470);
+    height: torem(470);
+    margin-bottom: 1.5rem;
+  }
+  @include mini {
+    width: torem(320);
+    height: torem(320);
+  }
 }
 
 .bicho-canvas {

@@ -207,6 +207,7 @@ onMounted(() => {
     transform: scale(1);
     width: max(33.9vw, torem(650));
     height: max(20.83vw, torem(400));
+    backdrop-filter: blur(10px);
     &.fullscreen {
       position: fixed;
       top: 0;
@@ -245,7 +246,7 @@ onMounted(() => {
   left: 0;
   border-radius: torem(25);
   overflow: hidden;
-  opacity: 0.95;
+  opacity: 0.85;
   background-color: white;
   @include small {
     display: none;

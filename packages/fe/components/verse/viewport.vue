@@ -143,6 +143,7 @@ watch(drippy, (scene) => {
   @include small {
     bottom: torem(14);
     right: torem(14);
+    z-index: 4;
   }
 }
 

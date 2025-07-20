@@ -156,7 +156,7 @@ const animateSlides = center => {
   ordered.value = reordered.reverse()
 
   const group = carouselGroupRef.value.getNode()
-  carouselGroupOffset.value = (-1 * center * thingieHeight / 2) + (0.5 * els.length * thingieHeight / 2) + 100
+  carouselGroupOffset.value = (-1 * center * thingieHeight / 2) + (0.5 * els.length * thingieHeight / 2) // + 100
   group.to({
     y: carouselGroupOffset.value,
     duration: 0.20,
