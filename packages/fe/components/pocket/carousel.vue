@@ -4,14 +4,14 @@
     <div
       id="pocket-carousel"
       ref="carouselRef">
-      <button
+      <!-- <button
         @click="handleSwipe(1)">
         forward
       </button>
       <button
         @click="handleSwipe(-1)">
         backward
-      </button>
+      </button> -->
       <ClientOnly>
         <v-stage ref="stageRef" :config="carouselConfig">
           <v-layer>
@@ -86,6 +86,9 @@
 </template>
 
 <script setup>
+// ===================================================================== Imports
+import { useSwipe } from '@vueuse/core'
+
 // ======================================================================= Props
 const props = defineProps({
   pocketThingies: {
@@ -108,6 +111,7 @@ const carouselGroupRef = ref(null)
 const carouselGroupOffset = ref(0)
 const thingieWidth = 100
 const thingieHeight = 100
+const { isSwiping, direction } = useSwipe(carouselRef)
 const carouselConfig = ref({
   width: 300,
   height: 500
@@ -122,6 +126,16 @@ const audioButtonVisible = computed(() => props.pocketThingies[centerIndex.value
 watch(() => props.pocketThingies, () => {
   centerIndex.value = Math.floor(ids.value.length / 2)
   animateSlides(centerIndex.value)
+})
+
+watch(isSwiping, (val) => {
+  if (val) {
+    if (direction.value === 'up') {
+      handleSwipe(1)
+    } else if (direction.value === 'down') {
+      handleSwipe(-1)
+    }
+  }
 })
 
 watch(centerIndex, index => { animateSlides(index) })
