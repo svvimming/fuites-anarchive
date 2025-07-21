@@ -54,6 +54,7 @@ const handleDeleteThingie = async () => {
   border-radius: torem(20);
   transition: 300ms ease;
   background-color: $athensGray;
+  touch-action: none;
   // box-shadow: 0 torem(6) torem(10) rgba(0, 0, 0, 0.25);
   @include modalShadow;
   .title,

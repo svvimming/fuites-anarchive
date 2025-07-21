@@ -51,6 +51,7 @@ const handleDegreeChange = deg => {
   align-items: center;
   width: torem(152);
   height: torem(152);
+  touch-action: none;
 }
 
 .rotation-icon {

@@ -110,6 +110,7 @@ const handleStrokeWidthResize = delta => {
   align-items: center;
   width: torem(152);
   height: torem(152);
+  touch-action: none;
   &.image {
     flex-direction: column;
     .buttons-before {

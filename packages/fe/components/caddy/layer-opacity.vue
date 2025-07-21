@@ -71,6 +71,7 @@ const handleDegreeChange = val => {
   align-items: center;
   width: torem(152);
   height: torem(152);
+  touch-action: none;
 }
 
 .panel {

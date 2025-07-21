@@ -42,7 +42,7 @@
       <SvgCaddyMobileConnector v-if="!hideTool" class="caddy-tool-connector" />
     </div>
     <!-- ============================================================ Slider -->
-    <div class="slider-container">
+    <div ref="sliderContainerRef" class="slider-container">
       <div
         :class="['tool-slider', { 'clip-active': thingie?.clip }, { 'locked': thingie?.locked }]"
         :style="{ transform: `translateX(${sliderX}px)` }">
@@ -75,6 +75,7 @@
 <script setup>
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
+import { useSwipe } from '@vueuse/core'
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
@@ -83,6 +84,8 @@ const pocketStore = usePocketStore()
 const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { page, textEditor, colorSelectorHex } = storeToRefs(verseStore)
+const sliderContainerRef = ref(null)
+const { isSwiping, direction } = useSwipe(sliderContainerRef)
 
 const soundThingieData = ref({})
 const initAngle = ref(0)
@@ -164,11 +167,18 @@ watch(() => thingie.value?._id, (newId, oldId) => {
   }
 })
 
-// watch(selected.value, () => {
-//   if () {
-
-//   }
-// })
+watch(isSwiping, (val) => {
+  if (val) {
+    const currentIndex = tools.value.indexOf(selected.value)
+    if (currentIndex === -1) { return }
+    const len = tools.value.length
+    if (direction.value === 'left' && currentIndex < len - 1) {
+      selected.value = tools.value[currentIndex + 1]
+    } else if (direction.value === 'right' && currentIndex > 0) {
+      selected.value = tools.value[currentIndex - 1]
+    }
+  }
+})
 
 // ==================================================================== Methods
 /**
@@ -391,6 +401,7 @@ const update = useThrottleFn(data => {
   width: 100%;
   height: 100%;
   z-index: 2;
+  touch-action: pan-x;
   &:before,
   &:after {
     content: '';
@@ -419,6 +430,7 @@ const update = useThrottleFn(data => {
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease-in-out;
+  touch-action: pan-x;
   // z-index: 2;
   .mobile-tool-button.clip-toggle,
   .mobile-tool-button.lock {

@@ -156,6 +156,7 @@ onMounted(() => {
   border-radius: 0;
   width: torem(142);
   height: torem(142);
+  touch-action: none;
   z-index: 3 !important;
 }
 
