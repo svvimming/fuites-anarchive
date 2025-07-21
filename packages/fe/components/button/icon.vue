@@ -51,6 +51,7 @@ defineProps({
   padding: torem(8.5);
   width: torem(40);
   height: torem(40);
+  touch-action: none;
   --two-tone-a: #{$drippyCore};
   --two-tone-b: white;
   &:before {
@@ -115,6 +116,7 @@ defineProps({
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  touch-action: none;
 }
 </style>
 

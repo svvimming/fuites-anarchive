@@ -212,11 +212,13 @@ const handleUnlockPageThingies = () => {
 // /////////////////////////////////////////////////////////////// Dropdown Menu
 .landing-sites-dropdown {
   position: relative;
+  touch-action: none;
   :deep(.panel-container) {
     top: 0;
     right: 100%;
     left: unset;
     transform: translate(torem(-20), 0);
+    touch-action: none;
     &:not(.open) {
       transform: translate(torem(-20), torem(8));
     }

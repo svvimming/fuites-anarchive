@@ -226,6 +226,7 @@ onMounted(() => {
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  touch-action: none;
   @include modalShadow;
   &.open {
     transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
