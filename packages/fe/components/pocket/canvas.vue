@@ -70,7 +70,7 @@ onMounted(() => {
   })
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (resizeEventListener.value) {
     window.removeEventListener('resize', resizeEventListener.value)
   }

@@ -1,6 +1,7 @@
 // ////////////////////////////////////////////////////////////////////// Import
 // -----------------------------------------------------------------------------
 import { useElementByPoint, useMouse } from '@vueuse/core'
+import { useCreatePageFromThingie } from './use-create-page-from-thingie'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -18,6 +19,7 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
   const { thingies } = storeToRefs(collectorStore)
   const pocketStore = usePocketStore()
   const { pocket, authenticated } = storeToRefs(pocketStore)
+  const { createNewPageFromThingie } = useCreatePageFromThingie()
 
   const handleOffset = ref({ x: 0, y: 0 })
   const { x, y } = useMouse({ type: 'client' })
@@ -125,29 +127,6 @@ export const useHandleThingieDragEvents = (element, stageRef) => {
    */
 
   const handleDrop = e => { e.preventDefault() }
-
-  /**
-   * @method createNewPageFromThingie
-   */
-
-  const createNewPageFromThingie = async (thingie, newAt) => {
-    const created = await verseStore.postCreatePage({
-      initiatorPocket: pocket.value.data._id,
-      creatorThingie: thingie,
-      overflowPage: page.value.data.name
-    })
-    if (created) {
-      collectorStore.initThingieUpdate({
-        _id: thingie._id,
-        location: created.name,
-        record_new_location: true,
-        at: newAt
-      }, true)
-      // Navigate to new page
-      const newRoute = `/${created.verse}/${created.name}`
-      await navigateTo({ path: newRoute })
-    }
-  }
 
   // ===================================================================== Hooks
   onMounted(() => {

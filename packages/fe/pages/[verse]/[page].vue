@@ -58,7 +58,7 @@ const route = useRoute()
 const verseStore = useVerseStore()
 const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
-const { thingies, editing } = storeToRefs(collectorStore)
+const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { dragndrop, small, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
@@ -347,6 +347,12 @@ const handleTouchMove = e => {
       })
       touchLast.value = { x: touch1.clientX, y: touch1.clientY }
     }
+  } else if (e.target.attrs.hasOwnProperty('thingie_id')) {
+    if (e.target.attrs.thingie_id !== mobileDragThingie.value) {
+      collectorStore.setMobileDragThingie(e.target.attrs.thingie_id)
+    }
+  } else if (mobileDragThingie.value) {
+    collectorStore.setMobileDragThingie(false)
   }
 }
 
@@ -354,7 +360,7 @@ const handleTouchMove = e => {
  * @method handleTouchEnd
  */
 
-const handleTouchEnd = () => {
+const handleTouchEnd = (e) => {
   lastTouchDistance.value = 0
 }
 

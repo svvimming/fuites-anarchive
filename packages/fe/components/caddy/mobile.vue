@@ -322,7 +322,7 @@ const update = useThrottleFn(data => {
   left: 0;
   width: 100%;
   height: torem(98);
-  z-index: 3;
+  z-index: 10;
   visibility: hidden;
   opacity: 0;
   &.active {

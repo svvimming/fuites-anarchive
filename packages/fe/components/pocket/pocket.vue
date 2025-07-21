@@ -1,5 +1,5 @@
 <template>
-  <div id="pocket-anchor">
+  <div id="pocket-anchor" :class="{ 'mobile-drag-to': mobileDragTo }">
     <!-- ===================================================== Pocket Toggle -->
     <Tooltip
       :tooltip="pocketOpen ? 'pocket-toggle-button-open' : 'pocket-toggle-button-closed'"
@@ -16,9 +16,9 @@
 
       <ButtonIcon
         :active="pocketOpen"
-        :class="['pocket-toggle-button', 'mobile', { active: pocketOpen }]"
+        :class="['pocket-toggle-button', 'mobile', { active: pocketOpen || mobileDragTo }, { 'mobile-drag-to': mobileDragTo }]"
         @clicked="pocketStore.setPocketOpen(!pocketOpen)">
-        <IconPocket v-if="authenticated" class="icon" />
+        <IconPocket v-if="authenticated" :open-icon="mobileDragTo" class="icon" />
         <IconKey v-else class="icon" />
       </ButtonIcon>
       
@@ -80,6 +80,14 @@
 </template>
 
 <script setup>
+// ======================================================================= Props
+const props = defineProps({
+  mobileDragTo: {
+    type: Boolean,
+    default: false
+  }
+})
+
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
@@ -184,6 +192,25 @@ onMounted(() => {
     }
     @include small {
       display: flex;
+    }
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        transition: 250ms ease;
+      }
+    }
+  }
+  &.mobile-drag-to {
+    width: torem(80);
+    height: torem(80);
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        width: torem(44);
+        height: torem(44);
+      }
     }
   }
 }
@@ -344,5 +371,30 @@ onMounted(() => {
   position: fixed;
   left: -9999px;
   overflow: hidden;
+}
+
+// ====================================================================== Mobile
+#pocket-anchor {
+  &:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background-color: $billyBlue;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: 250ms ease;
+  }
+  &.mobile-drag-to {
+    &:before {
+      opacity: 0.3;
+      width: torem(250);
+      height: torem(250);
+      transition: opacity 250ms ease;
+    }
+  }
 }
 </style>

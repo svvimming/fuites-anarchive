@@ -76,6 +76,12 @@
       <IconExpand />
     </ButtonIcon>
 
+    <ButtonIcon
+      :class="['audio-button', { visible: audioButtonVisible }]"
+      @clicked="handleAudioClick">
+      <IconAudio />
+    </ButtonIcon>
+
   </div>
 </template>
 
@@ -92,6 +98,7 @@ const props = defineProps({
 const collectorStore = useCollectorStore()
 const verseStore = useVerseStore()
 const { sceneData, page } = storeToRefs(verseStore)
+const { createNewPageFromThingie } = useCreatePageFromThingie()
 const carouselRef = ref(null)
 const thingieRefs = ref(null)
 const stageRef = ref(null)
@@ -99,16 +106,17 @@ const ordered = ref([])
 const centerIndex = ref(0)
 const carouselGroupRef = ref(null)
 const carouselGroupOffset = ref(0)
+const thingieWidth = 100
+const thingieHeight = 100
 const carouselConfig = ref({
   width: 300,
   height: 500
 })
-const thingieWidth = 100
-const thingieHeight = 100
 
 // ==================================================================== Computed
 const ids = computed(() => props.pocketThingies.map(thingie => thingie._id))
 const orderedThingies = computed(() => ordered.value.map(id => props.pocketThingies.find(thingie => thingie._id === id)))
+const audioButtonVisible = computed(() => props.pocketThingies[centerIndex.value]?.thingie_type === 'sound')
 
 // ==================================================================== Watchers
 watch(() => props.pocketThingies, () => {
@@ -149,9 +157,9 @@ const sendThingieToPage = () => {
       at
     }, true)
     // handle page creation functions
-    // if (page.value.data?.state === 'metastable' && !['pocket', 'compost'].includes(targetLocation)) {
-    //   createNewPageFromThingie(thingie, at)
-    // }
+    if (page.value.data?.state === 'metastable') {
+      createNewPageFromThingie(thingie, at)
+    }
   }
 }
 
@@ -172,6 +180,14 @@ const sendThingieToCompost = () => {
     record_new_location: true,
     at
   }, true)
+}
+
+/**
+ * @method handleAudioClick
+ */
+
+const handleAudioClick = () => {
+  console.log('handleAudioClick')
 }
 
 /**
@@ -318,6 +334,23 @@ onMounted(() => {
     :deep(path) {
       stroke: var(--two-tone-b);
     }
+  }
+}
+
+.audio-button {
+  --two-tone-a: #{$drippyCore};
+  --two-tone-b: white;
+  position: absolute;
+  left: 50%;
+  top: torem(12);
+  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition: 150ms ease;
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transition: 150ms ease;
   }
 }
 </style>
