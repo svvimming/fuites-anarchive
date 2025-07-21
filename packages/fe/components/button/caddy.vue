@@ -86,10 +86,10 @@ const recessed = computed(() => props.forcePressed || props.selected)
   }
   &:active {
     .button-shadow.concave {
-      opacity: 1 !important;
+      opacity: 1;
     }
     .button-shadow.convex {
-      opacity: 0 !important;
+      opacity: 0;
     }
   }
   &.disabled {

@@ -58,9 +58,9 @@ const route = useRoute()
 const verseStore = useVerseStore()
 const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
-const { thingies, editing } = storeToRefs(collectorStore)
+const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop, activeModes, mouseOverScene } = storeToRefs(generalStore)
+const { dragndrop, small, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 const mixerStore = useMixerStore()
@@ -124,6 +124,22 @@ watch(loadedIds, (ids) => {
     initPageshot({ destination: 'server' })
   }
 }, { deep: true })
+
+// position scene to center on editing thingie on mobile devices
+watch(editing, id => {
+  if (small.value && id) {
+    const editingData = thingies.value.data.find(item => item._id === id)
+    if (editingData && editingData.location !== 'pocket') {
+      const at = editingData.at
+      const hw = (window.innerWidth * 0.5) / sceneData.value.scale
+      const hh = (window.innerHeight * 0.366) / sceneData.value.scale
+      positionScene({
+        x: -1 * at.x + hw,
+        y: -1 * at.y + hh
+      })
+    }
+  }
+})
 
 // ===================================================================== Methods
 /**
@@ -331,6 +347,12 @@ const handleTouchMove = e => {
       })
       touchLast.value = { x: touch1.clientX, y: touch1.clientY }
     }
+  } else if (e.target.attrs.hasOwnProperty('thingie_id')) {
+    if (e.target.attrs.thingie_id !== mobileDragThingie.value) {
+      collectorStore.setMobileDragThingie(e.target.attrs.thingie_id)
+    }
+  } else if (mobileDragThingie.value) {
+    collectorStore.setMobileDragThingie(false)
   }
 }
 
@@ -338,7 +360,7 @@ const handleTouchMove = e => {
  * @method handleTouchEnd
  */
 
-const handleTouchEnd = () => {
+const handleTouchEnd = (e) => {
   lastTouchDistance.value = 0
 }
 
@@ -438,6 +460,8 @@ const initController = key => {
 
 // ======================================================================= Hooks
 onMounted(() => {
+  // Add no-scroll class to body
+  document.body.classList.add('no-scroll')
   // Set canvas dimensions based on current viewport dimensions
   setCanvasDimensions()
   // Initialize scene position and scale
@@ -519,6 +543,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (document.body.classList.contains('no-scroll')) {
+    document.body.classList.remove('no-scroll')
+  }
   loadedIds.value = []
   window.removeEventListener('resize', resizeEventListener.value)
   window.removeEventListener('keydown', keydownEventListener.value)

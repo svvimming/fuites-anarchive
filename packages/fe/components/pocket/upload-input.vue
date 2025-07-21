@@ -257,6 +257,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
+  @include small {
+    height: unset;
+  }
 }
 
 // //////////////////////////////////////////////////////// [button] file upload

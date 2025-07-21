@@ -25,6 +25,7 @@ export const useCollectorStore = defineStore('collector', () => {
 
   const editing = ref(false)
   const deleted = ref([])
+  const mobileDragThingie = ref(false)
 
   // ================================================================== watchers
   watch(() => activeModes.value.mobileEdit, (val) => {
@@ -195,6 +196,14 @@ export const useCollectorStore = defineStore('collector', () => {
   }
 
   /**
+   * @method setMobileDragThingie
+   */
+
+  const setMobileDragThingie = incoming => {
+    mobileDragThingie.value = incoming
+  }
+
+  /**
    * @method addNewTextThingie
    */
 
@@ -250,6 +259,7 @@ export const useCollectorStore = defineStore('collector', () => {
     thingies,
     editing,
     deleted,
+    mobileDragThingie,
     // ----- actions
     getThingies,
     postCreateThingie,
@@ -259,6 +269,7 @@ export const useCollectorStore = defineStore('collector', () => {
     initThingieUpdate,
     updateThingie,
     setEditing,
+    setMobileDragThingie,
     addNewTextThingie,
     removeNewTextThingie
   }

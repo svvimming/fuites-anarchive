@@ -1,5 +1,5 @@
 <template>
-  <div id="compost-portal-anchor">
+  <div id="compost-portal-anchor" :class="{ 'mobile-drag-to': mobileDragTo }">
     <!-- ============================================= Compost Portal Toggle -->
     <Tooltip
       tooltip="compost-portal-toggle-button"
@@ -22,8 +22,7 @@
       <ButtonIcon
         v-if="authenticated"
         :active="compostPortalOpen"
-        :class="['compost-portal-button', 'mobile', { active: compostPortalOpen }]"
-        @clicked="compostPortalOpen = !compostPortalOpen">
+        :class="['compost-portal-button', 'mobile', { active: compostPortalOpen || mobileDragTo }, { 'mobile-drag-to': mobileDragTo }]">
         <IconRecycle />
       </ButtonIcon>
 
@@ -60,9 +59,17 @@
 </template>
 
 <script setup>
+// ======================================================================= Props
+const props = defineProps({
+  mobileDragTo: {
+    type: Boolean,
+    default: false
+  }
+})
+
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { dragndrop, small } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { verse } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
@@ -78,6 +85,13 @@ const buttonText = [
   { letter: 's', classes: 'source-serif-pro semibold italic' },
   { letter: 't', classes: 'source-sans-pro bold italic' }
 ]
+
+// ==================================================================== Watchers
+watch(() => small.value, () => {
+  if (compostPortalOpen.value) {
+    compostPortalOpen.value = false
+  }
+})
 
 // ==================================================================== Computed
 const verseName = computed(() => verse.value.data?.name)
@@ -125,6 +139,25 @@ const verseName = computed(() => verse.value.data?.name)
     @include small {
       display: flex;
     }
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        transition: 250ms ease;
+      }
+    }
+  }
+  &.mobile-drag-to {
+    width: torem(80);
+    height: torem(80);
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        width: torem(44);
+        height: torem(44);
+      }
+    }
   }
 }
 
@@ -139,6 +172,7 @@ const verseName = computed(() => verse.value.data?.name)
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  backdrop-filter: blur(10px);
   transform: scale(0.1);
   transform-origin: bottom left;
   transition: transform 300ms ease, opacity 300ms ease-in, visibility 300ms linear, width 400ms ease, height 400ms ease;
@@ -158,7 +192,7 @@ const verseName = computed(() => verse.value.data?.name)
   left: torem(3);
   border-radius: torem(25);
   overflow: hidden;
-  opacity: 0.95;
+  opacity: 0.85;
   background-color: white;
   transform: scaleX(-1);
 }
@@ -252,6 +286,31 @@ const verseName = computed(() => verse.value.data?.name)
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+// ====================================================================== Mobile
+#compost-portal-anchor {
+  &:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background-color: $kellyGreen;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: 250ms ease;
+  }
+  &.mobile-drag-to {
+    &:before {
+      opacity: 0.3;
+      width: torem(250);
+      height: torem(250);
+      transition: opacity 250ms ease;
+    }
   }
 }
 </style>
