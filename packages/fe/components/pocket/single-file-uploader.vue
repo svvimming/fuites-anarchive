@@ -1,6 +1,6 @@
 <template>
   <PocketUploadInput
-    accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a"
+    accepted-mimetypes="image/jpeg,image/png,audio/mpeg,audio/x-m4a,audio/ogg"
     :uploader-id="uploaderId"
     :max-file-size-mb="maxFileSizeMB"
     :class="[
