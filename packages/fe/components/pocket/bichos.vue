@@ -68,7 +68,6 @@ const initCanvas = () => {
 
 const setCanvasDimensions = () => {
   const rect = ctn.value.getBoundingClientRect()
-  console.log(rect)
   canvasWidth.value = window.matchMedia('(max-width: 40rem)').matches ? 300 :
                         window.matchMedia('(max-wdith: 53.125rem)').matches ? 450 : rect.height // set the width and height based on the canvas height so the canvas is square
   canvas.value.width = canvasWidth.value
