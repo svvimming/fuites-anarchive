@@ -29,6 +29,14 @@
     <TooltipCursor v-if="activeModes.tooltips" />
     <!-- ---------------------------------------- Create Sound Thingie Alert -->
     <VerseCreateSoundThingieAlert />
+    <!-- --------------------------------------------------------- Edit Mode -->
+    <ButtonIcon
+      v-if="authenticated"
+      :active="activeModes.mobileEdit"
+      class="mobile-edit-mode-toggle"
+      @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
+      <IconPencil />
+    </ButtonIcon>
 
   </div>
 </template>
@@ -41,7 +49,7 @@ const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
 const { activeModes, small } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
-const { drippy } = storeToRefs(pocketStore)
+const { drippy, authenticated } = storeToRefs(pocketStore)
 const alertStore = useZeroAlertStore()
 const viewport = ref(null)
 const touchmoveEventListener = ref(null)
@@ -231,5 +239,34 @@ onBeforeUnmount(() => {
 
 :deep(.first-time-user-alert) {
   z-index: 3;
+}
+
+.mobile-edit-mode-toggle {
+  --two-tone-a: #{$drippyCore};
+  --two-tone-b: white;
+  position: absolute;
+  bottom: torem(14);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  transition: 200ms ease;
+  z-index: 2;
+  @include small {
+    display: block;
+  }
+  :deep(.slot) {
+    path {
+      transition: 200ms ease;
+      stroke: var(--two-tone-a);
+      stroke-width: 2;
+    }
+  }
+  &.active {
+    :deep(.slot) {
+      path {
+        stroke: var(--two-tone-b);
+      }
+    }
+  }
 }
 </style>

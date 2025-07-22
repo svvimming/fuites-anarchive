@@ -92,7 +92,7 @@ const props = defineProps({
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { small } = storeToRefs(generalStore)
+const { small, activeModes } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
@@ -336,8 +336,10 @@ onMounted(() => {
     }
   }
   @include small {
-    left: 50%;
-    transform: translate(-50%, 0);
+    left: unset;
+    right: torem(12);
+    bottom: torem(36);
+    transform: translateY(-100%);
   }
 }
 
@@ -398,4 +400,5 @@ onMounted(() => {
     }
   }
 }
+
 </style>

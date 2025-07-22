@@ -4,20 +4,12 @@
     <div
       id="pocket-carousel"
       ref="carouselRef">
-      <!-- <button
-        @click="handleSwipe(1)">
-        forward
-      </button>
-      <button
-        @click="handleSwipe(-1)">
-        backward
-      </button> -->
       <ClientOnly>
         <v-stage ref="stageRef" :config="carouselConfig">
           <v-layer>
             <v-group
               ref="carouselGroupRef"
-              :config="{ x: 150, y: 0 }">
+              :config="{ x: carouselConfig.width * 0.5, y: 0 }">
               <template
                 v-for="thingie in orderedThingies"
                 :key="thingie._id">
@@ -26,22 +18,22 @@
                   :config="{
                     _id: thingie._id,
                     x: 0,
-                    y: ids.indexOf(thingie._id) * thingieHeight / 2,
-                    offsetX: thingieWidth / 2,
-                    offsetY: thingieHeight / 2
+                    y: ids.indexOf(thingie._id) * thingieHeight * spacingRatio - (thingieHeight * 0.5),
+                    offsetX: getThingieOffsetX(thingie),
+                    offsetY: thingieHeight * 0.5
                   }">
 
                   <ThingieImage
                     v-if="thingie.thingie_type === 'image'"
                     :file-ref="thingie.file_ref"
-                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
+                    :parent-config="getParentConfig(thingie)"
                     :clip-active="thingie.clip"
                     :path="thingie.path_data" />
 
                   <ThingieSound
                     v-if="thingie.thingie_type === 'sound'"
                     :file-ref="thingie.file_ref"
-                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }"
+                    :parent-config="getParentConfig(thingie)"
                     :gain="thingie.gain || 1"
                     :path="thingie.path_data"
                     :colors="thingie.colors"
@@ -54,7 +46,7 @@
                     v-if="thingie.thingie_type === 'text'"
                     :text="thingie.text"
                     :link="thingie.link || ''"
-                    :parent-config="{ width: thingieWidth, height: thingieHeight, thingie_id: thingie._id }" />
+                    :parent-config="getParentConfig(thingie)" />
 
                 </v-group>
               </template>
@@ -65,28 +57,37 @@
     </div>
     <!-- -------------------------------------------------- Thingie Controls -->
     <ButtonIcon
+      :class="['close-button']"
+      @clicked="pocketStore.setPocketOpen(false)">
+      <IconClose />
+    </ButtonIcon>
+
+    <ButtonIcon
       :class="['compost-button']"
       @clicked="sendThingieToCompost">
       <IconRecycle />
     </ButtonIcon>
 
-    <ButtonIcon
+    <ButtonBasic
       :class="['page-button']"
       @clicked="sendThingieToPage">
-      <IconExpand />
-    </ButtonIcon>
+      <span class="move-to">move to</span>
+      <span class="page-name">{{ page.data?.name }}</span>
+    </ButtonBasic>
 
-    <ButtonIcon
+    <ButtonBasic
       :class="['audio-button', { visible: audioButtonVisible }]"
       @clicked="handleAudioClick">
-      <IconAudio />
-    </ButtonIcon>
+      <span class="audio-text">preview sound</span>
+      <IconAudio class="audio-icon" />
+    </ButtonBasic>
 
   </div>
 </template>
 
 <script setup>
 // ===================================================================== Imports
+import { useThrottleFn } from '@vueuse/core'
 import { useSwipe } from '@vueuse/core'
 
 // ======================================================================= Props
@@ -99,6 +100,7 @@ const props = defineProps({
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
+const pocketStore = usePocketStore()
 const verseStore = useVerseStore()
 const { sceneData, page } = storeToRefs(verseStore)
 const { createNewPageFromThingie } = useCreatePageFromThingie()
@@ -111,11 +113,13 @@ const carouselGroupRef = ref(null)
 const carouselGroupOffset = ref(0)
 const thingieWidth = 100
 const thingieHeight = 100
+const resizeEventListener = ref(null)
 const { isSwiping, direction } = useSwipe(carouselRef)
 const carouselConfig = ref({
   width: 300,
   height: 500
 })
+const spacingRatio = 1.0
 
 // ==================================================================== Computed
 const ids = computed(() => props.pocketThingies.map(thingie => thingie._id))
@@ -224,7 +228,7 @@ const animateSlides = center => {
   ordered.value = reordered.reverse()
 
   const group = carouselGroupRef.value.getNode()
-  carouselGroupOffset.value = (-1 * center * thingieHeight / 2) + (0.5 * els.length * thingieHeight / 2) // + 100
+  carouselGroupOffset.value = (-1 * center * thingieHeight * spacingRatio) + (0.5 * thingieHeight * spacingRatio) + (window.innerHeight * 0.5)
   group.to({
     y: carouselGroupOffset.value,
     duration: 0.20,
@@ -238,48 +242,48 @@ const animateSlides = center => {
         const id = node.attrs._id
         if (id === els[center]) {
           node.to({
-            scaleX: 2,
-            scaleY: 2,
+            scaleX: 2.1,
+            scaleY: 2.1,
             opacity: 1,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut
           })
         } else if (id === els[center + 1]) {
           node.to({
-            scaleX: 1.66,
-            scaleY: 1.66,
-            opacity: 0.66,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            opacity: 0.33,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut
           })
         } else if (id === els[center - 1]) {
           node.to({
-            scaleX: 1.66,
-            scaleY: 1.66,
-            opacity: 0.66,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            opacity: 0.33,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut
           })
         } else if (id === els[center + 2]) {
           node.to({
-            scaleX: 1.33,
-            scaleY: 1.33,
-            opacity: 0.33,
+            scaleX: 1,
+            scaleY: 1,
+            opacity: 0.1,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut
           })
         } else if (id === els[center - 2]) {
           node.to({
-            scaleX: 1.33,
-            scaleY: 1.33,
-            opacity: 0.33,
+            scaleX: 1,
+            scaleY: 1,
+            opacity: 0.1,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut 
           })
         } else {
           node.to({
-            scaleX: 1,
-            scaleY: 1,
+            scaleX: 0.5,
+            scaleY: 0.5,
             opacity: 0,
             duration: 0.20,
             easing: Konva.Easings.EaseInOut
@@ -290,12 +294,58 @@ const animateSlides = center => {
   })
 }
 
+/**
+ * @method getCarouselConfig
+ */
+
+const getCarouselConfig = useThrottleFn(() => {
+  carouselConfig.value.width = Math.max(window.innerWidth, 300)
+  carouselConfig.value.height = Math.max(window.innerHeight, 500)
+}, 50)
+
+/**
+ * @method getParentConfig
+ */
+
+const getParentConfig = thingie => {
+  const width = thingie.at.width
+  const height = thingie.at.height
+  return {
+    width: thingieWidth * (width / height),
+    height: thingieHeight,
+    thingie_id: thingie._id
+  }
+}
+
+/**
+ * @method getThingieOffsetX
+ */
+
+const getThingieOffsetX = thingie => {
+  const width = thingie.at.width
+  const height = thingie.at.height
+  return thingieWidth * (width / height) * 0.5
+}
+
 // ======================================================================= Hooks
 onMounted(() => {
+  // Register the resize event listener
+  resizeEventListener.value = () => { getCarouselConfig() }
+  window.addEventListener('resize', resizeEventListener.value)
   nextTick(() => {
     centerIndex.value = Math.floor(ids.value.length / 2)
     animateSlides(centerIndex.value)
+    // Get the initial pocket canvas config
+    setTimeout(() => {
+      getCarouselConfig()
+    }, 500)
   })
+})
+
+onBeforeUnmount(() => {
+  if (resizeEventListener.value) {
+    window.removeEventListener('resize', resizeEventListener.value)
+  }
 })
 
 </script>
@@ -319,6 +369,12 @@ onMounted(() => {
   touch-action: pan-y;
 }
 
+.close-button {
+  position: absolute;
+  left: torem(12);
+  top: torem(12);
+}
+
 .compost-button {
   --two-tone-a: #{$kellyGreen} !important;
   --two-tone-b: white;
@@ -337,29 +393,44 @@ onMounted(() => {
 }
 
 .page-button {
-  --two-tone-a: #{$drippyCore};
-  --two-tone-b: white;
   position: absolute;
-  left: torem(12);
-  top: torem(12);
-  :deep(path) {
-    stroke: var(--two-tone-a);
+  padding: torem(10) torem(16);
+  left: 50%;
+  bottom: torem(12);
+  transform: translateX(-50%);
+  border-radius: torem(35);
+  background-color: #{$billyBlue};
+  // overflow: hidden;
+  // text-overflow: ellipsis;
+  white-space: nowrap;
+  &:before {
+    display: none;
   }
-  &.active {
-    transform: none;
-    :deep(path) {
-      stroke: var(--two-tone-b);
-    }
+  :deep(.slot) {
+    display: flex;
+    align-items: center;
+  }
+  .move-to {
+    display: inline-block;
+    overflow: hidden;
+  }
+  .page-name {
+    display: inline-block;
+    margin-left: torem(4);
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: torem(130);
   }
 }
 
 .audio-button {
-  --two-tone-a: #{$drippyCore};
-  --two-tone-b: white;
   position: absolute;
   left: 50%;
   top: torem(12);
   transform: translateX(-50%);
+  border-radius: torem(35);
+  background-color: transparent;
   opacity: 0;
   visibility: hidden;
   transition: 150ms ease;
@@ -367,6 +438,25 @@ onMounted(() => {
     opacity: 1;
     visibility: visible;
     transition: 150ms ease;
+  }
+  &:before {
+    display: none;
+  }
+  :deep(.slot) {
+    display: flex;
+    align-items: center;
+  }
+  .audio-text {
+    font-size: torem(12);
+    color: white;
+  }
+  .audio-icon {
+    width: torem(14);
+    height: torem(14);
+    margin-left: torem(4);
+    :deep(path) {
+      stroke: white;
+    }
   }
 }
 </style>
