@@ -135,5 +135,8 @@ onBeforeUnmount(() => {
   &.drag-n-drop-event {
     cursor: copy !important;
   }
+  @include small {
+    height: 100svh;
+  }
 }
 </style>

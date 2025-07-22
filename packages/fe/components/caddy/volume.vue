@@ -166,6 +166,7 @@ onBeforeUnmount(() => {
   padding: torem(13) 0;
   width: torem(142);
   height: torem(142);
+  touch-action: none;
 }
 
 .meter,
