@@ -7,35 +7,41 @@
       <!-- ------------------------------------------ Shared [Layer/Opacity] -->
       <CaddyLayerOpacity
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'layer-opacity'}]"
+        :parent-radius="radius"
         @bring-forward="bringThingieForward"
         @send-back="sendThingieBack"
         @update-opacity="updateOpacity" />
       <!-- ----------------------------------------------- Shared [Rotation] -->
       <CaddyRotation
         :default-angle="initAngle"
+        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'rotation' }]"
         @update-rotation="rotateThingie" />
       <!-- ------------------------------------------ Image & Sound [Resize] -->
       <CaddyResize
         v-if="type === 'image' || type === 'sound'"
         :type="type"
+        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'resize' }]"
         @resize-thingie="resizeThingie"
         @update-stroke-width="updateStrokeWidth" />
       <!-- ---------------------------------------------- Text [Font Editor] -->
       <CaddyFontEditor
         v-if="textEditor"
+        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'font-editor' }]" />
       <!-- ------------------------------------- Text & Sound [Color Picker] -->
       <CaddyColorSelector
         v-if="type === 'text' || type === 'sound'"
         :init-color="thingieColor || '#000000'"
+        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'color-selector'}]"
         @color-change="handleColorSelection" />
       <!-- -------------------------------------------------- Sound [Volume] -->
       <CaddyVolume
         v-show="type === 'sound'"
         :active="selected === 'volume'"
+        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]"
         @update-gain="handleGainUpdate" />
       <!-- =================================================== Connector SVG -->
@@ -116,15 +122,15 @@ const soundTools = [
   'lock'
 ]
 const radii = {
-  'trash': 86,
-  'layer-opacity': 86,
-  'rotation': 86,
-  'resize': 86,
-  'clip-toggle': 86,
-  'font-editor': 90,
-  'color-selector': 90,
-  'volume': 86,
-  'lock': 86
+  'trash': 96,
+  'layer-opacity': 96,
+  'rotation': 96,
+  'resize': 96,
+  'clip-toggle': 96,
+  'font-editor': 96,
+  'color-selector': 96,
+  'volume': 96,
+  'lock': 96
 }
 
 // ==================================================================== Computed
@@ -136,7 +142,8 @@ const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
 const sliderX = computed(() => tools.value.indexOf(selected.value) * -72) // 48px slide width + 12px margin + 12px margin
-const toolCtnStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 40}px` }))
+const radius = computed(() => radii[selected.value] || 45)
+const toolCtnStyles = computed(() => ({ '--center-panel-diameter': `${2 * radius.value}px` }))
 const hideTool = computed(() => ['clip-toggle', 'trash', 'lock'].includes(selected.value))
 
 // ==================================================================== Watchers
@@ -366,7 +373,7 @@ const update = useThrottleFn(data => {
   position: absolute;
   left: 50%;
   bottom: 100%;
-  transform: translate(-50%, torem(-76));
+  transform: translate(-50%, torem(-106));
   background-color: $stormGray;
   color: white;
   transition: 200ms ease;

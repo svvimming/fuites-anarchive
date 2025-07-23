@@ -1,5 +1,5 @@
 <template>
-  <div class="font-editor">
+  <div class="font-editor" :style="{ '--parent-radius': `${parentRadius}px` }">
     <!-- ======================================================= Font Styles -->
     <div class="font-styles">
       <button
@@ -72,6 +72,15 @@
 </template>
 
 <script setup>
+// ======================================================================= Props
+const props = defineProps({
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 70
+  }
+})
+
 // ======================================================================== Data
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)
@@ -148,16 +157,53 @@ onMounted(() => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .font-editor {
+  --parent-radius: 66px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: torem(12) 0;
+  padding: calc(var(--parent-radius) * 0.18) 0;
   border-radius: 0;
-  width: torem(142);
-  height: torem(142);
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
   touch-action: none;
   z-index: 3 !important;
+  .style-button {
+    &.toggle-italic,
+    &.toggle-underline {
+      margin-top: calc(var(--parent-radius) * 0.157);
+      :deep(svg) {
+        width: calc(var(--parent-radius) * 0.46);
+        height: calc(var(--parent-radius) * 0.46);
+      }
+    }
+    &.toggle-bold {
+      :deep(svg) {
+        width: calc(var(--parent-radius) * 0.6);
+        height: calc(var(--parent-radius) * 0.3);
+      }
+    }
+  }
+  .font-family-selector {
+    width: calc(var(--parent-radius) * 1.542);
+    height: calc(var(--parent-radius) * 0.257);
+  }
+  .size-button {
+    &:first-child,
+    &:last-child {
+      margin-bottom: calc(var(--parent-radius) * 0.157);
+    }
+    :deep(svg) {
+      width: calc(var(--parent-radius) * 0.6);
+      height: calc(var(--parent-radius) * 0.3);
+    }
+    &.retrigger-button {
+      :deep(svg) {
+        width: calc(var(--parent-radius) * 0.46);
+        height: calc(var(--parent-radius) * 0.46);
+      }
+    }
+  }
 }
 
 .font-styles,
@@ -186,18 +232,9 @@ onMounted(() => {
     transform: scale(1.05);
     filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
   }
-  &:first-child,
-  &:last-child {
-    margin-top: torem(11);
-  }
 }
 
 // /////////////////////////////////////////////////////////////// Font Families
-.font-family-selector {
-  width: torem(108);
-  height: torem(18);
-}
-
 .family-list-toggle {
   position: relative;
   width: 100%;
@@ -255,6 +292,9 @@ onMounted(() => {
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+    @include small {
+      font-size: torem(14);
+    }
   }
 }
 
@@ -262,6 +302,9 @@ onMounted(() => {
   padding: torem(2) 0;
   width: 100%;
   transition: 150ms;
+  @include small {
+    padding: torem(6) 0;
+  }
   &.active {
     background-color: rgba(255, 255, 255, 0.1);
   }
@@ -310,6 +353,9 @@ onMounted(() => {
     font-family: 'Nunito';
     font-weight: 800;
     color: $stormGray;
+    @include small {
+      font-size: torem(18);
+    }
   }
 }
 

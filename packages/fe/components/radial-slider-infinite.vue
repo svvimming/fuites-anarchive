@@ -1,7 +1,7 @@
 <template>
   <div
     class="radial-slider-infinite"
-    :style="{ width: `${radius * 2}px`, height: `${radius * 2}px` }">
+    :style="{ width: `${radius * 2}px`, height: `${radius * 2}px`, '--thumb-width': `${radius * 0.39}px` }">
 
     <div
       ref="track"
@@ -74,7 +74,12 @@ defineExpose({ setTheta })
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .radial-slider-infinite {
+  --thumb-width: torem(18);
   position: relative;
+  .thumb {
+    width: var(--thumb-width);
+    height: var(--thumb-width);
+  }
 }
 
 .track {
@@ -118,8 +123,6 @@ defineExpose({ setTheta })
 
 .thumb {
   position: absolute;
-  width: torem(18);
-  height: torem(18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: transform 150ms ease;
@@ -129,6 +132,8 @@ defineExpose({ setTheta })
   }
   .thumb-icon {
     position: absolute;
+    width: 100%;
+    height: 100%;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);

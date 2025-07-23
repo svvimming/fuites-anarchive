@@ -1,5 +1,5 @@
 <template>
-  <div class="volume-tool">
+  <div class="volume-tool" :style="{ '--parent-radius': `${parentRadius}px` }">
     
     <div class="meter">
       <IconAudioMeter
@@ -11,7 +11,7 @@
       <RadialSliderBounded
         ref="volumeSliderRef"
         v-slot="{ theta }"
-        :radius="32"
+        :radius="parentRadius * 0.484"
         :input-range="[57, 303]"
         :output-range="[0, 1]"
         @degree-change="handleVolumeChange">
@@ -57,6 +57,11 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
+  },
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 66
   }
 })
 const emit = defineEmits(['update-gain'])
@@ -159,14 +164,41 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .volume-tool {
+  --parent-radius: 66px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: torem(13) 0;
-  width: torem(142);
-  height: torem(142);
+  padding: calc(var(--parent-radius) * 0.075) 0;
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
   touch-action: none;
+  .meter {
+    :deep(.audio-meter-svg) {
+      width: calc(var(--parent-radius) * 1.54);
+      height: calc(var(--parent-radius) * 0.757);
+    }
+  }
+  .knob {
+    width: calc(var(--parent-radius) * 0.96);
+    height: calc(var(--parent-radius) * 0.96);
+  }
+  .size-button {
+    &:first-child,
+    &:last-child {
+      margin-bottom: calc(var(--parent-radius) * 0.166);
+    }
+    :deep(svg) {
+      width: calc(var(--parent-radius) * 0.65);
+      height: calc(var(--parent-radius) * 0.33);
+    }
+    &.retrigger-button {
+      :deep(svg) {
+        width: calc(var(--parent-radius) * 0.48);
+        height: calc(var(--parent-radius) * 0.48);
+      }
+    }
+  }
 }
 
 .meter,
@@ -214,11 +246,6 @@ onBeforeUnmount(() => {
   }
 }
 
-.knob {
-  width: torem(64);
-  height: torem(64);
-}
-
 .notch {
   position: absolute;
   width: calc(100% - torem(18));
@@ -251,7 +278,6 @@ onBeforeUnmount(() => {
   display: flex;
   &:first-child,
   &:last-child {
-    margin-bottom: torem(11);
     transition: 150ms ease;
     filter: drop-shadow(0px 1px 1px rgba(#2C2E35, 0.5));
     &:hover {
@@ -284,6 +310,9 @@ onBeforeUnmount(() => {
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+    @include small {
+      font-size: torem(18);
+    }
   }
 }
 
