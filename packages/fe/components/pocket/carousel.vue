@@ -77,9 +77,11 @@
 
     <ButtonBasic
       :class="['audio-button', { visible: audioButtonVisible }]"
-      @clicked="handleAudioClick">
-      <span class="audio-text">preview sound</span>
-      <IconAudio class="audio-icon" />
+      @clicked="handlePreviewAudioClick">
+      <span class="audio-text">{{ previewPlaying ? 'stop previews' : 'preview sounds' }}</span>
+      <div :class="['audio-icon-container', { playing: previewPlaying }]">
+        <IconAudio class="audio-icon" />
+      </div>
     </ButtonBasic>
 
   </div>
@@ -101,9 +103,15 @@ const props = defineProps({
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const pocketStore = usePocketStore()
+const { pocketOpen } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { sceneData, page } = storeToRefs(verseStore)
+const mixerStore = useMixerStore()
+const { audioContext } = storeToRefs(mixerStore)
+const generalStore = useGeneralStore()
+const { baseUrl } = storeToRefs(generalStore)
 const { createNewPageFromThingie } = useCreatePageFromThingie()
+
 const carouselRef = ref(null)
 const thingieRefs = ref(null)
 const stageRef = ref(null)
@@ -113,13 +121,20 @@ const carouselGroupRef = ref(null)
 const carouselGroupOffset = ref(0)
 const thingieWidth = 100
 const thingieHeight = 100
-const resizeEventListener = ref(null)
-const { isSwiping, direction } = useSwipe(carouselRef)
+const spacingRatio = 1.0
 const carouselConfig = ref({
   width: 300,
   height: 500
 })
-const spacingRatio = 1.0
+
+const resizeEventListener = ref(null)
+const { isSwiping, direction } = useSwipe(carouselRef)
+
+const config = useRuntimeConfig()
+const previewAudioContext = ref(null)
+const player = ref(null)
+const source = ref(null)
+const previewPlaying = ref(false)
 
 // ==================================================================== Computed
 const ids = computed(() => props.pocketThingies.map(thingie => thingie._id))
@@ -143,6 +158,13 @@ watch(isSwiping, (val) => {
 })
 
 watch(centerIndex, index => { animateSlides(index) })
+
+watch(pocketOpen, val => {
+  if (!val && previewPlaying.value) {
+    handlePreviewAudioClick()
+    previewPlaying.value = false
+  }
+})
 
 // ===================================================================== Methods
 /**
@@ -201,11 +223,59 @@ const sendThingieToCompost = () => {
 }
 
 /**
- * @method handleAudioClick
+ * @method handlePreviewAudioClick
  */
 
-const handleAudioClick = () => {
-  console.log('handleAudioClick')
+const handlePreviewAudioClick = () => {
+  // Stop the current preview if it's playing
+  if (player.value && previewPlaying.value) {
+    player.value.pause()
+    source.value.disconnect()
+    player.value = null
+    source.value = null
+    previewPlaying.value = false
+    return
+  }
+  // Pause the main audio context
+  if (audioContext.value) {
+    audioContext.value.suspend()
+  }
+  // Create a new audio context for the preview
+  if (!previewAudioContext.value) {
+    previewAudioContext.value = new AudioContext()
+  }
+  // Preview the audio
+  previewAudio()
+}
+
+/**
+ * @method previewAudio
+ */
+
+const previewAudio = () => {
+  // Reset the player and source
+  if (player.value) {
+    player.value.pause()
+    source.value.disconnect()
+    player.value = null
+    source.value = null
+  }
+  // Get the selected thingie
+  const selectedThingie = props.pocketThingies[centerIndex.value]
+  // If the selected thingie is not a sound, return before creating a new audio element
+  if (selectedThingie.thingie_type !== 'sound') { return }
+  // Get the file reference
+  const fileRef = selectedThingie.file_ref
+  // Create a new audio element for the preview
+  player.value = document.createElement('audio')
+  player.value.crossOrigin = 'anonymous'
+  player.value.loop = true
+  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : '/its-a-long-way.mp3' // `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+  source.value = previewAudioContext.value.createMediaElementSource(player.value)
+  source.value.connect(previewAudioContext.value.destination)
+  // Play the preview
+  previewPlaying.value = true
+  player.value.play()
 }
 
 /**
@@ -226,6 +296,9 @@ const animateSlides = center => {
     }
   }
   ordered.value = reordered.reverse()
+
+  // Handle audio previews
+  if (previewPlaying.value) { previewAudio() }
 
   const group = carouselGroupRef.value.getNode()
   carouselGroupOffset.value = (-1 * center * thingieHeight * spacingRatio) + (0.5 * thingieHeight * spacingRatio) + (window.innerHeight * 0.5)
@@ -346,6 +419,13 @@ onBeforeUnmount(() => {
   if (resizeEventListener.value) {
     window.removeEventListener('resize', resizeEventListener.value)
   }
+  if (player.value) {
+    player.value.pause()
+    source.value.disconnect()
+  }
+  if (previewAudioContext.value) {
+    previewAudioContext.value.close()
+  }
 })
 
 </script>
@@ -450,10 +530,37 @@ onBeforeUnmount(() => {
     font-size: torem(12);
     color: white;
   }
-  .audio-icon {
+  .audio-icon-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: torem(14);
     height: torem(14);
     margin-left: torem(4);
+    &:after {
+      content: "";
+      position: absolute;
+      left: calc(50% - 0.0625rem);
+      top: torem(-2);
+      width: 0;
+      height: torem(16);
+      background-color: #E2368C;
+      border-radius: 0.125rem;
+      border: 0.0625rem solid #E2368C;
+      transform: rotate(45deg);
+      transform-origin: center;
+      opacity: 0;
+    }
+    &.playing {
+      &:after {
+        opacity: 1;
+      }
+    }
+  }
+  .audio-icon {
+    width: 100%;
+    height: 100%;
     :deep(path) {
       stroke: white;
     }
