@@ -270,7 +270,7 @@ const previewAudio = () => {
   player.value = document.createElement('audio')
   player.value.crossOrigin = 'anonymous'
   player.value.loop = true
-  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : '/its-a-long-way.mp3' // `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
   source.value = previewAudioContext.value.createMediaElementSource(player.value)
   source.value.connect(previewAudioContext.value.destination)
   // Play the preview
