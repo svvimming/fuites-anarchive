@@ -37,6 +37,9 @@ export const useGeneralStore = defineStore('general', () => {
 
   watch(small, (val) => {
     if (!val) { setMode('mobileEdit', false) }
+    if (val && activeModes.value.record) {
+      setMode('record', false)
+    }
   })
   
   // ===================================================================== Hooks

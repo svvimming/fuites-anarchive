@@ -63,7 +63,7 @@ import { onClickOutside } from '@vueuse/core'
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { siteData, activeModes } = storeToRefs(generalStore)
+const { siteData, activeModes, small } = storeToRefs(generalStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const pocketStore = usePocketStore()
@@ -83,7 +83,7 @@ onClickOutside(anchorRef, () => {
 })
 
 // ==================================================================== Computed
-const landingSites = computed(() => siteData.value?.settings?.landingSites || [])
+const landingSites = computed(() => siteData.value?.settings?.landingSites.filter(site => site.devices.includes(small.value ? 'mobile' : 'desktop')) || [])
 const lockedThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === page.value.data?.name && thingie.locked))
 
 // ==================================================================== Watchers
