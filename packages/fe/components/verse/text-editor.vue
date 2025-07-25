@@ -6,7 +6,7 @@
     <div ref="sizer" class="input-sizer">
       <div
         class="editor-wrapper"
-        :style="{ width: rect.width + 'px', height: rect.height + 'px', opacity }"
+        :style="innerStyles"
         @click="textEditor?.view.focus()">
 
         <EditorContent
@@ -52,7 +52,6 @@ const id = ref('')
 const rect = ref({ x: 0, y: 0, width: 100, height: 100 })
 
 useResizeObserver(sizer, (entries) => {
-  if (small.value) { return }
   const entry = entries[0]
   const { width, height } = entry.contentRect
   Object.assign(rect.value, { width, height })
@@ -80,6 +79,12 @@ const textEditorStyles = computed(() => {
       transform: `scale(${sceneData.value.scale}) rotate(${rotation.value}deg)`,
       '--highlight-color': highlight.value
     }
+})
+const innerStyles = computed(() => {
+  if (small.value) {
+    return { width: '100%', height: '100%', opacity: '1' }
+  }
+  return { width: rect.value.width + 'px', height: rect.value.height + 'px', opacity: opacity.value }
 })
 
 // ==================================================================== Watchers
@@ -214,6 +219,10 @@ onBeforeUnmount(() => {
     transition: opacity 10ms linear, visibility 10ms linear;
     transition-delay: 10ms;
   }
+  @include small {
+    width: 100%;
+    background-color: white;
+  }
   .input-sizer {
     &:before {
       box-shadow: 0px 0px 3px 1px var(--highlight-color);
@@ -225,6 +234,9 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   border-radius: torem(4);
+  @include small {
+    width: 100%;
+  }
   &:before {
     content: '';
     position: absolute;
