@@ -1,9 +1,11 @@
 <template>
-  <div :class="['caddy-mobile', { active: thingie }]">
+  <div :class="['caddy-mobile', { active: thingie }, { 'hide-tool': hideTool }]">
     <!-- ======================================================= Trash Alert -->
     <CaddyMobileTrashAlert v-show="selected === 'trash'" class="mobile-trash-alert" />
+    <!-- ======================================================== Background -->
+    <SvgCaddyMobileBackground class="caddy-mobile-skin" />
     <!-- ============================================================= Tools -->
-    <div :class="['tool-container', { 'hide-tool': hideTool }]" :style="toolCtnStyles">
+    <div class="tool-container" :style="toolCtnStyles">
       <!-- ------------------------------------------ Shared [Layer/Opacity] -->
       <CaddyLayerOpacity
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'layer-opacity'}]"
@@ -44,8 +46,6 @@
         :parent-radius="radius"
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]"
         @update-gain="handleGainUpdate" />
-      <!-- =================================================== Connector SVG -->
-      <SvgCaddyMobileConnector v-if="!hideTool" class="caddy-tool-connector" />
     </div>
     <!-- ============================================================ Slider -->
     <div ref="sliderContainerRef" class="slider-container">
@@ -342,21 +342,39 @@ const update = useThrottleFn(data => {
   z-index: 10;
   visibility: hidden;
   opacity: 0;
+  &:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $stormGray;
+    box-shadow: inset 0 torem(2) torem(6) rgba(#929BB5, 0.9), inset torem(-3) torem(-3) torem(8) rgba(#454956, 0.9);
+  }
   &.active {
     display: block;
     visibility: visible;
     opacity: 1;
   }
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: $stormGray;
-    z-index: 2;
+  &.hide-tool {
+    .tool-container,
+    .caddy-mobile-skin {
+      visibility: hidden;
+      opacity: 0;
+    }
   }
+}
+
+.caddy-mobile-skin {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, torem(8));
+  touch-action: none;
+  visibility: visible;
+  opacity: 1;
+  transition: 200ms ease;
 }
 
 .mobile-trash-alert {
@@ -364,7 +382,6 @@ const update = useThrottleFn(data => {
   top: torem(-16);
   left: 50%;
   transform: translate(-50%, -100%);
-  // min-width: torem(340);
   z-index: 3;
 }
 
@@ -373,13 +390,11 @@ const update = useThrottleFn(data => {
   position: absolute;
   left: 50%;
   bottom: 100%;
-  transform: translate(-50%, torem(-106));
-  background-color: $stormGray;
+  transform: translate(-50%, torem(-113));
   color: white;
   transition: 200ms ease;
   border-radius: 50%;
   z-index: 1;
-  @include modalShadow;
   &:before {
     content: '';
     position: absolute;
@@ -389,15 +404,7 @@ const update = useThrottleFn(data => {
     height: var(--center-panel-diameter);
     transform: translate(-50%, -50%);
     transition: 200ms ease;
-    background-color: $stormGray;
     border-radius: 50%;
-  }
-  &.hide-tool {
-    visibility: hidden;
-    opacity: 0;
-  }
-  .caddy-tool-connector {
-    top: calc(var(--center-panel-diameter) * 0.5);
   }
 }
 
@@ -413,9 +420,9 @@ const update = useThrottleFn(data => {
   &:after {
     content: '';
     position: absolute;
-    top: 0;
+    top: torem(10);
     width: 22.5%;
-    height: 100%;
+    height: calc(100% - torem(20));
     z-index: 10;
   }
   &:before {
@@ -425,6 +432,9 @@ const update = useThrottleFn(data => {
   &:after {
     right: 0;
     background: linear-gradient(90deg, rgba(107, 112, 128, 0) 0%, $stormGray 90.83%);
+  }
+  &.hide-tool {
+    background-color: $stormGray;
   }
 }
 
@@ -505,14 +515,6 @@ const update = useThrottleFn(data => {
     visibility: visible;
     opacity: 1;
   }
-}
-
-.caddy-tool-connector {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, torem(-3)) scale(0.85);
-  transition: 200ms ease;
 }
 
 :deep(.font-family-selector) {
