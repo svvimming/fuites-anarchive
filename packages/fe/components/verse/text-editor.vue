@@ -188,6 +188,7 @@ onBeforeUnmount(() => {
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  touch-action: none;
   &.active {
     opacity: 1;
     visibility: visible;

@@ -186,6 +186,8 @@ const handleClick = e => {
  */
 
 const handleDoubleClick = e => {
+  // if mobile device and edit mode is not enabled, return
+  if (small.value && !activeModes.value.mobileEdit) { return }
   const target = e.target
   if (authenticated.value && target.attrs.hasOwnProperty('id') && target.attrs.id === 'page-canvas' && !activeModes.value.record) {
     collectorStore.addNewTextThingie({

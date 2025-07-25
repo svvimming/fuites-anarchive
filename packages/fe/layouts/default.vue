@@ -37,6 +37,7 @@ const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
+const doubleClickEventListener = ref(false)
 
 // ==================================================================== Watchers
 watch(() => page.value.data, async () => {
@@ -113,6 +114,12 @@ const setInteractionModes = (e, val) => {
 // The following is emitted in websocket plugin in websocket zero-core module
 $bus.$on('socket.io-connected', handleWebsocketConnected)
 
+onMounted(() => {
+  // Prevent browser zoom on double clicks
+  doubleClickEventListener.value = e => { e.preventDefault() }
+  window.addEventListener('dblclick', doubleClickEventListener.value)
+})
+
 onBeforeUnmount(() => {
   $bus.$off('socket.io-connected', handleWebsocketConnected)
   if (keydownEventListener.value) {
@@ -120,6 +127,9 @@ onBeforeUnmount(() => {
   }
   if (keyupEventListener.value) {
     window.removeEventListener('keyup', keyupEventListener.value)
+  }
+  if (doubleClickEventListener.value) {
+    window.removeEventListener('dblclick', doubleClickEventListener.value)
   }
 })
 
