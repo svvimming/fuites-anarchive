@@ -2,12 +2,7 @@
   <div
     id="text-editor"
     :class="{ active: id }"
-    :style="{
-      left: `${(rect.x + sceneData.x - 6) * sceneData.scale - rect.width * 0.5}px`,
-      top: `${(rect.y + sceneData.y - 6) * sceneData.scale - rect.height * 0.5}px`,
-      transform: `scale(${sceneData.scale}) rotate(${rotation}deg)`,
-      '--highlight-color': highlight
-    }">
+    :style="textEditorStyles">
     <div ref="sizer" class="input-sizer">
       <div
         class="editor-wrapper"
@@ -49,12 +44,15 @@ const {
   textEditor,
   colorSelectorHex
 } = storeToRefs(verseStore)
+const generalStore = useGeneralStore()
+const { small } = storeToRefs(generalStore)
 
 const sizer = ref(null)
 const id = ref('')
 const rect = ref({ x: 0, y: 0, width: 100, height: 100 })
 
 useResizeObserver(sizer, (entries) => {
+  if (small.value) { return }
   const entry = entries[0]
   const { width, height } = entry.contentRect
   Object.assign(rect.value, { width, height })
@@ -66,6 +64,23 @@ const rotation = computed(() => active.value?.at.rotation)
 const opacity = computed(() => active.value?.opacity || 1)
 const colors = computed(() => active.value?.colors || [])
 const highlight = computed(() => colors.value[colors.value.length - 1] || '#6c6575')
+const textEditorStyles = computed(() => {
+  if (small.value) {
+    return {
+      left: '0',
+      top: 'unset',
+      bottom: '98px', // height of mobile caddy toolbar
+      transform: `scale(1) rotate(0deg)`,
+      '--highlight-color': highlight.value
+    }
+  }
+  return {
+      left: `${(rect.value.x + sceneData.value.x - 6) * sceneData.value.scale - rect.value.width * 0.5}px`,
+      top: `${(rect.value.y + sceneData.value.y - 6) * sceneData.value.scale - rect.value.height * 0.5}px`,
+      transform: `scale(${sceneData.value.scale}) rotate(${rotation.value}deg)`,
+      '--highlight-color': highlight.value
+    }
+})
 
 // ==================================================================== Watchers
 watch(editing, (newId, oldId) => {
@@ -77,9 +92,13 @@ watch(editing, (newId, oldId) => {
       resetEditor()
       return
     }
+    const oldThingie = thingies.value.data.find(item => item._id === oldId)
+    const at = small.value ?
+                    Object.assign({}, oldThingie.at, { width: rect.value.width, height: rect.value.height }) :
+                    Object.assign({}, rect.value, { rotation: rotation.value })
     handleSubmit({
       _id: id.value,
-      at: Object.assign({}, rect.value, { rotation: rotation.value }),
+      at,
       text: text.replaceAll('<p></p>', '<p><br></p>'),
       ...(pushColor && {
         colors: colors.value.concat([colorSelectorHex.value.text])
@@ -88,7 +107,7 @@ watch(editing, (newId, oldId) => {
   }
   const editingThingie = thingies.value.data.find(item => item._id === newId)
   if (editingThingie && editingThingie.thingie_type === 'text') {
-    rect.value = { ...editingThingie.at }
+    rect.value = small.value ? { x: 0, y: 0, width: window.innerWidth, height: 100, rotation: 0 } : { ...editingThingie.at }
     id.value = editingThingie._id
     const content = editingThingie.text.replaceAll('<p><br></p>', '<p></p>')
     textEditor.value.commands.setContent(content, false, { preserveWhitespace: 'full' })
@@ -226,6 +245,9 @@ onBeforeUnmount(() => {
   cursor: text;
   overflow-y: scroll;
   resize: both;
+  @include small {
+    resize: none;
+  }
 }
 
 :deep(.tiptap) {
