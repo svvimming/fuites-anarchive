@@ -235,4 +235,48 @@ $offsetOnHover: 0rem;
 .next-drippy-scene-button {
   margin-top: torem(10);
 }
+
+.drippy-scene-2 {
+  .icon-drippy {
+    @include small {
+      top: unset;
+      right: unset;
+      bottom: 100%;
+      left: 100%;
+      transform: translate(-50%, 50%) scale(0.9);
+    }
+  }
+}
+
+.drippy-scene-3 {
+  .icon-drippy {
+    @include small {
+      top: unset;
+      right: unset;
+      bottom: 100%;
+      left: 100%;
+      transform: translate(-50%, 50%) scale(0.9) !important;
+    }
+  }
+}
+
+.drippy-scene-4 {
+  .icon-drippy {
+    @include small {
+      transform: translate(-50%, -50%) scale(0.9) !important;
+    }
+  }
+}
+
+.drippy-scene-5 {
+  .icon-drippy {
+    @include small {
+      top: 100%;
+      right: unset;
+      bottom: unset;
+      left: 100%;
+      transform: translate(-50%, -50%) scale(0.9) !important;
+    }
+  }
+}
 </style>
