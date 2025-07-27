@@ -234,9 +234,13 @@
     }
   },
   "tooltipsMobile": {
-    "pocket-toggle-button": {
+    "pocket-toggle-button-closed": {
       "heading": "Pocket",
       "message": "When editing is enabled, try dragging a 'thingie' onto this button, then click it to open the Pocket.<br><br>A 'thingie' on fuites is a piece of text, an image or a sounds that you can move and edit. Putting a thingie in your pocket allows you to carry it to other pages that you visit."
+    },
+    "pocket-toggle-button-open": {
+      "heading": "You're in the pocket",
+      "message": "Once you've got some thingies in your pocket, you can swipe up and down to scroll through them.<br><br>The thingie at the center will be the one you can move by clicking the \"<em>move to...</em>\" button below."
     },
     "compost-portal-toggle-button": {
       "heading": "Compost",
@@ -245,6 +249,25 @@
     "settings-toggle-button": {
       "heading": "Settings",
       "message": "This is where you can toggle your settings and preferences for the site, like showing and hiding these tooltips."
+    },
+    "mobile-edit-mode-toggle": {
+      "heading": "Edit mode toggle"
+    },
+    "tooltip-mode-toggle": {
+      "heading": "Hide/show helpful tips"
+    },
+    "portals-mode-toggle": {
+      "heading": "Hide/show portals from view"
+    },
+    "external-links-mode-toggle": {
+      "heading": "Some thingies link to other sites",
+      "message": "Turn on to enable outbound links."
+    },
+    "uploader-toggle-button": {
+      "heading": "Upload a file here"
+    },
+    "token-input-toggle-button": {
+      "heading": "Change token here"
     }
   },
   "landingSites": [

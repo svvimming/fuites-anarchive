@@ -4,8 +4,10 @@
       'tooltip',
       `contact__${contact}`,
       { disabled },
-      { 'force-active': drippyScene === drippy },
-      `drippy-scene-${drippy}`
+      { 'force-active': drippyScene === drippy || forceActive },
+      `drippy-scene-${drippy}`,
+      tooltip,
+      { [`variant__${variant}`]: variant }
     ]">
     <!-- =========================================================== TOOLTIP -->
     <div class="floating">
@@ -48,7 +50,7 @@ const props = defineProps({
     required: false,
     default: 'bottom-left',
     validator (prop) {
-      const allowList = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+      const allowList = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top-center', 'bottom-center', 'left-center', 'right-center']
       return allowList.includes(prop)
     }
   },
@@ -61,10 +63,20 @@ const props = defineProps({
     required: false,
     default: false
   },
+  forceActive: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
   drippyScene: {
     type: [Number, Boolean],
     required: false,
     default: false
+  },
+  variant: {
+    type: String,
+    required: false,
+    default: ''
   }
 })
 // ======================================================================== Data
@@ -105,8 +117,12 @@ $offsetOnHover: 0rem;
     .floating {
       transition: 150ms ease-in;
       opacity: 1;
-      transform: none !important;
       pointer-events: all !important;
+    }
+    &:not(.variant__mobile-pocket) {
+      .floating {
+        transform: none !important;
+      }
     }
   }
   &.contact__top-left,
@@ -287,6 +303,165 @@ $offsetOnHover: 0rem;
       left: 100%;
       transform: translate(-50%, -50%) scale(0.9) !important;
     }
+  }
+}
+
+// ////////////////////////////////////////////////////////////////////// Mobile
+.contact__top-center,
+.contact__bottom-center {
+  .floating {
+    left: 50%;
+    z-index: 1000;
+  }
+  .tip {
+    border-radius: torem(12);
+    min-width: unset;
+  }
+  :deep(.heading) {
+    white-space: nowrap;
+    margin-bottom: 0 !important;
+  }
+  :deep(.message) {
+    margin-top: torem(6);
+  }
+  :deep(.heading),
+  :deep(.message) {
+    text-align: center;
+  }
+}
+
+.contact__top-center {
+  .floating {
+    top: unset;
+    bottom: calc(100% + #{$offset});
+  }
+}
+
+.contact__bottom-center {
+  .floating {
+    bottom: unset;
+    top: calc(100% + #{$offset});
+  }
+}
+
+.contact__left-center,
+.contact__right-center {
+  .floating {
+    top: 50%;
+    z-index: 1000;
+    .tip {
+      position: relative;
+    }
+  }
+}
+
+.contact__left-center {
+  .floating {
+    left: unset;
+    right: 100%;
+    transform: translate(torem(-12), -50%);
+  }
+  .tip {
+    &:after {
+      content: '▸';
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translate(torem(3), -50%);
+      font-size: torem(12);
+      font-weight: 600;
+      color: white;
+      opacity: 0.8;
+    }
+  }
+}
+
+.contact__right-center {
+  .floating {
+    left: 100%;
+    right: unset;
+    transform: translate(torem(12), -50%);
+  }
+  .tip {
+    &:after {
+      content: '◂';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translate(torem(-3), -50%);
+      font-size: torem(12);
+      font-weight: 600;
+      color: white;
+      opacity: 0.8;
+    }
+  }
+}
+
+.tooltip-mode-toggle,
+.portals-mode-toggle,
+.external-links-mode-toggle,
+.mobile-edit-mode-toggle {
+  @include small {
+    &:not(.disabled) {
+      &:hover {
+        .floating {
+          transition: none;
+          opacity: 0;
+          transform: translate(-50%, 0);
+          animation: tooltip-mobile-enter-exit 2s ease-in;
+        }
+      }
+    }
+  }
+}
+
+.variant__mobile-pocket {
+  .floating {
+    display: flex;
+  }
+  .tip {
+    background-color: transparent;
+    box-shadow: none;
+    min-width: unset;
+    padding: 0;
+    :deep(.heading) {
+      color: white;
+      font-size: torem(12);
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      font-style: italic;
+      margin-bottom: 0 !important;
+      opacity: 0.8;
+    }
+    :deep(.message) {
+      display: none;
+    }
+  }
+  &.contact__bottom-left {
+    .floating {
+      transform: none !important;
+    }
+  }
+  &.contact__bottom-right {
+    .floating {
+      // transform: translate(torem(12), 0) !important;
+    }
+  }
+}
+// ////////////////////////////////////////////////////////////////// Animations
+@keyframes tooltip-mobile-enter-exit {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 </style>

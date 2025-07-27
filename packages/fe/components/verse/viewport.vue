@@ -26,17 +26,22 @@
     <!-- ----------------------------------------------- Delete Portal Alert -->
     <VerseDeletePortalAlert />
     <!-- ---------------------------------------------------- Cursor Tooltip -->
-    <TooltipCursor v-if="activeModes.tooltips" />
+    <TooltipCursor v-if="activeModes.tooltips && !small" />
     <!-- ---------------------------------------- Create Sound Thingie Alert -->
     <VerseCreateSoundThingieAlert />
     <!-- --------------------------------------------------------- Edit Mode -->
-    <ButtonIcon
-      v-if="authenticated"
-      :active="activeModes.mobileEdit"
-      class="mobile-edit-mode-toggle"
-      @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
-      <IconPencil />
-    </ButtonIcon>
+    <Tooltip
+      tooltip="mobile-edit-mode-toggle"
+      contact="top-center"
+      class="mobile-edit-mode-toggle-tooltip">
+      <ButtonIcon
+        v-if="authenticated"
+        :active="activeModes.mobileEdit"
+        class="mobile-edit-mode-toggle"
+        @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
+        <IconPencil />
+      </ButtonIcon>
+    </Tooltip>
 
   </div>
 </template>
@@ -241,19 +246,22 @@ onBeforeUnmount(() => {
   z-index: 3;
 }
 
-.mobile-edit-mode-toggle {
-  --two-tone-a: #{$drippyCore};
-  --two-tone-b: white;
+.mobile-edit-mode-toggle-tooltip {
   position: absolute;
   bottom: torem(14);
   left: 50%;
   transform: translateX(-50%);
   display: none;
-  transition: 200ms ease;
   z-index: 2;
   @include small {
     display: block;
   }
+}
+
+.mobile-edit-mode-toggle {
+  --two-tone-a: #{$drippyCore};
+  --two-tone-b: white;
+  transition: 200ms ease;
   :deep(.slot) {
     path {
       transition: 200ms ease;
