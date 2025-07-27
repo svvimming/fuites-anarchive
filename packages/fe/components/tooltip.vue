@@ -237,6 +237,11 @@ $offsetOnHover: 0rem;
 }
 
 .drippy-scene-2 {
+  .message {
+    @include small {
+      min-width: torem(240);
+    }
+  }
   .icon-drippy {
     @include small {
       top: unset;
@@ -269,6 +274,11 @@ $offsetOnHover: 0rem;
 }
 
 .drippy-scene-5 {
+  .message {
+    @include small {
+      min-width: torem(240);
+    }
+  }
   .icon-drippy {
     @include small {
       top: 100%;

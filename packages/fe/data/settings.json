@@ -174,7 +174,7 @@
     },
     "multiverse-link": {
       "heading": "Verses",
-      "message": "This leads to the multiverse where you can see the verses you have access to"
+      "message": "This leads to the multiverse where you can see the verses you have access to."
     },
     "thingie": {
       "heading": "Thingie",
@@ -236,7 +236,15 @@
   "tooltipsMobile": {
     "pocket-toggle-button": {
       "heading": "Pocket",
-      "message": "The pocket is where you can keep your thingies. You can add new thingies from your device or retrieve thingies from the current page."
+      "message": "When editing is enabled, try dragging a 'thingie' onto this button, then click it to open the Pocket.<br><br>A 'thingie' on fuites is a piece of text, an image or a sounds that you can move and edit. Putting a thingie in your pocket allows you to carry it to other pages that you visit."
+    },
+    "compost-portal-toggle-button": {
+      "heading": "Compost",
+      "message": "Drag a thingie onto this button to remove it from this page and put it in the compost where someone else can grab it."
+    },
+    "settings-toggle-button": {
+      "heading": "Settings",
+      "message": "This is where you can toggle your settings and preferences for the site, like showing and hiding these tooltips."
     }
   },
   "landingSites": [
