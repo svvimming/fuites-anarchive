@@ -59,11 +59,15 @@ const handleCloseDrippy = () => {
   left: 50%;
   top: 50%;
   padding: torem(16);
+  min-width: torem(244);
   border-radius: torem(20);
   transform: translate(-50%, -50%) scale(0.8);
   transition: 300ms ease;
   background-color: $athensGray;
   // box-shadow: 0 torem(6) torem(10) rgba(0, 0, 0, 0.25);
+  @include small {
+    transform: translate(-50%, -50%);
+  }
   @include modalShadow;
   .title {
     font-weight: 600;
@@ -90,5 +94,12 @@ const handleCloseDrippy = () => {
   right: 100%;
   transform: translate(30%, -30%);
   filter: drop-shadow(0px 0px 25px #B2B9CC) drop-shadow(1px 2px 4px rgba(#262222, 0.25));
+  @include small {
+    top: unset;
+    right: unset;
+    bottom: 100%;
+    left: 100%;
+    transform: translate(-50%, 50%);
+  }
 }
 </style>
