@@ -488,6 +488,11 @@ const update = useThrottleFn(data => {
   height: torem(48);
   margin: 0 torem(12);
   color: white;
+  :deep(.tooltip) {
+    .floating {
+      display: none;
+    }
+  }
 }
 
 .mobile-tool-button {

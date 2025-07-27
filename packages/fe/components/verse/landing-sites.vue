@@ -23,7 +23,8 @@
             <Tooltip
               v-for="mode in landingSites"
               :key="mode.slug"
-              :tooltip="mode.tooltip">
+              :tooltip="mode.tooltip"
+              :contact="small ? 'bottom-center' : 'bottom-left'">
               <ButtonToggle :active="activeModes[mode.slug]" @clicked="handleModeClick(mode.slug)">
                 <span :class="['label', { active: activeModes[mode.slug] }]">
                   {{ mode.label }}
@@ -123,9 +124,16 @@ const handleUnlockPageThingies = () => {
 // ///////////////////////////////////////////////////////////////////// General
 #landing-site-anchor {
   display: flex;
+  @include small {
+    flex-direction: column-reverse;
+  }
   .margin-left-gap,
   :deep(.tooltip) {
     margin-left: torem(20);
+    @include small {
+      margin-left: 0;
+      margin-bottom: torem(16);
+    }
   }
 }
 
@@ -203,6 +211,11 @@ const handleUnlockPageThingies = () => {
     margin-left: 0 !important;
     &:not(:last-child) {
       margin-bottom: torem(16);
+    }
+    &:last-child {
+      @include small {
+        margin-bottom: 0 !important;
+      }
     }
   }
 }

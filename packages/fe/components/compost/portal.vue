@@ -8,7 +8,7 @@
       class="compost-portal-tooltip">
 
       <template #message>
-        <span>{{ `Visit the compost anytime at fuit.es/${verseName}/compost to see what is happening in there!` }}</span>
+        <span class="visit-compost-message">{{ `Visit the compost anytime at fuit.es/${verseName}/compost to see what is happening in there!` }}</span>
       </template>
 
       <ButtonDashed
@@ -159,6 +159,10 @@ const verseName = computed(() => verse.value.data?.name)
       }
     }
   }
+}
+
+.visit-compost-message {
+  margin-top: torem(12);
 }
 
 .compost-portal-container {

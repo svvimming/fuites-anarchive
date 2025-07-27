@@ -57,13 +57,13 @@
     </div>
     <!-- -------------------------------------------------- Thingie Controls -->
     <ButtonIcon
-      :class="['close-button']"
+      :class="['close-button', { 'mobile-tooltip': small && activeModes.tooltips }]"
       @clicked="pocketStore.setPocketOpen(false)">
       <IconClose />
     </ButtonIcon>
 
     <ButtonIcon
-      :class="['compost-button']"
+      :class="['compost-button', { 'mobile-tooltip': small && activeModes.tooltips }]"
       @clicked="sendThingieToCompost">
       <IconRecycle />
     </ButtonIcon>
@@ -109,7 +109,7 @@ const { sceneData, page } = storeToRefs(verseStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
-const { baseUrl } = storeToRefs(generalStore)
+const { baseUrl, small, activeModes } = storeToRefs(generalStore)
 const { createNewPageFromThingie } = useCreatePageFromThingie()
 
 const carouselRef = ref(null)
@@ -453,6 +453,24 @@ onBeforeUnmount(() => {
   position: absolute;
   left: torem(12);
   top: torem(12);
+  &.mobile-tooltip {
+    &:after {
+      content: '◂ Close Pocket here';
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translate(torem(4), -50%);
+      color: white;
+      font-size: torem(12);
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      font-style: italic;
+      pointer-events: none;
+      touch-action: none;
+      opacity: 0.8;
+    }
+  }
 }
 
 .compost-button {
@@ -468,6 +486,26 @@ onBeforeUnmount(() => {
     transform: none;
     :deep(path) {
       stroke: var(--two-tone-b);
+    }
+  }
+  &.mobile-tooltip {
+    &:after {
+      content: 'Move thingie to compost here';
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: torem(82);
+      transform: translate(0%, torem(-4));
+      color: white;
+      font-size: torem(12);
+      font-weight: 600;
+      color: #00d19c;
+      text-align: left;
+      // white-space: nowrap;
+      font-style: italic;
+      pointer-events: none;
+      touch-action: none;
+      // opacity: 0.8;
     }
   }
 }
@@ -507,7 +545,7 @@ onBeforeUnmount(() => {
 .audio-button {
   position: absolute;
   left: 50%;
-  top: torem(12);
+  top: torem(60);
   transform: translateX(-50%);
   border-radius: torem(35);
   background-color: transparent;
