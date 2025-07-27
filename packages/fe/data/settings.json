@@ -233,6 +233,12 @@
       "message": "You can add an external link to a text thingie with this tool."
     }
   },
+  "tooltipsMobile": {
+    "pocket-toggle-button": {
+      "heading": "Pocket",
+      "message": "The pocket is where you can keep your thingies. You can add new thingies from your device or retrieve thingies from the current page."
+    }
+  },
   "landingSites": [
     {
       "label": "tooltips",

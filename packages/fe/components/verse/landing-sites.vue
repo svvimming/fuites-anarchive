@@ -123,9 +123,16 @@ const handleUnlockPageThingies = () => {
 // ///////////////////////////////////////////////////////////////////// General
 #landing-site-anchor {
   display: flex;
+  @include small {
+    flex-direction: column-reverse;
+  }
   .margin-left-gap,
   :deep(.tooltip) {
     margin-left: torem(20);
+    @include small {
+      margin-left: 0;
+      margin-bottom: torem(16);
+    }
   }
 }
 

@@ -11,14 +11,14 @@
     <div class="floating">
       <div class="tip">
         <!-- ------------------------------------------------------- Heading -->
-        <span v-if="tooltips[tooltip]?.heading" class="heading">
-          {{ tooltips[tooltip].heading }}
+        <span v-if="display?.heading" class="heading">
+          {{ display.heading }}
         </span>
         <!-- ------------------------------------------------------- Message -->
         <span
-          v-if="tooltips[tooltip]?.message"
+          v-if="display?.message"
           class="message"
-          v-html="tooltips[tooltip].message">
+          v-html="display.message">
         </span>
         <!-- ------------------------------------------------ Custom Message -->
         <slot name="message" />
@@ -69,13 +69,20 @@ const props = defineProps({
 })
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { siteData, activeModes } = storeToRefs(generalStore)
+const { siteData, activeModes, small } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { drippy } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
-const tooltips = computed(() => siteData.value?.settings?.tooltips || {})
 const disabled = computed(() => !activeModes.value.tooltips || props.forceDisabled)
+const tooltips = computed(() => siteData.value?.settings?.tooltips || {})
+const tooltipsMobile = computed(() => siteData.value?.settings?.tooltipsMobile || {})
+const display = computed(() => {
+  if (small.value) {
+    return tooltipsMobile.value[props.tooltip] || tooltips.value[props.tooltip]
+  }
+  return tooltips.value[props.tooltip]
+})
 
 </script>
 
