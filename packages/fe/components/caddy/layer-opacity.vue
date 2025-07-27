@@ -1,5 +1,5 @@
 <template>
-  <div class="layer-opacity-tool">
+  <div class="layer-opacity-tool" :style="{ '--parent-radius': `${parentRadius}px` }">
 
     <div class="panel opacity-tool">
       <div class="slider-wrapper">
@@ -8,6 +8,7 @@
           :input-range="[10, 170]"
           :output-range="[0.1, 1]"
           :include-track-styles="true"
+          :radius="parentRadius * 0.7"
           @degree-change="handleDegreeChange" />
       </div>
     </div>
@@ -40,6 +41,15 @@
 // ======================================================================= Setup
 const emit = defineEmits(['send-back', 'bring-forward', 'update-opacity'])
 
+// ======================================================================= Props
+const props = defineProps({
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 66
+  }
+})
+
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies, editing } = storeToRefs(collectorStore)
@@ -66,11 +76,25 @@ const handleDegreeChange = val => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .layer-opacity-tool {
+  --parent-radius: 66px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: torem(152);
-  height: torem(152);
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
+  touch-action: none;
+  // &.mobile {
+  //   width: torem(192);
+  //   height: torem(192);
+  //   :deep(.radial-slider-bounded) {
+  //     .svg-track {
+  //       width: torem(64);
+  //     }
+  //   }
+  // }
+  .slider-wrapper {
+    width: calc(var(--parent-radius) * 0.76);
+  }
 }
 
 .panel {
@@ -86,7 +110,6 @@ const handleDegreeChange = val => {
   position: absolute;
   right: torem(8);
   top: 50%;
-  width: torem(50);
   transform: translate(0, -50%);
   padding: torem(8) 0 torem(8) torem(10);
   // overflow: hidden;
@@ -106,6 +129,10 @@ const handleDegreeChange = val => {
   &:hover {
     transform: scale(1.05);
     filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
+  }
+  :deep(svg) {
+    width: calc(var(--parent-radius) * 0.77);
+    height: calc(var(--parent-radius) * 0.77);
   }
 }
 

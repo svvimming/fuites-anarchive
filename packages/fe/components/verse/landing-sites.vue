@@ -23,7 +23,8 @@
             <Tooltip
               v-for="mode in landingSites"
               :key="mode.slug"
-              :tooltip="mode.tooltip">
+              :tooltip="mode.tooltip"
+              :contact="small ? 'bottom-center' : 'bottom-left'">
               <ButtonToggle :active="activeModes[mode.slug]" @clicked="handleModeClick(mode.slug)">
                 <span :class="['label', { active: activeModes[mode.slug] }]">
                   {{ mode.label }}
@@ -34,13 +35,6 @@
         </div>
       </template>
     </DropdownSelector>
-    <!-- ========================================================= Edit Mode -->
-    <ButtonIcon
-      :active="activeModes.mobileEdit"
-      class="mobile-edit-mode-toggle margin-left-gap"
-      @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
-      <IconPencil />
-    </ButtonIcon>
     <!-- ======================================================= Lock Toggle -->
     <Tooltip
       v-if="lockedThingies.length > 0"
@@ -70,7 +64,7 @@ import { onClickOutside } from '@vueuse/core'
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
-const { siteData, activeModes } = storeToRefs(generalStore)
+const { siteData, activeModes, small } = storeToRefs(generalStore)
 const mixerStore = useMixerStore()
 const { audioContext } = storeToRefs(mixerStore)
 const pocketStore = usePocketStore()
@@ -90,7 +84,7 @@ onClickOutside(anchorRef, () => {
 })
 
 // ==================================================================== Computed
-const landingSites = computed(() => siteData.value?.settings?.landingSites || [])
+const landingSites = computed(() => siteData.value?.settings?.landingSites.filter(site => site.devices.includes(small.value ? 'mobile' : 'desktop')) || [])
 const lockedThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === page.value.data?.name && thingie.locked))
 
 // ==================================================================== Watchers
@@ -130,9 +124,16 @@ const handleUnlockPageThingies = () => {
 // ///////////////////////////////////////////////////////////////////// General
 #landing-site-anchor {
   display: flex;
+  @include small {
+    flex-direction: column-reverse;
+  }
   .margin-left-gap,
   :deep(.tooltip) {
     margin-left: torem(20);
+    @include small {
+      margin-left: 0;
+      margin-bottom: torem(16);
+    }
   }
 }
 
@@ -185,38 +186,16 @@ const handleUnlockPageThingies = () => {
   }
 }
 
-.mobile-edit-mode-toggle {
-  --two-tone-a: #{$drippyCore};
-  --two-tone-b: white;
-  display: none;
-  transition: 200ms ease;
-  @include small {
-    display: block;
-  }
-  :deep(.slot) {
-    path {
-      transition: 200ms ease;
-      stroke: var(--two-tone-a);
-      stroke-width: 2;
-    }
-  }
-  &.active {
-    :deep(.slot) {
-      path {
-        stroke: var(--two-tone-b);
-      }
-    }
-  }
-}
-
 // /////////////////////////////////////////////////////////////// Dropdown Menu
 .landing-sites-dropdown {
   position: relative;
+  touch-action: none;
   :deep(.panel-container) {
     top: 0;
     right: 100%;
     left: unset;
     transform: translate(torem(-20), 0);
+    touch-action: none;
     &:not(.open) {
       transform: translate(torem(-20), torem(8));
     }
@@ -232,6 +211,11 @@ const handleUnlockPageThingies = () => {
     margin-left: 0 !important;
     &:not(:last-child) {
       margin-bottom: torem(16);
+    }
+    &:last-child {
+      @include small {
+        margin-bottom: 0 !important;
+      }
     }
   }
 }

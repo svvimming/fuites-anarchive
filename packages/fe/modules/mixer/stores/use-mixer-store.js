@@ -126,7 +126,6 @@ export const useMixerStore = defineStore('mixer', () => {
       // Handle recording completion
       mediaRecorder.value.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
-        console.log('blob', blob)
         recording.value.audioBuffer = blob
         // Open the create sound thingie alert after recording is stopped and the blob is created
         alertStore.openAlert('create-sound-thingie-alert')

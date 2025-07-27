@@ -1,7 +1,7 @@
 <template>
   <div
     class="radial-slider-bounded"
-    :style="{ width: `${radius * 2}px`, height: `${radius * 2}px` }">
+    :style="{ width: `${radius * 2}px`, height: `${radius * 2}px`, '--thumb-width': `${radius * 0.39}px` }">
 
     <slot :theta="theta"></slot>
 
@@ -102,7 +102,12 @@ defineExpose({ setTheta })
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .radial-slider-bounded {
+  --thumb-width: torem(18);
   position: relative;
+  .thumb {
+    width: var(--thumb-width);
+    height: var(--thumb-width);
+  }
 }
 
 .track {
@@ -123,19 +128,16 @@ defineExpose({ setTheta })
     position: absolute;
     top: calc(var(--border-stroke-width) * -1 - torem(4));
     left: calc(var(--border-stroke-width) * -2 + torem(4));
-    height: calc(100% + (var(--border-stroke-width) * 2) + torem(8));
+    width: calc(46% + (var(--border-stroke-width) * 2));
+    height: calc(101% + (var(--border-stroke-width) * 2) + torem(8));
   }
   &:hover {
     cursor: pointer;
   }
 }
 
-
-
 .thumb {
   position: absolute;
-  width: torem(18);
-  height: torem(18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: transform 150ms ease;
@@ -145,6 +147,8 @@ defineExpose({ setTheta })
   }
   .thumb-icon {
     position: absolute;
+    width: 100%;
+    height: 100%;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);

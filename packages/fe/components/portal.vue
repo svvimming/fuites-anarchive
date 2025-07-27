@@ -199,7 +199,9 @@ const drag = e => {
 const loadImage = () => {
   imageLoading.value = true
   const img = document.createElement('img')
-  img.crossOrigin = 'anonymous'
+  if (config.public.serverEnv !== 'development') {
+    img.crossOrigin = 'anonymous'
+  }
   img.onload = function () {
     imageLoadError.value = false
     imageLoading.value = false

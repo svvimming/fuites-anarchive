@@ -1,8 +1,8 @@
 <template>
-  <div id="pocket-anchor">
+  <div id="pocket-anchor" :class="{ 'mobile-drag-to': mobileDragTo }">
     <!-- ===================================================== Pocket Toggle -->
     <Tooltip
-      :tooltip="pocketOpen ? 'pocket-toggle-button-open' : 'pocket-toggle-button-closed'"
+      :tooltip="tooltip"
       :drippy-scene="2"
       contact="top-left"
       class="pocket-toggle-tooltip">
@@ -16,14 +16,15 @@
 
       <ButtonIcon
         :active="pocketOpen"
-        :class="['pocket-toggle-button', 'mobile', { active: pocketOpen }]"
+        :class="['pocket-toggle-button', 'mobile', { active: pocketOpen || mobileDragTo }, { 'mobile-drag-to': mobileDragTo }]"
         @clicked="pocketStore.setPocketOpen(!pocketOpen)">
-        <IconPocket />
+        <IconPocket v-if="authenticated" :open-icon="mobileDragTo" class="icon" />
+        <IconKey v-else class="icon" />
       </ButtonIcon>
       
     </Tooltip>
 
-    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen }]">
+    <div :class="['pocket-container', { open: pocketOpen }, { fullscreen: small }]">
       <!-- ============================================= Background Elements -->
       <Turbulence instance-id="pocket-turbulence-bg" />
        <!-- ===================================================== Token Auth -->
@@ -36,29 +37,21 @@
       <!-- ========================================================== Pocket -->
       <div
         v-show="authenticated && pageExists"
-        id="pocket"
-        ref="pocketRef"
-        :draggable="dragndrop"
-        data-location="pocket">
+        id="pocket">
         <!-- ------------------------------------------------------- spinner -->
         <SpinnerTripleDot v-if="thingies.loading || thingies.refresh" class="theme-cove" />
         <!-- ------------------------------------------------------ uploader -->
         <PocketSingleFileUploader :uploader-id="pocketUploaderId" />
-        <!-- -------------------------------------------------------- canvas -->
-        <ClientOnly>
-          <v-stage ref="stageRef" :config="pocketCanvasConfig">
-            <v-layer>
-              <Thingie
-                v-for="thingie in pocketThingies"
-                :key="thingie._id"
-                :thingie="thingie"
-                :force-bounds="forceBounds" />
-            </v-layer>
-          </v-stage>
-        </ClientOnly>
+        <!-- ------------------------------------------------ canvas desktop -->
+        <PocketCanvas v-if="!small" :pocket-thingies="pocketThingies" />
+        <!-- ----------------------------------------------- carousel mobile -->
+        <PocketCarousel v-else :pocket-thingies="pocketThingies" />
         <!-- --------------------------------------------------- token input -->
         <Tooltip
           tooltip="token-input-toggle-button"
+          :variant="small ? 'mobile-pocket' : ''"
+          :contact="small ? 'left-center' : 'bottom-left'"
+          :force-active="small && activeModes.tooltips"
           class="token-input-toggle">
           <ButtonIcon
             :active="tokenInputOpen"
@@ -67,16 +60,12 @@
             <IconKey class="key-icon"/>
           </ButtonIcon>
         </Tooltip>
-        <!-- -------------------------------------------- full screen toggle -->
-        <!-- <ButtonIcon
-          class="pocket-button fullscreen-toggle"
-          @clicked="pocketStore.togglePocketFullscreen()">
-          <IconExpand />
-        </ButtonIcon> -->
         <!-- ----------------------------------------------- uploader toggle -->
         <Tooltip
           tooltip="uploader-toggle-button"
-          contact="top-right"
+          :contact="small ? 'left-center' : 'top-right'"
+          :variant="small ? 'mobile-pocket' : ''"
+          :force-active="small && activeModes.tooltips"
           class="uploader-toggle">
           <ButtonIcon
             v-if="pageExists"
@@ -96,33 +85,30 @@
 </template>
 
 <script setup>
-// ===================================================================== Imports
-import { useThrottleFn } from '@vueuse/core'
+// ======================================================================= Props
+const props = defineProps({
+  mobileDragTo: {
+    type: Boolean,
+    default: false
+  }
+})
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
 const { thingies } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { dragndrop } = storeToRefs(generalStore)
+const { small, activeModes } = storeToRefs(generalStore)
 const verseStore = useVerseStore()
 const { page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
 const {
   pocket,
   uploaders,
-  fullscreen,
   authenticated,
   pocketOpen,
 } = storeToRefs(pocketStore)
 
-const pocketRef = ref(null)
-const stageRef = ref(null)
 const tokenInputOpen = ref(false)
-const resizeEventListener = ref(false)
-const pocketCanvasConfig = ref({
-  width: 650,
-  height: 400
-})
 const buttonText = [
   { letter: 'p', classes: 'source-serif-pro italic semibold' },
   { letter: 'o', classes: 'source-sans-pro bold' },
@@ -133,14 +119,12 @@ const buttonText = [
 ]
 const pocketUploaderId = 'pocket-uploader'
 
-useHandleThingieDragEvents(pocketRef, stageRef)
-
 // ==================================================================== Computed
 const uploader = computed(() => uploaders.value[pocketUploaderId])
 const uploaderOpen = computed(() => uploader.value?.open)
 const pageExists = computed(() => page.value.data?._id && !page.value.data.doesNotExist)
-const forceBounds = computed(() => ({ x: pocketCanvasConfig.value.width, y: pocketCanvasConfig.value.height }))
 const pocketThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === 'pocket' && thingie.pocket_ref === pocket.value.data?._id).sort((a, b) => a.zIndex - b.zIndex))
+const tooltip = computed(() => pocketOpen.value ? 'pocket-toggle-button-open' : 'pocket-toggle-button-closed')
 const authMessage = computed(() => {
   if (!pocket.value.authenticated && !authenticated.value) {
     return 'Enter a token below to access your pocket and make changes:'
@@ -174,32 +158,12 @@ const handleCancelAuthentication = () => {
   }
 }
 
-const getPocketCanvasConfig = useThrottleFn(() => {
-  const pocketRect = pocketRef.value.getBoundingClientRect()
-  pocketCanvasConfig.value.width = Math.max(pocketRect.width, 650)
-  pocketCanvasConfig.value.height = Math.max(pocketRect.height, 400)
-}, 50)
-
 // ======================================================================= Hooks
 onMounted(() => {
   // Register the pocket uploader object in the pocket store
   pocketStore.registerUploader(pocketUploaderId)
-  // Register the resize event listener
-  resizeEventListener.value = () => { getPocketCanvasConfig() }
-  window.addEventListener('resize', resizeEventListener.value)
-  // Get the initial pocket canvas config
-  nextTick(() => {
-    setTimeout(() => {
-      getPocketCanvasConfig()
-    }, 500)
-  })
 })
 
-onUnmounted(() => {
-  if (resizeEventListener.value) {
-    window.removeEventListener('resize', resizeEventListener.value)
-  }
-})
 </script>
 
 <style lang="scss" scoped>
@@ -235,6 +199,25 @@ onUnmounted(() => {
     @include small {
       display: flex;
     }
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        transition: 250ms ease;
+      }
+    }
+  }
+  &.mobile-drag-to {
+    width: torem(80);
+    height: torem(80);
+    :deep(.slot) {
+      width: 100%;
+      height: 100%;
+      svg {
+        width: torem(44);
+        height: torem(44);
+      }
+    }
   }
 }
 
@@ -242,23 +225,32 @@ onUnmounted(() => {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: max(33.9vw, torem(650));
-  height: max(20.83vw, torem(400));
+  width: 100%;
+  height: 100%;
   border-radius: torem(25);
   overflow: hidden;
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  touch-action: none;
   @include modalShadow;
   &.open {
-    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear, width 400ms ease, height 400ms ease;
+    transition: transform 300ms ease, opacity 300ms ease-out, visibility 300ms linear;
     opacity: 1;
     visibility: visible;
     transform: scale(1);
-  }
-  &.fullscreen {
-    width: calc(100vw - torem(50));
-    height: calc(100vh - torem(50));
+    width: max(33.9vw, torem(650));
+    height: max(20.83vw, torem(400));
+    backdrop-filter: blur(10px);
+    &.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(#2C2E35, 0.8);
+      border-radius: 0;
+    }
   }
 }
 
@@ -276,6 +268,9 @@ onUnmounted(() => {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+  @include small {
+    min-width: torem(300);
+  }
 }
 
 :deep(.turbulence) {
@@ -285,8 +280,11 @@ onUnmounted(() => {
   left: 0;
   border-radius: torem(25);
   overflow: hidden;
-  opacity: 0.95;
+  opacity: 0.85;
   background-color: white;
+  @include small {
+    display: none;
+  }
 }
 
 :deep(.svg-border-rectangle) {
@@ -302,6 +300,9 @@ onUnmounted(() => {
   @include modalShadow;
   width: 100%;
   height: 100%;
+  @include small {
+    filter: none;
+  }
 }
 
 :deep(.triple-dot-loader) {
@@ -340,13 +341,12 @@ onUnmounted(() => {
       transform: rotate(45deg);
     }
   }
-}
-
-.fullscreen-toggle {
-  position: absolute !important;
-  left: torem(12);
-  top: torem(12);
-  z-index: 101;
+  @include small {
+    left: unset;
+    right: torem(12);
+    bottom: torem(36);
+    transform: translateY(-100%);
+  }
 }
 
 .token-input-toggle {
@@ -381,4 +381,30 @@ onUnmounted(() => {
   left: -9999px;
   overflow: hidden;
 }
+
+// ====================================================================== Mobile
+#pocket-anchor {
+  &:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background-color: $billyBlue;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: 250ms ease;
+  }
+  &.mobile-drag-to {
+    &:before {
+      opacity: 0.3;
+      width: torem(250);
+      height: torem(250);
+      transition: opacity 250ms ease;
+    }
+  }
+}
+
 </style>

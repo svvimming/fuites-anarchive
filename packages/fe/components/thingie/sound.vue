@@ -54,6 +54,11 @@ const props = defineProps({
     type: Number,
     required: false,
     default: 3
+  },
+  forceOpacity: {
+    type: [Number, Boolean],
+    required: false,
+    default: false
   }
 })
 
@@ -64,13 +69,14 @@ const player = ref(false)
 const gainNode = ref(false)
 const amplitude = ref(0)
 const mousemoveEventListener = ref(false)
+const touchmoveEventListener = ref(false)
 const key = ref(0)
 const verseStore = useVerseStore()
 const { sceneData, colorSelectorHex } = storeToRefs(verseStore)
 const mixerStore = useMixerStore()
 const { audioContext, mixer } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
-const { baseUrl } = storeToRefs(generalStore)
+const { baseUrl, small } = storeToRefs(generalStore)
 const collectorStore = useCollectorStore()
 const { editing } = storeToRefs(collectorStore)
 
@@ -86,7 +92,7 @@ const pathConfig = computed(() => ({
   data: svgPath.value,
   stroke: color.value,
   strokeWidth: props.strokeWidth,
-  opacity: opacity.value,
+  opacity: props.forceOpacity || opacity.value,
   ...props.options
 }))
 const shadowConfig = computed(() => ({
@@ -127,6 +133,19 @@ const calculateMouseDistance = e => {
 }
 
 /**
+ * @method calculateScreenCenterDistance
+ */
+
+const calculateScreenCenterDistance = () => {
+  const deltaX = props.position.x - (window.innerWidth * 0.5 / sceneData.value.scale) + sceneData.value.x
+  const deltaY = props.position.y - (window.innerHeight * 0.5 / sceneData.value.scale) + sceneData.value.y
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+  const amp = Math.exp(-0.005 * distance)
+  gainNode.value.gain.value = amp * props.gain
+  amplitude.value = amp
+}
+
+/**
  * @method initSoundThingie
  */
 
@@ -141,8 +160,13 @@ const initSoundThingie = () => {
   gainNode.value = audioContext.value.createGain()
   gainNode.value.gain.value = 0
   source.value.connect(gainNode.value).connect(mixer.value) // audioContext.value.destination
-  mousemoveEventListener.value = useThrottleFn(e => { calculateMouseDistance(e) }, 100)
-  window.addEventListener('mousemove', e => { mousemoveEventListener.value(e) })
+  if (small.value) {
+    touchmoveEventListener.value = useThrottleFn(() => { calculateScreenCenterDistance() }, 100)
+    window.addEventListener('touchmove', touchmoveEventListener.value)
+  } else {
+    mousemoveEventListener.value = useThrottleFn(e => { calculateMouseDistance(e) }, 100)
+    window.addEventListener('mousemove', e => { mousemoveEventListener.value(e) })
+  }
   player.value.play()
 }
 
@@ -154,5 +178,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (player.value) { player.value.pause() }
   if (mousemoveEventListener.value) { window.removeEventListener('mousemove', mousemoveEventListener.value) }
+  if (touchmoveEventListener.value) { window.removeEventListener('touchmove', touchmoveEventListener.value) }
 })
 </script>

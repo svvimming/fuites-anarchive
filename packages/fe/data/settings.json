@@ -174,7 +174,7 @@
     },
     "multiverse-link": {
       "heading": "Verses",
-      "message": "This leads to the multiverse where you can see the verses you have access to"
+      "message": "This leads to the multiverse where you can see the verses you have access to."
     },
     "thingie": {
       "heading": "Thingie",
@@ -233,26 +233,67 @@
       "message": "You can add an external link to a text thingie with this tool."
     }
   },
+  "tooltipsMobile": {
+    "pocket-toggle-button-closed": {
+      "heading": "Pocket",
+      "message": "When editing is enabled, try dragging a 'thingie' onto this button, then click it to open the Pocket.<br><br>A 'thingie' on fuites is a piece of text, an image or a sounds that you can move and edit. Putting a thingie in your pocket allows you to carry it to other pages that you visit."
+    },
+    "pocket-toggle-button-open": {
+      "heading": "You're in the pocket",
+      "message": "Once you've got some thingies in your pocket, you can swipe up and down to scroll through them.<br><br>The thingie at the center will be the one you can move by clicking the \"<em>move to...</em>\" button below."
+    },
+    "compost-portal-toggle-button": {
+      "heading": "Compost",
+      "message": "Drag a thingie onto this button to remove it from this page and put it in the compost where someone else can grab it."
+    },
+    "settings-toggle-button": {
+      "heading": "Settings",
+      "message": "This is where you can toggle your settings and preferences for the site, like showing and hiding these tooltips."
+    },
+    "mobile-edit-mode-toggle": {
+      "heading": "Edit mode toggle"
+    },
+    "tooltip-mode-toggle": {
+      "heading": "Hide/show helpful tips"
+    },
+    "portals-mode-toggle": {
+      "heading": "Hide/show portals from view"
+    },
+    "external-links-mode-toggle": {
+      "heading": "Some thingies link to other sites",
+      "message": "Turn on to enable outbound links."
+    },
+    "uploader-toggle-button": {
+      "heading": "Upload a file here"
+    },
+    "token-input-toggle-button": {
+      "heading": "Change token here"
+    }
+  },
   "landingSites": [
     {
       "label": "tooltips",
       "slug": "tooltips",
-      "tooltip": "tooltip-mode-toggle"
+      "tooltip": "tooltip-mode-toggle",
+      "devices": ["desktop", "mobile"]
     },
     {
       "label": "portals",
       "slug": "portals",
-      "tooltip": "portals-mode-toggle"
+      "tooltip": "portals-mode-toggle",
+      "devices": ["desktop", "mobile"]
     },
     {
       "label": "record",
       "slug": "record",
-      "tooltip": "record-mode-toggle"
+      "tooltip": "record-mode-toggle",
+      "devices": ["desktop"]
     },
     {
       "label": "external links",
       "slug": "externalLinks",
-      "tooltip": "external-links-mode-toggle"
+      "tooltip": "external-links-mode-toggle",
+      "devices": ["desktop", "mobile"]
     }
   ],
   "infoModalMarkdown": "## about fuit.es\n\nFuit.es aims to provide a creative online space, a platform for collective processes designed with the 'Anarchive' as its operational concept; an archive which promotes the continual evolution and variation of its documents rather than their mere preservation.\n\nEach individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as \"thingies\". Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at contact@fuit.es, we would be happy to make you a token.\n\n###### *We acknowledge the support of the Canada Council for the Arts.*\n###### *Nous remercions le Conseil des arts du Canada de son soutien.*",

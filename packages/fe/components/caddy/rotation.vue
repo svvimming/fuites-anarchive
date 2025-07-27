@@ -1,8 +1,9 @@
 <template>
-  <div class="rotation">
+  <div class="rotation" :style="{ '--parent-radius': `${parentRadius}px` }">
 
     <RadialSliderInfinite
       ref="slider"
+      :radius="parentRadius * 0.7"
       @degree-change="handleDegreeChange" />
 
     <ButtonCaddy
@@ -19,6 +20,11 @@
 <script setup>
 // ======================================================================= Setup
 const props = defineProps({
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 66
+  },
   defaultAngle: {
     type: Number,
     required: false,
@@ -46,11 +52,13 @@ const handleDegreeChange = deg => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .rotation {
+  --parent-radius: 66px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: torem(152);
-  height: torem(152);
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
+  touch-action: none;
 }
 
 .rotation-icon {

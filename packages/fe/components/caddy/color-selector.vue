@@ -1,5 +1,5 @@
 <template>
-  <div class="color-picker">
+  <div class="color-picker" :style="{ '--parent-radius': `${parentRadius}px` }">
     <div
       id="color-wheel"
       ref="wheel"
@@ -22,7 +22,8 @@
         :height="height"
         class="farbtastic-overlay"
         :style="{ width, height }"
-        @mousedown="mousedown" />
+        @mousedown="mousedown"
+        @touchstart="touchHandleStart" />
     </div>
   </div>
 </template>
@@ -34,6 +35,11 @@ const props = defineProps({
     type: String,
     required: false,
     default: '#000000'
+  },
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 70
   }
 })
 
@@ -48,8 +54,6 @@ const hsl = ref('')
 const radius = ref(0)
 const square = ref(0)
 const mid = ref(0)
-const width = ref(120)
-const height = ref(120)
 const markerSize = ref(0)
 const invert = ref(0)
 
@@ -58,10 +62,13 @@ const mask = ref(null)
 const overlay = ref(null)
 const maskCtx = ref(false)
 const overlayCtx = ref(false)
-
 const offset = ref({ left: '', top: '' })
+const touchHandled = ref(false)
+const touchMoved = ref(false)
 
 // ==================================================================== Computed
+const width = computed(() => props.parentRadius * 2 * 0.857)
+const height = computed(() => props.parentRadius * 2 * 0.857)
 const wheelWidth = computed(() => width.value / 10)
 const solidStyle = computed(() => ({
   'background-color': pack(HSLToRGB([hsl.value[0], 1, 0.5])),
@@ -382,10 +389,10 @@ const widgetCoords = e => ({
   y: e.clientY - offset.value.top - mid.value
 })
 
-// const widgetCoordsTouch = e => ({
-//   x: e.targetTouches[0].clientX - offset.value.left - mid.value,
-//   y: e.targetTouches[0].clientY - offset.value.top - mid.value
-// })
+const widgetCoordsTouch = e => ({
+  x: e.targetTouches[0].clientX - offset.value.left - mid.value,
+  y: e.targetTouches[0].clientY - offset.value.top - mid.value
+})
 
 const mousedown = e => {
   // Capture mouse
@@ -449,77 +456,75 @@ const RGBToHSL = val => {
   }
   return [h, s, l]
 }
-          
-// touchHandleStart(event) {
-//     // Ignore the event if another is already being handled
-//     if (this.touchHandled) {
-//         return;
-//     }
 
-//     // Set the flag to prevent others from inheriting the touch event
-//     this.touchHandled = true;
+/**
+ * @method touchHandleStart
+ */
 
-//     // Track movement to determine if interaction was a click
-//     this._touchMoved = false;
+const touchHandleStart = e => {
+  // Ignore the event if another is already being handled
+  if (touchHandled.value) { return }
+  // Set the flag to prevent others from inheriting the touch event
+  touchHandled.value = true
+  // Track movement to determine if interaction was a click
+  touchMoved.value = false
+  // Update the stored offset for the widget.
+  const rect = wheel.value.getBoundingClientRect()
+  offset.value = { left: rect.left, top: rect.top }
+  // Check which area is being dragged
+  const pos = widgetCoordsTouch(e)
+  circleDrag.value = Math.max(Math.abs(pos.x), Math.abs(pos.y)) > square.value + 2
+  // Add touch listeners
+  document.addEventListener('touchmove', touchHandleMove)
+  document.addEventListener('touchend', touchHandleEnd)
+}
 
-//     // Update the stored offset for the widget.
-//     this.offset = {
-//         left: this.$refs['color-wheel'].getBoundingClientRect().left,
-//         top: this.$refs['color-wheel'].getBoundingClientRect().top
-//     };
+/**
+ * @method touchHandleMove
+ */
 
-//     // Check which area is being dragged
-//     const pos = this.widgetCoordsTouch(event);
-//     this.circleDrag =
-//         Math.max(Math.abs(pos.x), Math.abs(pos.y)) > this.square + 2;
-// }
-// /**
-//  * Handle the touchstart events
-//  */
-// touchHandleMove(event) {
-//     // Ignore event if not handled
-//     if (!this.touchHandled) {
-//         return;
-//     }
-//     event.preventDefault();
+const touchHandleMove = e => {
+  // Ignore event if not handled
+  if (!touchHandled.value) { return }
+  // e.preventDefault()
+  // Interaction was not a click
+  touchMoved.value = true
+  // Get coordinates relative to color picker center
+  const pos = widgetCoordsTouch(e)
+  // Set new HSL parameters
+  if (circleDrag.value) {
+    const hue = Math.atan2(pos.x, -pos.y) / 6.28
+    setHSL([(hue + 1) % 1, hsl.value[1], hsl.value[2]])
+  } else {
+    const sat = Math.max(0, Math.min(1, -(pos.x / square.value / 2) + 0.5))
+    const lum = Math.max(0, Math.min(1, -(pos.y / square.value / 2) + 0.5))
+    setHSL([hsl.value[0], sat, lum])
+  }
+}
 
-//     // Interaction was not a click
-//     this._touchMoved = true;
+/**
+ * @method touchHandleEnd
+ */
 
-//     // Get coordinates relative to color picker center
-//     const pos = this.widgetCoordsTouch(event);
-
-//     // Set new HSL parameters
-//     if (this.circleDrag) {
-//         const hue = Math.atan2(pos.x, -pos.y) / 6.28;
-//         this.setHSL([(hue + 1) % 1, this.hsl[1], this.hsl[2]]);
-//     } else {
-//         const sat = Math.max(0, Math.min(1, -(pos.x / this.square / 2) + 0.5));
-//         const lum = Math.max(0, Math.min(1, -(pos.y / this.square / 2) + 0.5));
-//         this.setHSL([this.hsl[0], sat, lum]);
-//     }
-// }
-// /**
-//  * Handle the touchstart events
-//  */
-// touchHandleEnd() {
-//     // Ignore event if not handled
-//     if (!this.touchHandled) {
-//         return;
-//     }
-//     // Unset the flag to allow other widgets to inherit the touch event
-//     this.touchHandled = false;
-// }
+const touchHandleEnd = () => {
+  // Ignore event if not handled
+  if (!touchHandled.value) { return }
+  // Unset the flag to allow other widgets to inherit the touch event
+  document.removeEventListener('touchmove', touchHandleMove)
+  document.removeEventListener('touchend', touchHandleEnd)
+  touchHandled.value = false
+}
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .color-picker {
+  --parent-radius: 70px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: torem(142);
-  height: torem(142);
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
 }
 
 .cpw_container {

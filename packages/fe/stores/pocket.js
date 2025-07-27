@@ -26,7 +26,6 @@ export const usePocketStore = defineStore('pocket', () => {
   })
   const uploaders = ref({})
   const pocketOpen = ref(false)
-  const fullscreen = ref(false)
   const drippy = ref(0)
   
   // ================================================================== Computed
@@ -79,14 +78,6 @@ export const usePocketStore = defineStore('pocket', () => {
     if (uploaders.value[id]) {
       uploaders.value[id] = Object.assign({}, uploaders.value[id], incoming)
     }
-  }
-
-  /**
-   * @method togglePocketFullscreen
-   */
-
-  const togglePocketFullscreen = () => {
-    fullscreen.value = !fullscreen.value
   }
 
   /**
@@ -318,7 +309,6 @@ export const usePocketStore = defineStore('pocket', () => {
     invite,
     uploaders,
     pocketOpen,
-    fullscreen,
     drippy,
     // ----- computed
     token,
@@ -328,7 +318,6 @@ export const usePocketStore = defineStore('pocket', () => {
     registerUploader,
     toggleUploaderOpen,
     setUploader,
-    togglePocketFullscreen,
     setDrippyScene,
     getAuthPocket,
     postCreateVerse,

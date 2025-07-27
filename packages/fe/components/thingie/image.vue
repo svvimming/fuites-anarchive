@@ -115,7 +115,9 @@ const applyClipPath = () => {
 
 const loadImage = () => {
   const img = document.createElement('img')
-  img.crossOrigin = 'anonymous'
+  if (config.public.serverEnv !== 'development') {
+    img.crossOrigin = 'anonymous'
+  }
   img.onload = function () {
     emit('loaded', true)
     image.value = img

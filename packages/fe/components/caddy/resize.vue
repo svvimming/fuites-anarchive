@@ -1,5 +1,5 @@
 <template>
-  <div :class="['resize-tool', type]">
+  <div :class="['resize-tool', type]" :style="{ '--parent-radius': `${parentRadius}px` }">
     <!-- ==================================================== BUTTONS BEFORE -->
     <div class="buttons-before">
 
@@ -51,11 +51,23 @@
 </template>
 
 <script setup>
-// ======================================================================= Setup
+// ======================================================================= Props
 const props = defineProps({
-  type: String,
-  required: false,
-  default: 'image'
+  type: {
+    type: String,
+    required: false,
+    default: 'image'
+  },
+  parentRadius: {
+    type: Number,
+    required: false,
+    default: 66
+  },
+  variantMobile: {
+    type: Boolean,
+    required: false,
+    default: false
+  }
 })
 
 const emit = defineEmits(['resize-thingie', 'update-stroke-width'])
@@ -105,11 +117,13 @@ const handleStrokeWidthResize = delta => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .resize-tool {
+  --parent-radius: 66px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: torem(152);
-  height: torem(152);
+  width: calc(2 * var(--parent-radius));
+  height: calc(2 * var(--parent-radius));
+  touch-action: none;
   &.image {
     flex-direction: column;
     .buttons-before {
@@ -117,6 +131,12 @@ const handleStrokeWidthResize = delta => {
     }
     .buttons-after {
       margin-top: torem(21);
+    }
+    :deep(.retrigger-button) {
+      svg {
+        width: calc(var(--parent-radius) * 1.318);
+        height: calc(var(--parent-radius) * 0.575);
+      }
     }
   }
   &.sound {
@@ -131,6 +151,12 @@ const handleStrokeWidthResize = delta => {
     .buttons-after {
       :last-child {
         margin-top: torem(2);
+      }
+    }
+    :deep(.retrigger-button) {
+      svg {
+        width: calc(var(--parent-radius) * 0.77);
+        height: calc(var(--parent-radius) * 0.8);
       }
     }
   }
