@@ -17,15 +17,17 @@
       :config="portalConfig"
       @mouseover="hovering = true"
       @mouseout="hovering = false"
-      @mouseup="handlePortalMouseUp"
-      @dblclick="handleDoubleClick" />
+      @mouseup="handleNavigate('pointer')"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleNavigate('touch')"
+      @dblclick="handleDeleteManualPortal"
+      @dbltap="handleDeleteManualPortal" />
 
   </v-group>
 </template>
 
 <script setup>
-import { onBeforeMount } from 'vue';
-
 // ======================================================================= Setup
 const props = defineProps({
   portal: {
@@ -46,6 +48,7 @@ const groupRef = ref(null)
 const imageRef = ref(null)
 const pulseRef = ref(null)
 const portalRef = ref(null)
+const navigateArmed = ref(false)
 const imageLoadError = ref(false)
 const imageLoading = ref(false)
 const image = ref(false)
@@ -144,10 +147,29 @@ watch(destPrintId, id => {
 
 // ===================================================================== Methods
 /**
- * @method handlePortalMouseUp
+ * @method handleTouchStart
  */
 
-const handlePortalMouseUp = async () => {
+const handleTouchStart = () => {
+  hovering.value = true
+  navigateArmed.value = true
+}
+
+/**
+ * @method handleTouchMove
+ */
+
+const handleTouchMove = () => {
+  navigateArmed.value = false
+}
+
+/**
+ * @method handleNavigate
+ */
+
+const handleNavigate = async type => {
+  hovering.value = false
+  if (type === 'touch' && !navigateArmed.value) { return }
   if (verseName.value && thatVertex.value && !portalEditing.value) {
     const newRoute = `/${verseName.value}/${thatVertex.value.location}`
     await navigateTo({ path: newRoute })
@@ -155,10 +177,10 @@ const handlePortalMouseUp = async () => {
 }
 
 /**
- * @method handleDoubleClick
+ * @method handleDeleteManualPortal
  */
 
-const handleDoubleClick = () => {
+const handleDeleteManualPortal = () => {
   if (portalEditing.value && props.portal.manual) {
     verseStore.setPortalToDelete(props.portal._id)
     alertStore.openAlert('delete-portal-alert')
