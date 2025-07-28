@@ -59,12 +59,18 @@ const verseStore = useVerseStore()
 const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
-const generalStore = useGeneralStore()
-const { dragndrop, small, activeModes, mouseOverScene } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { authenticated } = storeToRefs(pocketStore)
 const mixerStore = useMixerStore()
 const { recording } = storeToRefs(mixerStore)
+const generalStore = useGeneralStore()
+const {
+  dragndrop,
+  small,
+  activeModes,
+  mouseOverScene,
+  portalEditing
+} = storeToRefs(generalStore)
 
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
 
@@ -81,6 +87,7 @@ const pageshotReady = ref(false)
 const { initPageshot, status } = usePageshotBot(stageRef)
 const touchLast = ref({ x: 0, y: 0 })
 const lastTouchDistance = ref(0)
+const touchHoldTimeout = ref(false)
 const controller = ref({
   arrowLeft: false,
   arrowRight: false,
@@ -309,10 +316,29 @@ const handleMouseLeave = () => {
  */
 
 const handleTouchStart = e => {
+  // Initiate touch position tracking
   if (!activeModes.value.mobileEdit) {
     const touchPoints = e.evt.touches
     const touchPoint1 = touchPoints[0]
     touchLast.value = { x: touchPoint1.clientX, y: touchPoint1.clientY }
+  }
+  // Close Portal Creator if it is open
+  if (portalCreatorOpen.value) {
+    verseStore.setPortalCreatorOpen(false)
+  }
+  // If portal editing is enabled and the target is not a portal, initiate touch hold timeout
+  const target = e.target
+  if (portalEditing.value && !target.attrs.hasOwnProperty('portal_id')) {
+    const touchPoints = e.evt.touches
+    const touchPoint1 = touchPoints[0]
+    const position = { evt: { clientX: touchPoint1.clientX, clientY: touchPoint1.clientY } }
+    // touch hold settimeout
+    touchHoldTimeout.value = setTimeout(() => {
+      if (portalEditing.value) {
+        // if portal editing is still enabled, open the portal creator
+        verseStore.setPortalCreatorOpen(position)
+      }
+    }, 1500)
   }
 }
 
@@ -321,6 +347,12 @@ const handleTouchStart = e => {
  */
 
 const handleTouchMove = e => {
+  // Clear touch hold timeout if it is set
+  if (touchHoldTimeout.value) {
+    clearTimeout(touchHoldTimeout.value)
+    touchHoldTimeout.value = false
+  }
+  // Handle positioning the scene outside of edit mode
   if (!activeModes.value.mobileEdit) {
     e.evt.preventDefault()
     const layer = layerRef.value.getNode()
@@ -349,10 +381,12 @@ const handleTouchMove = e => {
       })
       touchLast.value = { x: touch1.clientX, y: touch1.clientY }
     }
+    // Handle mobile drag thingie
   } else if (e.target.attrs.hasOwnProperty('thingie_id')) {
     if (e.target.attrs.thingie_id !== mobileDragThingie.value) {
       collectorStore.setMobileDragThingie(e.target.attrs.thingie_id)
     }
+    // Clear mobile drag thingie if it is set
   } else if (mobileDragThingie.value) {
     collectorStore.setMobileDragThingie(false)
   }
@@ -364,6 +398,11 @@ const handleTouchMove = e => {
 
 const handleTouchEnd = (e) => {
   lastTouchDistance.value = 0
+  // Clear touch hold timeout if it is set
+  if (touchHoldTimeout.value) {
+    clearTimeout(touchHoldTimeout.value)
+    touchHoldTimeout.value = false
+  }
 }
 
 /**
