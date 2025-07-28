@@ -38,7 +38,7 @@
         v-if="authenticated"
         :active="activeModes.mobileEdit"
         class="mobile-edit-mode-toggle"
-        @click="generalStore.setMode('mobileEdit', !activeModes.mobileEdit)">
+        @click="handleMobileEditModeToggle">
         <IconPencil />
       </ButtonIcon>
     </Tooltip>
@@ -52,7 +52,7 @@ const route = useRoute()
 const collectorStore = useCollectorStore()
 const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
 const generalStore = useGeneralStore()
-const { activeModes, small } = storeToRefs(generalStore)
+const { activeModes, small, portalEditing } = storeToRefs(generalStore)
 const pocketStore = usePocketStore()
 const { drippy, authenticated } = storeToRefs(pocketStore)
 const alertStore = useZeroAlertStore()
@@ -119,6 +119,15 @@ const handleTouchEnd = () => {
     }
     dragTo.value = 'none'
   }
+}
+
+/**
+ * @method handleMobileEditModeToggle
+ */
+
+const handleMobileEditModeToggle = () => {
+  generalStore.setMode('mobileEdit', !activeModes.value.mobileEdit)
+  generalStore.setPortalEditing(!portalEditing.value)
 }
 
 // ======================================================================= Hooks
