@@ -1,7 +1,7 @@
 <template>
   <div
     id="text-editor"
-    :class="{ active: id }"
+    :class="{ active: id, 'force-hide': forceHide }"
     :style="textEditorStyles">
     <div ref="sizer" class="input-sizer">
       <div
@@ -34,6 +34,14 @@ import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
 import FontSize from 'tiptap-extension-font-size'
 import { Color } from '@tiptap/extension-color'
+
+// ======================================================================= Setup
+const props = defineProps({
+  forceHide: {
+    type: Boolean,
+    default: false
+  }
+})
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
@@ -68,7 +76,7 @@ const textEditorStyles = computed(() => {
     return {
       left: '0',
       top: 'unset',
-      bottom: '98px', // height of mobile caddy toolbar
+      bottom: '184px', // height of mobile caddy toolbar + height of mobile font editor
       transform: `scale(1) rotate(0deg)`,
       '--highlight-color': highlight.value
     }
@@ -228,6 +236,10 @@ onBeforeUnmount(() => {
       box-shadow: 0px 0px 3px 1px var(--highlight-color);
     }
   }
+  &.force-hide {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 .input-sizer {
@@ -237,7 +249,8 @@ onBeforeUnmount(() => {
   @include small {
     width: 100%;
   }
-  &:before {
+  &:before,
+  &:after {
     content: '';
     position: absolute;
     left: 0;
@@ -247,6 +260,17 @@ onBeforeUnmount(() => {
     border-radius: torem(4);
     opacity: 0.5;
     z-index: -1;
+    @include small {
+      height: calc(100% + torem(86));
+    }
+  }
+  &:after {
+    display: none;
+    background-color: white;
+    @include small {
+      display: block;
+      opacity: 1;
+    }
   }
 }
 
