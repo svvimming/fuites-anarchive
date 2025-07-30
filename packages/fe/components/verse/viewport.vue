@@ -72,10 +72,6 @@ watch(drippy, (scene) => {
   }
 }, { immediate: true })
 
-watch(hideMobileTextEditor, (val) => {
-  console.log('hideMobileTextEditor', val)
-})
-
 // ===================================================================== Methods
 /**
  * @method handleTouchMove
