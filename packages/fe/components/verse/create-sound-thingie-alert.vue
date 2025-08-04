@@ -4,6 +4,7 @@
     alert-id="create-sound-thingie-alert"
     :class="['create-sound-thingie-alert']">
     <div class="message">
+
       <span class="title text">Create Sound Thingie</span>
       <span class="prompt text">Are you happy with the path you just drew?</span>
       <div class="sound-path-preview">
@@ -24,6 +25,7 @@
             stroke-linejoin="round" />
         </svg>
       </div>
+
       <div class="button-row">
         <ButtonBasic
           :force-disabled="recording.uploadStatus === 'uploading'"
@@ -39,6 +41,17 @@
           <span class="text">No, Try again</span>
         </ButtonBasic>
       </div>
+
+      <div class="button-row">
+        <ButtonBasic
+          :force-disabled="recording.uploadStatus === 'uploading'"
+          theme="clear"
+          class="download-button"
+          @clicked="handleDownload">
+          <span class="text">Download</span>
+        </ButtonBasic>
+      </div>
+
     </div>
   </ZeroAlert>
 </template>
@@ -88,11 +101,7 @@ watch(playbackAnalyser, (value) => {
 const handleConfirm = () => {
   mixerStore.initUploadRecording()
   mixerStore.stopRecordingPlayback()
-  if (requestId.value) {
-    cancelAnimationFrame(requestId.value)
-    audioBufferArray.value = false
-    opacity.value = 0
-  }
+  resetAnimation()
 }
 
 /**
@@ -103,6 +112,14 @@ const handleCancel = () => {
   alertStore.closeAlert('create-sound-thingie-alert')
   mixerStore.stopRecordingPlayback()
   mixerStore.resetRecording()
+  resetAnimation()
+}
+
+/**
+ * @method resetAnimation
+ */
+
+const resetAnimation = () => {
   if (requestId.value) {
     cancelAnimationFrame(requestId.value)
     audioBufferArray.value = false
@@ -133,6 +150,16 @@ const calculateOutputLevel = () => {
   }
   opacity.value = 0.025 * Math.sqrt(sum / audioBufferArray.value.length)
   requestId.value = requestAnimationFrame(calculateOutputLevel)
+}
+
+/**
+ * @method handleDownload
+ */
+
+const handleDownload = () => {
+  mixerStore.downloadRecordingAsMp3()
+  resetAnimation()
+  alertStore.closeAlert('create-sound-thingie-alert')
 }
 </script>
 
@@ -192,6 +219,22 @@ const calculateOutputLevel = () => {
 .cancel-button {
   flex-grow: 1;
   min-width: torem(120);
+}
+
+.download-button {
+  padding: torem(6) torem(25);
+  &:hover {
+    :deep(.text) {
+      letter-spacing: 1px;
+      transform: scale(1.1);
+    }
+  }
+  :deep(.text) {
+    letter-spacing: 1px;
+    transform: scale(1);
+    transition: 150ms ease;
+    color: $drippyDark;
+  }
 }
 
 </style>

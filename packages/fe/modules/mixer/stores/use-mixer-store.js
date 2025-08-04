@@ -318,6 +318,33 @@ export const useMixerStore = defineStore('mixer', () => {
     websocket.on('audio-recording|file-upload-complete|payload', handleUploadComplete)
   }
 
+  /**
+   * @method downloadRecordingAsMp3
+   * @desc Downloads the recorded audio buffer as an MP3 file
+   */
+  const downloadRecordingAsMp3 = () => {
+    if (!recording.value.audioBuffer) {
+      console.warn('No audio buffer available to download')
+      return
+    }
+
+    // Create a URL for the blob
+    const url = URL.createObjectURL(recording.value.audioBuffer)
+    
+    // Create a temporary anchor element
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sound-thingie-${Date.now()}.mp3`
+    
+    // Append to body, click, and remove
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    
+    // Clean up the URL object
+    URL.revokeObjectURL(url)
+  }
+
   // ==================================================================== Socket
   // Add socket connection handler
   $bus.$on('socket.io-connected', setupFileUpload)
@@ -342,6 +369,7 @@ export const useMixerStore = defineStore('mixer', () => {
     resetRecording,
     playRecording,
     stopRecordingPlayback,
-    initUploadRecording
+    initUploadRecording,
+    downloadRecordingAsMp3
   }
 })
