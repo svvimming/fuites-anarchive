@@ -13,11 +13,11 @@
     <!-- ---------------------------------------------------- Portal Creator -->
     <VersePortalCreator />
     <!-- ------------------------------------------------------- Text Editor -->
-    <VerseTextEditor />
+    <VerseTextEditor :force-hide="small && hideMobileTextEditor" />
     <!-- ------------------------------------------------------------- Caddy -->
     <ClientOnly>
       <Caddy v-if="!small" :container="viewport" />
-      <CaddyMobile v-else />
+      <CaddyMobile v-else @emit-selected="handleCaddyMobileSelected" />
     </ClientOnly>
     <!-- ---------------------------------------------- Delete Thingie Alert -->
     <VerseDeleteThingieAlert />
@@ -60,6 +60,7 @@ const viewport = ref(null)
 const touchmoveEventListener = ref(null)
 const touchendEventListener = ref(null)
 const dragTo = ref('none')
+const hideMobileTextEditor = ref(true)
 
 // ==================================================================== Computed
 const inCompost = computed(() => route.params.page === 'compost')
@@ -128,6 +129,18 @@ const handleTouchEnd = () => {
 const handleMobileEditModeToggle = () => {
   generalStore.setMode('mobileEdit', !activeModes.value.mobileEdit)
   generalStore.setPortalEditing(!portalEditing.value)
+}
+
+/**
+ * @method handleCaddyMobileSelected
+ */
+
+const handleCaddyMobileSelected = selected => {
+  if (selected === 'font-editor') {
+    hideMobileTextEditor.value = false
+  } else {
+    hideMobileTextEditor.value = true
+  }
 }
 
 // ======================================================================= Hooks

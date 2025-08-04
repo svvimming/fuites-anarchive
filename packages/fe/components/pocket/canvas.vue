@@ -86,5 +86,12 @@ onBeforeUnmount(() => {
   bottom: 0;
   width: 100%;
   height: 100%;
+  :deep(canvas),
+  :deep(div) {
+    user-select: none;
+    -webkit-user-select: none; /* For WebKit browsers */
+    -moz-user-select: none; /* For Firefox */
+    -ms-user-select: none; /* For Internet Explorer/Edge */
+  }
 }
 </style>

@@ -3,7 +3,7 @@
     <!-- ======================================================= Trash Alert -->
     <CaddyMobileTrashAlert v-show="selected === 'trash'" class="mobile-trash-alert" />
     <!-- ======================================================== Background -->
-    <SvgCaddyMobileBackground class="caddy-mobile-skin" />
+    <SvgCaddyMobileBackground class="caddy-mobile-skin" v-if="selected !== 'font-editor'" />
     <!-- ============================================================= Tools -->
     <div class="tool-container" :style="toolCtnStyles">
       <!-- ------------------------------------------ Shared [Layer/Opacity] -->
@@ -28,9 +28,8 @@
         @resize-thingie="resizeThingie"
         @update-stroke-width="updateStrokeWidth" />
       <!-- ---------------------------------------------- Text [Font Editor] -->
-      <CaddyFontEditor
+      <CaddyMobileFontEditor
         v-if="textEditor"
-        :parent-radius="radius"
         :class="['caddy-tool', 'z-index-2', { selected: selected === 'font-editor' }]" />
       <!-- ------------------------------------- Text & Sound [Color Picker] -->
       <CaddyColorSelector
@@ -82,6 +81,9 @@
 // ====================================================================== Import
 import { useThrottleFn } from '@vueuse/core'
 import { useSwipe } from '@vueuse/core'
+
+// ======================================================================= Setup
+const emit = defineEmits(['emit-selected'])
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
@@ -186,6 +188,8 @@ watch(isSwiping, (val) => {
     }
   }
 })
+
+watch(selected, (val) => { emit('emit-selected', val) })
 
 // ==================================================================== Methods
 /**
@@ -520,6 +524,10 @@ const update = useThrottleFn(data => {
     visibility: visible;
     opacity: 1;
   }
+}
+
+:deep(.mobile-font-editor) {
+  transform: translate(-50%, torem(29));
 }
 
 :deep(.font-family-selector) {
