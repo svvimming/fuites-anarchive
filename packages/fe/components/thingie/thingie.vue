@@ -33,6 +33,7 @@
       :parent-config="config"
       :options="highlight"
       :gain="thingie.gain || 1"
+      :pitch="thingie.pitch || 0"
       :path="thingie.path_data"
       :colors="thingie.colors"
       :position="thingie.at"

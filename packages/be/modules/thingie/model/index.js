@@ -147,6 +147,11 @@ const ThingieSchema = new Schema({
     required: false,
     default: 1
   },
+  pitch: {
+    type: Number,
+    required: false,
+    default: 0
+  },
   stroke_width: {
     type: Number,
     required: false,

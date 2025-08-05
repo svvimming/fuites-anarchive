@@ -26,7 +26,7 @@
     <div class="step-controls">
       <ButtonRetrigger
         class="size-button"
-        @retrigger="handleIncrementVolume(-1)">
+        @retrigger="handleIncrementPitch(-1)">
         <IconCaddyArcLeft />
         <span class="label">-</span>
       </ButtonRetrigger>
@@ -34,14 +34,14 @@
         class="size-button">
         <IconCaddyArcMiddle />
         <input
-          v-model="knobLevel"
+          v-model="pitch"
           type="number"
           pattern="[0-9]*"
           class="input" />
       </div>
       <ButtonRetrigger
         class="size-button"
-        @retrigger="handleIncrementVolume(1)">
+        @retrigger="handleIncrementPitch(1)">
         <IconCaddyArcRight />
         <span class="label">+</span>
       </ButtonRetrigger>
@@ -64,7 +64,7 @@ const props = defineProps({
     default: 66
   }
 })
-const emit = defineEmits(['update-gain'])
+const emit = defineEmits(['update-gain', 'update-pitch'])
 
 // ======================================================================== Data
 const collectorStore = useCollectorStore()
@@ -77,6 +77,7 @@ const requestId = ref(false)
 const mixerLevel = ref(0)
 const volumeSliderRef = ref(null)
 const knobLevel = ref(0)
+const pitch = ref(0)
 
 // ==================================================================== Computed
 const thingie = computed(() => thingies.value.data.find(item => item._id === editing.value))
@@ -87,6 +88,7 @@ watch(editing, () => {
     const defaultDegree = (thingie.value.gain * (303 - 57)) + 57 // map gain to degree range of knob
     volumeSliderRef.value.setTheta(defaultDegree * (Math.PI / 180) - Math.PI)
     knobLevel.value = Math.round(thingie.value.gain * 10)
+    pitch.value = thingie.value.pitch || 0
   }
 })
 
@@ -117,14 +119,12 @@ const handleVolumeChange = val => {
 }
 
 /**
- * @method handleIncrementVolume
+ * @method handleIncrementPitch
  */
 
-const handleIncrementVolume = val => {
-  knobLevel.value = Math.max(0, Math.min(knobLevel.value + val, 10))
-  const degree = ((knobLevel.value / 10) * (303 - 57)) + 57 // map level to degree range of knob
-  volumeSliderRef.value.setTheta(degree * (Math.PI / 180) - Math.PI)
-  emit('update-gain', knobLevel.value / 10)
+const handleIncrementPitch = val => {
+  pitch.value += val
+  emit('update-pitch', pitch.value)
 }
 
 /**

@@ -29,6 +29,11 @@ const props = defineProps({
     required: false,
     default: 1
   },
+  pitch: {
+    type: Number,
+    required: false,
+    default: 0
+  },
   path: {
     type: String,
     required: true,
@@ -118,6 +123,12 @@ watch(() => props.gain, (val) => {
   }
 })
 
+watch(() => props.pitch, (val) => {
+  if (source.value) {
+    source.value.playbackRate.value = Math.pow(2, (val / 1200))
+  }
+})
+
 // ===================================================================== Methods
 /**
  * @method calculateMouseDistance
@@ -155,10 +166,11 @@ const initSoundThingie = () => {
   player.value.crossOrigin = 'anonymous'
   player.value.loop = true
   const fileRef = props.fileRef
-  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : '/winter-behaviour.mp3' //: `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
   source.value = audioContext.value.createMediaElementSource(player.value)
   gainNode.value = audioContext.value.createGain()
   gainNode.value.gain.value = 0
+  source.value.playbackRate.value = Math.pow(2, (props.pitch / 1200))
   source.value.connect(gainNode.value).connect(mixer.value) // audioContext.value.destination
   if (small.value) {
     touchmoveEventListener.value = useThrottleFn(() => { calculateScreenCenterDistance() }, 100)

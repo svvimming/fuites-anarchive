@@ -2,6 +2,7 @@
 // -----------------------------------------------------------------------------
 import { defineStore } from 'pinia'
 import { useTransformPathData } from '../../../composables/use-transform-path-data'
+// import Crunker from 'crunker'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -126,7 +127,7 @@ export const useMixerStore = defineStore('mixer', () => {
       
       // Handle recording completion
       mediaRecorder.value.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
+        const blob = new Blob(chunks, { type: 'audio/mpeg' })
         recording.value.audioBuffer = blob
         // Open the create sound thingie alert after recording is stopped and the blob is created
         alertStore.openAlert('create-sound-thingie-alert')
@@ -335,22 +336,9 @@ export const useMixerStore = defineStore('mixer', () => {
       console.warn('No audio buffer available to download')
       return
     }
-
-    // Create a URL for the blob
-    const url = URL.createObjectURL(recording.value.audioBuffer)
-    
-    // Create a temporary anchor element
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `sound-thingie-${Date.now()}.mp3`
-    
-    // Append to body, click, and remove
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    
-    // Clean up the URL object
-    URL.revokeObjectURL(url)
+    // const crunker = new Crunker()
+    // const blob = crunker.export(recording.value.audioBuffer, 'audio/mp3')
+    // crunker.download(blob, `sound-thingie-${Date.now()}.mp3`)
   }
 
   // ==================================================================== Socket
