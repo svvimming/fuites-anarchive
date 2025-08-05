@@ -38,7 +38,6 @@
     "browser-image-compression": "^2.0.2",
     "canvas": "^2.11.2",
     "change-case": "^5.4.4",
-    "crunker": "^2.4.0",
     "eslint": "^9.8.0",
     "filesize": "^10.1.6",
     "konva": "^9.3.15",
