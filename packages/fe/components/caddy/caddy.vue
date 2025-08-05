@@ -94,7 +94,8 @@
         v-show="type === 'sound'"
         :active="selected === 'volume'"
         :class="['caddy-tool', 'z-index-1', { selected: selected === 'volume' }]"
-        @update-gain="handleGainUpdate" />
+        @update-gain="handleGainUpdate"
+        @update-pitch="handlePitchUpdate" />
 
     </div>
 
@@ -328,6 +329,16 @@ const toggleImageClip = () => {
 const handleGainUpdate = val => {
   if (thingie.value) {
     update({ gain: val })
+  }
+}
+
+/**
+ * @method handlePitchUpdate
+ */
+
+const handlePitchUpdate = val => {
+  if (thingie.value) {
+    update({ pitch: val })
   }
 }
 

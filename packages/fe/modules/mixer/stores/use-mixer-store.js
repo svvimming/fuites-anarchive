@@ -2,6 +2,7 @@
 // -----------------------------------------------------------------------------
 import { defineStore } from 'pinia'
 import { useTransformPathData } from '../../../composables/use-transform-path-data'
+// import Crunker from 'crunker'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -43,6 +44,7 @@ export const useMixerStore = defineStore('mixer', () => {
   const nextChunkPayload = ref(null)
   const place = ref(0)
   const goal = ref(0)
+  const lastRecordingSampleLength = ref(false)
 
   // =================================================================== actions
   /**
@@ -125,7 +127,7 @@ export const useMixerStore = defineStore('mixer', () => {
       
       // Handle recording completion
       mediaRecorder.value.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
+        const blob = new Blob(chunks, { type: 'audio/mpeg' })
         recording.value.audioBuffer = blob
         // Open the create sound thingie alert after recording is stopped and the blob is created
         alertStore.openAlert('create-sound-thingie-alert')
@@ -215,18 +217,25 @@ export const useMixerStore = defineStore('mixer', () => {
    * @method initUploadRecording
    * @desc Initiates the upload of the recorded audio to the server
    */
-  const initUploadRecording = () => {
+  const initUploadRecording = (options = {}) => {
     if (!recording.value.audioBuffer) {
       console.warn('No audio buffer available to upload')
       return
     }
-
+    console.log('init upload recording options', options)
+    // if cutToLength is true, cut the audio buffer to the length of the lastRecordingSampleLength
+    if (options.cutToLength) {
+      recording.value.audioBuffer = recording.value.audioBuffer.slice(0, lastRecordingSampleLength.value)
+    }
+    // update the upload status
     recording.value.uploadStatus = 'uploading'
+    // save the sample length of the current buffer
+    lastRecordingSampleLength.value = recording.value.audioBuffer.length
+    // get the blob and filename
     const blob = recording.value.audioBuffer
     const filename = `recording-${Date.now()}.ogg`
     const filesize = blob.size
     const mimetype = blob.type
-
     // Initialize the upload
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
@@ -318,6 +327,20 @@ export const useMixerStore = defineStore('mixer', () => {
     websocket.on('audio-recording|file-upload-complete|payload', handleUploadComplete)
   }
 
+  /**
+   * @method downloadRecordingAsMp3
+   * @desc Downloads the recorded audio buffer as an MP3 file
+   */
+  const downloadRecordingAsMp3 = () => {
+    if (!recording.value.audioBuffer) {
+      console.warn('No audio buffer available to download')
+      return
+    }
+    // const crunker = new Crunker()
+    // const blob = crunker.export(recording.value.audioBuffer, 'audio/mp3')
+    // crunker.download(blob, `sound-thingie-${Date.now()}.mp3`)
+  }
+
   // ==================================================================== Socket
   // Add socket connection handler
   $bus.$on('socket.io-connected', setupFileUpload)
@@ -334,6 +357,7 @@ export const useMixerStore = defineStore('mixer', () => {
     mixer,
     analyser,
     recording,
+    lastRecordingSampleLength,
     // ----- actions
     createAudioContext,
     setAudioContextPlayState,
@@ -342,6 +366,7 @@ export const useMixerStore = defineStore('mixer', () => {
     resetRecording,
     playRecording,
     stopRecordingPlayback,
-    initUploadRecording
+    initUploadRecording,
+    downloadRecordingAsMp3
   }
 })
