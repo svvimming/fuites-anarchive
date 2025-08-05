@@ -43,6 +43,7 @@ export const useMixerStore = defineStore('mixer', () => {
   const nextChunkPayload = ref(null)
   const place = ref(0)
   const goal = ref(0)
+  const lastRecordingSampleLength = ref(false)
 
   // =================================================================== actions
   /**
@@ -215,18 +216,25 @@ export const useMixerStore = defineStore('mixer', () => {
    * @method initUploadRecording
    * @desc Initiates the upload of the recorded audio to the server
    */
-  const initUploadRecording = () => {
+  const initUploadRecording = (options = {}) => {
     if (!recording.value.audioBuffer) {
       console.warn('No audio buffer available to upload')
       return
     }
-
+    console.log('init upload recording options', options)
+    // if cutToLength is true, cut the audio buffer to the length of the lastRecordingSampleLength
+    if (options.cutToLength) {
+      recording.value.audioBuffer = recording.value.audioBuffer.slice(0, lastRecordingSampleLength.value)
+    }
+    // update the upload status
     recording.value.uploadStatus = 'uploading'
+    // save the sample length of the current buffer
+    lastRecordingSampleLength.value = recording.value.audioBuffer.length
+    // get the blob and filename
     const blob = recording.value.audioBuffer
     const filename = `recording-${Date.now()}.ogg`
     const filesize = blob.size
     const mimetype = blob.type
-
     // Initialize the upload
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
@@ -361,6 +369,7 @@ export const useMixerStore = defineStore('mixer', () => {
     mixer,
     analyser,
     recording,
+    lastRecordingSampleLength,
     // ----- actions
     createAudioContext,
     setAudioContextPlayState,

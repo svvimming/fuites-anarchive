@@ -26,6 +26,17 @@
         </svg>
       </div>
 
+      <div v-show="showCutLoopCheckbox" class="checkbox-container">
+        <input
+          type="checkbox"
+          id="cut-to-length-checkbox"
+          v-model="checkboxValue"
+          class="checkbox-input" />
+        <label for="cut-to-length-checkbox" class="checkbox-label">
+          <span class="text">Cut to length of last recording</span>
+        </label>
+      </div>
+
       <div class="button-row">
         <ButtonBasic
           :force-disabled="recording.uploadStatus === 'uploading'"
@@ -59,17 +70,19 @@
 <script setup>
 // ======================================================================== Data
 const mixerStore = useMixerStore()
-const { recording } = storeToRefs(mixerStore)
+const { recording, lastRecordingSampleLength } = storeToRefs(mixerStore)
 const alertStore = useZeroAlertStore()
 const path = ref('')
 const { normalizePathData } = useTransformPathData()
 const audioBufferArray = ref(false)
 const requestId = ref(false)
 const opacity = ref(0)
+const checkboxValue = ref(false)
 
 // ==================================================================== Computed
 const open = computed(() => alertStore.getAlert('create-sound-thingie-alert')?.status === 'open')
 const playbackAnalyser = computed(() => recording.value.playbackAnalyser)
+const showCutLoopCheckbox = computed(() => lastRecordingSampleLength.value > 1000)
 
 // ===================================================================== Watchers
 watch(open, (value) => {
@@ -99,7 +112,7 @@ watch(playbackAnalyser, (value) => {
  */
 
 const handleConfirm = () => {
-  mixerStore.initUploadRecording()
+  mixerStore.initUploadRecording({ cutToLength: checkboxValue.value })
   mixerStore.stopRecordingPlayback()
   resetAnimation()
 }
@@ -207,6 +220,34 @@ const handleDownload = () => {
   overflow: visible;
 }
 
+// //////////////////////////////////////////////////////////////////// Checkbox
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: torem(8);
+  margin-bottom: torem(15);
+}
+
+.checkbox-input {
+  width: torem(16);
+  height: torem(16);
+  cursor: pointer;
+  accent-color: $kellyGreen;
+}
+
+.checkbox-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  
+  .text {
+    font-size: torem(14);
+    line-height: 1.4;
+  }
+}
+
+// ///////////////////////////////////////////////////////////////////// Buttons
 .button-row {
   display: flex;
   justify-content: center;
