@@ -29,14 +29,15 @@ export const useMixerStore = defineStore('mixer', () => {
   const recording = ref({
     path: [],
     id: null,
-    audioBuffer: null,
+    audioBlob: null,
+    bufferData: null,
     playbackSource: false,
     playbackAnalyser: false,
     color: '#000',
     state: 'waiting',
     uploadProgress: 0,
     uploadStatus: 'waiting',
-    fileId: null
+    fileId: null,
   })
 
   // Upload related refs
@@ -44,7 +45,7 @@ export const useMixerStore = defineStore('mixer', () => {
   const nextChunkPayload = ref(null)
   const place = ref(0)
   const goal = ref(0)
-  const lastRecordingSampleLength = ref(false)
+  const lastRecordingBufferData = ref(null)
 
   // =================================================================== actions
   /**
@@ -81,7 +82,8 @@ export const useMixerStore = defineStore('mixer', () => {
     recording.value = {
       path: [],
       id: null,
-      audioBuffer: null,
+      audioBlob: null,
+      bufferData: null,
       playbackSource: false,
       color: '#000',
       state: 'waiting',
@@ -128,7 +130,7 @@ export const useMixerStore = defineStore('mixer', () => {
       // Handle recording completion
       mediaRecorder.value.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/mpeg' })
-        recording.value.audioBuffer = blob
+        recording.value.audioBlob = blob
         // Open the create sound thingie alert after recording is stopped and the blob is created
         alertStore.openAlert('create-sound-thingie-alert')
       }
@@ -148,7 +150,7 @@ export const useMixerStore = defineStore('mixer', () => {
    * @returns {Promise} A promise that resolves when the audio has finished playing
    */
   const playRecording = async () => {
-    if (!recording.value.audioBuffer) {
+    if (!recording.value.audioBlob) {
       console.warn('No audio buffer available to play')
       return
     }
@@ -157,9 +159,14 @@ export const useMixerStore = defineStore('mixer', () => {
     audioContext.value.suspend()
     // Create an audio source from the blob
     const recordingAudioCtx = new AudioContext()
-    const arrayBuffer = await recording.value.audioBuffer.arrayBuffer()
+    const arrayBuffer = await recording.value.audioBlob.arrayBuffer()
     const audioBuffer = await recordingAudioCtx.decodeAudioData(arrayBuffer)
-    
+    // Record the buffer length
+    recording.value.bufferData = {
+      numberOfChannels: audioBuffer.numberOfChannels,
+      sampleRate: audioBuffer.sampleRate,
+      length: audioBuffer.length
+    }
     // Create and connect the source
     const source = recordingAudioCtx.createBufferSource()
     source.buffer = audioBuffer
@@ -214,25 +221,55 @@ export const useMixerStore = defineStore('mixer', () => {
   }
 
   /**
+   * @method cutAudioBlobToLength
+   * @desc Cuts the audio blob to the length of the last recording
+   * @param {Blob} blob - The audio blob to cut
+   * @param {object} bufferData - The buffer data of the last recording
+   * @returns {Blob} A new audio blob
+   */
+
+  const cutAudioBlobToLength = async (blob, bufferData) => {
+    // Get the array buffer of the old blob and create a new empty buffer
+    const audioCtx = new AudioContext()
+    const arrayBuffer = await blob.arrayBuffer()
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+    const newArrayBuffer = audioCtx.createBuffer(
+      bufferData.numberOfChannels,
+      bufferData.length,
+      bufferData.sampleRate,
+    )
+    // Copy the old buffer data to the new buffer
+    for (let channel = 0; channel < newArrayBuffer.numberOfChannels; channel++) {
+      const oldBufferChannel = audioBuffer.getChannelData(channel)
+      const newBufferChannel = newArrayBuffer.getChannelData(channel)
+      for (let i = 0; i < newArrayBuffer.length; i++) {
+        newBufferChannel[i] = oldBufferChannel[i] || 0
+      }
+    }
+    // Return the copied audio buffer as a new blob
+    return new Blob([newArrayBuffer], { type: 'audio/mpeg' })
+  }
+
+  /**
    * @method initUploadRecording
    * @desc Initiates the upload of the recorded audio to the server
    */
-  const initUploadRecording = (options = {}) => {
-    if (!recording.value.audioBuffer) {
+  const initUploadRecording = async (options = {}) => {
+    if (!recording.value.audioBlob) {
       console.warn('No audio buffer available to upload')
       return
     }
-    console.log('init upload recording options', options)
-    // if cutToLength is true, cut the audio buffer to the length of the lastRecordingSampleLength
+    // if cutToLength is true, cut the audio buffer to the length of the last recording
     if (options.cutToLength) {
-      recording.value.audioBuffer = recording.value.audioBuffer.slice(0, lastRecordingSampleLength.value)
+      recording.value.audioBlob = await cutAudioBlobToLength(recording.value.audioBlob, lastRecordingBufferData.value)
+      console.log('cut audio blob to length', recording.value.audioBlob)
     }
     // update the upload status
     recording.value.uploadStatus = 'uploading'
     // save the sample length of the current buffer
-    lastRecordingSampleLength.value = recording.value.audioBuffer.length
+    lastRecordingBufferData.value = recording.value.bufferData
     // get the blob and filename
-    const blob = recording.value.audioBuffer
+    const blob = recording.value.audioBlob
     const filename = `recording-${Date.now()}.ogg`
     const filesize = blob.size
     const mimetype = blob.type
@@ -260,7 +297,7 @@ export const useMixerStore = defineStore('mixer', () => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
-    const chunk = recording.value.audioBuffer.slice(index, index + Math.min(chunksize, (recording.value.audioBuffer.size - index)))
+    const chunk = recording.value.audioBlob.slice(index, index + Math.min(chunksize, (recording.value.audioBlob.size - index)))
 
     recording.value.uploadProgress = ((place.value / goal.value) * 100).toFixed(0)
 
@@ -332,12 +369,12 @@ export const useMixerStore = defineStore('mixer', () => {
    * @desc Downloads the recorded audio buffer as an MP3 file
    */
   const downloadRecordingAsMp3 = () => {
-    if (!recording.value.audioBuffer) {
+    if (!recording.value.audioBlob) {
       console.warn('No audio buffer available to download')
       return
     }
     // const crunker = new Crunker()
-    // const blob = crunker.export(recording.value.audioBuffer, 'audio/mp3')
+    // const blob = crunker.export(recording.value.audioBlob, 'audio/mp3')
     // crunker.download(blob, `sound-thingie-${Date.now()}.mp3`)
   }
 
@@ -357,7 +394,7 @@ export const useMixerStore = defineStore('mixer', () => {
     mixer,
     analyser,
     recording,
-    lastRecordingSampleLength,
+    lastRecordingBufferData,
     // ----- actions
     createAudioContext,
     setAudioContextPlayState,
