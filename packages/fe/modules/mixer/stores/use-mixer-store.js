@@ -37,7 +37,7 @@ export const useMixerStore = defineStore('mixer', () => {
     state: 'waiting',
     uploadProgress: 0,
     uploadStatus: 'waiting',
-    fileId: null,
+    fileId: null
   })
 
   // Upload related refs
