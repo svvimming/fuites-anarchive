@@ -31,6 +31,7 @@
           type="checkbox"
           id="cut-to-length-checkbox"
           v-model="checkboxValue"
+          :disabled="recording.uploadStatus === 'uploading'"
           class="checkbox-input" />
         <label for="cut-to-length-checkbox" class="checkbox-label">
           <span class="text">Cut to length of last recording</span>
@@ -70,7 +71,7 @@
 <script setup>
 // ======================================================================== Data
 const mixerStore = useMixerStore()
-const { recording, lastRecordingSampleLength } = storeToRefs(mixerStore)
+const { recording, lastRecordingBufferData } = storeToRefs(mixerStore)
 const alertStore = useZeroAlertStore()
 const path = ref('')
 const { normalizePathData } = useTransformPathData()
@@ -82,7 +83,7 @@ const checkboxValue = ref(false)
 // ==================================================================== Computed
 const open = computed(() => alertStore.getAlert('create-sound-thingie-alert')?.status === 'open')
 const playbackAnalyser = computed(() => recording.value.playbackAnalyser)
-const showCutLoopCheckbox = computed(() => lastRecordingSampleLength.value > 1000)
+const showCutLoopCheckbox = computed(() => lastRecordingBufferData.value && lastRecordingBufferData.value.length > 1000)
 
 // ===================================================================== Watchers
 watch(open, (value) => {
@@ -111,8 +112,8 @@ watch(playbackAnalyser, (value) => {
  * @method handleConfirm
  */
 
-const handleConfirm = () => {
-  mixerStore.initUploadRecording({ cutToLength: checkboxValue.value })
+const handleConfirm = async () => {
+  await mixerStore.initUploadRecording({ cutToLength: checkboxValue.value })
   mixerStore.stopRecordingPlayback()
   resetAnimation()
 }
