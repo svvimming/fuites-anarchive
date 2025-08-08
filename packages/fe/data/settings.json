@@ -1,0 +1,378 @@
+{
+  "uploader": {
+    "maxFileSizeMb": 8
+  },
+  "toaster": {
+    "display": 3,
+    "timeout": 5000,
+    "from": "top"
+  },
+  "fonts": [
+    {
+      "class": "nanum",
+      "display": "Nanum",
+      "styleAttribute": "Nanum Myeongjo, serif",
+      "fontFaceDeclaration": "\"Nanum Myeongjo\", serif"
+    },
+    {
+      "class": "courier",
+      "display": "Courier",
+      "styleAttribute": "Courier Prime, monospace",
+      "fontFaceDeclaration": "\"Courier Prime\", monospace"
+    },
+    {
+      "class": "merriweather",
+      "display": "Merriweather",
+      "styleAttribute": "Merriweather, serif",
+      "fontFaceDeclaration": "\"Merriweather\", serif"
+    },
+    {
+      "class": "source-code",
+      "display": "Source Code",
+      "styleAttribute": "Source Code Pro, monospace",
+      "fontFaceDeclaration": "\"Source Code Pro\", monospace"
+    },
+    {
+      "class": "anton",
+      "display": "Anton",
+      "styleAttribute": "Anton, sans-serif",
+      "fontFaceDeclaration": "\"Anton\", sans-serif"
+    },
+    {
+      "class": "arvo",
+      "display": "Arvo",
+      "styleAttribute": "Arvo, serif",
+      "fontFaceDeclaration": "\"Arvo\", serif"
+    },
+    {
+      "class": "source-sans-pro",
+      "display": "Source Sans Pro",
+      "styleAttribute": "Source Sans Pro, sans-serif",
+      "fontFaceDeclaration": "\"Source Sans Pro\", sans-serif",
+      "default": true
+    },
+    {
+      "class": "source-serif-pro",
+      "display": "Source Serif Pro",
+      "styleAttribute": "Source Serif Pro, serif",
+      "fontFaceDeclaration": "\"Source Serif Pro\", serif"
+    }
+  ],
+  "thingieEditableParams": {
+    "shared": [
+      {
+        "type": "static",
+        "name": "rotation",
+        "content": "θ",
+        "params": [
+          {
+            "directive": "rotateCW",
+            "button": "retrigger",
+            "content": "CW"
+          },
+          {
+            "directive": "rotateCCW",
+            "button": "retrigger",
+            "content": "CCW"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "z-index",
+        "content": "z",
+        "params": [
+          {
+            "directive": "sendBack",
+            "content": "Back",
+            "closeOnSelect": true
+          },
+          {
+            "directive": "bringForward",
+            "content": "Forward"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "opacity",
+        "content": "O",
+        "params": [
+          {
+            "directive": "decreaseOpacity",
+            "content": "O-"
+          },
+          {
+            "directive": "increaseOpacity",
+            "content": "O+"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "name": "delete-thingie",
+        "params": [
+          {
+            "directive": "deleteThingie"
+          }
+        ]
+      }
+    ]
+  },
+  "tooltips": {
+    "audio-toggle-button": {
+      "heading": "Audio",
+      "message": "You won't hear any of the sound thingies on this page until you turn the audio on!"
+    },
+    "thingie-lock-toggle": {
+      "heading": "Unlock thingies",
+      "message": "When there are locked thingies on a page, this button appears so that you can unlock them."
+    },
+    "pocket-toggle-button-closed": {
+      "heading": "Pocket",
+      "message": "Open your pocket to store and retrieve thingies from the current page, as well as add new thingies from your device."
+    },
+    "pocket-toggle-button-open": {
+      "heading": "Pocket",
+      "message": "Hold D while clicking and holding to drag a thingie out of the pocket onto a page.<br><br>You can also take a thingie off of a page to put it in your pocket. This way, you can save it for another time or take it to another page."
+    },
+    "settings-toggle-button": {
+      "heading": "Settings",
+      "message": "This is where you can toggle your settings and preferences for the site (like showing/hiding these tooltips) as well as switch from Explore to Edit mode."
+    },
+    "explore-mode-toggle": {
+      "heading": "Explore mode",
+      "message": "Enabling explore mode allows you to move through the site without worrying about changing anything."
+    },
+    "tooltip-mode-toggle": {
+      "heading": "Tooltips",
+      "message": "Turn off this toggle to hide tooltips."
+    },
+    "portals-mode-toggle": {
+      "heading": "Portals",
+      "message": "A portal is a passageway to another page, click on one to see where it takes you! If you don't want to see them, turn them off here."
+    },
+    "record-mode-toggle": {
+      "heading": "Record mode",
+      "message": "When enabled, you can draw a path on the page to create a new sound thingie with the audio triggered by your drawing."
+    },
+    "external-links-mode-toggle": {
+      "heading": "Enable external links",
+      "message": "When enabled, clicking on a text thingie with an external link will navigate to the link rather than edit the text."
+    },
+    "token-input-toggle-button": {
+      "heading": "Add a token",
+      "message": "Click here to submit a token. A token gives access to create within a Verse."
+    },
+    "uploader-toggle-button": {
+      "heading": "Upload a file",
+      "message": "Click to toggle the file uploader where you can add new image and sound thingies."
+    },
+    "compost-portal-toggle-button": {
+      "heading": "Compost",
+      "message": "If there is a thingie you want to discard from this page, throw it here in the compost, where someone else can grab it."
+    },
+    "multiverse-link": {
+      "heading": "Verses",
+      "message": "This leads to the multiverse where you can see the verses you have access to."
+    },
+    "thingie": {
+      "heading": "Thingie",
+      "message": "Double click on a thingie to edit it."
+    },
+    "portal": {
+      "heading": "Portal",
+      "message": "A portal is a passageway to another page, click on one to see where it takes you!<br><br>To make a new portal, a shift + click anywhere on the page will let you enter the name of an existing page you want to connect to this one."
+    },
+    "canvas": {
+      "heading": "Page",
+      "message": "You can navigate around the page by scrolling or using the arrow keys. To zoom in and out, hold shift and use the + and - keys."
+    },
+    "caddy-handle": {
+      "heading": "Caddy",
+      "message": "Click and drag this hand to grab and move your toolkit"
+    },
+    "caddy-trash": {
+      "heading": "Delete thingie",
+      "message": "You can use this tool to remove a thingie from fuites"
+    },
+    "caddy-layer-opacity": {
+      "heading": "Opacity/Layer",
+      "message": "Send a thingie to the back layer or move it to the top. Opacity can be changed here too"
+    },
+    "caddy-rotation": {
+      "heading": "Rotation",
+      "message": "Rotate a thingie using the radial slider"
+    },
+    "caddy-font-editor": {
+      "heading": "Fonts",
+      "message": "All font editing tools can be found here"
+    },
+    "caddy-color-selector": {
+      "heading": "Colours",
+      "message": "Use the colour picker tool to change font colours and sound thingie colours"
+    },
+    "caddy-resize": {
+      "heading": "Resize",
+      "message": "Click or hold the + and - buttons to resize. If editing a sound thingie, this tool can also serve to change the line width."
+    },
+    "caddy-volume": {
+      "heading": "Volume",
+      "message": "Change the volume of a sound thingie"
+    },
+    "caddy-clip-toggle": {
+      "heading": "Clip",
+      "message": "Use the drawing you made when uploading an image as a clip path"
+    },
+    "caddy-lock": {
+      "heading": "Lock Thingie",
+      "message": "Lock this thingie to the background. It will no longer be moveable until you unlock it."
+    },
+    "caddy-link-editor": {
+      "heading": "Add a link",
+      "message": "You can add an external link to a text thingie with this tool."
+    }
+  },
+  "tooltipsMobile": {
+    "pocket-toggle-button-closed": {
+      "heading": "Pocket",
+      "message": "When editing is enabled, try dragging a 'thingie' onto this button, then click it to open the Pocket.<br><br>A 'thingie' on fuites is a piece of text, an image or a sounds that you can move and edit. Putting a thingie in your pocket allows you to carry it to other pages that you visit."
+    },
+    "pocket-toggle-button-open": {
+      "heading": "You're in the pocket",
+      "message": "Once you've got some thingies in your pocket, you can swipe up and down to scroll through them.<br><br>The thingie at the center will be the one you can move by clicking the \"<em>move to...</em>\" button below."
+    },
+    "compost-portal-toggle-button": {
+      "heading": "Compost",
+      "message": "Drag a thingie onto this button to remove it from this page and put it in the compost where someone else can grab it."
+    },
+    "settings-toggle-button": {
+      "heading": "Settings",
+      "message": "This is where you can toggle your settings and preferences for the site, like showing and hiding these tooltips."
+    },
+    "mobile-edit-mode-toggle": {
+      "heading": "Edit mode toggle"
+    },
+    "tooltip-mode-toggle": {
+      "heading": "Hide/show helpful tips"
+    },
+    "portals-mode-toggle": {
+      "heading": "Hide/show portals from view"
+    },
+    "external-links-mode-toggle": {
+      "heading": "Some thingies link to other sites",
+      "message": "Turn on to enable outbound links."
+    },
+    "uploader-toggle-button": {
+      "heading": "Upload a file here"
+    },
+    "token-input-toggle-button": {
+      "heading": "Change token here"
+    }
+  },
+  "landingSites": [
+    {
+      "label": "tooltips",
+      "slug": "tooltips",
+      "tooltip": "tooltip-mode-toggle",
+      "devices": ["desktop", "mobile"]
+    },
+    {
+      "label": "portals",
+      "slug": "portals",
+      "tooltip": "portals-mode-toggle",
+      "devices": ["desktop", "mobile"]
+    },
+    {
+      "label": "record",
+      "slug": "record",
+      "tooltip": "record-mode-toggle",
+      "devices": ["desktop"]
+    },
+    {
+      "label": "external links",
+      "slug": "externalLinks",
+      "tooltip": "external-links-mode-toggle",
+      "devices": ["desktop", "mobile"]
+    }
+  ],
+  "infoModalMarkdown": "## about fuit.es\n\nFuit.es aims to provide a creative online space, a platform for collective processes designed with the 'Anarchive' as its operational concept; an archive which promotes the continual evolution and variation of its documents rather than their mere preservation.\n\nEach individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as \"thingies\". Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at contact@fuit.es, we would be happy to make you a token.\n\n###### *We acknowledge the support of the Canada Council for the Arts.*\n###### *Nous remercions le Conseil des arts du Canada de son soutien.*",
+  "invitePage": {
+    "ctaText": {
+      "uninitialized": "If you already have one, click add token. If not, you can make a new token using the token generator.",
+      "add-token": "Add your token below.",
+      "generate-token": "Using the token generator below, you can create a token. Once you've found one you like, save it somewhere safe and click accept to finalize."
+    },
+    "warningText": "Warning! make sure to copy your token as it will not be shown again.",
+    "successMessage": {
+      "add-token": "Success! Your token has been added to the verses above.",
+      "generate-token": "Success! Your token was created and added to the verses above."
+    }
+  },
+  "pageCreatorAlert": {
+    "title": "'<page-name>' doesn't seem to exist yet!",
+    "messageAuthenticated": "You can create a new page called '<page-name>' by uploading a thingie below:",
+    "messageUnauthenticated": "You can create a new page called '<page-name>' but first, you'll need to open the pocket and enter a token."
+  },
+  "verseSettings": {
+    "invite": {
+      "heading": "Generate an invite link for <<verse-name>>",
+      "description": "Send this link to a collaborator so they can join this verse. Using the link, they'll be able to add their token to this verse."
+    },
+    "crons": {
+      "heading": "Cron settings",
+      "available": [
+        {
+          "name": "fuitesbot",
+          "label": "Fuitesbot",
+          "description": "The fuitesbot likes to stir things up when they've become too still.",
+          "settings": [
+            {
+              "label": "Overflow Intensity",
+              "name": "overflowIntensity",
+              "description": "When a page is too full, it 'tips' over, creating a new page. The fuitesbot redistributes thingies into this new page and any connected pages. Set the intensity of this behaviour here.",
+              "min": 0,
+              "max": 10,
+              "step": 1,
+              "default": 1
+            }
+          ]
+        },
+        {
+          "name": "compost",
+          "label": "Compost",
+          "description": "The compost is a place for leftover thingies. When a page is created, a thingie from the compost will be added to the new page.",
+          "settings": [
+            {
+              "label": "Grace period",
+              "name": "gracePeriod",
+              "description": "The amount of time a thingie can be in the compost before it is deleted from the site.",
+              "min": 1,
+              "max": 180,
+              "step": 1,
+              "default": 30,
+              "unit": "days"
+            }
+          ]
+        },
+        {
+          "name": "tunneler",
+          "label": "Tunneler",
+          "description": "When a thingie moves from one page to another, the tunneler connects those pages by a portal.",
+          "settings": [
+            {
+              "label": "Portal chain length",
+              "name": "portalChainLength",
+              "description": "How far back in the history of a thingie's locations the tunneler will look to keep connections between pages. For example, if set to 5, the last 5 pages a thingie has been on will be connected in the order they were visited.",
+              "min": 1,
+              "max": 10,
+              "step": 1,
+              "default": 3,
+              "unit": "pages"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

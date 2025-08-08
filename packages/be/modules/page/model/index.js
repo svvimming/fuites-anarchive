@@ -8,6 +8,10 @@ const Schema = Mongoose.Schema
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
 const PageSchema = new Schema({
+  verse: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -16,24 +20,29 @@ const PageSchema = new Schema({
     type: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Portal',
+        ref: 'portals',
         required: false
       }
     ],
     required: false
   },
-  print_ref: {
+  print_refs: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'prints',
+        required: false
+      }
+    ]
+  },
+  initiator_pocket_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Print',
+    ref: 'pockets',
     required: false
   },
-  initiator_token: {
-    type: String,
-    required: true
-  },
-  creator_thingie: {
+  creator_thingie_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Thingie',
+    ref: 'thingies',
     required: false
   },
   overflow_page: {
@@ -49,19 +58,14 @@ const PageSchema = new Schema({
   bounds: {
     x: {
       type: Number,
-      required: false,
+      required: true,
       default: 2732
     },
     y: {
       type: Number,
-      required: false,
+      required: true,
       default: 2000
     }
-  },
-  consistencies: {
-    type: [String],
-    required: false,
-    default: []
   },
   temperature: {
     type: Number,
@@ -80,4 +84,4 @@ const PageSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PageSchema // Mongoose.model('pages', PageSchema)
+module.exports = Mongoose.model('pages', PageSchema)

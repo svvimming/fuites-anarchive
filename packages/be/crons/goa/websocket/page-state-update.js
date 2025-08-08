@@ -6,18 +6,14 @@ const MC = require('@Root/config')
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-const mongoInstances = Object.keys(MC.mongoInstances)
-for (let i = 0; i < mongoInstances.length; i++) {
-  const instance = mongoInstances[i]
-  MC.socket.listeners.push({
-    name: `${instance}|cron|page-state-update|initialize`,
-    handler (updated) {
-      if (updated) {
-        MC.socket.io
-          .of(`/${instance}`)
-          .to(`${instance}|goa`)
-          .emit('module|page-state-update|payload', updated)
-      }
+MC.socket.listeners.push({
+  name: 'cron|page-state-update|initialize',
+  handler (updated) {
+    const verse = updated?.verse
+    if (verse) {
+      MC.socket.io
+        .to(`${verse}|pages`)
+        .emit('module|post-update-page|payload', { page: updated })
     }
-  })
-}
+  }
+})

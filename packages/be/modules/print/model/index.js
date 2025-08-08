@@ -8,13 +8,36 @@ const Schema = Mongoose.Schema
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
 const PrintSchema = new Schema({
-  page: {
+  page_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pages',
+    required: true
+  },
+  filename: {
     type: String,
     required: true
   },
-  data_url: {
+  mimetype: {
     type: String,
     required: true
+  },
+  filesize: {
+    type: Number,
+    required: true
+  },
+  file_ext: {
+    type: String,
+    required: true
+  },
+  file_url: {
+    type: String,
+    required: false
+  },
+  upload_status: { // 0 = in progress, 1 = complete, 2 = error
+    type: Number,
+    required: true,
+    enum: [0, 1, 2],
+    default: 0
   }
 }, {
   timestamps: true,
@@ -23,4 +46,4 @@ const PrintSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PrintSchema // Mongoose.model('prints', PrintSchema)
+module.exports = Mongoose.model('prints', PrintSchema)

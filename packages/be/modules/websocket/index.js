@@ -13,22 +13,20 @@ MC.socket.io = require('socket.io')(MC.server.instance, {
   maxHttpBufferSize: 5000000
 })
 
-const mongoInstances = Object.keys(MC.mongoInstances)
-for (let i = 0; i < mongoInstances.length; i++) {
-  const instance = mongoInstances[i]
-  MC.socket.io.of(`/${instance}`).use((socket, next) => {
-    MC.expressSession[instance](socket.request, {}, next)
-  })
-  MC.socket.io.of(`/${instance}`).on('connection', (socket) => {
-    socket.on('join-room', roomId => socket.join(roomId))
-    const listeners = MC.socket.listeners.filter(item => item.name.startsWith(instance))
-    const len = listeners.length
-    for (let i = 0; i < len; i++) {
-      const listener = listeners[i]
-      socket.on(listener.name, listener.handler)
-    }
-  })
-}
+MC.socket.io.use((socket, next) => {
+  MC.expressSession(socket.request, {}, next)
+})
+
+MC.socket.io.on('connection', socket => {
+  socket.on('join-room', roomId => socket.join(roomId))
+  socket.on('leave-room', roomId => socket.leave(roomId))
+  const listeners = MC.socket.listeners
+  const len = listeners.length
+  for (let i = 0; i < len; i++) {
+    const listener = listeners[i]
+    socket.on(listener.name, listener.handler)
+  }
+})
 
 // //////////////////////////////////////// Import Websocket (socket.io) Modules
 // -----------------------------------------------------------------------------

@@ -1,13 +1,118 @@
 // ////////////////////////////////////////////////////////////////// Typography
 // =============================================================================
+$fontAssetPath: '@/assets/fonts';
+
+// -------------------------------------------------------------- Nanum Myeongjo
+@font-face {
+  font-family: 'Nanum Myeongjo';
+  src: url('#{$fontAssetPath}/NanumMyeongjo/NanumMyeongjo-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+// ---------------------------------------------------------------- Merriweather
+@font-face {
+  font-family: 'Merriweather';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/Merriweather/Merriweather-Regular.otf') format('opentype');
+  font-weight: 400;
+}
+
+// --------------------------------------------------------------- Courier Prime
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('#{$fontAssetPath}/CourierPrime/CourierPrime-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ------------------------------------------------------------------------ Arvo
+@font-face {
+  font-family: 'Arvo';
+  src: url('#{$fontAssetPath}/Arvo/Arvo-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ----------------------------------------------------------------------- Anton
+@font-face {
+  font-family: 'Anton';
+  src: url('#{$fontAssetPath}/Anton/Anton-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+// ------------------------------------------------------------- Source Code Pro
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('#{$fontAssetPath}/SourceCodePro/SourceCodePro-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/SourceCodePro/SourceCodePro-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+// ------------------------------------------------------------- Source Sans Pro
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/SourceSans3/SourceSans3-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/SourceSans3/SourceSans3-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+// ------------------------------------------------------------ Source Serif Pro
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: normal;
+  src: url('#{$fontAssetPath}/SourceSerif4/SourceSerif4-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/SourceSerif4/SourceSerif4-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+// ---------------------------------------------------------------------- Nunito
+@font-face {
+  font-family: 'Nunito';
+  src: url('#{$fontAssetPath}/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+// ------------------------------------------------------------- Fraunces Italic
+@font-face {
+  font-family: 'Fraunces Italic';
+  src: url('#{$fontAssetPath}/FrauncesItalic/Fraunces_9pt-Italic.ttf') format('truetype');
+  font-weight: 400;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
 @mixin fontFamily_CourierPrime { font-family: 'Courier Prime', monospace; }
-@mixin fontFamily_Cousine { font-family: 'Cousine', monospace; }
 @mixin fontFamily_Anton { font-family: 'Anton', sans-serif; }
 @mixin fontFamily_Arvo { font-family: 'Arvo', serif; }
 @mixin fontFamily_SourceCodePro { font-family: 'Source Code Pro', monospace; }
+@mixin fontFamily_SourceSansPro { font-family: 'Source Sans Pro', sans-serif; }
+@mixin fontFamily_SourceSerifPro { font-family: 'Source Serif Pro', serif; }
+@mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
 
 // ---------------------------------------------------------------------- Sizing
 
@@ -19,3 +124,120 @@
 @mixin fontWeight_Medium { font-weight: 500; }
 @mixin fontWeight_Semibold { font-weight: 600; }
 @mixin fontWeight_Bold { font-weight: 700; }
+
+//------------------------------------------------------------------------ Fonts
+.anton {
+  @include fontFamily_Anton;
+}
+.arvo {
+  @include fontFamily_Arvo;
+}
+.courier {
+  @include fontFamily_CourierPrime;
+}
+.merriweather {
+  @include fontFamily_Merriweather;
+}
+.nanum {
+  @include fontFamily_NanumMyeongjo;
+}
+.source-code {
+  @include fontFamily_SourceCodePro;
+}
+
+.source-sans-pro {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'Source Sans Pro';
+  &.semibold {
+    font-weight: 600;
+  }
+  &.bold {
+    font-weight: 700;
+  }
+  &.italic {
+    font-style: italic;
+  }
+}
+
+.source-serif-pro {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'Source Serif Pro';
+  &.semibold {
+    font-weight: 600;
+  }
+  &.bold {
+    font-weight: 700;
+  }
+  &.italic {
+    font-style: italic;
+  }
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6,
+p,
+div,
+button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+p,
+div,
+button {
+  line-height: 1.7;
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6 {
+  display: block;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: none;
+}
+
+h1, .h1 {
+  font-size: 3rem;
+  @include small {
+    font-size: 2rem;
+  }
+}
+
+h2, .h2 {
+  font-size: 1.8rem;
+}
+
+h3, .h3 {
+  font-size: 1.6rem;
+}
+
+h4, .h4 {
+  font-size: 1rem;
+}
+
+h5, .h5 {
+  font-size: 0.9rem;
+}
+
+h6, .h6 {
+  font-size: 0.8rem;
+}
+
+.thingie-rich-text {
+  p,
+  div,
+  li {
+    line-height: 1 !important;
+  }
+}

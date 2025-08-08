@@ -12,6 +12,11 @@ const VertexSchema = new Schema({
     type: String,
     required: true
   },
+  page_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pages',
+    required: false
+  },
   at: {
     x: {
       type: Number,
@@ -22,33 +27,34 @@ const VertexSchema = new Schema({
       required: false
     }
   }
+}, {
+  _id: false
 })
 
 // ---------------------------------------------------------------------- Portal
 const PortalSchema = new Schema({
   thingie_ref: {
     type: Schema.Types.ObjectId,
-    ref: 'Thingie',
+    ref: 'thingies',
     required: false
   },
-  edge: {
+  verse_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'verses',
+    required: false
+  },
+  verse: {
     type: String,
     required: true
   },
   vertices: {
-    a: {
-      type: VertexSchema
-    },
-    b: {
-      type: VertexSchema
-    }
-  },
-  enabled: {
-    type: Boolean,
-    required: false
+    type: [VertexSchema],
+    required: true,
+    validate: [(val) => { return val.length === 2 }, 'Portal does not have the correct number of vertices (2).']
   },
   manual: {
     type: Boolean,
+    default: false,
     required: false
   }
 }, {
@@ -58,4 +64,4 @@ const PortalSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PortalSchema // Mongoose.model('portals', PortalSchema)
+module.exports = Mongoose.model('portals', PortalSchema)

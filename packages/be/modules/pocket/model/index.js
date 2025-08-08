@@ -12,10 +12,29 @@ const PocketSchema = new Schema({
     type: String,
     required: true
   },
-  thingies: {
-    type: [String],
-    required: true,
-    default: []
+  verses: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'verses',
+        required: false
+      }
+    ],
+    required: true
+  },
+  manualAuthDate: {
+    type: Date,
+    required: false
+  },
+  manualAuthCount: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  version: {
+    type: Number,
+    required: false,
+    default: 1
   }
 }, {
   timestamps: true,
@@ -24,4 +43,4 @@ const PocketSchema = new Schema({
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
-module.exports = PocketSchema // Mongoose.model('pockets', PocketSchema)
+module.exports = Mongoose.model('pockets', PocketSchema)

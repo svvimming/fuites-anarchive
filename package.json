@@ -1,33 +1,30 @@
 {
   "name": "fuites-anarchive",
-  "version": "1.2.1",
+  "version": "2.3.0",
   "description": "fuites anarchive monorepo",
   "author": {
     "name": "fuites",
     "email": "benmunozj@gmail.com"
   },
   "scripts": {
-    "dev-be": "npm run dev -w be",
-    "dev-fe": "npm run dev -w fe",
-    "dev-interweave": "npm run dev -w interweave",
-    "dev-music": "npm run dev -w music",
-    "dev-blinkrate": "npm run dev -w blinkrate",
-    "dev-3e": "npm run dev -w 3e"
+    "app:stable:launch": "npm run launch:stable -w fe && npm run reload:stable -w be",
+    "app:production:launch": "npm run launch:production -w fe && npm run reload:production -w be",
+    "be:dev": "npm run dev -w be",
+    "fe:dev": "npm run dev -w fe"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/svvimming/fuites-anarchive.git"
   },
   "engines": {
-    "node": ">=16.18.0"
+    "node": ">=20.9.0"
   },
   "homepage": "https://github.com/svvimming/fuites-anarchive#readme",
   "workspaces": [
     "packages/be",
-    "packages/fe",
-    "packages/interweave",
-    "packages/music",
-    "packages/blinkrate",
-    "packages/3e"
-  ]
+    "packages/fe"
+  ],
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
 }
