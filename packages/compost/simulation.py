@@ -15,6 +15,8 @@ from utils import scale_image_to_fit, quit_program
 from worm import Worm, Glue
 from chunk_thingie import Chunk
 import sys
+import io
+from queue import Queue, Empty
 
 # ------------------------------------------------------------
 #  ChunkFactory: Responsible for creating Chunk objects
@@ -384,6 +386,8 @@ class Simulation:
         self.worms: List[Worm] = []
         self.glues: List[Glue] = []  # List to store all active glues
         self.boundary_walls = []
+        # Thread-safe queue for incoming uploads from background server
+        self._upload_queue: "Queue[bytes]" = Queue()
 
         # Create boundaries
         self._create_boundaries()
@@ -609,30 +613,77 @@ class Simulation:
         """
         image = self.image_processor.load_image_via_dialog()
         if image:
-            # Reset the worm but keep existing glues
-            self.worm = None
-        
-            # Scale the image to fit the screen (treat UI bar as overlay)
-            max_width = self.width
-            max_height = self.height  # Use full height, ignore UI bar
-            image = scale_image_to_fit(image, max_width, max_height)
-            print(f"Image loaded and scaled to {image.get_size()}.")
+            self.process_image_surface(image)
 
-            # Segment the image (with size reduction)
-            segments, labels_to_downsize = self.image_processor.segment_image(image)
-            print(f"Segmentation completed. {len(labels_to_downsize)} segments marked for downsizing.")
+    def process_image_surface(self, image: pygame.Surface) -> None:
+        """
+        Process a provided pygame Surface as if it were uploaded via the UI.
 
-            # Create chunks and store them
-            new_chunks = self.chunk_factory.create_chunks_from_segments(image, segments, labels_to_downsize)
-            self.chunks.extend(new_chunks)
-            print(f"Created {len(new_chunks)} new chunks.")
+        Args:
+            image (pygame.Surface): Loaded image surface to process.
+        """
+        # Reset the current worm but keep existing glues
+        self.worm = None
 
-            # Create a new worm each time an image is uploaded
-            new_worm = Worm(self.config)
-            # Set panel enabled based on global state
-            new_worm.panel_enabled = self.history_panel_enabled
-            self.worm = new_worm
-            self.worms.append(new_worm)
+        # Scale the image to fit the screen (treat UI bar as overlay)
+        max_width = self.width
+        max_height = self.height  # Use full height, ignore UI bar
+        image = scale_image_to_fit(image, max_width, max_height)
+        print(f"Image loaded and scaled to {image.get_size()}.")
+
+        # Segment the image (with size reduction)
+        segments, labels_to_downsize = self.image_processor.segment_image(image)
+        print(f"Segmentation completed. {len(labels_to_downsize)} segments marked for downsizing.")
+
+        # Create chunks and store them
+        new_chunks = self.chunk_factory.create_chunks_from_segments(image, segments, labels_to_downsize)
+        self.chunks.extend(new_chunks)
+        print(f"Created {len(new_chunks)} new chunks.")
+
+        # Create a new worm each time an image is uploaded
+        new_worm = Worm(self.config)
+        # Set panel enabled based on global state
+        new_worm.panel_enabled = self.history_panel_enabled
+        self.worm = new_worm
+        self.worms.append(new_worm)
+
+    def process_image_bytes(self, image_bytes: bytes) -> bool:
+        """
+        Load an image from raw bytes and process it into chunks, like a UI upload.
+
+        Args:
+            image_bytes (bytes): Raw image data.
+
+        Returns:
+            bool: True if processing succeeded, False otherwise.
+        """
+        try:
+            bytes_io = io.BytesIO(image_bytes)
+            image = pygame.image.load(bytes_io).convert_alpha()
+        except Exception as exc:
+            print(f"Failed to load image from bytes: {exc}")
+            return False
+
+        self.process_image_surface(image)
+        return True
+
+    def enqueue_image_bytes(self, image_bytes: bytes) -> None:
+        """Enqueue raw image bytes to be processed on the main thread."""
+        if image_bytes:
+            self._upload_queue.put(image_bytes)
+
+    def drain_upload_queue(self, max_items: int = 4) -> None:
+        """Drain up to max_items from the upload queue and process them."""
+        processed = 0
+        while processed < max_items:
+            try:
+                data = self._upload_queue.get_nowait()
+            except Empty:
+                break
+            try:
+                self.process_image_bytes(data)
+            finally:
+                processed += 1
 
     def clear_chunks(self) -> None:
         """

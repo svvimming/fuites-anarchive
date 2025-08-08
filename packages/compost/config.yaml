@@ -84,3 +84,9 @@ colors:
   UI_BG: [30, 30, 30]
   RED: [255, 0, 0]
   PANEL_BG: [40, 40, 40]
+
+server:
+  host: 127.0.0.1
+  port: 5055
+  max_download_bytes: 26214400 # 25MB
+  download_timeout_sec: 15
