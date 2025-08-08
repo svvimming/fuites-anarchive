@@ -7,9 +7,9 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 pygame = "^2.6.1"
-noise = "^1.2.2"
+#noise = "^1.2.2"
 numpy = "^2.1.2"
 matplotlib = "^3.5.3"
 scikit-image = "^0.24.0"
