@@ -97,6 +97,8 @@ watch(open, (value) => {
     })
     // convert the path data to an svg path
     path.value = useGetSvgPath(normalized.join(' '), { closed: false }) || ''
+  } else {
+    checkboxValue.value = false
   }
 })
 

@@ -243,9 +243,10 @@ export const useMixerStore = defineStore('mixer', () => {
     source.buffer = newAudioBuffer
     source.loop = true // Enable infinite looping
     source.connect(recordingAudioCtx.value.destination)
-    // Store the source for later stopping
+    // Stop the old source and analyser
     recording.value.playbackSource.stop()
     recording.value.playbackAnalyser.disconnect()
+    // Store the new source and analyser
     recording.value.playbackSource = source
     recording.value.playbackAnalyser = recordingAudioCtx.value.createAnalyser()
     source.connect(recording.value.playbackAnalyser)

@@ -37,7 +37,8 @@
           v-model="pitch"
           type="number"
           pattern="[0-9]*"
-          class="input" />
+          class="input"
+          @keydown.enter="(e) => updatePitch(e)" />
       </div>
       <ButtonRetrigger
         class="size-button"
@@ -134,6 +135,16 @@ const handleIncrementPitch = val => {
 const initAudioBufferArray = () => {
   const bufferLength = analyser.value.frequencyBinCount
   audioBufferArray.value = new Uint8Array(bufferLength)
+}
+
+/**
+ * @method updatePitch
+ */
+
+const updatePitch = e => {
+  if (!e.target.value) { return }
+  pitch.value = parseInt(e.target.value)
+  emit('update-pitch', pitch.value)
 }
 
 /**
@@ -289,15 +300,14 @@ onBeforeUnmount(() => {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: torem(26);
+    width: torem(34);
     transform: translate(-50%, -50%);
     color: white;
-    font-size: torem(12);
+    font-size: torem(10);
     font-family: 'Source Code Pro';
     font-weight: 600;
     line-height: 1;
     text-align: center;
-    pointer-events: none; // remove to enable input interaction
   }
   .label {
     position: absolute;
