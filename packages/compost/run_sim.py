@@ -67,15 +67,28 @@ def main() -> None:
         def health():
             return jsonify({"status": "ok"})
 
-        @app.post("/upload")
-        def upload():
+        @app.post("/post-compost-upload")
+        def post_compost_upload():
             # Accept only a URL to a file; we will download in-memory and process
             url = None
+            target_width = None
+            target_height = None
+            
             if request.is_json:
                 payload = request.get_json(silent=True) or {}
-                url = payload.get("url")
-            if not url:
-                url = request.form.get("url") or request.args.get("url")
+                thingie = payload.get("thingie")
+                if thingie and thingie.get("file_ref"):
+                    url = thingie.get("file_ref").get("file_url")
+                    # Extract width and height from the 'at' object if available
+                    at_obj = thingie.get("at")
+                    if at_obj:
+                        if "width" in at_obj:
+                            target_width = at_obj.get("width")
+                            print(f"Extracted target width from JSON: {target_width}")
+                        if "height" in at_obj:
+                            target_height = at_obj.get("height")
+                            print(f"Extracted target height from JSON: {target_height}")
+                        
             if not url:
                 return jsonify({"ok": False, "error": "missing 'url'"}), 400
 
@@ -111,7 +124,12 @@ def main() -> None:
 
             # Enqueue for main-thread processing and return quickly
             try:
-                sim.enqueue_image_bytes(data)
+                # Pass both image data and target dimensions
+                if target_width is not None and target_height is not None:
+                    print(f"Enqueueing image with target dimensions: {target_width}x{target_height}")
+                else:
+                    print("Enqueueing image without target dimensions")
+                sim.enqueue_image_bytes(data, target_width, target_height)
                 return jsonify({"ok": True}), 200
             except Exception as exc:
                 return jsonify({"ok": False, "error": str(exc)}), 500

@@ -11,7 +11,7 @@ from skimage.color import rgba2rgb, rgb2gray
 from skimage.util import img_as_ubyte
 from skimage.transform import resize
 from scipy.spatial import ConvexHull, QhullError
-from utils import scale_image_to_fit, quit_program
+from utils import scale_image_to_fit, quit_program, resize_image_to_dimensions
 from worm import Worm, Glue
 from chunk_thingie import Chunk
 import sys
@@ -387,7 +387,7 @@ class Simulation:
         self.glues: List[Glue] = []  # List to store all active glues
         self.boundary_walls = []
         # Thread-safe queue for incoming uploads from background server
-        self._upload_queue: "Queue[bytes]" = Queue()
+        self._upload_queue: "Queue[Tuple[bytes, int, int]]" = Queue()
 
         # Create boundaries
         self._create_boundaries()
@@ -613,14 +613,16 @@ class Simulation:
         """
         image = self.image_processor.load_image_via_dialog()
         if image:
-            self.process_image_surface(image)
+            self.process_image_surface(image, None, None)
 
-    def process_image_surface(self, image: pygame.Surface) -> None:
+    def process_image_surface(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
         """
         Process a provided pygame Surface as if it were uploaded via the UI.
 
         Args:
             image (pygame.Surface): Loaded image surface to process.
+            target_width (int, optional): Target width for the image.
+            target_height (int, optional): Target height for the image.
         """
         # Reset the current worm but keep existing glues
         self.worm = None
@@ -628,7 +630,16 @@ class Simulation:
         # Scale the image to fit the screen (treat UI bar as overlay)
         max_width = self.width
         max_height = self.height  # Use full height, ignore UI bar
-        image = scale_image_to_fit(image, max_width, max_height)
+        
+        # Use target dimensions if provided, otherwise use screen dimensions
+        if target_width is not None and target_height is not None:
+            print(f"Using target dimensions: {target_width}x{target_height}")
+            image = resize_image_to_dimensions(image, target_width, target_height, max_width, max_height)
+        else:
+            # No target dimensions, scale to fit screen
+            print(f"No target dimensions provided, scaling to fit screen: {max_width}x{max_height}")
+            image = scale_image_to_fit(image, max_width, max_height)
+            
         print(f"Image loaded and scaled to {image.get_size()}.")
 
         # Segment the image (with size reduction)
@@ -647,12 +658,14 @@ class Simulation:
         self.worm = new_worm
         self.worms.append(new_worm)
 
-    def process_image_bytes(self, image_bytes: bytes) -> bool:
+    def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
         """
         Load an image from raw bytes and process it into chunks, like a UI upload.
 
         Args:
             image_bytes (bytes): Raw image data.
+            target_width (int, optional): Target width for the image.
+            target_height (int, optional): Target height for the image.
 
         Returns:
             bool: True if processing succeeded, False otherwise.
@@ -664,24 +677,25 @@ class Simulation:
             print(f"Failed to load image from bytes: {exc}")
             return False
 
-        self.process_image_surface(image)
+        self.process_image_surface(image, target_width, target_height)
         return True
 
-    def enqueue_image_bytes(self, image_bytes: bytes) -> None:
-        """Enqueue raw image bytes to be processed on the main thread."""
+    def enqueue_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
+        """Enqueue raw image bytes and target dimensions to be processed on the main thread."""
         if image_bytes:
-            self._upload_queue.put(image_bytes)
+            self._upload_queue.put((image_bytes, target_width, target_height))
 
     def drain_upload_queue(self, max_items: int = 4) -> None:
         """Drain up to max_items from the upload queue and process them."""
         processed = 0
         while processed < max_items:
             try:
-                data = self._upload_queue.get_nowait()
+                data_tuple = self._upload_queue.get_nowait()
             except Empty:
                 break
             try:
-                self.process_image_bytes(data)
+                image_bytes, target_width, target_height = data_tuple
+                self.process_image_bytes(image_bytes, target_width, target_height)
             finally:
                 processed += 1
 
