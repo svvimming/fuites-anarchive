@@ -3,32 +3,40 @@ console.log('⚡️ [websocket] module|update-thingie|payload')
 // ///////////////////////////////////////////////////////////////////// Imports
 // -----------------------------------------------------------------------------
 const MC = require('@Root/config')
+const axios = require('axios')
+
+require('dotenv').config({ path: Path.resolve(__dirname, '../../../.env') })
+
+// /////////////////////////////////////////////////////////////////// Functions
+// -----------------------------------------------------------------------------
+const forwardToCompostService = async (payload) => {
+  try {
+    const baseUrl = process.env.COMPOST_SERVICE_ADDRESS
+    const endpoint = process.env.COMPOST_SERVICE_ENDPOINT
+    const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
+    await axios.post(url, payload, { timeout: 5000 })
+  } catch (err) {
+    console.error('❌ [compost] forward failed:', err?.message || err)
+  }
+}
 
 // //////////////////////////////////////////////////////////////////// Endpoint
 // -----------------------------------------------------------------------------
-// TODO: Need to add a socket event to emit to the pocket when on the
-// compost that will create thingies in the collections store as they
-// are sent to the compost from other pages.
-// This is the only page where this is necessary as thingies never
-// move directly between pages other than via the pocket.
-// It is also necessary for movements between pages made by the fuites cron.
-// Currently thingies moving between pages (not via the
-// pocket) will disappear from a page in real time but not appear
-// on the new page unless it is refreshed.
-// This is low priority as it doesn't break anything to not have
-// thingies appear.
-
 MC.socket.listeners.push({
   name: 'update-thingie',
   async handler (incoming) {
     // Record this update timestamp and increment the global update count
     incoming.last_update.timestamp = Date.now()
     incoming.$inc = { update_count: 1 }
+    let forwardToCompost = false
     // If the incoming update includes a location change, record it in the thingie's location history
     if (incoming.record_new_location) {
       delete incoming.record_new_location
       // Record timestamp if composted
-      if (incoming.location === 'compost') { incoming.compostedAt = Date.now() }
+      if (incoming.location === 'compost') {
+        incoming.compostedAt = Date.now()
+        forwardToCompost = true
+      }
       // Add new location to history
       incoming.$push = {
         location_history: {
@@ -41,12 +49,10 @@ MC.socket.listeners.push({
       }
     }
     // Update the thingie
+    const select = forwardToCompost ? '_id filename mimetype file_ext file_url aspect palette createdAt updatedAt' : 'filename file_ext file_url'
     const updated = await MC.model.Thingie
       .findOneAndUpdate({ _id: incoming._id }, incoming, { new: true })
-      .populate({
-        path: 'file_ref',
-        select: 'filename file_ext file_url'
-      })
+      .populate({ path: 'file_ref', select })
     const data = { thingie: updated }
     // If present, record the client session ID to omit updating on that frontend
     if (incoming.hasOwnProperty('omit_session_id')) {
@@ -54,5 +60,7 @@ MC.socket.listeners.push({
     }
     // Broadcast the update to the socket
     MC.socket.io.to(`${updated.verse}|thingies`).emit('module|update-thingie|payload', data)
+    // Handle composting
+    if (forwardToCompost) { forwardToCompostService(data) }
   }
 })
