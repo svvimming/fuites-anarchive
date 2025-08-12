@@ -67,15 +67,15 @@ def main() -> None:
         def health():
             return jsonify({"status": "ok"})
 
-        @app.post("/upload")
-        def upload():
+        @app.post("/post-compost-upload")
+        def post_compost_upload():
             # Accept only a URL to a file; we will download in-memory and process
             url = None
             if request.is_json:
                 payload = request.get_json(silent=True) or {}
-                url = payload.get("url")
-            if not url:
-                url = request.form.get("url") or request.args.get("url")
+                thingie = payload.get("thingie")
+                if thingie and thingie.get("file_ref"):
+                    url = thingie.get("file_ref").get("file_url")
             if not url:
                 return jsonify({"ok": False, "error": "missing 'url'"}), 400
 
