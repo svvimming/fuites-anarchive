@@ -171,7 +171,7 @@ const calculateOutputLevel = () => {
  */
 
 const handleDownload = () => {
-  mixerStore.downloadRecordingAsMp3()
+  mixerStore.downloadRecordingAsWav()
   resetAnimation()
   alertStore.closeAlert('create-sound-thingie-alert')
 }
