@@ -38,11 +38,11 @@ worm:
       # separate_force_mult: 70
       # seek_force_mult: 60
       #     flocking:
-      maxspeed: 70
-      maxforce: 10
-      desired_separation: 20
-      separate_force_mult: 70
-      seek_force_mult: 50
+      maxspeed: 50
+      maxforce: 5
+      desired_separation: 30
+      separate_force_mult: 30
+      seek_force_mult: 25
     visual:
       enabled: true
       glow_radius: 15
