@@ -650,8 +650,7 @@ class Simulation:
             if not glued_chunks:
                 continue
 
-            # Compute bounding box of all rotated chunk surfaces in screen coordinates
-            rects = []
+            # Build list of rotated surfaces and their destination rects (screen coords)
             rotated_surfaces = []
             for glued in glued_chunks:
                 chunk = glued.chunk
@@ -659,24 +658,18 @@ class Simulation:
                 rotated_surface = pygame.transform.rotate(chunk.segment_surface, angle_degrees)
                 pos = chunk.body.position
                 rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
-                rects.append(rect)
                 rotated_surfaces.append((rotated_surface, rect))
 
-            min_left = min(r.left for r in rects)
-            min_top = min(r.top for r in rects)
-            max_right = max(r.right for r in rects)
-            max_bottom = max(r.bottom for r in rects)
-
-            width = max(1, max_right - min_left)
-            height = max(1, max_bottom - min_top)
-
-            # Create offscreen surface with transparency
-            offscreen = pygame.Surface((width, height), pygame.SRCALPHA)
-
-            # Blit each rotated chunk surface onto the offscreen surface
+            # Create a full-screen transparent surface; blitting will clip to simulation bounds
+            offscreen_full = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             for rotated_surface, rect in rotated_surfaces:
-                blit_pos = (rect.left - min_left, rect.top - min_top)
-                offscreen.blit(rotated_surface, blit_pos)
+                offscreen_full.blit(rotated_surface, rect)
+
+            # Compute the tightest bounding box of visible pixels and crop
+            crop_rect = offscreen_full.get_bounding_rect(min_alpha=1)
+            if crop_rect.width <= 0 or crop_rect.height <= 0:
+                continue
+            image_to_save = offscreen_full.subsurface(crop_rect).copy()
 
             # Save to file
             timestamp = pygame.time.get_ticks()
@@ -684,7 +677,7 @@ class Simulation:
             filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}.png"
             filepath = os.path.join(export_dir, filename)
             try:
-                pygame.image.save(offscreen, filepath)
+                pygame.image.save(image_to_save, filepath)
                 exported_count += 1
                 print(f"Exported glue to: {filepath}")
             except Exception as exc:
