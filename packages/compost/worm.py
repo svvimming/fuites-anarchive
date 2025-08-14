@@ -230,8 +230,8 @@ class Worm:
             surface (pygame.Surface): The surface to draw on.
             x_offset (int): Horizontal offset for the panel (for multi-worm display).
         """
-        # Only draw panel if enabled
-        if not self.panel_enabled:
+        # Only draw panel if enabled and there is content
+        if not self.panel_enabled or len(self.history) == 0:
             return
         # Draw panel background
         panel_rect = pygame.Rect(self.panel_x + x_offset, self.panel_y, self.panel_width, self.panel_height)

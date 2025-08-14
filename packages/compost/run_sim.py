@@ -169,6 +169,12 @@ def main() -> None:
                     simulation.toggle_history_panel()
                 elif event.key == pygame.K_g:
                     simulation.glue_visuals_enabled = not simulation.glue_visuals_enabled
+                elif event.key == pygame.K_u:
+                    # Toggle UI on/off
+                    simulation.ui_enabled = not simulation.ui_enabled
+                elif event.key == pygame.K_e:
+                    # Export glues shortcut
+                    simulation.export_glues()
 
         # Fill screen with background color
         screen.fill(config["colors"]["WHITE"])

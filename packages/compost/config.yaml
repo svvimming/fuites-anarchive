@@ -3,6 +3,7 @@ simulation:
     width: 1600
     height: 1000
     ui_bar_height: 60
+  ui_enabled: true
   fps: 60
   gravity_x: 0
   gravity_y: 0
