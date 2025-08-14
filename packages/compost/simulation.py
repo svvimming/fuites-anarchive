@@ -291,15 +291,21 @@ class UIManager:
             self.button_width,
             self.button_height
         )
-        quit_rect = pygame.Rect(
+        export_rect = pygame.Rect(
             clear_rect.right + self.button_gap,
             (self.ui_bar_height - self.button_height) // 2,
             self.button_width,
             self.button_height
         )
-        return [upload_rect, clear_rect, quit_rect]
+        quit_rect = pygame.Rect(
+            export_rect.right + self.button_gap,
+            (self.ui_bar_height - self.button_height) // 2,
+            self.button_width,
+            self.button_height
+        )
+        return [upload_rect, clear_rect, export_rect, quit_rect]
 
-    def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True) -> None:
+    def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True, glue_visuals_enabled: bool = True, ui_enabled: bool = True) -> None:
         """
         Draw the UI bar, buttons, and optional debug text.
 
@@ -307,28 +313,33 @@ class UIManager:
             debug_mode (bool): Whether to show debug mode status on the UI bar.
             torus_world (bool): Whether the simulation is in torus world mode.
             history_panel_enabled (bool): Whether the history panel is visible.
+            glue_visuals_enabled (bool): Whether glue visuals are visible.
+            ui_enabled (bool): Whether UI is currently enabled.
         """
         ui_bar_rect = pygame.Rect(0, 0, self.width, self.ui_bar_height)
         pygame.draw.rect(self.screen, self.colors["UI_BG"], ui_bar_rect)
 
-        button_texts = ["Upload Image", "Clear Canvas", "Quit"]
+        button_texts = ["Upload Image", "Clear Canvas", "Export Glues (E)", "Quit"]
         for rect, text in zip(self.buttons, button_texts):
             self._draw_button(rect, text)
 
-        # Show debug mode
-        debug_text = f"Debug: {'ON' if debug_mode else 'OFF'} (D)"
-        debug_surface = self.font.render(debug_text, True, self.colors["WHITE"])
-        self.screen.blit(debug_surface, (self.width - 300, (self.ui_bar_height - debug_surface.get_height()) // 2))
-        
-        # Show world type
-        world_text = f"World: {'Torus' if torus_world else 'Rigid Walls'} (T)"
-        world_surface = self.font.render(world_text, True, self.colors["WHITE"])
-        self.screen.blit(world_surface, (self.width - 500, (self.ui_bar_height - world_surface.get_height()) // 2))
-
-        # Show history panel status
-        history_text = f"History: {'ON' if history_panel_enabled else 'OFF'} (H)"
-        history_surface = self.font.render(history_text, True, self.colors["WHITE"])
-        self.screen.blit(history_surface, (self.width - 700, (self.ui_bar_height - history_surface.get_height()) // 2))
+        # Build right-aligned status texts with shortcuts; lay them out from right edge
+        status_texts = [
+            f"UI: {'ON' if ui_enabled else 'OFF'} (U)",
+            f"Glue Visuals: {'ON' if glue_visuals_enabled else 'OFF'} (G)",
+            f"History: {'ON' if history_panel_enabled else 'OFF'} (H)",
+            f"World: {'Torus' if torus_world else 'Rigid Walls'} (T)",
+            f"Debug: {'ON' if debug_mode else 'OFF'} (D)",
+        ]
+        gap = 20
+        x_right = self.width - 10
+        y_center = (self.ui_bar_height) // 2
+        # Place each status block from right to left
+        for text in status_texts:
+            surface = self.font.render(text, True, self.colors["WHITE"])
+            x_right -= surface.get_width()
+            self.screen.blit(surface, (x_right, y_center - surface.get_height() // 2))
+            x_right -= gap
 
     def _draw_button(self, rect: pygame.Rect, text: str) -> None:
         """Draw a single button."""
@@ -368,6 +379,7 @@ class Simulation:
         self.debug_mode = False
         self.glue_visuals_enabled = config["worm"]["glue"]["visual"].get("enabled", True)
         self.history_panel_enabled = config["worm"]["history_panel"]["enabled"]
+        self.ui_enabled = config["simulation"].get("ui_enabled", True)
 
         # Build sub-components
         self.ui_manager = UIManager(config, screen, font)
@@ -481,7 +493,15 @@ class Simulation:
         """
         Draw the UI bar, buttons, and debug status.
         """
-        self.ui_manager.draw_ui(self.debug_mode, self.torus_world, self.history_panel_enabled)
+        if not self.ui_enabled:
+            return
+        self.ui_manager.draw_ui(
+            self.debug_mode,
+            self.torus_world,
+            self.history_panel_enabled,
+            self.glue_visuals_enabled,
+            self.ui_enabled,
+        )
 
     def update_chunks(self) -> None:
         """
@@ -526,12 +546,14 @@ class Simulation:
             glue.update()
             if self.glue_visuals_enabled:
                 glue.draw(self.screen)
-        # Draw worm history panels for all worms, offsetting each to the right
+        # Draw worm history panels for all worms, compactly offsetting only visible panels
         panel_spacing = 20
-        for i, worm in enumerate(self.worms):
-            if worm:
-                x_offset = i * (worm.panel_width + panel_spacing)
+        visible_index = 0
+        for worm in self.worms:
+            if worm and worm.panel_enabled and len(worm.history) > 0:
+                x_offset = visible_index * (worm.panel_width + panel_spacing)
                 worm.draw(self.screen, x_offset=x_offset)
+                visible_index += 1
 
     def get_all_glued_chunk_ids(self) -> Set[int]:
         """
@@ -590,13 +612,115 @@ class Simulation:
         Args:
             mouse_pos (Tuple[int, int]): The (x,y) position of the mouse click.
         """
-        upload_rect, clear_rect, quit_rect = self.ui_manager.buttons
+        if not self.ui_enabled:
+            return
+        upload_rect, clear_rect, export_rect, quit_rect = self.ui_manager.buttons
         if upload_rect.collidepoint(mouse_pos):
             self.upload_image()
         elif clear_rect.collidepoint(mouse_pos):
             self.clear_chunks()
+        elif export_rect.collidepoint(mouse_pos):
+            self.export_glues()
         elif quit_rect.collidepoint(mouse_pos):
             quit_program()
+
+    def export_glues(self) -> None:
+        """
+        Export each glue's glued chunks to a PNG (without glue visuals) and
+        remove those glued chunks and their glue from the simulation.
+        """
+        # Collect glues to export, including a dead worm's glue not yet appended
+        glues_to_export: List[Glue] = list(self.glues)
+        if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
+            glues_to_export.append(self.worm.glue)
+
+        if not glues_to_export:
+            print("No glues to export.")
+            return
+
+        # Ensure export directory exists (packages/compost/exports)
+        base_dir = os.path.dirname(__file__)
+        export_dir = os.path.join(base_dir, "exports")
+        os.makedirs(export_dir, exist_ok=True)
+
+        exported_count = 0
+
+        for glue in glues_to_export:
+            glued_chunks = glue.glued_chunks
+            if not glued_chunks:
+                continue
+
+            # Build list of rotated surfaces and their destination rects (screen coords)
+            rotated_surfaces = []
+            for glued in glued_chunks:
+                chunk = glued.chunk
+                angle_degrees = math.degrees(-chunk.body.angle)
+                rotated_surface = pygame.transform.rotate(chunk.segment_surface, angle_degrees)
+                pos = chunk.body.position
+                rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
+                rotated_surfaces.append((rotated_surface, rect))
+
+            # Create a full-screen transparent surface; blitting will clip to simulation bounds
+            offscreen_full = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            for rotated_surface, rect in rotated_surfaces:
+                offscreen_full.blit(rotated_surface, rect)
+
+            # Compute the tightest bounding box of visible pixels and crop
+            crop_rect = offscreen_full.get_bounding_rect(min_alpha=1)
+            if crop_rect.width <= 0 or crop_rect.height <= 0:
+                continue
+            image_to_save = offscreen_full.subsurface(crop_rect).copy()
+
+            # Save to file
+            timestamp = pygame.time.get_ticks()
+            rand_suffix = random.randint(0, 999999)
+            filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}.png"
+            filepath = os.path.join(export_dir, filename)
+            try:
+                pygame.image.save(image_to_save, filepath)
+                exported_count += 1
+                print(f"Exported glue to: {filepath}")
+            except Exception as exc:
+                print(f"Failed to export glue PNG: {exc}")
+
+            # Remove glued chunks' bodies and shapes from space and simulation
+            for glued in list(glued_chunks):
+                chunk = glued.chunk
+                try:
+                    if chunk.shape in self.space.shapes or chunk.body in self.space.bodies:
+                        self.space.remove(chunk.shape, chunk.body)
+                except Exception:
+                    # Ignore if already removed
+                    pass
+                # Remove from simulation's chunk list if present
+                if chunk in self.chunks:
+                    try:
+                        self.chunks.remove(chunk)
+                    except ValueError:
+                        pass
+
+            # Clear glue contents
+            glue.glued_chunks.clear()
+
+        # Remove exported glues from simulation tracking
+        for glue in glues_to_export:
+            if glue in self.glues:
+                try:
+                    self.glues.remove(glue)
+                except ValueError:
+                    pass
+
+        # Also clear any reference from the current worm
+        if self.worm and self.worm.glue in glues_to_export:
+            self.worm.glue = None
+
+        # Clear histories for all worms after export
+        for worm in self.worms:
+            if worm:
+                worm.history.clear()
+                worm.last_color = None
+
+        print(f"Export complete. {exported_count} glue images saved. Removed glued chunks and cleaned up glues. Cleared worm history panels.")
 
     def toggle_history_panel(self) -> None:
         """

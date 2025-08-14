@@ -225,7 +225,8 @@ class GluedChunk:
 
     def apply_force(self, force: Tuple[float, float]) -> None:
         """Apply a force to the chunk's body."""
-        self.chunk.body.apply_force_at_local_point(force, (0, 0))
+        # Apply force at the body's center, not at local point (0,0)
+        self.chunk.body.apply_force_at_world_point(force, self.chunk.body.position)
 
     def separate(self, glued_chunks: List['GluedChunk']) -> Tuple[float, float]:
         """Calculate separation force to avoid crowding other chunks."""
@@ -247,10 +248,16 @@ class GluedChunk:
                 # If they're too close, calculate repulsion
                 if d > 0 and d < self.desired_separation:
                     # Weighted by distance (closer = stronger force)
+                    # Use inverse square law for more natural separation
+                    force_strength = (self.desired_separation - d) / self.desired_separation
+                    force_strength = min(force_strength, 1.0)  # Cap at 1.0
+                    
+                    # Normalize the direction vector
                     dx /= d
                     dy /= d
-                    sum_x += dx
-                    sum_y += dy
+                    # Add to the sum with distance-based weighting
+                    sum_x += dx * force_strength
+                    sum_y += dy * force_strength
                     count += 1
 
         # Average the forces
@@ -258,13 +265,13 @@ class GluedChunk:
             sum_x /= count
             sum_y /= count
 
-            # Normalize and scale to maximum speed
+            # Scale to maximum speed
             magnitude = math.sqrt(sum_x*sum_x + sum_y*sum_y)
             if magnitude > 0:
                 sum_x = (sum_x / magnitude) * self.maxspeed
                 sum_y = (sum_y / magnitude) * self.maxspeed
 
-            # Steering = Desired - Velocity
+            # Convert to steering force by subtracting current velocity
             vel = self.chunk.body.velocity
             sum_x -= vel.x
             sum_y -= vel.y
@@ -287,17 +294,14 @@ class GluedChunk:
         # Calculate distance to target
         distance = math.sqrt(dx*dx + dy*dy)
         
-        # Scale force based on distance (stronger when far, weaker when close)
-        distance_factor = min(1.0, distance / 100.0)  # Adjust denominator as needed
-        
         # Normalize and scale to maximum speed
         if distance > 0:
-            dx = (dx / distance) * self.maxspeed * distance_factor
-            dy = (dy / distance) * self.maxspeed * distance_factor
+            dx = (dx / distance) * self.maxspeed
+            dy = (dy / distance) * self.maxspeed
         else:
             dx = dy = 0
 
-        # Steering = Desired - Velocity
+        # Convert to steering force by subtracting current velocity
         vel = self.chunk.body.velocity
         dx -= vel.x
         dy -= vel.y
