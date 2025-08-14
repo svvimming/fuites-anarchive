@@ -50,6 +50,10 @@ class Chunk:
             self.segment_surface = segment_surface
             self.vertices = vertices
 
+        # Cache the HSV color once to avoid expensive recalculations
+        from utils import calculate_chunk_color
+        self.cached_hsv_color = calculate_chunk_color(self.segment_surface)
+
         # Compute a valid random position using bounding-box constraints
         random_x, random_y = self._get_random_position_in_bounds(self.vertices)
 

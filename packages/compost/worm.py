@@ -45,8 +45,8 @@ class Glue:
     
     def is_in_vicinity(self, chunk: Chunk) -> bool:
         """Check if a chunk's color is in the vicinity of any meal in the worm's history."""
-        # Get this chunk's color
-        chunk_color = calculate_chunk_color(chunk.segment_surface)
+        # Get this chunk's cached color
+        chunk_color = chunk.cached_hsv_color
         
         # Check against each meal in history
         for entry in self.worm_history:
@@ -170,8 +170,8 @@ class Worm:
         if self.last_color is None:
             return True
             
-        # Calculate this chunk's color
-        chunk_color = calculate_chunk_color(chunk.segment_surface)
+        # Get this chunk's cached color
+        chunk_color = chunk.cached_hsv_color
         
         # Calculate color difference between chunks
         difference = calculate_color_contrast(self.last_color, chunk_color, self.config)
@@ -198,8 +198,8 @@ class Worm:
         # Store reference to the last chunk consumed
         self.last_chunk = chunk
             
-        # Calculate and store HSV color
-        hsv_color = calculate_chunk_color(chunk.segment_surface)
+        # Get the cached HSV color
+        hsv_color = chunk.cached_hsv_color
         self.last_color = hsv_color
         # print(f"Consumed chunk with HSV color: {hsv_color}")
         
