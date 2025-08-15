@@ -2,7 +2,8 @@ import pygame
 import random
 import pymunk
 import math
-from typing import List, Tuple, Dict, Any, Optional, Set
+from typing import List, Tuple, Dict, Any, Optional, Set, Deque
+from collections import deque
 from utils import calculate_chunk_color, calculate_color_contrast, hsv_to_rgb_int, rgb_to_hex
 from chunk_thingie import Chunk, GluedChunk
 
@@ -98,7 +99,8 @@ class Glue:
             return
 
         # Build candidate lists per history color (by nearest in-vicinity meal)
-        meal_to_candidates: Dict[int, List[Chunk]] = {}
+        # Keep (diff, chunk) so we can pick nearest-first within each color group
+        meal_to_candidates: Dict[int, List[Tuple[float, Chunk]]] = {}
 
         # Pre-calc for speed
         min_diff = self.min_difference
@@ -111,8 +113,8 @@ class Glue:
                 continue
 
             # Find the nearest meal index within vicinity thresholds
-            best_idx = None
-            best_diff = None
+            best_idx: Optional[int] = None
+            best_diff: Optional[float] = None
             for idx, entry in enumerate(self.worm_history):
                 diff = calculate_color_contrast(entry.hsv_color, chunk.cached_hsv_color, self.config)
                 if min_diff <= diff <= max_diff:
@@ -121,10 +123,15 @@ class Glue:
                         best_idx = idx
 
             if best_idx is not None:
-                meal_to_candidates.setdefault(best_idx, []).append(chunk)
+                meal_to_candidates.setdefault(best_idx, []).append((best_diff, chunk))
 
         if not meal_to_candidates:
             return
+
+        # Sort each meal group by nearest (smallest difference) first, then convert to deque for O(1) popleft
+        for idx in list(meal_to_candidates.keys()):
+            sorted_list = sorted(meal_to_candidates[idx], key=lambda t: t[0])
+            meal_to_candidates[idx] = deque(sorted_list)  # type: ignore[assignment]
 
         # Rank meals from lowest candidate count to highest
         ordered_meals = sorted(meal_to_candidates.keys(), key=lambda k: len(meal_to_candidates[k]))
@@ -134,17 +141,17 @@ class Glue:
         while capacity_remaining > 0:
             progressed = False
             for meal_idx in ordered_meals:
-                candidates = meal_to_candidates.get(meal_idx, [])
+                candidates: Deque[Tuple[float, Chunk]] = meal_to_candidates.get(meal_idx, deque())  # type: ignore[assignment]
                 # Drop any already-attracted candidates from the head of the list
-                while candidates and id(candidates[0]) in self.attracted_chunk_ids:
-                    candidates.pop(0)
+                while candidates and id(candidates[0][1]) in self.attracted_chunk_ids:
+                    candidates.popleft()
                 if not candidates:
                     continue
 
                 # Pick the next candidate for this meal
-                chosen = candidates.pop(0)
+                _diff, chosen = candidates.popleft()
                 # Color the dot with the RGB of the meal that attracted this chunk
-                meal_rgb = hsv_to_rgb_int(self.worm_history[meal_idx].hsv_color)
+                meal_rgb = self.meal_rgbs[meal_idx]
                 self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
                 self.attracted_chunk_ids.add(id(chosen))
                 capacity_remaining -= 1
