@@ -34,14 +34,44 @@ class Glue:
         # Glowing effect parameters from config
         visual_cfg = self.glue_cfg.get("visual", {})
         self.glow_radius = visual_cfg.get("glow_radius", 15)
-        self.glow_color = tuple(visual_cfg.get("glow_color", [255, 255, 0]))
         self.pulse_speed = visual_cfg.get("pulse_speed", 0.05)
         self.pulse_min = visual_cfg.get("pulse_min", 0.7)
         self.pulse_max = visual_cfg.get("pulse_max", 1.0)
         self.pulse_time = 0
-        # Assign a unique random hue for this glue
-        self.hue = random.uniform(0, 360)
-        self.tint_rgb = hsv_to_rgb_int((self.hue, 0.7, 1.0))
+        # Compute colors from worm history
+        self._init_history_colors()
+
+    def _init_history_colors(self) -> None:
+        """Prepare meal colors and mixed glow color from worm history."""
+        # Collect HSV colors from history
+        hsv_colors = [entry.hsv_color for entry in self.worm_history if entry and entry.hsv_color]
+        if not hsv_colors:
+            # Fallback to a default tint if no history; should not happen due to constructor guard
+            self.glow_rgb = (255, 255, 255)
+            self.meal_rgbs = []
+            return
+
+        # Convert each HSV to RGB for wheel segments
+        self.meal_rgbs = [hsv_to_rgb_int(hsv) for hsv in hsv_colors]
+
+        # Average HSV for glow color, handling circular hue
+        # Hue is in degrees [0,360)
+        sum_sin = 0.0
+        sum_cos = 0.0
+        sum_s = 0.0
+        sum_v = 0.0
+        n = float(len(hsv_colors))
+        for (h, s, v) in hsv_colors:
+            rad = h * math.pi / 180.0
+            sum_sin += math.sin(rad)
+            sum_cos += math.cos(rad)
+            sum_s += s
+            sum_v += v
+        mean_h_rad = math.atan2(sum_sin / n, sum_cos / n)
+        mean_h = (mean_h_rad * 180.0 / math.pi) % 360.0
+        mean_s = sum_s / n
+        mean_v = sum_v / n
+        self.glow_rgb = hsv_to_rgb_int((mean_h, mean_s, mean_v))
     
     def is_in_vicinity(self, chunk: Chunk) -> bool:
         """Check if a chunk's color is in the vicinity of any meal in the worm's history."""
@@ -113,7 +143,9 @@ class Glue:
 
                 # Pick the next candidate for this meal
                 chosen = candidates.pop(0)
-                self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, self.tint_rgb))
+                # Color the dot with the RGB of the meal that attracted this chunk
+                meal_rgb = hsv_to_rgb_int(self.worm_history[meal_idx].hsv_color)
+                self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
                 self.attracted_chunk_ids.add(id(chosen))
                 capacity_remaining -= 1
                 progressed = True
@@ -134,24 +166,55 @@ class Glue:
             glued_chunk.apply_behaviors(self.glued_chunks)
             
     def draw(self, surface: pygame.Surface) -> None:
-        """Draw the glue as a glowing dot matching the glue's tint color."""
+        """Draw the glue as a glowing dot with mixed colors from worm history and a spinning color wheel."""
         # Create pulsing effect for glow
         pulse_factor = self.pulse_min + (self.pulse_max - self.pulse_min) * math.sin(self.pulse_time)
-        # Draw outer glow (semi-transparent, tinted)
+        # Draw outer glow (semi-transparent). Use mixed color from worm history
         outer_radius = int(self.glow_radius * 2 * pulse_factor)
         glow_surface = pygame.Surface((outer_radius * 2, outer_radius * 2), pygame.SRCALPHA)
+        is_full = len(self.glued_chunks) >= self.max_glued_chunks
+        # Keep mixed glow color even when full; we'll draw a white ring instead
+        base_glow_rgb = self.glow_rgb
         for r in range(outer_radius, 0, -1):
             alpha = max(0, 150 - (r * 150 // outer_radius))  # Fades from 150 to 0 alpha
-            pygame.draw.circle(glow_surface, self.tint_rgb + (alpha,), (outer_radius, outer_radius), r)
-        # Draw the core of the glow (solid, tinted)
+            pygame.draw.circle(glow_surface, base_glow_rgb + (alpha,), (outer_radius, outer_radius), r)
+
+        # Draw the center as a spinning color wheel made from meal colors
         core_radius = int(self.glow_radius * pulse_factor)
-        # When glue is at full capacity, turn the center visual to black
-        is_full = len(self.glued_chunks) >= self.max_glued_chunks
-        core_color = (0, 0, 0, 255) if is_full else self.tint_rgb + (255,)
-        pygame.draw.circle(glow_surface, core_color, (outer_radius, outer_radius), core_radius)
+        if core_radius > 0 and self.meal_rgbs:
+            self._draw_color_wheel(glow_surface, (outer_radius, outer_radius), core_radius, angle_offset=self.pulse_time)
+            # If full, draw an outer white ring around the wheel
+            if is_full:
+                white = (255, 255, 255, 255)
+                ring_radius = max(1, core_radius + 2)
+                ring_width = 2
+                pygame.draw.circle(glow_surface, white, (outer_radius, outer_radius), ring_radius, ring_width)
+
         # Draw onto main surface at the glue position
         glow_rect = glow_surface.get_rect(center=(int(self.position[0]), int(self.position[1])))
         surface.blit(glow_surface, glow_rect)
+
+    def _draw_color_wheel(self, surface: pygame.Surface, center: Tuple[int, int], radius: int, angle_offset: float = 0.0) -> None:
+        """Draw a simple pie-slice color wheel of meal colors, rotated by angle_offset (radians)."""
+        num_segments = len(self.meal_rgbs)
+        if num_segments <= 0:
+            return
+        # Convert offset to radians for rotation; use a moderate spin speed
+        spin_speed = 1.0
+        start_angle = angle_offset * spin_speed
+        segment_angle = 2 * math.pi / num_segments
+        steps_per_segment = max(6, int(radius / 2))  # quality vs perf
+        cx, cy = center
+        for idx, color in enumerate(self.meal_rgbs):
+            a0 = start_angle + idx * segment_angle
+            a1 = a0 + segment_angle
+            points = [(cx, cy)]
+            for s in range(steps_per_segment + 1):
+                t = a0 + (a1 - a0) * (s / steps_per_segment)
+                x = cx + int(math.cos(t) * radius)
+                y = cy + int(math.sin(t) * radius)
+                points.append((x, y))
+            pygame.draw.polygon(surface, color + (255,), points)
 
 
 class Worm:
