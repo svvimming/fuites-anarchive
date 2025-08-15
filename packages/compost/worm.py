@@ -62,26 +62,67 @@ class Glue:
         return False
     
     def try_attract_chunks(self, available_chunks: List[Chunk]) -> None:
-        """Try to attract chunks that are in the vicinity of any meal in the worm's history."""
+        """Attract chunks in a balanced way across history colors (lowest-count first, round-robin)."""
         # Skip if we've reached the maximum number of glued chunks
         if len(self.glued_chunks) >= self.max_glued_chunks:
             return
-            
-        # Find all chunks in vicinity that aren't already attracted
+
+        # Build candidate lists per history color (by nearest in-vicinity meal)
+        meal_to_candidates: Dict[int, List[Chunk]] = {}
+
+        # Pre-calc for speed
+        min_diff = self.min_difference
+        max_diff = self.max_difference
+
         for chunk in available_chunks:
-            # Skip chunks we've already evaluated or attracted
             chunk_id = id(chunk)
+            # Skip if we already attracted this chunk earlier
             if chunk_id in self.attracted_chunk_ids:
                 continue
-                
-            # Mark as evaluated
-            self.attracted_chunk_ids.add(chunk_id)
-            
-            # Check if in vicinity of any meal
-            if self.is_in_vicinity(chunk):
-                # Add to glued chunks if we haven't reached max
-                if len(self.glued_chunks) < self.max_glued_chunks:
-                    self.glued_chunks.append(GluedChunk(chunk, self.position, self.config, self.tint_rgb))
+
+            # Find the nearest meal index within vicinity thresholds
+            best_idx = None
+            best_diff = None
+            for idx, entry in enumerate(self.worm_history):
+                diff = calculate_color_contrast(entry.hsv_color, chunk.cached_hsv_color, self.config)
+                if min_diff <= diff <= max_diff:
+                    if best_diff is None or diff < best_diff:
+                        best_diff = diff
+                        best_idx = idx
+
+            if best_idx is not None:
+                meal_to_candidates.setdefault(best_idx, []).append(chunk)
+
+        if not meal_to_candidates:
+            return
+
+        # Rank meals from lowest candidate count to highest
+        ordered_meals = sorted(meal_to_candidates.keys(), key=lambda k: len(meal_to_candidates[k]))
+
+        # Round-robin pick: one from each meal in ascending order until capacity reached
+        capacity_remaining = self.max_glued_chunks - len(self.glued_chunks)
+        while capacity_remaining > 0:
+            progressed = False
+            for meal_idx in ordered_meals:
+                candidates = meal_to_candidates.get(meal_idx, [])
+                # Drop any already-attracted candidates from the head of the list
+                while candidates and id(candidates[0]) in self.attracted_chunk_ids:
+                    candidates.pop(0)
+                if not candidates:
+                    continue
+
+                # Pick the next candidate for this meal
+                chosen = candidates.pop(0)
+                self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, self.tint_rgb))
+                self.attracted_chunk_ids.add(id(chosen))
+                capacity_remaining -= 1
+                progressed = True
+                if capacity_remaining <= 0:
+                    break
+
+            # If we made no progress in this pass, no more candidates are available
+            if not progressed:
+                break
     
     def update(self) -> None:
         """Update the behavior of all glued chunks."""
@@ -104,7 +145,10 @@ class Glue:
             pygame.draw.circle(glow_surface, self.tint_rgb + (alpha,), (outer_radius, outer_radius), r)
         # Draw the core of the glow (solid, tinted)
         core_radius = int(self.glow_radius * pulse_factor)
-        pygame.draw.circle(glow_surface, self.tint_rgb + (255,), (outer_radius, outer_radius), core_radius)
+        # When glue is at full capacity, turn the center visual to black
+        is_full = len(self.glued_chunks) >= self.max_glued_chunks
+        core_color = (0, 0, 0, 255) if is_full else self.tint_rgb + (255,)
+        pygame.draw.circle(glow_surface, core_color, (outer_radius, outer_radius), core_radius)
         # Draw onto main surface at the glue position
         glow_rect = glow_surface.get_rect(center=(int(self.position[0]), int(self.position[1])))
         surface.blit(glow_surface, glow_rect)
