@@ -24,6 +24,7 @@ class Glue:
         self.config = config
         self.glued_chunks: List[GluedChunk] = []
         self.attracted_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already attracted
+        self.evaluated_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already evaluated
         
         # Get glue configuration
         self.glue_cfg = config["worm"]["glue"]
@@ -111,6 +112,9 @@ class Glue:
             # Skip if we already attracted this chunk earlier
             if chunk_id in self.attracted_chunk_ids:
                 continue
+            # Skip if we already evaluated this chunk earlier
+            if chunk_id in self.evaluated_chunk_ids:
+                continue
 
             # Find the nearest meal index within vicinity thresholds
             best_idx: Optional[int] = None
@@ -124,6 +128,8 @@ class Glue:
 
             if best_idx is not None:
                 meal_to_candidates.setdefault(best_idx, []).append((best_diff, chunk))
+            # Mark as evaluated (whether it was added to candidates or not)
+            self.evaluated_chunk_ids.add(chunk_id)
 
         if not meal_to_candidates:
             return
