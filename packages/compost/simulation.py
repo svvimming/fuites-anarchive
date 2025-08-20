@@ -305,7 +305,7 @@ class UIManager:
         )
         return [upload_rect, clear_rect, export_rect, quit_rect]
 
-    def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True, glue_visuals_enabled: bool = True, ui_enabled: bool = True) -> None:
+    def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True, glue_visuals_enabled: bool = True, ui_enabled: bool = True, chunk_count: int = 0) -> None:
         """
         Draw the UI bar, buttons, and optional debug text.
 
@@ -325,6 +325,7 @@ class UIManager:
 
         # Build right-aligned status texts with shortcuts; lay them out from right edge
         status_texts = [
+            f"Chunks: {chunk_count}",
             f"UI: {'ON' if ui_enabled else 'OFF'} (U)",
             f"Glue Visuals: {'ON' if glue_visuals_enabled else 'OFF'} (G)",
             f"History: {'ON' if history_panel_enabled else 'OFF'} (H)",
@@ -501,6 +502,7 @@ class Simulation:
             self.history_panel_enabled,
             self.glue_visuals_enabled,
             self.ui_enabled,
+            len(self.chunks),
         )
 
     def update_chunks(self) -> None:

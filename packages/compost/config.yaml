@@ -46,7 +46,7 @@ worm:
       seek_force_mult: 35
     visual:
       enabled: true
-      glow_radius: 15
+      glow_radius: 20
       pulse_speed: 0.05
       pulse_min: 0.7
       pulse_max: 1.0

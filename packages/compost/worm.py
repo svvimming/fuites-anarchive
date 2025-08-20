@@ -2,7 +2,8 @@ import pygame
 import random
 import pymunk
 import math
-from typing import List, Tuple, Dict, Any, Optional, Set
+from typing import List, Tuple, Dict, Any, Optional, Set, Deque
+from collections import deque
 from utils import calculate_chunk_color, calculate_color_contrast, hsv_to_rgb_int, rgb_to_hex
 from chunk_thingie import Chunk, GluedChunk
 
@@ -23,6 +24,7 @@ class Glue:
         self.config = config
         self.glued_chunks: List[GluedChunk] = []
         self.attracted_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already attracted
+        self.evaluated_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already evaluated
         
         # Get glue configuration
         self.glue_cfg = config["worm"]["glue"]
@@ -34,19 +36,49 @@ class Glue:
         # Glowing effect parameters from config
         visual_cfg = self.glue_cfg.get("visual", {})
         self.glow_radius = visual_cfg.get("glow_radius", 15)
-        self.glow_color = tuple(visual_cfg.get("glow_color", [255, 255, 0]))
         self.pulse_speed = visual_cfg.get("pulse_speed", 0.05)
         self.pulse_min = visual_cfg.get("pulse_min", 0.7)
         self.pulse_max = visual_cfg.get("pulse_max", 1.0)
         self.pulse_time = 0
-        # Assign a unique random hue for this glue
-        self.hue = random.uniform(0, 360)
-        self.tint_rgb = hsv_to_rgb_int((self.hue, 0.7, 1.0))
+        # Compute colors from worm history
+        self._init_history_colors()
+
+    def _init_history_colors(self) -> None:
+        """Prepare meal colors and mixed glow color from worm history."""
+        # Collect HSV colors from history
+        hsv_colors = [entry.hsv_color for entry in self.worm_history if entry and entry.hsv_color]
+        if not hsv_colors:
+            # Fallback to a default tint if no history; should not happen due to constructor guard
+            self.glow_rgb = (255, 255, 255)
+            self.meal_rgbs = []
+            return
+
+        # Convert each HSV to RGB for wheel segments
+        self.meal_rgbs = [hsv_to_rgb_int(hsv) for hsv in hsv_colors]
+
+        # Average HSV for glow color, handling circular hue
+        # Hue is in degrees [0,360)
+        sum_sin = 0.0
+        sum_cos = 0.0
+        sum_s = 0.0
+        sum_v = 0.0
+        n = float(len(hsv_colors))
+        for (h, s, v) in hsv_colors:
+            rad = h * math.pi / 180.0
+            sum_sin += math.sin(rad)
+            sum_cos += math.cos(rad)
+            sum_s += s
+            sum_v += v
+        mean_h_rad = math.atan2(sum_sin / n, sum_cos / n)
+        mean_h = (mean_h_rad * 180.0 / math.pi) % 360.0
+        mean_s = sum_s / n
+        mean_v = sum_v / n
+        self.glow_rgb = hsv_to_rgb_int((mean_h, mean_s, mean_v))
     
     def is_in_vicinity(self, chunk: Chunk) -> bool:
         """Check if a chunk's color is in the vicinity of any meal in the worm's history."""
-        # Get this chunk's color
-        chunk_color = calculate_chunk_color(chunk.segment_surface)
+        # Get this chunk's cached color
+        chunk_color = chunk.cached_hsv_color
         
         # Check against each meal in history
         for entry in self.worm_history:
@@ -62,26 +94,80 @@ class Glue:
         return False
     
     def try_attract_chunks(self, available_chunks: List[Chunk]) -> None:
-        """Try to attract chunks that are in the vicinity of any meal in the worm's history."""
+        """Attract chunks in a balanced way across history colors (lowest-count first, round-robin)."""
         # Skip if we've reached the maximum number of glued chunks
         if len(self.glued_chunks) >= self.max_glued_chunks:
             return
-            
-        # Find all chunks in vicinity that aren't already attracted
+
+        # Build candidate lists per history color (by nearest in-vicinity meal)
+        # Keep (diff, chunk) so we can pick nearest-first within each color group
+        meal_to_candidates: Dict[int, List[Tuple[float, Chunk]]] = {}
+
+        # Pre-calc for speed
+        min_diff = self.min_difference
+        max_diff = self.max_difference
+
         for chunk in available_chunks:
-            # Skip chunks we've already evaluated or attracted
             chunk_id = id(chunk)
+            # Skip if we already attracted this chunk earlier
             if chunk_id in self.attracted_chunk_ids:
                 continue
-                
-            # Mark as evaluated
-            self.attracted_chunk_ids.add(chunk_id)
-            
-            # Check if in vicinity of any meal
-            if self.is_in_vicinity(chunk):
-                # Add to glued chunks if we haven't reached max
-                if len(self.glued_chunks) < self.max_glued_chunks:
-                    self.glued_chunks.append(GluedChunk(chunk, self.position, self.config, self.tint_rgb))
+            # Skip if we already evaluated this chunk earlier
+            if chunk_id in self.evaluated_chunk_ids:
+                continue
+
+            # Find the nearest meal index within vicinity thresholds
+            best_idx: Optional[int] = None
+            best_diff: Optional[float] = None
+            for idx, entry in enumerate(self.worm_history):
+                diff = calculate_color_contrast(entry.hsv_color, chunk.cached_hsv_color, self.config)
+                if min_diff <= diff <= max_diff:
+                    if best_diff is None or diff < best_diff:
+                        best_diff = diff
+                        best_idx = idx
+
+            if best_idx is not None:
+                meal_to_candidates.setdefault(best_idx, []).append((best_diff, chunk))
+            # Mark as evaluated (whether it was added to candidates or not)
+            self.evaluated_chunk_ids.add(chunk_id)
+
+        if not meal_to_candidates:
+            return
+
+        # Sort each meal group by nearest (smallest difference) first, then convert to deque for O(1) popleft
+        for idx in list(meal_to_candidates.keys()):
+            sorted_list = sorted(meal_to_candidates[idx], key=lambda t: t[0])
+            meal_to_candidates[idx] = deque(sorted_list)  # type: ignore[assignment]
+
+        # Rank meals from lowest candidate count to highest
+        ordered_meals = sorted(meal_to_candidates.keys(), key=lambda k: len(meal_to_candidates[k]))
+
+        # Round-robin pick: one from each meal in ascending order until capacity reached
+        capacity_remaining = self.max_glued_chunks - len(self.glued_chunks)
+        while capacity_remaining > 0:
+            progressed = False
+            for meal_idx in ordered_meals:
+                candidates: Deque[Tuple[float, Chunk]] = meal_to_candidates.get(meal_idx, deque())  # type: ignore[assignment]
+                # Drop any already-attracted candidates from the head of the list
+                while candidates and id(candidates[0][1]) in self.attracted_chunk_ids:
+                    candidates.popleft()
+                if not candidates:
+                    continue
+
+                # Pick the next candidate for this meal
+                _diff, chosen = candidates.popleft()
+                # Color the dot with the RGB of the meal that attracted this chunk
+                meal_rgb = self.meal_rgbs[meal_idx]
+                self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
+                self.attracted_chunk_ids.add(id(chosen))
+                capacity_remaining -= 1
+                progressed = True
+                if capacity_remaining <= 0:
+                    break
+
+            # If we made no progress in this pass, no more candidates are available
+            if not progressed:
+                break
     
     def update(self) -> None:
         """Update the behavior of all glued chunks."""
@@ -93,21 +179,55 @@ class Glue:
             glued_chunk.apply_behaviors(self.glued_chunks)
             
     def draw(self, surface: pygame.Surface) -> None:
-        """Draw the glue as a glowing dot matching the glue's tint color."""
+        """Draw the glue as a glowing dot with mixed colors from worm history and a spinning color wheel."""
         # Create pulsing effect for glow
         pulse_factor = self.pulse_min + (self.pulse_max - self.pulse_min) * math.sin(self.pulse_time)
-        # Draw outer glow (semi-transparent, tinted)
+        # Draw outer glow (semi-transparent). Use mixed color from worm history
         outer_radius = int(self.glow_radius * 2 * pulse_factor)
         glow_surface = pygame.Surface((outer_radius * 2, outer_radius * 2), pygame.SRCALPHA)
+        is_full = len(self.glued_chunks) >= self.max_glued_chunks
+        # Keep mixed glow color even when full; we'll draw a white ring instead
+        base_glow_rgb = self.glow_rgb
         for r in range(outer_radius, 0, -1):
             alpha = max(0, 150 - (r * 150 // outer_radius))  # Fades from 150 to 0 alpha
-            pygame.draw.circle(glow_surface, self.tint_rgb + (alpha,), (outer_radius, outer_radius), r)
-        # Draw the core of the glow (solid, tinted)
+            pygame.draw.circle(glow_surface, base_glow_rgb + (alpha,), (outer_radius, outer_radius), r)
+
+        # Draw the center as a spinning color wheel made from meal colors
         core_radius = int(self.glow_radius * pulse_factor)
-        pygame.draw.circle(glow_surface, self.tint_rgb + (255,), (outer_radius, outer_radius), core_radius)
+        if core_radius > 0 and self.meal_rgbs:
+            self._draw_color_wheel(glow_surface, (outer_radius, outer_radius), core_radius, angle_offset=self.pulse_time)
+            # If full, draw an outer white ring around the wheel
+            if is_full:
+                white = (255, 255, 255, 255)
+                ring_radius = max(1, core_radius + 2)
+                ring_width = 2
+                pygame.draw.circle(glow_surface, white, (outer_radius, outer_radius), ring_radius, ring_width)
+
         # Draw onto main surface at the glue position
         glow_rect = glow_surface.get_rect(center=(int(self.position[0]), int(self.position[1])))
         surface.blit(glow_surface, glow_rect)
+
+    def _draw_color_wheel(self, surface: pygame.Surface, center: Tuple[int, int], radius: int, angle_offset: float = 0.0) -> None:
+        """Draw a simple pie-slice color wheel of meal colors, rotated by angle_offset (radians)."""
+        num_segments = len(self.meal_rgbs)
+        if num_segments <= 0:
+            return
+        # Convert offset to radians for rotation; use a moderate spin speed
+        spin_speed = 1.0
+        start_angle = angle_offset * spin_speed
+        segment_angle = 2 * math.pi / num_segments
+        steps_per_segment = max(6, int(radius / 2))  # quality vs perf
+        cx, cy = center
+        for idx, color in enumerate(self.meal_rgbs):
+            a0 = start_angle + idx * segment_angle
+            a1 = a0 + segment_angle
+            points = [(cx, cy)]
+            for s in range(steps_per_segment + 1):
+                t = a0 + (a1 - a0) * (s / steps_per_segment)
+                x = cx + int(math.cos(t) * radius)
+                y = cy + int(math.sin(t) * radius)
+                points.append((x, y))
+            pygame.draw.polygon(surface, color + (255,), points)
 
 
 class Worm:
@@ -170,8 +290,8 @@ class Worm:
         if self.last_color is None:
             return True
             
-        # Calculate this chunk's color
-        chunk_color = calculate_chunk_color(chunk.segment_surface)
+        # Get this chunk's cached color
+        chunk_color = chunk.cached_hsv_color
         
         # Calculate color difference between chunks
         difference = calculate_color_contrast(self.last_color, chunk_color, self.config)
@@ -198,8 +318,8 @@ class Worm:
         # Store reference to the last chunk consumed
         self.last_chunk = chunk
             
-        # Calculate and store HSV color
-        hsv_color = calculate_chunk_color(chunk.segment_surface)
+        # Get the cached HSV color
+        hsv_color = chunk.cached_hsv_color
         self.last_color = hsv_color
         # print(f"Consumed chunk with HSV color: {hsv_color}")
         
