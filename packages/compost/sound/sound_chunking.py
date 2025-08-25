@@ -114,6 +114,7 @@ def split_audio_felzenszwalb_2d(
     filtered_by_time = 0
     filtered_by_time_empty = 0
     filtered_by_loudness = 0  # NEW counter
+    filtered_by_tuning = 0  # NEW counter for tuning filter
     kept_segments = []
 
     for _, label in enumerate(unique_labels):
@@ -139,7 +140,6 @@ def split_audio_felzenszwalb_2d(
         area = int(chunk_mask.sum())
         
         if area < min_area_pixels:
-            print(f"area: {area}")
             filtered_shapes += 1
             filtered_by_area += 1
             continue
@@ -176,11 +176,35 @@ def split_audio_felzenszwalb_2d(
         rms_frames = librosa.feature.rms(y=y_seg)
         rms_scalar = float(np.median(rms_frames))
         rms_db = 20.0 * np.log10(rms_scalar + 1e-12)
-        # if rms_db < min_loudness_db:
-        #     filtered_shapes += 1
-        #     filtered_by_loudness += 1
-        #     print("filtered by loudness")
-        #     continue
+        if rms_db < min_loudness_db:
+            filtered_shapes += 1
+            filtered_by_loudness += 1
+            continue
+        
+        # Replicate the exact sequence from librosa.estimate_tuning -> pitch_tuning
+        pitch, mag = librosa.piptrack(y=y_seg, sr=sr, threshold=0.1)
+        
+        # Only count magnitude where frequency is > 0
+        pitch_mask = pitch > 0
+        
+        if pitch_mask.any():
+            threshold = np.median(mag[pitch_mask])
+        else:
+            print("no pitch")
+            threshold = 0.0
+        
+        # Apply the same filtering as estimate_tuning
+        filtered_frequencies = pitch[(mag >= threshold) & pitch_mask]
+        
+        # Trim out any DC components (same as pitch_tuning function)
+        filtered_frequencies = filtered_frequencies[filtered_frequencies > 0]
+        
+        # Check if empty (this is what triggers the warning)
+        if not np.any(filtered_frequencies):
+            filtered_shapes += 1
+            filtered_by_tuning += 1
+            print("filtered by empty frequency set (would cause tuning warning)")
+            continue
         
         filename = f"felzen_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_f{freq_span}.wav"
         out_path = os.path.join(output_dir, filename)
@@ -257,6 +281,7 @@ def split_audio_felzenszwalb_2d(
     print(f"      └─ By energy (< {min_energy_ratio:.1e} ratio): {filtered_by_energy}")
     print(f"      └─ By area (< {min_area_pixels} pixels): {filtered_by_area}")
     print(f"      └─ By loudness (< {min_loudness_db:.1f} dBFS): {filtered_by_loudness}")
+    print(f"      └─ By empty frequency set (tuning): {filtered_by_tuning}")
     print(f"   ✅ Audio chunks saved: {shape_index}")
     print(f"   📁 Output directory: {output_dir}/")
     if saved_paths:
