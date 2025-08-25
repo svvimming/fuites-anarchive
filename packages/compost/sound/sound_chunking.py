@@ -47,6 +47,7 @@ def split_audio_felzenszwalb_2d(
     min_energy_ratio=1e-3,
     min_loudness_db=-70.0,   # NEW loudness threshold
     max_shapes=None,
+    show_plots=True,  # NEW parameter to control visualizations
 ):
     """
     🎨 TRUE 2D FELZENSZWALB AUDIO SEGMENTATION (no connected-components)
@@ -210,38 +211,39 @@ def split_audio_felzenszwalb_2d(
         if max_shapes is not None and shape_index >= max_shapes:
             break
 
-    # 6) Create and display visualization
-    print(f"📊 CREATING VISUALIZATIONS...")
+    # 6) Create and display visualization (only if show_plots is True)
+    if show_plots:
+        print(f"📊 CREATING VISUALIZATIONS...")
 
-    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+        fig, axes = plt.subplots(2, 2, figsize=(16, 10))
 
-    # Original spectrogram
-    axes[0,0].imshow(S_db, aspect='auto', origin='lower', cmap='magma')
-    axes[0,0].set_title('Original Spectrogram (dB)')
-    axes[0,0].set_ylabel('Frequency Bins')
+        # Original spectrogram
+        axes[0,0].imshow(S_db, aspect='auto', origin='lower', cmap='magma')
+        axes[0,0].set_title('Original Spectrogram (dB)')
+        axes[0,0].set_ylabel('Frequency Bins')
 
-    # Normalized image for segmentation
-    axes[0,1].imshow(img, aspect='auto', origin='lower', cmap='gray')
-    axes[0,1].set_title('Normalized Image (0-255)')
-    axes[0,1].set_ylabel('Frequency Bins')
+        # Normalized image for segmentation
+        axes[0,1].imshow(img, aspect='auto', origin='lower', cmap='gray')
+        axes[0,1].set_title('Normalized Image (0-255)')
+        axes[0,1].set_ylabel('Frequency Bins')
 
-    # Segmentation labels
-    axes[1,0].imshow(segments, aspect='auto', origin='lower', cmap='tab20')
-    axes[1,0].set_title(f'Felzenszwalb Segments ({len(unique_labels)} labels)')
-    axes[1,0].set_xlabel('Time Frames')
-    axes[1,0].set_ylabel('Frequency Bins')
+        # Segmentation labels
+        axes[1,0].imshow(segments, aspect='auto', origin='lower', cmap='tab20')
+        axes[1,0].set_title(f'Felzenszwalb Segments ({len(unique_labels)} labels)')
+        axes[1,0].set_xlabel('Time Frames')
+        axes[1,0].set_ylabel('Frequency Bins')
 
-    # Boundaries overlay
-    boundary_img = mark_boundaries(np.dstack([S_db_norm]*3), segments)
-    axes[1,1].imshow(boundary_img, aspect='auto', origin='lower')
-    axes[1,1].set_title('Segmentation Boundaries')
-    axes[1,1].set_xlabel('Time Frames')
+        # Boundaries overlay
+        boundary_img = mark_boundaries(np.dstack([S_db_norm]*3), segments)
+        axes[1,1].imshow(boundary_img, aspect='auto', origin='lower')
+        axes[1,1].set_title('Segmentation Boundaries')
+        axes[1,1].set_xlabel('Time Frames')
 
-    plt.tight_layout()
-    viz_path = os.path.join(output_dir, "felzenszwalb_analysis.png")
-    plt.savefig(viz_path, dpi=160, bbox_inches='tight')
-    print(f"   💾 Saved visualization: {viz_path}")
-    plt.show()
+        plt.tight_layout()
+        viz_path = os.path.join(output_dir, "felzenszwalb_analysis.png")
+        plt.savefig(viz_path, dpi=160, bbox_inches='tight')
+        print(f"   💾 Saved visualization: {viz_path}")
+        plt.show()
 
     # Summary statistics
     total_time = time.time() - start_time
@@ -374,7 +376,7 @@ def estimate_alpha(y_sig, min_alpha=0.1, min_db=-70.0, max_db=-14.0):
     # Map to [min_alpha, 1.0]
     return float(min_alpha + (1.0 - min_alpha) * v)
 
-def create_2d_path_visualization(kept_segments, song_path, points_per_second=100, resampled_points_per_chunk=128):
+def create_2d_path_visualization(kept_segments, song_path, points_per_second=100, resampled_points_per_chunk=128, show_plots=True):
     """
     Create a random 2D path over the clip timeline and align chunks to Felzenszwalb windows
     """
@@ -474,92 +476,93 @@ def create_2d_path_visualization(kept_segments, song_path, points_per_second=100
 
     curve_profiles_2d = np.asarray(curve_profiles_2d) if len(curve_profiles_2d) else np.empty((0, resampled_points_per_chunk, 2))
 
-    # Visualization
-    # Figure 1: full 2D path with overlaid subset of chunks (color-matched to grid)
-    fig1, ax1 = plt.subplots(1, 1, figsize=(7, 6))
-    ax1.plot(X, Y, color="#333", linewidth=1.5, label="full path")
+    # Only show visualizations if requested
+    if show_plots:
+        # Figure 1: full 2D path with overlaid subset of chunks (color-matched to grid)
+        fig1, ax1 = plt.subplots(1, 1, figsize=(7, 6))
+        ax1.plot(X, Y, color="#333", linewidth=1.5, label="full path")
 
-    # Choose subset indices to overlay (deterministic: first up to 15)
-    overlay_idxs = list(range(min(100, len(curve_chunks_2d))))
-    cmap = plt.get_cmap('tab20')
-    # Use per-chunk RGBA if available; fallback to colormap
-    colors = {}
-    for i in overlay_idxs:
-        col = curve_chunks_2d[i].get("color_rgba", None)
-        if col is None:
-            col = cmap(i % cmap.N)
-        colors[i] = col
-        ax1.plot(curve_chunks_2d[i]["x"], curve_chunks_2d[i]["y"], linewidth=5.0, color=col)
-    ax1.set_title("Random 2D path with aligned time chunks (Felzenszwalb)")
-    ax1.set_xlabel("x")
-    ax1.set_ylabel("y")
-    ax1.axis('equal')
-    ax1.grid(True, alpha=0.25)
-    plt.tight_layout()
-    plt.show()
-
-    # Figure 2: separate subplots for each overlaid chunk, using the same color
-    N = len(overlay_idxs)
-    if N > 0:
-        cols = 4
-        rows = int(np.ceil(N / cols))
-        fig2, axes2 = plt.subplots(rows, cols, figsize=(cols * 3.0, rows * 3.0))
-        axes2 = np.atleast_2d(axes2).reshape(rows, cols)
-        for idx in range(rows * cols):
-            r = idx // cols
-            c = idx % cols
-            ax = axes2[r, c]
-            if idx < N:
-                k = overlay_idxs[idx]
-                ax.plot(curve_chunks_2d[k]["x_resampled"], curve_chunks_2d[k]["y_resampled"], color=colors[k], linewidth=5.0)
-                t0 = curve_chunks_2d[k]["t_start"]
-                t1 = curve_chunks_2d[k]["t_end"]
-                ax.set_title(f"chunk {k}\n[{t0:.2f}s, {t1:.2f}s]", fontsize=8)
-                ax.axis('equal')
-                ax.grid(True, alpha=0.25)
-            else:
-                ax.axis('off')
-        fig2.suptitle("Felzenszwalb-aligned " + f"{N} 2D chunk profiles (color-matched)")
+        # Choose subset indices to overlay (deterministic: first up to 15)
+        overlay_idxs = list(range(min(100, len(curve_chunks_2d))))
+        cmap = plt.get_cmap('tab20')
+        # Use per-chunk RGBA if available; fallback to colormap
+        colors = {}
+        for i in overlay_idxs:
+            col = curve_chunks_2d[i].get("color_rgba", None)
+            if col is None:
+                col = cmap(i % cmap.N)
+            colors[i] = col
+            ax1.plot(curve_chunks_2d[i]["x"], curve_chunks_2d[i]["y"], linewidth=5.0, color=col)
+        ax1.set_title("Random 2D path with aligned time chunks (Felzenszwalb)")
+        ax1.set_xlabel("x")
+        ax1.set_ylabel("y")
+        ax1.axis('equal')
+        ax1.grid(True, alpha=0.25)
         plt.tight_layout()
         plt.show()
 
-    # Figure 3: Pitch-class color mapping arranged around a circle (circle of fifths order)
-    circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
-    pitch_names = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
-    fig3, ax3 = plt.subplots(1, 1, figsize=(6, 6))
-    R_outer = 1.0
-    R_inner = 0.6
-    for k in range(12):
-        pitch = circle_order[k]
-        H = k / 12.0
-        # # To try Scriabin's palette instead of equal spacing, uncomment:
-        # r_col, g_col, b_col = SCRIABIN_RGB.get(pitch, (1.0, 1.0, 1.0))
-        # # set the S and V to 1 and convert back to rgb:
-        # h, s, v = colorsys.rgb_to_hsv(r_col, g_col, b_col)
-        # s = 1.0
-        # v = 1.0
-        # r_col, g_col, b_col = colorsys.hsv_to_rgb(h, s, v)
+        # Figure 2: separate subplots for each overlaid chunk, using the same color
+        N = len(overlay_idxs)
+        if N > 0:
+            cols = 4
+            rows = int(np.ceil(N / cols))
+            fig2, axes2 = plt.subplots(rows, cols, figsize=(cols * 3.0, rows * 3.0))
+            axes2 = np.atleast_2d(axes2).reshape(rows, cols)
+            for idx in range(rows * cols):
+                r = idx // cols
+                c = idx % cols
+                ax = axes2[r, c]
+                if idx < N:
+                    k = overlay_idxs[idx]
+                    ax.plot(curve_chunks_2d[k]["x_resampled"], curve_chunks_2d[k]["y_resampled"], color=colors[k], linewidth=5.0)
+                    t0 = curve_chunks_2d[k]["t_start"]
+                    t1 = curve_chunks_2d[k]["t_end"]
+                    ax.set_title(f"chunk {k}\n[{t0:.2f}s, {t1:.2f}s]", fontsize=8)
+                    ax.axis('equal')
+                    ax.grid(True, alpha=0.25)
+                else:
+                    ax.axis('off')
+            fig2.suptitle("Felzenszwalb-aligned " + f"{N} 2D chunk profiles (color-matched)")
+            plt.tight_layout()
+            plt.show()
 
-        r_col, g_col, b_col = colorsys.hsv_to_rgb(H, 1.0, 1.0)
-        theta_center = 90.0 - k * (360.0 / 12.0)  # C at top (90°), increasing k clockwise
-        theta1 = theta_center - (180.0 / 12.0)    # 15° before center
-        theta2 = theta_center + (180.0 / 12.0)    # 15° after center
-        wedge = Wedge((0.0, 0.0), R_outer, theta1, theta2, width=R_outer - R_inner, facecolor=(r_col, g_col, b_col), edgecolor='white')
-        ax3.add_patch(wedge)
-        theta_mid = np.deg2rad(theta_center)
-        tx = (R_outer + 0.08) * np.cos(theta_mid)
-        ty = (R_outer + 0.08) * np.sin(theta_mid)
-        ax3.text(tx, ty, pitch_names[pitch], ha='center', va='center', fontsize=10)
-    # Outer ring guide
-    guide = Wedge((0.0, 0.0), R_outer, 0, 360, width=0.0, facecolor='none', edgecolor='#999999')
-    ax3.add_patch(guide)
-    ax3.set_xlim(-1.25, 1.25)
-    ax3.set_ylim(-1.25, 1.25)
-    ax3.set_aspect('equal')
-    ax3.axis('off')
-    ax3.set_title("Pitch-class color circle (circle of fifths order)")
-    plt.tight_layout()
-    plt.show()
+        # Figure 3: Pitch-class color mapping arranged around a circle (circle of fifths order)
+        circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
+        pitch_names = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
+        fig3, ax3 = plt.subplots(1, 1, figsize=(6, 6))
+        R_outer = 1.0
+        R_inner = 0.6
+        for k in range(12):
+            pitch = circle_order[k]
+            H = k / 12.0
+            # # To try Scriabin's palette instead of equal spacing, uncomment:
+            # r_col, g_col, b_col = SCRIABIN_RGB.get(pitch, (1.0, 1.0, 1.0))
+            # # set the S and V to 1 and convert back to rgb:
+            # h, s, v = colorsys.rgb_to_hsv(r_col, g_col, b_col)
+            # s = 1.0
+            # v = 1.0
+            # r_col, g_col, b_col = colorsys.hsv_to_rgb(h, s, v)
+
+            r_col, g_col, b_col = colorsys.hsv_to_rgb(H, 1.0, 1.0)
+            theta_center = 90.0 - k * (360.0 / 12.0)  # C at top (90°), increasing k clockwise
+            theta1 = theta_center - (180.0 / 12.0)    # 15° before center
+            theta2 = theta_center + (180.0 / 12.0)    # 15° after center
+            wedge = Wedge((0.0, 0.0), R_outer, theta1, theta2, width=R_outer - R_inner, facecolor=(r_col, g_col, b_col), edgecolor='white')
+            ax3.add_patch(wedge)
+            theta_mid = np.deg2rad(theta_center)
+            tx = (R_outer + 0.08) * np.cos(theta_mid)
+            ty = (R_outer + 0.08) * np.sin(theta_mid)
+            ax3.text(tx, ty, pitch_names[pitch], ha='center', va='center', fontsize=10)
+        # Outer ring guide
+        guide = Wedge((0.0, 0.0), R_outer, 0, 360, width=0.0, facecolor='none', edgecolor='#999999')
+        ax3.add_patch(guide)
+        ax3.set_xlim(-1.25, 1.25)
+        ax3.set_ylim(-1.25, 1.25)
+        ax3.set_aspect('equal')
+        ax3.axis('off')
+        ax3.set_title("Pitch-class color circle (circle of fifths order)")
+        plt.tight_layout()
+        plt.show()
 
     return X, Y, curve_chunks_2d, curve_profiles_2d
 
@@ -568,7 +571,7 @@ def main():
     # 🚀 RUN THE SEGMENTATION
     print("🎨 STARTING FELZENSZWALB 2D AUDIO SEGMENTATION")
     print("=" * 60)
-    song_path = "clips/play-1.mp3"
+    song_path = "clips/chop.mp3"
     shapes, kept_segments = split_audio_felzenszwalb_2d(
         song_path,
         output_dir=f"chunks_detailed_{song_path.split('/')[-1].split('.')[0]}",
