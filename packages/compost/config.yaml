@@ -91,3 +91,28 @@ server:
   port: 5055
   max_download_bytes: 26214400 # 25MB
   download_timeout_sec: 15
+
+# --- Sound processing (for sound_chunking integration) ---
+sound:
+  felzenszwalb:
+    scale: 150
+    sigma: 3
+    min_size: 20
+  min_area_pixels: 300
+  min_time_seconds: 0.5
+  min_energy_ratio: 0.001
+  min_loudness_db: -70.0
+  max_shapes: 50
+  points_per_second: 100
+  resampled_points_per_chunk: 128
+  chunk_surface:
+    line_width: 10
+    padding: 6
+  # Dynamic sizing by duration (linear between min and max)
+  duration_size:
+    min_seconds: 0.5
+    max_seconds: 60.0
+    min_width: 50
+    min_height: 50
+    max_width: 800
+    max_height: 800

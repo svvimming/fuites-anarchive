@@ -175,12 +175,15 @@ def main() -> None:
                 elif event.key == pygame.K_e:
                     # Export glues shortcut
                     simulation.export_glues()
-
         # Fill screen with background color
         screen.fill(config["colors"]["WHITE"])
         simulation.draw_ui()
         # Drain any queued uploads (main-thread safe)
         simulation.drain_upload_queue()
+        # Handle audio hover for sound chunks
+        simulation.handle_audio_hover(pygame.mouse.get_pos())
+        # Clean up finished audio periodically
+        simulation.cleanup_finished_audio()
         space.step(dt)
         simulation.update_chunks()
         pygame.display.flip()
