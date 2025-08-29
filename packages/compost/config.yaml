@@ -23,9 +23,16 @@ worm:
     hue_weight: 0.6
     saturation_weight: 0.2
     value_weight: 0.2
+  # --- SUPERABUNDANCE: When there are more than threshold particles ---
+  # During superabundance, multiple worms are spawned to handle the increased load
+  superabundance:
+    threshold: 1000  # Number of particles that triggers superabundance
+    worms_per_upload: 2  # Number of worms spawned per upload during superabundance
+    auto_export_capped_after_ms: 45000  # Auto-export glues capped longer than this during superabundance
   glue:
     enabled: true
     max_glued_chunks: 100
+    max_active_glues: 6
     vicinity:
       min_difference: 0
       max_difference: 0.07
@@ -56,10 +63,11 @@ worm:
       x: 10
       y: 70
       width: 300
-      height: 400
-    chunk_preview_size: 50
-    text_height: 20
-    spacing: 10
+      height: 700
+    chunk_preview_size: 36
+    text_height: 18
+    spacing: 6
+    show_hsv_text: false
 
 segmentation:
   # --- Felzenszwalb Segmentation ---
@@ -102,11 +110,11 @@ sound:
   min_time_seconds: 0.5
   min_energy_ratio: 0.001
   min_loudness_db: -70.0
-  max_shapes: 50
+  max_shapes: 200
   points_per_second: 100
   resampled_points_per_chunk: 128
   chunk_surface:
-    line_width: 10
+    line_width: 5
     padding: 6
   # Dynamic sizing by duration (linear between min and max)
   duration_size:

@@ -5,7 +5,7 @@ import os
 import math
 import numpy as np
 from tkinter import filedialog
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Optional
 from skimage.segmentation import felzenszwalb
 from skimage.color import rgba2rgb, rgb2gray
 from skimage.util import img_as_ubyte
@@ -408,6 +408,9 @@ class Simulation:
         # Thread-safe queue for incoming uploads from background server
         self._upload_queue: "Queue[Tuple[bytes, int, int]]" = Queue()
         
+        # Worm scheduling state for sequential spawns after exports
+        self._active_worm: Worm = None
+        
         # Audio playback for sound chunks
         self.playing_chunks = {}  # Track currently playing chunks: {chunk: channel}
         self.last_hovered_chunks = set()  # Track chunks that were hovered last frame
@@ -596,6 +599,9 @@ class Simulation:
         """
         Update (draw) all chunks in the simulation and process worm behavior.
         """
+        # Check if we need to spawn a new worm after export
+        self._check_worm_completion()
+        
         # Apply torus wrapping if enabled
         if self.torus_world:
             self.handle_torus_wrapping()
@@ -635,14 +641,63 @@ class Simulation:
             glue.update()
             if self.glue_visuals_enabled:
                 glue.draw(self.screen)
+
+        # During superabundance, auto-export clumps (glues) that have been capped > configured time
+        try:
+            superabundance_cfg = self.config["worm"].get("superabundance", {})
+            threshold = superabundance_cfg.get("threshold", 1000)
+            total_particles = len(self.chunks)
+            if total_particles > threshold:
+                now_ms = pygame.time.get_ticks()
+                auto_export_age_ms = int(superabundance_cfg.get("auto_export_capped_after_ms", 60_000))
+                expired_glues = [
+                    g for g in self.glues
+                    if getattr(g, "capped_at_ms", None) is not None
+                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
+                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
+                ]
+                if expired_glues:
+                    # Only skip respawn when active glues exceed threshold
+                    glue_cfg = self.config["worm"].get("glue", {})
+                    max_active = int(glue_cfg.get("max_active_glues", 5))
+                    over_limit = len(self.glues) > max_active
+                    self.export_glues(expired_glues, schedule_worms=not over_limit)
+        except Exception:
+            # Fail-safe: never break the frame loop due to auto-export logic
+            pass
+
+        # If active glues exceed configured limit, auto-export capped-and-old glues (no respawn)
+        try:
+            glue_cfg = self.config["worm"].get("glue", {})
+            max_active = int(glue_cfg.get("max_active_glues", 5))
+            if len(self.glues) > max_active:
+                now_ms = pygame.time.get_ticks()
+                # Reuse superabundance auto-export age param for simplicity
+                age_cfg = self.config["worm"].get("superabundance", {})
+                auto_export_age_ms = int(age_cfg.get("auto_export_capped_after_ms", 60_000))
+                over_limit_candidates = [
+                    g for g in self.glues
+                    if getattr(g, "capped_at_ms", None) is not None
+                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
+                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
+                ]
+                if over_limit_candidates:
+                    # Do not schedule respawn worms when auto-exporting due to threshold
+                    self.export_glues(over_limit_candidates, schedule_worms=False)
+        except Exception:
+            # Fail-safe: never break the frame loop due to over-limit auto-export logic
+            pass
         # Draw worm history panels for all worms, compactly offsetting only visible panels
         panel_spacing = 20
-        visible_index = 0
+        x_cursor = 0
         for worm in self.worms:
             if worm and worm.panel_enabled and len(worm.history) > 0:
-                x_offset = visible_index * (worm.panel_width + panel_spacing)
-                worm.draw(self.screen, x_offset=x_offset)
-                visible_index += 1
+                worm.draw(self.screen, x_offset=x_cursor)
+                # Advance by effective width plus spacing
+                try:
+                    x_cursor += worm.get_panel_width() + panel_spacing
+                except Exception:
+                    x_cursor += worm.panel_width + panel_spacing
 
     def get_all_glued_chunk_ids(self) -> Set[int]:
         """
@@ -715,15 +770,20 @@ class Simulation:
         elif quit_rect.collidepoint(mouse_pos):
             quit_program()
 
-    def export_glues(self) -> None:
+    def export_glues(self, glues: Optional[List[Glue]] = None, schedule_worms: bool = True) -> None:
         """
         Export each glue's glued chunks to a PNG (without glue visuals) and
         remove those glued chunks and their glue from the simulation.
+        If schedule_worms is True, schedule one new worm per exported glue.
         """
-        # Collect glues to export, including a dead worm's glue not yet appended
-        glues_to_export: List[Glue] = list(self.glues)
-        if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
-            glues_to_export.append(self.worm.glue)
+        # Collect glues to export
+        if glues is not None:
+            glues_to_export: List[Glue] = list(glues)
+        else:
+            glues_to_export = list(self.glues)
+            # Include a dead worm's glue not yet appended
+            if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
+                glues_to_export.append(self.worm.glue)
 
         if not glues_to_export:
             print("No glues to export.")
@@ -804,17 +864,73 @@ class Simulation:
                 except ValueError:
                     pass
 
-        # Also clear any reference from the current worm
-        if self.worm and self.worm.glue in glues_to_export:
-            self.worm.glue = None
+        # Clear history panels only for worms whose glue was exported
+        try:
+            exported_histories = {id(glue.worm_history) for glue in glues_to_export}
+        except Exception:
+            exported_histories = set()
 
-        # Clear histories for all worms after export
+        # Unlink and clear only impacted worms
         for worm in self.worms:
-            if worm:
+            if not worm:
+                continue
+            # If this worm's glue was exported, unlink it
+            if getattr(worm, 'glue', None) in glues_to_export:
+                worm.glue = None
+            # If this worm's history fed an exported glue, clear just this worm's panel/history
+            if id(getattr(worm, 'history', [])) in exported_histories:
                 worm.history.clear()
                 worm.last_color = None
 
+        # Schedule one worm per exported glue, sequentially (optional)
+        if schedule_worms:
+            self._schedule_worms(exported_count)
+
         print(f"Export complete. {exported_count} glue images saved. Removed glued chunks and cleaned up glues. Cleared worm history panels.")
+
+    def _schedule_worms(self, count: int) -> None:
+        """Schedule spawning of 'count' worms sequentially. If none active, spawn immediately."""
+        if count <= 0:
+            return
+        # Initialize counters if missing
+        if not hasattr(self, '_spawn_pending'):
+            self._spawn_pending = 0
+        if not hasattr(self, '_spawn_batch_total'):
+            self._spawn_batch_total = 0
+        self._spawn_pending += count
+        self._spawn_batch_total += count
+        # If no active worm, start immediately
+        if not getattr(self, '_active_worm', None):
+            self._spawn_next_worm()
+
+    def _spawn_next_worm(self) -> None:
+        """Spawn the next worm in the current schedule batch."""
+        if getattr(self, '_spawn_pending', 0) <= 0:
+            return
+        new_worm = Worm(self.config)
+        new_worm.panel_enabled = self.history_panel_enabled
+        self.worm = new_worm
+        self.worms.append(new_worm)
+        self._active_worm = new_worm
+        # Decrement pending and report progress
+        self._spawn_pending -= 1
+        spawned_so_far = self._spawn_batch_total - self._spawn_pending
+        total = self._spawn_batch_total
+        print(f"Spawned new worm {spawned_so_far} of {total}")
+
+    def _check_worm_completion(self) -> None:
+        """Advance scheduling when the active worm finishes eating."""
+        if not getattr(self, '_active_worm', None):
+            return
+        if self._active_worm.is_dead:
+            if getattr(self, '_spawn_pending', 0) > 0:
+                self._spawn_next_worm()
+            else:
+                self._active_worm = None
+                # Reset batch counters
+                self._spawn_batch_total = 0
+                self._spawn_pending = 0
+                print("All scheduled worms have been spawned and completed")
 
     def _export_glue_audio(self, glued_chunks, export_dir: str, timestamp: int, rand_suffix: int, exported_count: int) -> None:
         """
@@ -919,8 +1035,7 @@ class Simulation:
             target_width (int, optional): Target width for the image.
             target_height (int, optional): Target height for the image.
         """
-        # Reset the current worm but keep existing glues
-        self.worm = None
+        # Do not reset the current worm here; keep it active so it can continue consuming
 
         # Scale the image to fit the screen (treat UI bar as overlay)
         max_width = self.width
@@ -946,12 +1061,8 @@ class Simulation:
         self.chunks.extend(new_chunks)
         print(f"Created {len(new_chunks)} new chunks.")
 
-        # Create a new worm each time an image is uploaded
-        new_worm = Worm(self.config)
-        # Set panel enabled based on global state
-        new_worm.panel_enabled = self.history_panel_enabled
-        self.worm = new_worm
-        self.worms.append(new_worm)
+        # Create worms based on superabundance status
+        self._spawn_worms_for_upload(upload_type="image")
 
     def upload_sound(self) -> None:
         """
@@ -975,8 +1086,7 @@ class Simulation:
         Use sound_chunking to segment audio into shapes, generate 2D curve profiles with color mapping,
         and instantiate physics chunks from those curves.
         """
-        # Reset the current worm but keep existing glues
-        self.worm = None
+        # Do not reset the current worm here; keep it active so it can continue consuming
 
         # Lazy-import the sound_chunking module from the local sound directory
         import sys as _sys
@@ -1079,11 +1189,8 @@ class Simulation:
         self.chunks.extend(new_chunks)
         print(f"Created {len(new_chunks)} new sound curve chunks.")
 
-        # Create a new worm after processing sound
-        new_worm = Worm(self.config)
-        new_worm.panel_enabled = self.history_panel_enabled
-        self.worm = new_worm
-        self.worms.append(new_worm)
+        # Create worms based on superabundance status
+        self._spawn_worms_for_upload(upload_type="sound")
 
     def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
         """
@@ -1137,3 +1244,19 @@ class Simulation:
         self.worm = None
         self.worms.clear()
         self.glues.clear()  # Clear all glues when clearing chunks
+
+    def _spawn_worms_for_upload(self, upload_type: str = "image") -> None:
+        """Spawn worms for an upload. During superabundance, spawn two; otherwise one.
+        Worms are scheduled to spawn sequentially (wait for one to finish before next)."""
+        superabundance_cfg = self.config["worm"].get("superabundance", {})
+        threshold = superabundance_cfg.get("threshold", 1000)
+        worms_per_upload = superabundance_cfg.get("worms_per_upload", 2)
+        total_particles = len(self.chunks)
+        is_superabundant = total_particles > threshold
+        worms_to_spawn = worms_per_upload if is_superabundant else 1
+        if is_superabundant:
+            print(f"SUPERABUNDANCE detected! {total_particles} total particles. Scheduling {worms_to_spawn} worms for {upload_type} upload.")
+        else:
+            print(f"Normal abundance: {total_particles} total particles. Scheduling {worms_to_spawn} worm for {upload_type} upload.")
+        # Schedule sequential spawning (shared with export logic)
+        self._schedule_worms(worms_to_spawn)

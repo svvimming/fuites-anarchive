@@ -25,6 +25,8 @@ class Glue:
         self.glued_chunks: List[GluedChunk] = []
         self.attracted_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already attracted
         self.evaluated_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already evaluated
+        # Timestamp (ms) when this glue first became full ("capped"). None if not yet capped
+        self.capped_at_ms: Optional[int] = None
         
         # Get glue configuration
         self.glue_cfg = config["worm"]["glue"]
@@ -97,6 +99,13 @@ class Glue:
         """Attract chunks in a balanced way across history colors (lowest-count first, round-robin)."""
         # Skip if we've reached the maximum number of glued chunks
         if len(self.glued_chunks) >= self.max_glued_chunks:
+            # If already full and no timestamp recorded yet, record it now
+            if self.capped_at_ms is None:
+                try:
+                    self.capped_at_ms = pygame.time.get_ticks()
+                except Exception:
+                    # Fallback in unlikely case pygame isn't initialized here
+                    self.capped_at_ms = 0
             return
 
         # Build candidate lists per history color (by nearest in-vicinity meal)
@@ -168,6 +177,13 @@ class Glue:
             # If we made no progress in this pass, no more candidates are available
             if not progressed:
                 break
+
+        # If we've just reached or exceeded capacity and haven't recorded the cap time, do it now
+        if self.capped_at_ms is None and len(self.glued_chunks) >= self.max_glued_chunks:
+            try:
+                self.capped_at_ms = pygame.time.get_ticks()
+            except Exception:
+                self.capped_at_ms = 0
     
     def update(self) -> None:
         """Update the behavior of all glued chunks."""
@@ -261,6 +277,7 @@ class Worm:
         self.chunk_preview_size = panel_cfg["chunk_preview_size"]
         self.text_height = panel_cfg["text_height"]
         self.spacing = panel_cfg["spacing"]
+        self.show_hsv_text = panel_cfg.get("show_hsv_text", True)
         
         # Colors
         self.panel_bg_color = tuple(config["colors"]["PANEL_BG"])
@@ -353,8 +370,8 @@ class Worm:
         # Only draw panel if enabled and there is content
         if not self.panel_enabled or len(self.history) == 0:
             return
-        # Draw panel background
-        panel_rect = pygame.Rect(self.panel_x + x_offset, self.panel_y, self.panel_width, self.panel_height)
+        # Draw panel background (use compact width if HSV text hidden)
+        panel_rect = pygame.Rect(self.panel_x + x_offset, self.panel_y, self.get_panel_width(), self.panel_height)
         pygame.draw.rect(surface, self.panel_bg_color, panel_rect)
         # Draw each history entry
         font = pygame.font.SysFont(None, self.text_height)
@@ -369,14 +386,23 @@ class Worm:
             swatch_rect = pygame.Rect(preview_rect.right + self.spacing, y_offset,
                                     self.chunk_preview_size, self.chunk_preview_size)
             pygame.draw.rect(surface, entry.rgb_color, swatch_rect)
-            # Draw HSV values
-            h, s, v = entry.hsv_color
-            hsv_text = f"H:{h:.0f}° S:{s:.2f} V:{v:.2f}"
-            text = font.render(hsv_text, True, (255, 255, 255))
-            text_rect = text.get_rect(midleft=(swatch_rect.right + self.spacing,
-                                             y_offset + self.chunk_preview_size // 2))
-            surface.blit(text, text_rect)
+            # Draw HSV values (optional)
+            if self.show_hsv_text:
+                h, s, v = entry.hsv_color
+                hsv_text = f"H:{h:.0f}° S:{s:.2f} V:{v:.2f}"
+                text = font.render(hsv_text, True, (255, 255, 255))
+                text_rect = text.get_rect(midleft=(swatch_rect.right + self.spacing,
+                                                 y_offset + self.chunk_preview_size // 2))
+                surface.blit(text, text_rect)
+            # Advance to next row
             y_offset += self.chunk_preview_size + self.spacing
+
+    def get_panel_width(self) -> int:
+        """Return effective panel width; compact when HSV text is hidden."""
+        if self.show_hsv_text:
+            return self.panel_width
+        # Compact layout: preview + swatch + paddings
+        return min(self.panel_width, (self.spacing * 3) + (self.chunk_preview_size * 2))
 
     def select_next_chunk(self, chunks: List[Chunk]) -> Optional[Chunk]:
         """
