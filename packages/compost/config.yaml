@@ -32,7 +32,7 @@ worm:
   glue:
     enabled: true
     max_glued_chunks: 100
-    max_active_glues: 6
+    max_active_glues: 5
     vicinity:
       min_difference: 0
       max_difference: 0.07
@@ -80,6 +80,10 @@ segmentation:
     scale: 150
     sigma: 3
     min_size: 20
+  # Minimal visibility filtering for image segments (post-segmentation)
+  image_filter:
+    min_visible_pixels: 30         # Skip segments with fewer visible pixels than this
+    min_alpha_threshold: 8         # Alpha threshold (0-255) to consider a pixel visible
 
 compression:
   max_size: 10000

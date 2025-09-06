@@ -108,6 +108,18 @@ class ChunkFactory:
                         if 0 <= blit_x < surface_width and 0 <= blit_y < surface_height:
                             centered_surface.set_at((blit_x, blit_y), color)
 
+            # --- Minimal visibility filtering (configurable) ---
+            filt_cfg = self.config.get("segmentation", {}).get("image_filter", {})
+            min_visible = int(filt_cfg.get("min_visible_pixels", 1))
+            min_alpha = int(filt_cfg.get("min_alpha_threshold", 1))
+
+            alpha_view = pygame.surfarray.pixels_alpha(centered_surface)
+            visible_count = (alpha_view >= min_alpha).sum()
+            del alpha_view  # Release lock
+
+            if visible_count < min_visible:
+                continue
+
             # Check if this segment is marked for downsizing
             downsized = segment_label in labels_to_downsize
 
