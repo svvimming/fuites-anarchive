@@ -36,7 +36,7 @@ MC.socket.listeners.push({
       // Record timestamp if composted
       if (incoming.location === 'compost') {
         incoming.compostedAt = Date.now()
-        forwardToCompost = true
+        forwardToCompost = process.env.SERVER_ENV !== 'production'
       }
       // Add new location to history
       incoming.$push = {
