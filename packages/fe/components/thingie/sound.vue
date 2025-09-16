@@ -165,7 +165,7 @@ const initSoundThingie = async () => {
   if (props.location === 'pocket') { return }
   try {
     const fileRef = props.fileRef
-    const path = config.public.serverEnv !== 'development' ? fileRef.file_url : '/concat.mp3' // `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+    const path = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
     const response = await fetch(path)
     buffer.value = await audioContext.value.decodeAudioData(await response.arrayBuffer())
     source.value = audioContext.value.createBufferSource()
