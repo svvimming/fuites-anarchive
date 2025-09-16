@@ -4,6 +4,7 @@
     alert-id="create-sound-thingie-alert"
     :class="['create-sound-thingie-alert']">
     <div class="message">
+
       <span class="title text">Create Sound Thingie</span>
       <span class="prompt text">Are you happy with the path you just drew?</span>
       <div class="sound-path-preview">
@@ -24,6 +25,19 @@
             stroke-linejoin="round" />
         </svg>
       </div>
+
+      <div v-show="showCutLoopCheckbox" class="checkbox-container">
+        <input
+          type="checkbox"
+          id="cut-to-length-checkbox"
+          v-model="checkboxValue"
+          :disabled="recording.uploadStatus === 'uploading'"
+          class="checkbox-input" />
+        <label for="cut-to-length-checkbox" class="checkbox-label">
+          <span class="text">Cut to length of last recording</span>
+        </label>
+      </div>
+
       <div class="button-row">
         <ButtonBasic
           :force-disabled="recording.uploadStatus === 'uploading'"
@@ -39,6 +53,17 @@
           <span class="text">No, Try again</span>
         </ButtonBasic>
       </div>
+
+      <div class="button-row">
+        <ButtonBasic
+          :force-disabled="recording.uploadStatus === 'uploading'"
+          theme="clear"
+          class="download-button"
+          @clicked="handleDownload">
+          <span class="text">Download</span>
+        </ButtonBasic>
+      </div>
+
     </div>
   </ZeroAlert>
 </template>
@@ -46,17 +71,19 @@
 <script setup>
 // ======================================================================== Data
 const mixerStore = useMixerStore()
-const { recording } = storeToRefs(mixerStore)
+const { recording, lastRecordingBufferData } = storeToRefs(mixerStore)
 const alertStore = useZeroAlertStore()
 const path = ref('')
 const { normalizePathData } = useTransformPathData()
 const audioBufferArray = ref(false)
 const requestId = ref(false)
 const opacity = ref(0)
+const checkboxValue = ref(false)
 
 // ==================================================================== Computed
 const open = computed(() => alertStore.getAlert('create-sound-thingie-alert')?.status === 'open')
 const playbackAnalyser = computed(() => recording.value.playbackAnalyser)
+const showCutLoopCheckbox = computed(() => lastRecordingBufferData.value && lastRecordingBufferData.value.length > 1000)
 
 // ===================================================================== Watchers
 watch(open, (value) => {
@@ -70,6 +97,8 @@ watch(open, (value) => {
     })
     // convert the path data to an svg path
     path.value = useGetSvgPath(normalized.join(' '), { closed: false }) || ''
+  } else {
+    checkboxValue.value = false
   }
 })
 
@@ -85,14 +114,10 @@ watch(playbackAnalyser, (value) => {
  * @method handleConfirm
  */
 
-const handleConfirm = () => {
-  mixerStore.initUploadRecording()
+const handleConfirm = async () => {
+  await mixerStore.initUploadRecording({ cutToLength: checkboxValue.value })
   mixerStore.stopRecordingPlayback()
-  if (requestId.value) {
-    cancelAnimationFrame(requestId.value)
-    audioBufferArray.value = false
-    opacity.value = 0
-  }
+  resetAnimation()
 }
 
 /**
@@ -103,6 +128,14 @@ const handleCancel = () => {
   alertStore.closeAlert('create-sound-thingie-alert')
   mixerStore.stopRecordingPlayback()
   mixerStore.resetRecording()
+  resetAnimation()
+}
+
+/**
+ * @method resetAnimation
+ */
+
+const resetAnimation = () => {
   if (requestId.value) {
     cancelAnimationFrame(requestId.value)
     audioBufferArray.value = false
@@ -133,6 +166,16 @@ const calculateOutputLevel = () => {
   }
   opacity.value = 0.025 * Math.sqrt(sum / audioBufferArray.value.length)
   requestId.value = requestAnimationFrame(calculateOutputLevel)
+}
+
+/**
+ * @method handleDownload
+ */
+
+const handleDownload = () => {
+  mixerStore.downloadRecordingAsWav()
+  resetAnimation()
+  alertStore.closeAlert('create-sound-thingie-alert')
 }
 </script>
 
@@ -180,6 +223,34 @@ const calculateOutputLevel = () => {
   overflow: visible;
 }
 
+// //////////////////////////////////////////////////////////////////// Checkbox
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: torem(8);
+  margin-bottom: torem(15);
+}
+
+.checkbox-input {
+  width: torem(16);
+  height: torem(16);
+  cursor: pointer;
+  accent-color: $kellyGreen;
+}
+
+.checkbox-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  
+  .text {
+    font-size: torem(14);
+    line-height: 1.4;
+  }
+}
+
+// ///////////////////////////////////////////////////////////////////// Buttons
 .button-row {
   display: flex;
   justify-content: center;
@@ -192,6 +263,22 @@ const calculateOutputLevel = () => {
 .cancel-button {
   flex-grow: 1;
   min-width: torem(120);
+}
+
+.download-button {
+  padding: torem(6) torem(25);
+  &:hover {
+    :deep(.text) {
+      letter-spacing: 1px;
+      transform: scale(1.1);
+    }
+  }
+  :deep(.text) {
+    letter-spacing: 1px;
+    transform: scale(1);
+    transition: 150ms ease;
+    color: $drippyDark;
+  }
 }
 
 </style>

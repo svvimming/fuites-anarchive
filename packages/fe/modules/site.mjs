@@ -72,7 +72,7 @@ const registerPlugins = path => {
   console.log(Chalk.bold('     → Plugins'))
   Fs.readdirSync(path).filter(file => file.includes('.js')).forEach(plugin => {
     addPlugin(resolve(path, plugin))
-    console.log(console.log(Chalk.cyan(`       ${plugin}`)))
+    console.log(Chalk.cyan(`       ${plugin}`))
   })
 }
 /**

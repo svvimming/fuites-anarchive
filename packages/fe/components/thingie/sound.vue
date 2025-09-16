@@ -29,6 +29,11 @@ const props = defineProps({
     required: false,
     default: 1
   },
+  pitch: {
+    type: Number,
+    required: false,
+    default: 0
+  },
   path: {
     type: String,
     required: true,
@@ -64,8 +69,9 @@ const props = defineProps({
 
 // ======================================================================== Data
 const config = useRuntimeConfig()
+const buffer = ref(false)
 const source = ref(false)
-const player = ref(false)
+// const player = ref(false)
 const gainNode = ref(false)
 const amplitude = ref(0)
 const mousemoveEventListener = ref(false)
@@ -118,6 +124,12 @@ watch(() => props.gain, (val) => {
   }
 })
 
+watch(() => props.pitch, (val) => {
+  if (source.value) {
+    source.value.playbackRate.value = Math.pow(2, (val / 1200))
+  }
+})
+
 // ===================================================================== Methods
 /**
  * @method calculateMouseDistance
@@ -149,25 +161,37 @@ const calculateScreenCenterDistance = () => {
  * @method initSoundThingie
  */
 
-const initSoundThingie = () => {
+const initSoundThingie = async () => {
   if (props.location === 'pocket') { return }
-  player.value = document.createElement('audio')
-  player.value.crossOrigin = 'anonymous'
-  player.value.loop = true
-  const fileRef = props.fileRef
-  player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
-  source.value = audioContext.value.createMediaElementSource(player.value)
-  gainNode.value = audioContext.value.createGain()
-  gainNode.value.gain.value = 0
-  source.value.connect(gainNode.value).connect(mixer.value) // audioContext.value.destination
-  if (small.value) {
-    touchmoveEventListener.value = useThrottleFn(() => { calculateScreenCenterDistance() }, 100)
-    window.addEventListener('touchmove', touchmoveEventListener.value)
-  } else {
-    mousemoveEventListener.value = useThrottleFn(e => { calculateMouseDistance(e) }, 100)
-    window.addEventListener('mousemove', e => { mousemoveEventListener.value(e) })
+  try {
+    const fileRef = props.fileRef
+    const path = config.public.serverEnv !== 'development' ? fileRef.file_url : `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+    const response = await fetch(path)
+    buffer.value = await audioContext.value.decodeAudioData(await response.arrayBuffer())
+    source.value = audioContext.value.createBufferSource()
+    source.value.buffer = buffer.value
+    source.value.loop = true
+    source.value.playbackRate.value = Math.pow(2, (props.pitch / 1200))
+    gainNode.value = audioContext.value.createGain()
+    gainNode.value.gain.value = 0
+    source.value.connect(gainNode.value).connect(mixer.value) // audioContext.value.destination
+    if (small.value) {
+      touchmoveEventListener.value = useThrottleFn(() => { calculateScreenCenterDistance() }, 100)
+      window.addEventListener('touchmove', touchmoveEventListener.value)
+    } else {
+      mousemoveEventListener.value = useThrottleFn(e => { calculateMouseDistance(e) }, 100)
+      window.addEventListener('mousemove', e => { mousemoveEventListener.value(e) })
+    }
+    source.value.start()
+  } catch (err) {
+    console.error(`Unable to load audio from ${path}. Error: ${err.message}`);
   }
-  player.value.play()
+  // player.value = document.createElement('audio')
+  // player.value.crossOrigin = 'anonymous'
+  // player.value.loop = true
+  // const fileRef = props.fileRef
+  // player.value.src = config.public.serverEnv !== 'development' ? fileRef.file_url : '/winter-behaviour.mp3' //: `${baseUrl.value}/uploads/${fileRef._id}.${fileRef.file_ext}`
+  // source.value = audioContext.value.createMediaElementSource(player.value)
 }
 
 // ======================================================================= Hooks
@@ -176,7 +200,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (player.value) { player.value.pause() }
+  if (source.value) { source.value.stop() }
   if (mousemoveEventListener.value) { window.removeEventListener('mousemove', mousemoveEventListener.value) }
   if (touchmoveEventListener.value) { window.removeEventListener('touchmove', touchmoveEventListener.value) }
 })

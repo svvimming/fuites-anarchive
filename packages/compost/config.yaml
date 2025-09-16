@@ -1,0 +1,93 @@
+simulation:
+  window:
+    width: 1600
+    height: 1000
+    ui_bar_height: 60
+  ui_enabled: true
+  fps: 60
+  gravity_x: 0
+  gravity_y: 0
+  chunk_velocity_min: -200
+  chunk_velocity_max: 200
+  torus_world: false
+  buttons:
+    width: 120
+    height: 40
+    gap: 10
+
+worm:
+  max_chunks: 15
+  appetite:
+    min_difference: 0.6
+    max_difference: 1
+    hue_weight: 0.6
+    saturation_weight: 0.2
+    value_weight: 0.2
+  glue:
+    enabled: true
+    max_glued_chunks: 100
+    vicinity:
+      min_difference: 0
+      max_difference: 0.07
+      hue_weight: 0.6
+      saturation_weight: 0.2
+      value_weight: 0.2
+    flocking:
+      # maxspeed: 50
+      # maxforce: 10
+      # desired_separation: 30
+      # separate_force_mult: 70
+      # seek_force_mult: 60
+      #     flocking:
+      maxspeed: 75
+      maxforce: 10
+      desired_separation: 30
+      separate_force_mult: 40
+      seek_force_mult: 35
+    visual:
+      enabled: true
+      glow_radius: 20
+      pulse_speed: 0.05
+      pulse_min: 0.7
+      pulse_max: 1.0
+  history_panel:
+    enabled: true
+    display_area:
+      x: 10
+      y: 70
+      width: 300
+      height: 400
+    chunk_preview_size: 50
+    text_height: 20
+    spacing: 10
+
+segmentation:
+  # --- Felzenszwalb Segmentation ---
+  # Hyperparameters to adjust:
+  # scale (int, default: 100), sigma (float, default: 0.8), min_size (int, default: 20)
+  # Increase scale -> fewer segments; Decrease scale -> more segments
+  # Increase sigma -> smoother image, fewer segments; Decrease sigma -> sharper details
+  # Increase min_size -> larger minimum segments; Decrease min_size -> smaller segments
+  felzenszwalb:
+    scale: 150
+    sigma: 3
+    min_size: 20
+
+compression:
+  max_size: 10000
+  min_entropy: 10
+  downsample_factor: 0.3
+
+colors:
+  BLACK: [0, 0, 0]
+  WHITE: [255, 255, 255]
+  DARK_GRAY: [70, 70, 70]
+  UI_BG: [30, 30, 30]
+  RED: [255, 0, 0]
+  PANEL_BG: [40, 40, 40]
+
+server:
+  host: 127.0.0.1
+  port: 5055
+  max_download_bytes: 26214400 # 25MB
+  download_timeout_sec: 15

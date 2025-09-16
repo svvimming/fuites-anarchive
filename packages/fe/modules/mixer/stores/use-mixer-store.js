@@ -2,6 +2,7 @@
 // -----------------------------------------------------------------------------
 import { defineStore } from 'pinia'
 import { useTransformPathData } from '../../../composables/use-transform-path-data'
+import AudioBufferToWav from 'audiobuffer-to-wav'
 
 // ////////////////////////////////////////////////////////////////////// Export
 // -----------------------------------------------------------------------------
@@ -16,6 +17,7 @@ export const useMixerStore = defineStore('mixer', () => {
   const { page } = storeToRefs(verseStore)
   const websocketStore = useWebsocketStore()
   const { socket } = storeToRefs(websocketStore)
+  const generalStore = useGeneralStore()
   const { calculatePathRanges, normalizePathData } = useTransformPathData()
 
   const { $bus } = useNuxtApp()
@@ -28,7 +30,7 @@ export const useMixerStore = defineStore('mixer', () => {
   const recording = ref({
     path: [],
     id: null,
-    audioBuffer: null,
+    audioBlob: null,
     playbackSource: false,
     playbackAnalyser: false,
     color: '#000',
@@ -43,6 +45,8 @@ export const useMixerStore = defineStore('mixer', () => {
   const nextChunkPayload = ref(null)
   const place = ref(0)
   const goal = ref(0)
+  const lastRecordingBufferData = ref(null)
+  const recordingAudioCtx = ref(null)
 
   // =================================================================== actions
   /**
@@ -79,7 +83,7 @@ export const useMixerStore = defineStore('mixer', () => {
     recording.value = {
       path: [],
       id: null,
-      audioBuffer: null,
+      audioBlob: null,
       playbackSource: false,
       color: '#000',
       state: 'waiting',
@@ -125,8 +129,8 @@ export const useMixerStore = defineStore('mixer', () => {
       
       // Handle recording completion
       mediaRecorder.value.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
-        recording.value.audioBuffer = blob
+        const blob = new Blob(chunks, { type: 'audio/mpeg' })
+        recording.value.audioBlob = blob
         // Open the create sound thingie alert after recording is stopped and the blob is created
         alertStore.openAlert('create-sound-thingie-alert')
       }
@@ -146,31 +150,28 @@ export const useMixerStore = defineStore('mixer', () => {
    * @returns {Promise} A promise that resolves when the audio has finished playing
    */
   const playRecording = async () => {
-    if (!recording.value.audioBuffer) {
+    if (!recording.value.audioBlob) {
       console.warn('No audio buffer available to play')
       return
     }
-
     // Pause the current audio context
     audioContext.value.suspend()
     // Create an audio source from the blob
-    const recordingAudioCtx = new AudioContext()
-    const arrayBuffer = await recording.value.audioBuffer.arrayBuffer()
-    const audioBuffer = await recordingAudioCtx.decodeAudioData(arrayBuffer)
-    
+    recordingAudioCtx.value = new AudioContext()
+    const arrayBuffer = await recording.value.audioBlob.arrayBuffer()
+    const audioBuffer = await recordingAudioCtx.value.decodeAudioData(arrayBuffer)
     // Create and connect the source
-    const source = recordingAudioCtx.createBufferSource()
+    const source = recordingAudioCtx.value.createBufferSource()
     source.buffer = audioBuffer
     source.loop = true // Enable infinite looping
-    source.connect(recordingAudioCtx.destination)
+    source.connect(recordingAudioCtx.value.destination)
     
     // Store the source for later stopping
     recording.value.playbackSource = source
-    recording.value.playbackAnalyser = recordingAudioCtx.createAnalyser()
+    recording.value.playbackAnalyser = recordingAudioCtx.value.createAnalyser()
     source.connect(recording.value.playbackAnalyser)
     // Play the audio
     source.start(0)
-    
     // Return a promise that resolves when the audio finishes playing
     return new Promise(resolve => {
       source.onended = resolve
@@ -212,21 +213,98 @@ export const useMixerStore = defineStore('mixer', () => {
   }
 
   /**
+   * @method cutAudioBlobToLength
+   * @desc Cuts the audio blob to the length of the last recording
+   * @param {Blob} blob - The audio blob to cut
+   * @param {object} bufferData - The buffer data of the last recording
+   * @returns {Blob} A new audio blob
+   */
+
+  const cutAudioBlobToLength = async (blob, bufferData) => {
+    // Get the array buffer of the old blob and create a new empty buffer
+    const audioCtx = new AudioContext()
+    const arrayBuffer = await blob.arrayBuffer()
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+    const newAudioBuffer = audioCtx.createBuffer(
+      bufferData.numberOfChannels,
+      bufferData.length,
+      bufferData.sampleRate,
+    )
+    // Copy the old buffer data to the new buffer
+    for (let channel = 0; channel < newAudioBuffer.numberOfChannels; channel++) {
+      const oldBufferChannel = audioBuffer.getChannelData(channel)
+      const newBufferChannel = newAudioBuffer.getChannelData(channel)
+      for (let i = 0; i < newAudioBuffer.length; i++) {
+        newBufferChannel[i] = oldBufferChannel[i] || 0
+      }
+    }
+    // Create and connect the source
+    const source = recordingAudioCtx.value.createBufferSource()
+    source.buffer = newAudioBuffer
+    source.loop = true // Enable infinite looping
+    source.connect(recordingAudioCtx.value.destination)
+    // Stop the old source and analyser
+    recording.value.playbackSource.stop()
+    recording.value.playbackAnalyser.disconnect()
+    // Store the new source and analyser
+    recording.value.playbackSource = source
+    recording.value.playbackAnalyser = recordingAudioCtx.value.createAnalyser()
+    source.connect(recording.value.playbackAnalyser)
+    // Play the audio
+    source.start(0)
+    // Create an OfflineAudioContext to render the newAudioBuffer to WAV
+    const offlineCtx = new OfflineAudioContext(
+      newAudioBuffer.numberOfChannels,
+      newAudioBuffer.length,
+      newAudioBuffer.sampleRate
+    )
+    // Create a buffer source with the newAudioBuffer
+    const offlineSource = offlineCtx.createBufferSource()
+    offlineSource.buffer = newAudioBuffer
+    offlineSource.connect(offlineCtx.destination)
+    offlineSource.start(0)
+    // Render the audio to a wav blob
+    return offlineCtx.startRendering()
+      .then(renderedBuffer => {
+        const wavBuffer = AudioBufferToWav(renderedBuffer)
+        return new Blob([wavBuffer], { type: 'audio/wav' })
+      })
+      .catch(error => {
+        console.error('Error rendering audio:', error)
+        return null
+      })
+  }
+
+  /**
    * @method initUploadRecording
    * @desc Initiates the upload of the recorded audio to the server
    */
-  const initUploadRecording = () => {
-    if (!recording.value.audioBuffer) {
+  const initUploadRecording = async (options = {}) => {
+    if (!recording.value.audioBlob) {
       console.warn('No audio buffer available to upload')
       return
     }
-
+    // If enabled, cut the audio blob to the length of the last recording
+    if (options.cutToLength && lastRecordingBufferData.value) {
+      const blob = await cutAudioBlobToLength(recording.value.audioBlob, lastRecordingBufferData.value)
+      if (blob) {
+        recording.value.audioBlob = blob
+      }
+    }
+    // update the upload status
     recording.value.uploadStatus = 'uploading'
-    const blob = recording.value.audioBuffer
-    const filename = `recording-${Date.now()}.ogg`
+    // save the sample length of the current buffer
+    const buffer = recording.value.playbackSource.buffer
+    lastRecordingBufferData.value = {
+      numberOfChannels: buffer.numberOfChannels,
+      sampleRate: buffer.sampleRate,
+      length: buffer.length
+    }
+    // get the blob and filename
+    const blob = recording.value.audioBlob
+    const filename = `recording-${Date.now()}`
     const filesize = blob.size
     const mimetype = blob.type
-
     // Initialize the upload
     socket.value.emit('module|file-upload-initialize|payload', {
       socket_id: socket.value.id,
@@ -251,7 +329,7 @@ export const useMixerStore = defineStore('mixer', () => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
-    const chunk = recording.value.audioBuffer.slice(index, index + Math.min(chunksize, (recording.value.audioBuffer.size - index)))
+    const chunk = recording.value.audioBlob.slice(index, index + Math.min(chunksize, (recording.value.audioBlob.size - index)))
 
     recording.value.uploadProgress = ((place.value / goal.value) * 100).toFixed(0)
 
@@ -301,6 +379,7 @@ export const useMixerStore = defineStore('mixer', () => {
     recording.value.uploadStatus = 'complete'
     // reset the recording
     alertStore.closeAlert('create-sound-thingie-alert')
+    generalStore.setMode('record', false)
     resetRecording()
   }
 
@@ -316,6 +395,64 @@ export const useMixerStore = defineStore('mixer', () => {
     }
     websocket.on('audio-recording|file-upload-chunk|payload', uploadNextChunk)
     websocket.on('audio-recording|file-upload-complete|payload', handleUploadComplete)
+  }
+
+  /**
+   * @method downloadRecordingAsWav
+   * @desc Downloads the recorded audio buffer as an WAV file
+   */
+  const downloadRecordingAsWav = () => {
+    if (!recording.value.playbackSource) {
+      console.warn('No playback source available to download')
+      return
+    }
+    // Get the buffer data from the playback source
+    const buffer = recording.value.playbackSource.buffer
+    // Create an OfflineAudioContext to render the newAudioBuffer to WAV
+    const offlineCtx = new OfflineAudioContext(
+      buffer.numberOfChannels,
+      buffer.length,
+      buffer.sampleRate
+    )
+    // Create a buffer source with the newAudioBuffer
+    const offlineSource = offlineCtx.createBufferSource()
+    offlineSource.buffer = buffer
+    offlineSource.connect(offlineCtx.destination)
+    offlineSource.start(0)
+    // Render the audio and convert to WAV
+    offlineCtx.startRendering()
+      .then(renderedBuffer => {
+        const wavBuffer = AudioBufferToWav(renderedBuffer)
+        const blob = new Blob([wavBuffer], { type: 'audio/wav' })
+        // Download file
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `sound-thingie-${Date.now()}.wav`
+        a.click()
+        // Cleanup: revoke the blob URL and remove the anchor element
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+          if (a.parentNode) {
+            a.parentNode.removeChild(a)
+          }
+        }, 1000) // Delay to ensure download starts
+      })
+      .catch(error => {
+        console.error('Error rendering audio:', error)
+        stopRecordingPlayback()
+        resetRecording()
+      })
+      .finally(() => {
+        // Cleanup: close the offline audio context
+        if (offlineCtx.state !== 'closed') {
+          offlineCtx.close()
+        }
+        stopRecordingPlayback()
+        resetRecording()
+        alertStore.closeAlert('create-sound-thingie-alert')
+        generalStore.setMode('record', false)
+      })
   }
 
   // ==================================================================== Socket
@@ -334,6 +471,7 @@ export const useMixerStore = defineStore('mixer', () => {
     mixer,
     analyser,
     recording,
+    lastRecordingBufferData,
     // ----- actions
     createAudioContext,
     setAudioContextPlayState,
@@ -342,6 +480,7 @@ export const useMixerStore = defineStore('mixer', () => {
     resetRecording,
     playRecording,
     stopRecordingPlayback,
-    initUploadRecording
+    initUploadRecording,
+    downloadRecordingAsWav
   }
 })
