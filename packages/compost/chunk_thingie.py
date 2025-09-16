@@ -14,7 +14,8 @@ class Chunk:
         vertices: List[Tuple[float, float]],
         config: Dict[str, Any],
         space: pymunk.Space,
-        downsized: bool = False  # Indicates if the segment has been downsized
+        downsized: bool = False,  # Indicates if the segment has been downsized
+        audio_path: str = None  # Path to audio file for sound chunks
     ) -> None:
         """
         Initialize an Chunk instance.
@@ -29,6 +30,7 @@ class Chunk:
         self.config = config
         self.space = space
         self.segment_surface = segment_surface
+        self.audio_path = audio_path  # Store audio file path for sound chunks
 
         sim_cfg = config["simulation"]
         self.width = sim_cfg["window"]["width"]

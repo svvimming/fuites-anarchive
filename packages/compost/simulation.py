@@ -5,13 +5,13 @@ import os
 import math
 import numpy as np
 from tkinter import filedialog
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Optional
 from skimage.segmentation import felzenszwalb
 from skimage.color import rgba2rgb, rgb2gray
 from skimage.util import img_as_ubyte
 from skimage.transform import resize
 from scipy.spatial import ConvexHull, QhullError
-from utils import scale_image_to_fit, quit_program, resize_image_to_dimensions
+from utils import scale_image_to_fit, quit_program, resize_image_to_dimensions, build_curve_surface, convex_hull_vertices_from_curve
 from worm import Worm, Glue
 from chunk_thingie import Chunk
 import sys
@@ -107,6 +107,18 @@ class ChunkFactory:
                         blit_y = int(y - (cy - min_y) + offset_y)
                         if 0 <= blit_x < surface_width and 0 <= blit_y < surface_height:
                             centered_surface.set_at((blit_x, blit_y), color)
+
+            # --- Minimal visibility filtering (configurable) ---
+            filt_cfg = self.config.get("segmentation", {}).get("image_filter", {})
+            min_visible = int(filt_cfg.get("min_visible_pixels", 1))
+            min_alpha = int(filt_cfg.get("min_alpha_threshold", 1))
+
+            alpha_view = pygame.surfarray.pixels_alpha(centered_surface)
+            visible_count = (alpha_view >= min_alpha).sum()
+            del alpha_view  # Release lock
+
+            if visible_count < min_visible:
+                continue
 
             # Check if this segment is marked for downsizing
             downsized = segment_label in labels_to_downsize
@@ -285,8 +297,14 @@ class UIManager:
             self.button_width,
             self.button_height
         )
-        clear_rect = pygame.Rect(
+        upload_sound_rect = pygame.Rect(
             upload_rect.right + self.button_gap,
+            (self.ui_bar_height - self.button_height) // 2,
+            self.button_width,
+            self.button_height
+        )
+        clear_rect = pygame.Rect(
+            upload_sound_rect.right + self.button_gap,
             (self.ui_bar_height - self.button_height) // 2,
             self.button_width,
             self.button_height
@@ -303,7 +321,7 @@ class UIManager:
             self.button_width,
             self.button_height
         )
-        return [upload_rect, clear_rect, export_rect, quit_rect]
+        return [upload_rect, upload_sound_rect, clear_rect, export_rect, quit_rect]
 
     def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True, glue_visuals_enabled: bool = True, ui_enabled: bool = True, chunk_count: int = 0) -> None:
         """
@@ -319,7 +337,7 @@ class UIManager:
         ui_bar_rect = pygame.Rect(0, 0, self.width, self.ui_bar_height)
         pygame.draw.rect(self.screen, self.colors["UI_BG"], ui_bar_rect)
 
-        button_texts = ["Upload Image", "Clear Canvas", "Export Glues (E)", "Quit"]
+        button_texts = ["Upload Image", "Upload Sound", "Clear Canvas", "Export Glues (E)", "Quit"]
         for rect, text in zip(self.buttons, button_texts):
             self._draw_button(rect, text)
 
@@ -401,9 +419,93 @@ class Simulation:
         self.boundary_walls = []
         # Thread-safe queue for incoming uploads from background server
         self._upload_queue: "Queue[Tuple[bytes, int, int]]" = Queue()
+        
+        # Worm scheduling state for sequential spawns after exports
+        self._active_worm: Worm = None
+        
+        # Audio playback for sound chunks
+        self.playing_chunks = {}  # Track currently playing chunks: {chunk: channel}
+        self.last_hovered_chunks = set()  # Track chunks that were hovered last frame
+        
+        # Initialize pygame mixer for audio playback with multiple channels
+        try:
+            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
+            pygame.mixer.set_num_channels(16)  # Allow up to 16 simultaneous sounds
+            print("Audio mixer initialized successfully with 16 channels")
+        except pygame.error as e:
+            print(f"Failed to initialize audio mixer: {e}")
 
         # Create boundaries
         self._create_boundaries()
+
+    def get_chunks_at_mouse(self, mouse_pos: Tuple[int, int]) -> List[Chunk]:
+        """
+        Find ALL chunks under the mouse cursor using physics collision detection.
+        
+        Args:
+            mouse_pos: (x, y) mouse position
+            
+        Returns:
+            List of Chunk objects found at position
+        """
+        # Get all shapes at the mouse position (not just nearest)
+        point_queries = self.space.point_query(mouse_pos, 0, pymunk.ShapeFilter())
+        
+        found_chunks = []
+        if point_queries:
+            # Find all chunks that own these physics shapes
+            for point_query in point_queries:
+                if point_query.shape:
+                    for chunk in self.chunks:
+                        if chunk.shape == point_query.shape:
+                            found_chunks.append(chunk)
+                            break
+        
+        return found_chunks
+
+    def handle_audio_hover(self, mouse_pos: Tuple[int, int]) -> None:
+        """
+        Handle audio playback when hovering over sound chunks.
+        Detects ALL overlapping chunks and plays them simultaneously.
+        
+        Args:
+            mouse_pos: (x, y) mouse position
+        """
+        hovered_chunks = set(self.get_chunks_at_mouse(mouse_pos))
+        
+        # Find newly hovered chunks (not hovered in previous frame)
+        newly_hovered = hovered_chunks - self.last_hovered_chunks
+        
+        # Start playing audio for newly hovered chunks
+        for chunk in newly_hovered:
+            if chunk.audio_path and chunk not in self.playing_chunks:
+                try:
+                    sound = pygame.mixer.Sound(chunk.audio_path)
+                    channel = sound.play()
+                    if channel:
+                        self.playing_chunks[chunk] = channel
+                        print(f"Playing audio: {os.path.basename(chunk.audio_path)}")
+                except pygame.error as e:
+                    print(f"Failed to play audio {chunk.audio_path}: {e}")
+        
+        # Update tracking for next frame
+        self.last_hovered_chunks = hovered_chunks
+
+    def cleanup_finished_audio(self) -> None:
+        """
+        Clean up the playing_chunks dict by removing chunks whose audio channels have finished.
+        This is lightweight and runs every frame to dynamically track individual completions.
+        """
+        # Create a list of chunks to remove (can't modify dict while iterating)
+        finished_chunks = []
+        
+        for chunk, channel in self.playing_chunks.items():
+            if not channel.get_busy():  # Channel is no longer playing
+                finished_chunks.append(chunk)
+        
+        # Remove finished chunks from the tracking dict
+        for chunk in finished_chunks:
+            del self.playing_chunks[chunk]
 
     def _create_boundaries(self) -> None:
         """
@@ -509,6 +611,9 @@ class Simulation:
         """
         Update (draw) all chunks in the simulation and process worm behavior.
         """
+        # Check if we need to spawn a new worm after export
+        self._check_worm_completion()
+        
         # Apply torus wrapping if enabled
         if self.torus_world:
             self.handle_torus_wrapping()
@@ -548,14 +653,63 @@ class Simulation:
             glue.update()
             if self.glue_visuals_enabled:
                 glue.draw(self.screen)
+
+        # During superabundance, auto-export clumps (glues) that have been capped > configured time
+        try:
+            superabundance_cfg = self.config["worm"].get("superabundance", {})
+            threshold = superabundance_cfg.get("threshold", 1000)
+            total_particles = len(self.chunks)
+            if total_particles > threshold:
+                now_ms = pygame.time.get_ticks()
+                auto_export_age_ms = int(superabundance_cfg.get("auto_export_capped_after_ms", 60_000))
+                expired_glues = [
+                    g for g in self.glues
+                    if getattr(g, "capped_at_ms", None) is not None
+                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
+                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
+                ]
+                if expired_glues:
+                    # Only skip respawn when active glues exceed threshold
+                    glue_cfg = self.config["worm"].get("glue", {})
+                    max_active = int(glue_cfg.get("max_active_glues", 5))
+                    over_limit = len(self.glues) > max_active
+                    self.export_glues(expired_glues, schedule_worms=not over_limit)
+        except Exception:
+            # Fail-safe: never break the frame loop due to auto-export logic
+            pass
+
+        # If active glues exceed configured limit, auto-export capped-and-old glues (no respawn)
+        try:
+            glue_cfg = self.config["worm"].get("glue", {})
+            max_active = int(glue_cfg.get("max_active_glues", 5))
+            if len(self.glues) > max_active:
+                now_ms = pygame.time.get_ticks()
+                # Reuse superabundance auto-export age param for simplicity
+                age_cfg = self.config["worm"].get("superabundance", {})
+                auto_export_age_ms = int(age_cfg.get("auto_export_capped_after_ms", 60_000))
+                over_limit_candidates = [
+                    g for g in self.glues
+                    if getattr(g, "capped_at_ms", None) is not None
+                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
+                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
+                ]
+                if over_limit_candidates:
+                    # Do not schedule respawn worms when auto-exporting due to threshold
+                    self.export_glues(over_limit_candidates, schedule_worms=False)
+        except Exception:
+            # Fail-safe: never break the frame loop due to over-limit auto-export logic
+            pass
         # Draw worm history panels for all worms, compactly offsetting only visible panels
         panel_spacing = 20
-        visible_index = 0
+        x_cursor = 0
         for worm in self.worms:
             if worm and worm.panel_enabled and len(worm.history) > 0:
-                x_offset = visible_index * (worm.panel_width + panel_spacing)
-                worm.draw(self.screen, x_offset=x_offset)
-                visible_index += 1
+                worm.draw(self.screen, x_offset=x_cursor)
+                # Advance by effective width plus spacing
+                try:
+                    x_cursor += worm.get_panel_width() + panel_spacing
+                except Exception:
+                    x_cursor += worm.panel_width + panel_spacing
 
     def get_all_glued_chunk_ids(self) -> Set[int]:
         """
@@ -616,9 +770,11 @@ class Simulation:
         """
         if not self.ui_enabled:
             return
-        upload_rect, clear_rect, export_rect, quit_rect = self.ui_manager.buttons
+        upload_rect, upload_sound_rect, clear_rect, export_rect, quit_rect = self.ui_manager.buttons
         if upload_rect.collidepoint(mouse_pos):
             self.upload_image()
+        elif upload_sound_rect.collidepoint(mouse_pos):
+            self.upload_sound()
         elif clear_rect.collidepoint(mouse_pos):
             self.clear_chunks()
         elif export_rect.collidepoint(mouse_pos):
@@ -626,15 +782,20 @@ class Simulation:
         elif quit_rect.collidepoint(mouse_pos):
             quit_program()
 
-    def export_glues(self) -> None:
+    def export_glues(self, glues: Optional[List[Glue]] = None, schedule_worms: bool = True) -> None:
         """
         Export each glue's glued chunks to a PNG (without glue visuals) and
         remove those glued chunks and their glue from the simulation.
+        If schedule_worms is True, schedule one new worm per exported glue.
         """
-        # Collect glues to export, including a dead worm's glue not yet appended
-        glues_to_export: List[Glue] = list(self.glues)
-        if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
-            glues_to_export.append(self.worm.glue)
+        # Collect glues to export
+        if glues is not None:
+            glues_to_export: List[Glue] = list(glues)
+        else:
+            glues_to_export = list(self.glues)
+            # Include a dead worm's glue not yet appended
+            if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
+                glues_to_export.append(self.worm.glue)
 
         if not glues_to_export:
             print("No glues to export.")
@@ -673,17 +834,20 @@ class Simulation:
                 continue
             image_to_save = offscreen_full.subsurface(crop_rect).copy()
 
-            # Save to file
+            # Save PNG to file
             timestamp = pygame.time.get_ticks()
             rand_suffix = random.randint(0, 999999)
             filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}.png"
             filepath = os.path.join(export_dir, filename)
             try:
                 pygame.image.save(image_to_save, filepath)
-                exported_count += 1
-                print(f"Exported glue to: {filepath}")
+                print(f"Exported glue PNG to: {filepath}")
             except Exception as exc:
                 print(f"Failed to export glue PNG: {exc}")
+
+            # Export mixed audio if there are sound chunks in this glue
+            self._export_glue_audio(glued_chunks, export_dir, timestamp, rand_suffix, exported_count)
+            exported_count += 1
 
             # Remove glued chunks' bodies and shapes from space and simulation
             for glued in list(glued_chunks):
@@ -712,17 +876,150 @@ class Simulation:
                 except ValueError:
                     pass
 
-        # Also clear any reference from the current worm
-        if self.worm and self.worm.glue in glues_to_export:
-            self.worm.glue = None
+        # Clear history panels only for worms whose glue was exported
+        try:
+            exported_histories = {id(glue.worm_history) for glue in glues_to_export}
+        except Exception:
+            exported_histories = set()
 
-        # Clear histories for all worms after export
+        # Unlink and clear only impacted worms
         for worm in self.worms:
-            if worm:
+            if not worm:
+                continue
+            # If this worm's glue was exported, unlink it
+            if getattr(worm, 'glue', None) in glues_to_export:
+                worm.glue = None
+            # If this worm's history fed an exported glue, clear just this worm's panel/history
+            if id(getattr(worm, 'history', [])) in exported_histories:
                 worm.history.clear()
                 worm.last_color = None
 
+        # Schedule one worm per exported glue, sequentially (optional)
+        if schedule_worms:
+            self._schedule_worms(exported_count)
+
         print(f"Export complete. {exported_count} glue images saved. Removed glued chunks and cleaned up glues. Cleared worm history panels.")
+
+    def _schedule_worms(self, count: int) -> None:
+        """Schedule spawning of 'count' worms sequentially. If none active, spawn immediately."""
+        if count <= 0:
+            return
+        # Initialize counters if missing
+        if not hasattr(self, '_spawn_pending'):
+            self._spawn_pending = 0
+        if not hasattr(self, '_spawn_batch_total'):
+            self._spawn_batch_total = 0
+        self._spawn_pending += count
+        self._spawn_batch_total += count
+        # If no active worm, start immediately
+        if not getattr(self, '_active_worm', None):
+            self._spawn_next_worm()
+
+    def _spawn_next_worm(self) -> None:
+        """Spawn the next worm in the current schedule batch."""
+        if getattr(self, '_spawn_pending', 0) <= 0:
+            return
+        new_worm = Worm(self.config)
+        new_worm.panel_enabled = self.history_panel_enabled
+        self.worm = new_worm
+        self.worms.append(new_worm)
+        self._active_worm = new_worm
+        # Decrement pending and report progress
+        self._spawn_pending -= 1
+        spawned_so_far = self._spawn_batch_total - self._spawn_pending
+        total = self._spawn_batch_total
+        print(f"Spawned new worm {spawned_so_far} of {total}")
+
+    def _check_worm_completion(self) -> None:
+        """Advance scheduling when the active worm finishes eating."""
+        if not getattr(self, '_active_worm', None):
+            return
+        if self._active_worm.is_dead:
+            if getattr(self, '_spawn_pending', 0) > 0:
+                self._spawn_next_worm()
+            else:
+                self._active_worm = None
+                # Reset batch counters
+                self._spawn_batch_total = 0
+                self._spawn_pending = 0
+                print("All scheduled worms have been spawned and completed")
+
+    def _export_glue_audio(self, glued_chunks, export_dir: str, timestamp: int, rand_suffix: int, exported_count: int) -> None:
+        """
+        Export a mixed audio file from all sound chunks in a glue.
+        Positions each audio randomly within the duration of the longest audio.
+        """
+        # Collect all audio files from chunks that have them
+        audio_files = []
+        for glued in glued_chunks:
+            chunk = glued.chunk
+            if chunk.audio_path and os.path.exists(chunk.audio_path):
+                audio_files.append(chunk.audio_path)
+        
+        if not audio_files:
+            return  # No audio to mix
+        
+        try:
+            import librosa
+            import soundfile as sf
+            import numpy as np
+        except ImportError:
+            print("librosa and soundfile required for audio mixing")
+            return
+        
+        try:
+            # Load all audio files and find the longest duration
+            audio_data = []
+            sample_rates = []
+            max_duration = 0.0
+            
+            for audio_file in audio_files:
+                y, sr = librosa.load(audio_file, sr=None)
+                duration = len(y) / sr
+                audio_data.append((y, sr))
+                sample_rates.append(sr)
+                max_duration = max(max_duration, duration)
+            
+            if max_duration == 0:
+                return
+            
+            # Use the most common sample rate (or first one if tie)
+            target_sr = max(set(sample_rates), key=sample_rates.count)
+            
+            # Create output buffer
+            output_samples = int(max_duration * target_sr)
+            mixed_audio = np.zeros(output_samples, dtype=np.float32)
+            
+            # Mix each audio at a random position within the max duration
+            for i, (y, sr) in enumerate(audio_data):
+                # Resample to target sample rate if needed
+                if sr != target_sr:
+                    y = librosa.resample(y, orig_sr=sr, target_sr=target_sr)
+                
+                # Random start position within the available time
+                audio_length = len(y)
+                max_start_samples = max(0, output_samples - audio_length)
+                start_sample = random.randint(0, max_start_samples) if max_start_samples > 0 else 0
+                end_sample = min(start_sample + audio_length, output_samples)
+                
+                # Add to mix with overlap handling
+                mix_length = end_sample - start_sample
+                mixed_audio[start_sample:end_sample] += y[:mix_length]
+                
+                print(f"  Mixed audio {i+1}/{len(audio_data)}: {os.path.basename(audio_files[i])} at {start_sample/target_sr:.2f}s")
+            
+            # Normalize to prevent clipping
+            if np.max(np.abs(mixed_audio)) > 0:
+                mixed_audio = mixed_audio / np.max(np.abs(mixed_audio)) * 0.95
+            
+            # Save mixed audio
+            audio_filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}_mixed.wav"
+            audio_filepath = os.path.join(export_dir, audio_filename)
+            sf.write(audio_filepath, mixed_audio, target_sr)
+            print(f"Exported mixed audio to: {audio_filepath}")
+            
+        except Exception as exc:
+            print(f"Failed to export mixed audio: {exc}")
 
     def toggle_history_panel(self) -> None:
         """
@@ -750,8 +1047,7 @@ class Simulation:
             target_width (int, optional): Target width for the image.
             target_height (int, optional): Target height for the image.
         """
-        # Reset the current worm but keep existing glues
-        self.worm = None
+        # Do not reset the current worm here; keep it active so it can continue consuming
 
         # Scale the image to fit the screen (treat UI bar as overlay)
         max_width = self.width
@@ -777,12 +1073,136 @@ class Simulation:
         self.chunks.extend(new_chunks)
         print(f"Created {len(new_chunks)} new chunks.")
 
-        # Create a new worm each time an image is uploaded
-        new_worm = Worm(self.config)
-        # Set panel enabled based on global state
-        new_worm.panel_enabled = self.history_panel_enabled
-        self.worm = new_worm
-        self.worms.append(new_worm)
+        # Create worms based on superabundance status
+        self._spawn_worms_for_upload(upload_type="image")
+
+    def upload_sound(self) -> None:
+        """
+        Let the user pick a sound file and create curve-based chunks from its Felzenszwalb segments.
+        """
+        file_path = filedialog.askopenfilename(
+            title="Select an audio file",
+            filetypes=[
+                ("Audio files", ("*.wav", "*.mp3", "*.flac", "*.ogg", "*.m4a")),
+                ("All files", ("*.*",)),
+            ],
+        )
+        if file_path and os.path.exists(file_path):
+            try:
+                self.process_sound_file(file_path)
+            except Exception as e:
+                print(f"Failed to process sound: {e}")
+
+    def process_sound_file(self, song_path: str) -> None:
+        """
+        Use sound_chunking to segment audio into shapes, generate 2D curve profiles with color mapping,
+        and instantiate physics chunks from those curves.
+        """
+        # Do not reset the current worm here; keep it active so it can continue consuming
+
+        # Lazy-import the sound_chunking module from the local sound directory
+        import sys as _sys
+        import os as _os
+        base_dir = _os.path.dirname(__file__)
+        sound_dir = _os.path.join(base_dir, "sound")
+        if sound_dir not in _sys.path:
+            _sys.path.append(sound_dir)
+        try:
+            import sound_chunking as sc  # type: ignore
+        except Exception as exc:
+            print(f"Unable to import sound_chunking: {exc}")
+            return
+
+        snd_cfg = self.config.get("sound", {})
+        felz = snd_cfg.get("felzenszwalb", {})
+        output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(song_path).split('.')[0]}")
+        # Run segmentation (mirrors defaults used in sound_chunking.main)
+        saved_paths, kept_segments = sc.split_audio_felzenszwalb_2d(
+            song_path,
+            output_dir=output_dir,
+            scale=int(felz.get("scale", 150)),
+            sigma=float(felz.get("sigma", 3)),
+            min_size=int(felz.get("min_size", 20)),
+            max_shapes=int(snd_cfg.get("max_shapes", 50)),
+            min_area_pixels=int(snd_cfg.get("min_area_pixels", 300)),
+            min_time_seconds=float(snd_cfg.get("min_time_seconds", 0.5)),
+            min_energy_ratio=float(snd_cfg.get("min_energy_ratio", 0.001)),
+            min_loudness_db=float(snd_cfg.get("min_loudness_db", -70.0)),
+            show_plots=False,  # Disable matplotlib windows
+        )
+
+        # Create 2D path visualization data (returns curves and their RGBA colors)
+        _X, _Y, curve_chunks_2d, _profiles = sc.create_2d_path_visualization(
+            kept_segments,
+            song_path,
+            points_per_second=int(snd_cfg.get("points_per_second", 100)),
+            resampled_points_per_chunk=int(snd_cfg.get("resampled_points_per_chunk", 128)),
+            show_plots=False,  # Disable matplotlib windows
+        )
+
+        # Build chunks from curve profiles
+        surf_cfg = snd_cfg.get("chunk_surface", {})
+        line_w = int(surf_cfg.get("line_width", 6))
+        padding = int(surf_cfg.get("padding", 6))
+        # Dynamic sizing by duration
+        size_cfg = snd_cfg.get("duration_size", {})
+        min_sec = float(size_cfg.get("min_seconds", 0.5))
+        max_sec = float(size_cfg.get("max_seconds", 60.0))
+        min_w = int(size_cfg.get("min_width", 200))
+        min_h = int(size_cfg.get("min_height", 200))
+        max_w = int(size_cfg.get("max_width", 500))
+        max_h = int(size_cfg.get("max_height", 500))
+
+        def lerp(a: float, b: float, t: float) -> float:
+            return a + (b - a) * t
+
+        new_chunks: List[Chunk] = []
+        for item in curve_chunks_2d:
+            x_res = np.asarray(item.get("x_resampled", []), dtype=float)
+            y_res = np.asarray(item.get("y_resampled", []), dtype=float)
+            if x_res.size < 2 or y_res.size < 2:
+                continue
+            pts = np.stack([x_res, y_res], axis=-1)
+            rgba = item.get("color_rgba", (1.0, 1.0, 1.0, 1.0))
+            # Compute per-chunk dimensions based on duration
+            t0 = float(item.get("t_start", 0.0))
+            t1 = float(item.get("t_end", 0.0))
+            duration = max(0.0, t1 - t0)
+            if max_sec > min_sec:
+                u = (duration - min_sec) / (max_sec - min_sec)
+            else:
+                u = 0.0
+            u = float(np.clip(u, 0.0, 1.0))
+            surf_w = int(round(lerp(min_w, max_w, u)))
+            surf_h = int(round(lerp(min_h, max_h, u)))
+
+            surface = build_curve_surface(pts, rgba, surf_w, surf_h, line_width=line_w, padding=padding)
+            # Use convex hull around actual curve points for physics body
+            vertices = convex_hull_vertices_from_curve(pts, surf_w, surf_h, padding=padding, line_width=line_w)
+            
+            # Find the corresponding kept_segment to get the audio path
+            audio_path = None
+            chunk_idx = item.get("idx", -1)
+            for seg in kept_segments:
+                if seg.get("idx") == chunk_idx:
+                    audio_path = seg.get("path")
+                    break
+            
+            chunk = Chunk(
+                segment_surface=surface,
+                vertices=vertices,
+                config=self.config,
+                space=self.space,
+                downsized=False,
+                audio_path=audio_path,
+            )
+            new_chunks.append(chunk)
+
+        self.chunks.extend(new_chunks)
+        print(f"Created {len(new_chunks)} new sound curve chunks.")
+
+        # Create worms based on superabundance status
+        self._spawn_worms_for_upload(upload_type="sound")
 
     def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
         """
@@ -836,3 +1256,19 @@ class Simulation:
         self.worm = None
         self.worms.clear()
         self.glues.clear()  # Clear all glues when clearing chunks
+
+    def _spawn_worms_for_upload(self, upload_type: str = "image") -> None:
+        """Spawn worms for an upload. During superabundance, spawn two; otherwise one.
+        Worms are scheduled to spawn sequentially (wait for one to finish before next)."""
+        superabundance_cfg = self.config["worm"].get("superabundance", {})
+        threshold = superabundance_cfg.get("threshold", 1000)
+        worms_per_upload = superabundance_cfg.get("worms_per_upload", 2)
+        total_particles = len(self.chunks)
+        is_superabundant = total_particles > threshold
+        worms_to_spawn = worms_per_upload if is_superabundant else 1
+        if is_superabundant:
+            print(f"SUPERABUNDANCE detected! {total_particles} total particles. Scheduling {worms_to_spawn} worms for {upload_type} upload.")
+        else:
+            print(f"Normal abundance: {total_particles} total particles. Scheduling {worms_to_spawn} worm for {upload_type} upload.")
+        # Schedule sequential spawning (shared with export logic)
+        self._schedule_worms(worms_to_spawn)
