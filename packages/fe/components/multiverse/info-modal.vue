@@ -53,7 +53,7 @@ onClickOutside(alertRef, () => {
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
 .multiverse-info-modal-alert {
-  z-index: 1000;
+  z-index: 1000 !important;
   &.open {
     transform: translateY(0);
     .alert-message {

@@ -1,35 +1,7 @@
 <template>
   <div class="multiverse">
-    <!-- ======================================================== Background -->
-    <div class="background-panel">
-      <ClientOnly>
-        <div
-          v-for="item in backgroundVerses"
-          :key="item.color"
-          class="background-verse"
-          :style="{
-            transform: `translate(${item.rx * viewportDimensions.width}px, ${item.ry * viewportDimensions.height}px)`,
-            backgroundColor: item.color,
-            opacity: item.opacity
-          }" />
-      </ClientOnly>
-    </div>
     <!-- ======================================================= Landing Nav -->
     <LandingNav v-show="!authenticated" />
-    <!-- ========================================================= Site Logo -->
-    <div
-      v-show="authenticated"
-      class="logo-container">
-      <SiteLogo v-once />
-    </div>
-    <!-- ======================================================= Info Button -->
-    <ButtonBasic
-      v-if="authenticated && infoMarkdown"
-      theme="clear"
-      class="info-button"
-      @clicked="toggleInfoModal">
-      Info
-    </ButtonBasic>
     <!-- ======================================================== Info Modal -->
     <MultiverseInfoModal v-if="infoMarkdown" :markdown="infoMarkdown" />
     <!-- =========================================== Create New Verse Button -->
@@ -57,7 +29,10 @@
       </template>
     </ButtonDashed>
     <!-- ======================================================== Token Auth -->
-    <ZeroAlert mode="alert" alert-id="multiverse-auth-alert">
+    <ZeroAlert
+      mode="alert"
+      alert-id="multiverse-auth-alert"
+      class="multiverse-auth-alert">
       <Auth
         heading="Token"
         message="Enter a token to access your Verses:"
@@ -68,23 +43,11 @@
     <MultiverseCreateVerseAlert
       @close-alert="handleCloseCreateVerseAlert" />
     <!-- ============================================================ Verses -->
-    <div class="grid-noBottom-noPadding">
-      <div class="col">
-        <div ref="versesCtnRef" class="verses">
-          <ClientOnly>
-            <template v-for="(verse, index) in verses">
-              <MultiversePortal
-                v-if="verse._id"
-                :key="verse._id"
-                :verse="verse"
-                :to="getVersePageRoute(verse)"
-                :style="{ transform: `translate(${positionData[index]?.x}px, ${positionData[index]?.y}px)` }"
-                @open-verse-settings="setSettingsModalVerseId" />
-            </template>
-          </ClientOnly>
-        </div>
-      </div>
-    </div>
+    <ClientOnly>
+      <MultiverseVerseNav
+        :verses="verses"
+        @open-verse-settings="setSettingsModalVerseId" />
+    </ClientOnly>
     <!-- ============================================== Verse Settings Modal -->
     <MultiverseVerseSettingsModal
       :verse="editingVerse"
@@ -108,12 +71,7 @@ const verseStore = useVerseStore()
 const { verse } = storeToRefs(verseStore)
 const createVerseButtonActive = ref(false)
 const enterTokenButtonActive = ref(false)
-const positionData = ref([])
 const settingsModalVerseId = ref(false)
-const versesCtnRef = ref(null)
-const randomOffsets = ref([])
-const resizeEventListener = ref(null)
-const viewportDimensions = ref({ width: 0, height: 0 })
 
 const createVerseButtonText = [
   { letter: 'c', classes: 'source-serif-pro semibold italic' },
@@ -143,15 +101,7 @@ const changeTokenButtonText = [
   { letter: 'e', classes: 'source-serif-pro semibold italic' },
   { letter: 'n', classes: 'source-sans-pro bold italic' }
 ]
-const backgroundVerses = [
-  { color: '#73E575', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#D14CA9', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#D1CB4C', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#E573C3', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#45674A', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#73E5D8', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
-  { color: '#E57373', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() }
-]
+
 // fetch Verse
 await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 // fetch Info Markdown
@@ -170,14 +120,6 @@ if (process.client) {
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
 const infoMarkdown = computed(() => markdown.value.find(item => item.path === '/info'))
-
-// ==================================================================== Watchers
-watch(() => verses.value.length, () => {
-  nextTick(() => {
-    generateRandomOffsets()
-    calculatePortalPositions()
-  })
-})
 
 // ===================================================================== Methods
 const handleCreateNewVerseClick = () => {
@@ -222,44 +164,9 @@ const handleCloseCreateVerseAlert = () => {
   createVerseButtonActive.value = false
 }
 
-const getVersePageRoute = verse => {
-  const page = verse.page_refs.find(item => item.name !== 'compost')
-  return `/${verse.name}/${page.name}`
-}
-
-const calculatePortalPositions = () => {
-  positionData.value = Array.from({ length: verses.value.length }, (_, index) => getPortalPosition(index))
-}
-
-const generateRandomOffsets = () => {
-  randomOffsets.value = Array.from({ length: verses.value.length }, () => ({
-    x: Math.random() - 0.5,
-    y: Math.random() - 0.5
-  }))
-}
-
-const getPortalPosition = index => {
-  // Get the viewport width and height (for bg)
-  viewportDimensions.value = { width: window.innerWidth, height: window.innerHeight }
-  // Get the length of the verses
-  const length = verses.value.length
-  // Get the width of the verses container
-  const width = versesCtnRef.value?.clientWidth || 0
-  // Scale index to fit one sine period (2π)
-  const scaledIndex = (index / length) * 2 * Math.PI
-  // Calculate x scale based on viewport width
-  const xScale = width / length
-  // Scale factors for amplitude
-  const yAmplitude = versesCtnRef.value?.clientHeight * 0.25 || 100
-  return {
-    x: (index * xScale + (xScale / 2)) + randomOffsets.value[index].x * (xScale * 0.4),
-    y: (Math.sin(scaledIndex) * yAmplitude) + randomOffsets.value[index].y * (yAmplitude * 0.4)
-  }
-}
-
 const setSettingsModalVerseId = verseId => {
   // Set the verse id for the verse settings modal
-  settingsModalVerseId.value = verseId
+  settingsModalVerseId.value = verseId === settingsModalVerseId.value ? false : verseId
   // Close any open alerts when a verse settings modal is opened
   if (alertStore.getAlert('multiverse-auth-alert').status === 'open') {
     alertStore.closeAlert('multiverse-auth-alert')
@@ -271,29 +178,6 @@ const setSettingsModalVerseId = verseId => {
   }
 }
 
-const toggleInfoModal = () => {
-  alertStore.openAlert('multiverse-info-modal')
-}
-
-// ======================================================================= Hooks
-onMounted(() => {
-  if (process.client) {
-    // Generate random offsets for the portals
-    generateRandomOffsets()
-    // Calculate the positions of the portals
-    calculatePortalPositions()
-    // Add a resize event listener to the window
-    resizeEventListener.value = () => { calculatePortalPositions() }
-    window.addEventListener('resize', resizeEventListener.value)
-  }
-})
-
-onBeforeUnmount(() => {
-  // Remove the resize event listener from the window
-  if (resizeEventListener.value) {
-    window.removeEventListener('resize', resizeEventListener.value)
-  }
-})
 </script>
 
 <style lang="scss" scoped>
@@ -309,39 +193,15 @@ onBeforeUnmount(() => {
   }
 }
 
-.background-panel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.background-verse {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: torem(26);
-  height: torem(26);
-  border-radius: 50%;
-  filter: blur(torem(16));
-}
-
-.logo-container {
-  position: absolute;
-  top: torem(20);
-  left: torem(20);
-  z-index: 2;
-  :deep(.letter) {
-    color: $drippyCore;
-  }
+:deep(.alert) {
+  z-index: 3;
 }
 
 .info-button {
   position: absolute;
   top: torem(20);
   right: torem(20);
-  z-index: 2;
+  z-index: 3;
   :deep(.slot) {
     color: $drippyCore !important;
   }
@@ -352,7 +212,7 @@ onBeforeUnmount(() => {
   bottom: torem(20);
   left: torem(20);
   --two-tone-a: #{$drippyCore};
-  z-index: 2;
+  z-index: 3;
   :deep(.icon) {
     path {
       fill: rgb(131, 147, 192);
@@ -370,18 +230,12 @@ onBeforeUnmount(() => {
   bottom: torem(20);
   right: torem(20);
   --two-tone-a: #{$billyBlue};
-  z-index: 2;
+  z-index: 3;
 }
 
 .icon {
   width: torem(16);
   height: torem(16);
   margin-left: torem(5);
-}
-
-.verses {
-  position: relative;
-  height: 100%;
-  z-index: 1;
 }
 </style>
