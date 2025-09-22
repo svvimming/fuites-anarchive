@@ -21,7 +21,7 @@
       </ButtonCaddy>
       <!-- ======================================================== Trashbin -->
       <ButtonCaddy
-        class="caddy-tool-button z-index-2 tiny-button"
+        :class="['caddy-tool-button', 'z-index-2', 'tiny-button', { disable: newTextThingie}]"
         tool="trash"
         :style="getToolTransform('trash')"
         @clicked="openDeleteThingieModal">
@@ -30,7 +30,7 @@
       <!-- ============================================================ Lock -->
       <ButtonCaddy
         v-if="thingie?.location !== 'pocket'"
-        class="caddy-tool-button z-index-2 tiny-button"
+        :class="['caddy-tool-button', 'z-index-2', 'tiny-button', { disable: newTextThingie}]"
         tool="lock"
         :style="getToolTransform('lock')"
         @clicked="lockThingie">
@@ -40,7 +40,7 @@
       <CaddyLinkEditor
         :active="selected === 'font-editor'"
         :initial-url="thingie?.link || ''"
-        class="caddy-tool-button z-index-2"
+        :class="['caddy-tool-button', 'z-index-2', { disable: newTextThingie}]"
         :style="getToolTransform('link-editor')"
         @update-link="updateTextThingieLink" />
       <!-- ==================================================== Tool Buttons -->
@@ -178,6 +178,7 @@ const colors = computed(() => thingie.value.colors)
 const thingieColor = computed(() => colors.value[colors.value.length - 1])
 const tools = computed(() => type.value === 'image' ? imageTools : type.value === 'text' ? textTools : soundTools)
 const caddyStyles = computed(() => ({ '--center-panel-diameter': `${2 * (radii[selected.value] || 45) - 40}px` }))
+const newTextThingie = computed(() => editing.value === 'new-text-thingie')
 
 // ==================================================================== Watchers
 watch(() => thingie.value?._id, (newId, oldId) => {
@@ -512,6 +513,15 @@ const update = useThrottleFn(data => {
       transform: scale(1.1);
     }
   }
+  &.disable {
+    pointer-events: none;
+    touch-action: none;
+    :deep(.icon-button) {
+      opacity: 0.5;
+      pointer-events: none;
+      touch-action: none;
+    }
+  }
   :deep(.icon) {
     width: torem(20);
     height: torem(24);
@@ -534,7 +544,7 @@ const update = useThrottleFn(data => {
   width: torem(32) !important;
   height: torem(32) !important;
   border-radius: 50%;
-  z-index: 4 !important;
+  // z-index: 4 !important;
   .icon {
     transition: 150ms ease;
     transform: scale(0.9);
@@ -562,6 +572,7 @@ const update = useThrottleFn(data => {
   &.selected {
     visibility: visible;
     opacity: 1;
+    border-radius: 50%;
   }
 }
 </style>
