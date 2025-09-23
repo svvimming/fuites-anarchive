@@ -28,6 +28,25 @@
         <IconKey class="icon" />
       </template>
     </ButtonDashed>
+    <!-- =============================================== Community and Terms -->
+    <div class="community-and-terms">
+      <ButtonBasic
+        theme="clear"
+        tag="nuxt-link"
+        :to="'/community-guidelines'"
+        class="community-button">
+        Community Guidelines
+      </ButtonBasic>
+      <span class="separator">|</span>
+      <ButtonBasic
+        theme="clear"
+        tag="nuxt-link"
+        :to="'/terms-of-use'"
+        class="community-button">
+        Terms of Use
+      </ButtonBasic>
+    </div>
+
     <!-- ======================================================== Token Auth -->
     <ZeroAlert
       mode="alert"
@@ -231,6 +250,39 @@ const setSettingsModalVerseId = verseId => {
   right: torem(20);
   --two-tone-a: #{$billyBlue};
   z-index: 3;
+}
+
+.community-and-terms {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  bottom: torem(14);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.separator {
+  margin: 0 torem(8);
+  font-size: torem(14);
+  font-weight: 600;
+  color: $drippyCore;
+}
+
+.community-button {
+  padding: 0;
+  :deep(.slot) {
+    font-size: torem(14);
+    color: $drippyCore !important;
+    border-bottom: 0.5px solid transparent !important;
+  }
+  &:hover {
+    :deep(.slot) {
+      letter-spacing: 1px !important;
+      border-bottom: 0.5px solid $drippyCore !important;
+    }
+  }
 }
 
 .icon {

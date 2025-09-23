@@ -101,6 +101,9 @@ export default defineNuxtConfig({
         prefix: '/data',
         base: Path.resolve(__dirname, 'data')
       }
+    },
+    renderer: {
+      anchorLinks: { h2: false, h3: false, h4: false }
     }
   }
 })

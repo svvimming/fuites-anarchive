@@ -19,7 +19,7 @@
       <ContentRenderer
         v-if="markdown"
         :value="markdown"
-        class="markdown-content" />
+        class="global-markdown-content" />
 
       <IconCanadaCouncil class="canada-council-icon" />
 
@@ -96,8 +96,11 @@ onClickOutside(alertRef, () => {
   border-radius: torem(20);
   transition: 300ms ease;
   background-color: $athensGray;
-  max-width: torem(460);
+  max-width: torem(480);
   @include modalShadow;
+  @include mini {
+    max-width: torem(360);
+  }
 }
 
 .close-button {
@@ -121,50 +124,6 @@ onClickOutside(alertRef, () => {
   font-size: torem(20);
   color: $drippyDark;
   border-bottom: 1px solid rgba(#B2B9CC, 0.5);
-}
-
-.markdown-content {  
-  :deep(p) {
-    font-size: torem(16);
-    line-height: 1.3;
-    margin-bottom: torem(18);
-    color: $woodsmoke;
-  }
-  :deep(a) {
-    position: relative;
-    color: $billyBlue;
-    font-weight: 600;
-    
-    &:before {
-      content: '';
-      position: absolute;
-      top: calc(100% - torem(3));
-      left: 0;
-      width: 100%;
-      height: 0;
-      border-bottom: 1px solid rgba($billyBlue, 1);
-    }
-  }
-  :deep(h1),
-  :deep(h2),
-  :deep(h3),
-  :deep(h4),
-  :deep(h5),
-  :deep(h6) {
-    letter-spacing: torem(0.5);
-    em {
-      letter-spacing: torem(0.5);
-    }
-  }
-  :deep(h5),
-  :deep(h6) {
-    font-size: torem(12);
-    font-weight: 400;
-  }
-  :deep(hr) {
-    border-top: 1px solid rgba(#B2B9CC, 0.5);
-    margin-bottom: torem(20);
-  }
 }
 
 .canada-council-icon {
