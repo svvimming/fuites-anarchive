@@ -42,6 +42,8 @@
         <IconPencil />
       </ButtonIcon>
     </Tooltip>
+    <!-- ----------------------------------------------------- FTU FYI Blurb -->
+    <FtuFyiBlurb class="ftu-fyi-alert" />
 
   </div>
 </template>
@@ -70,7 +72,7 @@ watch(drippy, (scene) => {
   if (scene === 1) {
     alertStore.openAlert('first-time-user-alert')
   }
-}, { immediate: true })
+})
 
 // ===================================================================== Methods
 /**
@@ -297,6 +299,13 @@ onBeforeUnmount(() => {
         stroke: var(--two-tone-b);
       }
     }
+  }
+}
+
+.ftu-fyi-alert {
+  z-index: 1000;
+  &:before {
+    display: none;
   }
 }
 </style>

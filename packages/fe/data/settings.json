@@ -374,5 +374,10 @@
         }
       ]
     }
+  },
+  "ftuFyiBlurb": {
+    "heading": "FYI!",
+    "message": "<b><em>fuit.es</em> is not a private space.</b> Do not upload any sensitive material here. While a token is required to manipulate media, pages can be seen by anyone who navigates to them. We encourage users to treat the space like a sandbox in a playground or a collective mural where nothing happens in a vacuum. We do not condone any form of verbal abuse, bullying, hate speech or pornographic content.",
+    "after": "<span class='subheading'>See full community guidelines</span><a href='https://fuit.es/community-guidelines' target='_blank' class='subheading'>here</a>"
   }
 }

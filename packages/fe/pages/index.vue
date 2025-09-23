@@ -71,6 +71,8 @@
     <MultiverseVerseSettingsModal
       :verse="editingVerse"
       @close-alert="setSettingsModalVerseId(false)" />
+    <!-- ===================================================== FTU FYI Blurb -->
+    <FtuFyiBlurb class="ftu-fyi-alert" />
 
   </div>
 </template>
@@ -289,5 +291,9 @@ const setSettingsModalVerseId = verseId => {
   width: torem(16);
   height: torem(16);
   margin-left: torem(5);
+}
+
+.ftu-fyi-alert {
+  z-index: 1000;
 }
 </style>

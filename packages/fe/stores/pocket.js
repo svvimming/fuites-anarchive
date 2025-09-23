@@ -7,6 +7,7 @@ export const usePocketStore = defineStore('pocket', () => {
   const { activeModes } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
   const { verse } = storeToRefs(verseStore)
+  const alertStore = useZeroAlertStore()
 
   // ===================================================================== state
   const pocket = ref({
@@ -113,6 +114,9 @@ export const usePocketStore = defineStore('pocket', () => {
             if (!activeModes.value.tooltips) {
               generalStore.toggleMode('tooltips')
             }
+          }
+          if (typeof authCount === 'number' && authCount === 1) {
+            alertStore.openAlert('ftu-fyi-blurb')
           }
         }
         // Set the pocket data
