@@ -16,8 +16,9 @@
     <div
       class="grid-noBottom-noGutter full no-padding">
       <div
-        class="col-2"
-        data-push-right="off-1">
+        class="col-2_ulg-3_xlg-4_md-5_sm-8_mi-10_ti-12"
+        data-push-left="off-0_sm-2_mi-1_ti-0"
+        data-push-right="off-1_sm-2_mi-1_ti-0">
         <!-- ------------------------------------------------------ Site Nav -->
         <div
           v-show="authenticated"
@@ -33,14 +34,23 @@
         </ButtonBasic>
         <!-- ----------------------------------------------------- Verse Nav -->
         <template v-if="authenticated">
-          <div class="verse-list-heading">
-            Your Verses
+
+          <div class="verse-list-header">
+            <div class="list-heading">
+              Your Verses
+            </div>
+            <Searchbar
+              placeholder="Search for a verse"
+              class="verse-search"
+              @value-updated="handleSearch" />
           </div>
+
           <div
             class="verse-list"
             @mouseleave="hovered = false">
+
             <div
-              v-for="verse in verses"
+              v-for="verse in filteredVerses"
               :key="`${verse._id}-nav-item`"
               class="verse-nav-item"
               @mouseenter="hovered = verse._id">
@@ -62,11 +72,19 @@
                 <IconEllipsis class="icon-ellipsis" />
               </ButtonIcon>
             </div>
+
+            <div
+              v-if="filteredVerses.length === 0"
+              class="no-results">
+              No Verses match your search!
+            </div>
+
           </div>
+
         </template>
       </div>
       <!-- ----------------------------------------- Multiverse Visual Right -->
-      <div class="col-9">
+      <div class="col-9_ulg-8_xlg-7_md-6_sm-hidden">
         <div ref="versesCtnRef" class="verse-portals">
           <template v-for="(verse, index) in verses">
             <MultiversePortal
@@ -105,6 +123,7 @@ const randomOffsets = ref([])
 const resizeEventListener = ref(null)
 const viewportDimensions = ref({ width: 0, height: 0 })
 const hovered = ref(false)
+const searchTerm = ref('')
 
 const backgroundVerses = [
   { color: '#73E575', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
@@ -115,6 +134,12 @@ const backgroundVerses = [
   { color: '#73E5D8', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
   { color: '#E57373', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() }
 ]
+
+// ==================================================================== Computed
+const filteredVerses = computed(() => {
+  if (searchTerm.value === '') { return props.verses }
+  return props.verses.filter(verse => verse.name.toLowerCase().includes(searchTerm.value.toLowerCase()))
+})
 
 // ==================================================================== Watchers
 watch(() => props.verses.length, () => {
@@ -159,6 +184,10 @@ const toggleInfoModal = () => {
   if (alert) {
     alertStore.openAlert('multiverse-info-modal')
   }
+}
+
+const handleSearch = (term) => {
+  searchTerm.value = term
 }
 
 // ======================================================================= Hooks
@@ -238,14 +267,40 @@ onBeforeUnmount(() => {
   }
 }
 
+.logo-container,
+.info-button {
+  @include small {
+    transform: translateX(torem(-24));
+  }
+  @include tiny {
+    transform: none;
+  }
+}
+
 // /////////////////////////////////////////////////////////////////// Verse Nav
-.verse-list-heading {
-  padding: torem(60) 0 torem(8) torem(20);
-  margin-right: torem(4);
-  font-size: torem(16);
+.verse-list-header {
+  padding: torem(60) 0 torem(4) torem(10);
+  @include small {
+    padding: torem(60) 0 torem(4) 0;
+  }
+}
+
+.list-heading {
+  margin-left: torem(12);
+  margin-bottom: torem(6);
+  font-size: torem(18);
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.7);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: $drippyCore;
+}
+
+.verse-search {
+  width: 100%;
+  @include tiny {
+    padding: 0 torem(8);
+    &:after {
+      right: torem(20);
+    }
+  }
 }
 
 .verse-list {
@@ -253,8 +308,16 @@ onBeforeUnmount(() => {
   overflow-y: scroll;
   padding-right: torem(30);
   margin-right: torem(-30);
-  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  @include small {
+    padding-right: 0;
+    margin-right: 0;
+  }
 }
+
+// .verse-list-header,
+// .verse-list {
+//   padding-left: torem(20);
+// }
 
 .verse-nav-item {
   display: flex;
@@ -266,6 +329,9 @@ onBeforeUnmount(() => {
   border-top-right-radius: torem(4);
   border-bottom-right-radius: torem(4);
   transition: background-color 200ms ease-in-out;
+  @include small {
+    border-radius: torem(4);
+  }
   &:hover {
     background-color: $drippyCore;
     :deep(.slot) {
@@ -281,6 +347,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-grow: 1;
   margin-right: torem(16);
+  padding-left: torem(35);
+  @include small {
+    padding-left: torem(25);
+  }
   .verse-name {
     margin-right: torem(8);
   }
@@ -305,5 +375,13 @@ onBeforeUnmount(() => {
 .verse-settings-button {
   width: torem(30);
   height: torem(30);
+}
+
+.no-results {
+  padding: torem(16);
+  text-align: center;
+  font-size: torem(13);
+  font-weight: 400;
+  color: $drippyCore;
 }
 </style>

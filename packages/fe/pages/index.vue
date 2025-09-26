@@ -234,6 +234,12 @@ const setSettingsModalVerseId = verseId => {
   left: torem(20);
   --two-tone-a: #{$drippyCore};
   z-index: 3;
+  @include mini {
+    bottom: torem(42);
+  }
+  @include tiny {
+    left: torem(8);
+  }
   :deep(.icon) {
     path {
       fill: rgb(131, 147, 192);
@@ -252,6 +258,12 @@ const setSettingsModalVerseId = verseId => {
   right: torem(20);
   --two-tone-a: #{$billyBlue};
   z-index: 3;
+  @include mini {
+    bottom: torem(42);
+  }
+  @include tiny {
+    right: torem(8);
+  }
 }
 
 .community-and-terms {
@@ -263,6 +275,9 @@ const setSettingsModalVerseId = verseId => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
+  @include mini {
+    bottom: torem(10);
+  }
 }
 
 .separator {
@@ -270,14 +285,22 @@ const setSettingsModalVerseId = verseId => {
   font-size: torem(14);
   font-weight: 600;
   color: $drippyCore;
+  @include small {
+    font-size: torem(11);
+    margin: 0 torem(4);
+  }
 }
 
 .community-button {
   padding: 0;
   :deep(.slot) {
     font-size: torem(14);
+    white-space: nowrap;
     color: $drippyCore !important;
     border-bottom: 0.5px solid transparent !important;
+    @include small {
+      font-size: torem(11);
+    }
   }
   &:hover {
     :deep(.slot) {
