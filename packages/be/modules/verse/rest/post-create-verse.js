@@ -68,6 +68,7 @@ MC.app.post('/post-create-verse', async (req, res) => {
     const createdVerse = await MC.model.Verse.create({
       name: verseName,
       page_refs: [createdPage._id, compostPage._id],
+      initiator_pocket_ref: pocketId,
       average_colors: {
         primary: getRandomColor(),
         secondary: getRandomColor()

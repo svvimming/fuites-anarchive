@@ -319,6 +319,17 @@
       "heading": "Generate an invite link for <<verse-name>>",
       "description": "Send this link to a collaborator so they can join this verse. Using the link, they'll be able to add their token to this verse."
     },
+    "general": {
+      "heading": "General settings",
+      "settings": [
+        {
+          "name": "private",
+          "label": "Private",
+          "description": "Turn on to hide the pages of this verse from view for anyone who doesn't have a token.",
+          "type": "boolean"
+        }
+      ]
+    },
     "crons": {
       "heading": "Cron settings",
       "available": [

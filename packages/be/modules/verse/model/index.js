@@ -23,6 +23,11 @@ const VerseSchema = new Schema({
     required: true,
     validate: arr => Array.isArray(arr) && arr.length > 0
   },
+  initiator_pocket_ref: {
+    type: Schema.Types.ObjectId,
+    ref: 'pockets',
+    required: false
+  },
   settings: {
     tunneler: {
       portalChainLength: {
@@ -44,6 +49,11 @@ const VerseSchema = new Schema({
         required: false,
         default: 30 // 30 days
       }
+    },
+    private: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
   average_colors: {
@@ -55,11 +65,6 @@ const VerseSchema = new Schema({
       type: String,
       required: false
     }
-  },
-  public: {
-    type: Boolean,
-    required: false,
-    default: false
   }
 }, {
   timestamps: true,
