@@ -33,7 +33,7 @@
     <Tooltip
       tooltip="mobile-edit-mode-toggle"
       contact="top-center"
-      class="mobile-edit-mode-toggle-tooltip">
+      :class="['mobile-edit-mode-toggle-tooltip', { display: small }]">
       <ButtonIcon
         v-if="authenticated"
         :active="activeModes.mobileEdit"
@@ -277,7 +277,7 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   display: none;
   z-index: 2;
-  @include small {
+  &.display {
     display: block;
   }
 }
