@@ -36,8 +36,32 @@
           </ButtonBasic>
         </div>
 
+        <!-- ============================================== General Settings -->
+        <div
+          v-if="verseHasInitiator"
+          :class="['settings-section', 'general-settings', { disabled: notInitiatorPocket }]">
+          <span class="section-heading">{{ generalSettings.heading }}</span>
+          <div
+            v-for="setting in generalSettings.settings"
+            :key="setting.name"
+            class="setting-row">
+            <div class="info-row">
+              <span class="setting-label">{{ setting.label }}</span>
+              <span class="description">{{ setting.description }}</span>
+            </div>
+            <div class="range-wrapper unset-width">
+              <ButtonToggle
+                v-if="setting.type === 'boolean'"
+                :active="stateValues[setting.name]"
+                @clicked="updateStateValues(setting.name)">
+              </ButtonToggle>
+            </div>
+          </div>
+        </div>
         <!-- ================================================= Cron Settings -->
-        <div class="cron-settings">
+        <div
+          v-if="verseHasInitiator"
+          :class="['settings-section', 'cron-settings', { disabled: notInitiatorPocket }]">
           <span class="section-heading">{{ cronSettings.heading }}</span>
           <div
             v-for="cron in cronSettings.available"
@@ -74,16 +98,17 @@
 
       </div>
       <!-- ========================================================= Buttons -->
-      <div class="button-row bottom-buttons">
+      <div :class="['button-row', 'bottom-buttons', { 'center-items': !verseHasInitiator }]">
         <ButtonBasic
-          :class="['save-button', { disabled: saving }]"
-          :force-disabled="saving"
+          v-if="verseHasInitiator"
+          :class="['save-button', { disabled: saving || notInitiatorPocket }]"
+          :force-disabled="saving || notInitiatorPocket"
           :force-loading="saving"
           @clicked="saveVerseSettings">
           <span>Save</span>
         </ButtonBasic>
         <ButtonBasic
-          :class="['cancel-button']"
+          class="cancel-button"
           @clicked="emit('close-alert')">
           <span>Close</span>
         </ButtonBasic>
@@ -111,6 +136,7 @@ const emit = defineEmits(['close-alert'])
 // ======================================================================== Data
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
+const { pocket } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const generalStore = useGeneralStore()
 const { siteData } = storeToRefs(generalStore)
@@ -118,15 +144,19 @@ const inviteUrl = ref('')
 const generating = ref(false)
 const { copy, copied, isSupported } = useClipboard({ source: inviteUrl })
 const rangeValues = ref({})
+const stateValues = ref({})
 const saving = ref(false)
 
 // ==================================================================== Computed
 const inviteSettings = computed(() => siteData.value?.settings?.verseSettings.invite)
+const generalSettings = computed(() => siteData.value?.settings?.verseSettings.general)
 const modalHeading = computed(() => `Settings for '${props.verse?.name}'`)
 const inviteHeading = computed(() => inviteSettings.value?.heading.replace('<<verse-name>>', props.verse?.name))
 const inviteDescription = computed(() => inviteSettings.value?.description)
 const cronSettings = computed(() => siteData.value?.settings?.verseSettings.crons)
 const verseSettings = computed(() => props.verse?.settings || false)
+const verseHasInitiator = computed(() => props.verse?.initiator_pocket_ref)
+const notInitiatorPocket = computed(() => verseHasInitiator.value !== pocket.value.data._id)
 
 // ==================================================================== Watchers
 watch(() => props.verse?._id, (val) => {
@@ -135,6 +165,7 @@ watch(() => props.verse?._id, (val) => {
     inviteUrl.value = ''
     generating.value = false
     initRangeValues()
+    initStateValues()
     alertStore.openAlert('multiverse-verse-settings-modal')
   } else if (alert.status === 'open') {
     alertStore.closeAlert('multiverse-verse-settings-modal')
@@ -189,6 +220,27 @@ const initRangeValues = () => {
 }
 
 /**
+ * @method initStateValues
+ */
+
+const initStateValues = () => {
+  generalSettings.value.settings.forEach(setting => {
+    if (setting.type === 'boolean' && verseSettings.value.hasOwnProperty(setting.name)) {
+      stateValues.value[setting.name] = verseSettings.value[setting.name]
+    }
+  })
+}
+
+/**
+ * @method updateStateValues
+ * @param {string} key
+ */
+
+const updateStateValues = (key) => {
+  stateValues.value[key] = !stateValues.value[key]
+}
+
+/**
  * @method getDisplayValue
  * @param {string} key
  * @param {string} unit
@@ -230,7 +282,9 @@ const saveVerseSettings = async () => {
   // Copy all existing settings overwriting changes cron setting values
   const settings = {}
   Object.keys(verseSettings.value).forEach(key => {
-    settings[key] = Object.assign({}, verseSettings.value[key], newCronSettings[key] || {})
+    settings[key] = typeof verseSettings.value[key] === 'object' ?
+                      Object.assign({}, verseSettings.value[key], newCronSettings[key] || {}) :
+                      stateValues.value[key]
   })
   // Save the settings
   await verseStore.postUpdateVerseSettings({
@@ -254,6 +308,9 @@ const saveVerseSettings = async () => {
   min-width: torem(500);
   max-width: torem(560);
   @include modalShadow;
+  @include mini {
+    min-width: unset;
+  }
 }
 
 .input-row {
@@ -375,7 +432,19 @@ input::placeholder {
   margin-bottom: torem(18);
 }
 
-// /////////////////////////////////////////////////////////////// Cron Settings
+// ///////////////////////////////////////////////////// General & Cron Settings
+.settings-section {
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    touch-action: none;
+  }
+}
+
+.general-settings {
+  padding-bottom: torem(10);
+}
+
 .setting-row {
   display: flex;
   flex-direction: row;
@@ -396,6 +465,10 @@ input::placeholder {
   justify-content: space-between;
   max-width: 66%;
   margin-right: torem(22);
+  &.unset-width {
+    max-width: unset;
+    margin-right: torem(30);
+  }
   .setting-label {
     font-size: torem(14);
     font-weight: 500;
@@ -412,6 +485,9 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   width: 33%;
+  &.unset-width {
+    width: auto;
+  }
 }
 
 .range-input {
@@ -478,18 +554,27 @@ input::placeholder {
 // /////////////////////////////////////////////////////////////// Cancel Button
 .bottom-buttons {
   padding: 0 torem(14);
+  &.center-items {
+    justify-content: center;
+  }
 }
 
 .save-button {
   background-color: $kellyGreen;
   box-shadow: 0 2px 8px rgba($kellyGreen, 0.5);
   margin-top: torem(18);
+  &.disabled {
+    pointer-events: none;
+    background-color: rgba($gullGray, 0.5);
+    box-shadow: 0 2px 8px rgba($gullGray, 0.5);
+  }
 }
 
 .cancel-button {
   background-color: $pollyPink;
   box-shadow: 0 2px 8px rgba($pollyPink, 0.5);
   margin-top: torem(18);
+  max-width: 50%;
 }
 
 .feedback-message {

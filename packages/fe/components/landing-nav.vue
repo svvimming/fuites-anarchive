@@ -68,7 +68,7 @@ const handleEnterTokenClick = () => {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 2;
+  z-index: 3;
 }
 
 .logo-container {

@@ -7,6 +7,7 @@ export const usePocketStore = defineStore('pocket', () => {
   const { activeModes } = storeToRefs(generalStore)
   const verseStore = useVerseStore()
   const { verse } = storeToRefs(verseStore)
+  const alertStore = useZeroAlertStore()
 
   // ===================================================================== state
   const pocket = ref({
@@ -31,6 +32,7 @@ export const usePocketStore = defineStore('pocket', () => {
   // ================================================================== Computed
   const token = computed(() => pocket.value?.data.token)
   const authenticated = computed(() => pocket.value.authenticated && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
+  const hidePrivateVerse = computed(() => verse.value.data?.settings?.private && !pocket.value.data.verses.some(item => item._id === verse.value.data._id))
   
   // =================================================================== actions
 
@@ -113,6 +115,9 @@ export const usePocketStore = defineStore('pocket', () => {
             if (!activeModes.value.tooltips) {
               generalStore.toggleMode('tooltips')
             }
+          }
+          if (typeof authCount === 'number' && authCount === 1) {
+            alertStore.openAlert('ftu-fyi-blurb')
           }
         }
         // Set the pocket data
@@ -313,6 +318,7 @@ export const usePocketStore = defineStore('pocket', () => {
     // ----- computed
     token,
     authenticated,
+    hidePrivateVerse,
     // ----- actions
     setPocketOpen,
     registerUploader,

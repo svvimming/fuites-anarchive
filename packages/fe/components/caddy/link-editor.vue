@@ -93,7 +93,7 @@ const submit = () => {
   position: absolute;
   width: torem(32) !important;
   height: torem(32) !important;
-  z-index: 4 !important;
+  z-index: 2;
   opacity: 0;
   visibility: hidden;
   transition: opacity 150ms ease, visibility 150ms ease;
