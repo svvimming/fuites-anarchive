@@ -117,6 +117,56 @@ const getPageCenterOfMass = thingies => {
 }
 
 /**
+ * @method getProminentHSL
+ * @desc Takes an array of HSL colors, bins them and returns the most frequent bin
+ * @param {[Object]} colors - Array of HSL colors
+ * @param {Number} hueStep - Step size for hue
+ * @param {Number} slStep - Step size for saturation and lightness
+ * @returns {Object} - Most frequent bin
+ */
+const getProminentHSL = (colors, hueStep = 10, slStep = 0.1) => {
+  const bins = new Map()
+  colors.forEach(({ h, s, l }) => {
+    // Normalize
+    const hBin = Math.round(h / hueStep) * hueStep % 360
+    const sBin = Math.round(s / slStep) * slStep
+    const lBin = Math.round(l / slStep) * slStep
+    const key = `${hBin},${sBin.toFixed(1)},${lBin.toFixed(1)}`
+    if (!bins.has(key)) bins.set(key, [])
+    bins.get(key).push({ h, s, l })
+  })
+  // Find most frequent bin
+  let maxBin = null
+  let maxCount = 0
+  bins.forEach((arr, _) => {
+    if (arr.length > maxCount) {
+      maxCount = arr.length
+      maxBin = arr
+    }
+  })
+  // Compute centroid of that bin
+  if (maxBin) {
+    // Circular mean for hue
+    const xs = maxBin.map(c => Math.cos((c.h * Math.PI) / 180))
+    const ys = maxBin.map(c => Math.sin((c.h * Math.PI) / 180))
+    let avgH = (Math.atan2(
+      ys.reduce((a, b) => a + b, 0) / maxBin.length,
+      xs.reduce((a, b) => a + b, 0) / maxBin.length
+    ) * 180 / Math.PI + 360) % 360
+    let avgS = maxBin.reduce((a, c) => a + c.s, 0) / maxBin.length
+    let avgL = maxBin.reduce((a, c) => a + c.l, 0) / maxBin.length
+    // fallbacks for NaN
+    if (Number.isNaN(avgH)) { avgH = Math.random() * 360 }
+    if (Number.isNaN(avgS)) { avgS = Math.random() * 100 }
+    if (Number.isNaN(avgL)) { avgL = Math.random() * 100 }
+    // return the average HSL color
+    return { h: avgH, s: avgS, l: avgL }
+  }
+  // return null if no max bin
+  return null
+}
+
+/**
  * @method hexColorsToHslAverage
  * @desc Takes an array of hex colors, averages them in HSL space and returns HSL
  * @param {[String]} hexColors - Array of hex color codes (with or without #)
@@ -140,37 +190,14 @@ const hexColorsToHslAverage = hexColors => {
   if (hslColors.length === 0) {
     return { h: Math.random() * 360, s: Math.random() * 100, l: Math.random() * 100 }
   }
-  // Calculate the average saturation and lightness
-  const n = hslColors.length
-  let avgS = hslColors.reduce((sum, c) => sum + c.s, 0) / n
-  let avgL = hslColors.reduce((sum, c) => sum + c.l, 0) / n
-  // Calculate the average hue
-  const vector = hslColors.reduce((acc, c) => {
-    const rad = (c.h * Math.PI) / 180
-    acc.x += Math.cos(rad)
-    acc.y += Math.sin(rad)
-    return acc
-  }, { x: 0, y: 0 })
-  const meanX = vector.x / n
-  const meanY = vector.y / n
-  let avgH = Math.atan2(meanY, meanX) * (180 / Math.PI)
-  if (avgH < 0) avgH += 360
-  // If hues cancel out (near-zero vector), fall back to first non-gray hue or 0
-  if (Number.isNaN(avgH) || (Math.abs(meanX) < 1e-6 && Math.abs(meanY) < 1e-6)) {
-    const firstColored = hslColors.find(c => c.s > 0)
-    avgH = firstColored ? firstColored.h : 0
-  }
-  if (Number.isNaN(avgH)) {
-    avgH = Math.random() * 360
-  }
-  if (Number.isNaN(avgS)) {
-    avgS = Math.random() * 100
-  }
-  if (Number.isNaN(avgL)) {
-    avgL = Math.random() * 100
+  // Get the prominent HSL color
+  const hsl = getProminentHSL(hslColors)
+  // Return random color if no prominent HSL color
+  if (!hsl) {
+    return { h: Math.random() * 360, s: Math.random() * 100, l: Math.random() * 100 }
   }
   // Return the average HSL color
-  return { h: avgH, s: avgS, l: avgL }
+  return hsl
 }
 
 /**
