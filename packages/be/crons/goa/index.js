@@ -79,7 +79,10 @@ const updatePageThingiePreaccelerations = async (thingies, pageCenterOfMass, upd
       const updateCount = thingie.update_count || 0
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
       const weight = 250 * Math.log(((thingie.at.width * thingie.at.height) / 300) + 1)
-      const preacceleration = (updateCount - updateCountFloor) * distance / weight
+      let preacceleration = (updateCount - updateCountFloor) * distance / weight
+      if (Number.isNaN(preacceleration)) {
+        preacceleration = 0
+      }
       return {
         updateOne: {
           filter: { _id: thingie._id },
@@ -127,16 +130,20 @@ const hexColorsToHslAverage = hexColors => {
   }
   // Convert hex colors to HSL colors
   const hslColors = hexColors
-    .filter(Boolean)
-    .map(hex => HexToHsl(hex))
+    .filter(v => typeof v === 'string' && /^#?[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/.test(v))
+    .map(v => {
+      let s = v.replace(/^#/, '')
+      if (s.length === 3) { s = s.split('').map(ch => ch + ch).join('') }
+      return HexToHsl(`#${s.toLowerCase()}`)
+    })
   // Return random color if no colors provided
   if (hslColors.length === 0) {
     return { h: Math.random() * 360, s: Math.random() * 100, l: Math.random() * 100 }
   }
   // Calculate the average saturation and lightness
   const n = hslColors.length
-  const avgS = hslColors.reduce((sum, c) => sum + c.s, 0) / n
-  const avgL = hslColors.reduce((sum, c) => sum + c.l, 0) / n
+  let avgS = hslColors.reduce((sum, c) => sum + c.s, 0) / n
+  let avgL = hslColors.reduce((sum, c) => sum + c.l, 0) / n
   // Calculate the average hue
   const vector = hslColors.reduce((acc, c) => {
     const rad = (c.h * Math.PI) / 180
@@ -152,6 +159,15 @@ const hexColorsToHslAverage = hexColors => {
   if (Number.isNaN(avgH) || (Math.abs(meanX) < 1e-6 && Math.abs(meanY) < 1e-6)) {
     const firstColored = hslColors.find(c => c.s > 0)
     avgH = firstColored ? firstColored.h : 0
+  }
+  if (Number.isNaN(avgH)) {
+    avgH = Math.random() * 360
+  }
+  if (Number.isNaN(avgS)) {
+    avgS = Math.random() * 100
+  }
+  if (Number.isNaN(avgL)) {
+    avgL = Math.random() * 100
   }
   // Return the average HSL color
   return { h: avgH, s: avgS, l: avgL }
@@ -176,7 +192,8 @@ const getVersePortalColors = (primaryColors, secondaryColors) => {
   }
   // If the hues are too close (<40°), we move the second one away
   if (hueDiff < 40) {
-    secondaryHSL.h = (primaryHSL.h + 80) % 360
+    secondaryHSL.h = (secondaryHSL.h + 80) % 360
+    primaryHSL.h = (primaryHSL.h - 40) % 360
   }
   // If the lightness values are too close (<15), move the second one away
   const lightnessDiff = Math.abs(primaryHSL.l - secondaryHSL.l)
