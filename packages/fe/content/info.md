@@ -2,6 +2,8 @@
 
 Each individual page offers a space for collaboration, where digital media in the form of images, sounds or text can be uploaded and composed with. These individual media objects are referred to as “thingies”. Anyone with a token can create a verse, a public network of pages for anarchiving thingies. If you are curious about accessing the platform, get in touch with us by email at [contact@fuit.es](mailto:contact@fuit.es), we would be happy to make you a token.
 
+For more info see our [community guidelines](https://fuit.es/community-guidelines) and [terms of use](https://fuit.es/terms-of-use).
+
 ---
 
 ###### *We acknowledge the support of the [Canada Council for the Arts](https://canadacouncil.ca/).*

@@ -4,6 +4,10 @@
     <SpinnerTripleDot
       v-show="verse.loading || page.loading || thingies.loading"
       theme="dark" />
+    <!-- ================================================= No Access Message -->
+    <div v-if="hidePrivateVerse" class="no-access-message">
+      This is a private Verse. To view it, add a token that belongs to this Verse using the pocket below.
+    </div>
     <!-- ============================================================== Page -->
     <div
       ref="pageRef"
@@ -60,7 +64,7 @@ const { verse, page, portalCreatorOpen, sceneData } = storeToRefs(verseStore)
 const collectorStore = useCollectorStore()
 const { thingies, editing, mobileDragThingie } = storeToRefs(collectorStore)
 const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
+const { authenticated, hidePrivateVerse } = storeToRefs(pocketStore)
 const mixerStore = useMixerStore()
 const { recording } = storeToRefs(mixerStore)
 const generalStore = useGeneralStore()
@@ -117,6 +121,8 @@ watch(data, async (val) => {
       if (!authenticated.value && localStorageAuthToken) {
         await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
       }
+      // If private verse and this pocket doesn't have access, return
+      if (hidePrivateVerse.value) { return }
       // Fetch thingies
       await collectorStore.getThingies()
     } else {
@@ -623,5 +629,15 @@ onBeforeUnmount(() => {
     -moz-user-select: none; /* For Firefox */
     -ms-user-select: none; /* For Internet Explorer/Edge */
   }
+}
+
+.no-access-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: $drippyDark;
+  font-size: torem(14);
 }
 </style>

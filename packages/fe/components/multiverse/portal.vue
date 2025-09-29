@@ -1,20 +1,12 @@
 <template>
-  <div class="verse-portal" :style="colorStyles">
+  <div :class="['verse-portal', { active }]" :style="colorStyles">
     <!-- --------------------------------------------------------------- Orb -->
-    <nuxt-link :to="to">
-      <div class="orb"></div>
-    </nuxt-link>
+    <div class="orb"></div>
 
     <div :class="['label-container', `offset__${offset}`]">
       <!-- ----------------------------------------------------- Label Title -->
       <div class="verse-title">
         <span class="label">{{ verse.name }}</span>
-        <ButtonIcon
-          v-if="authenticated"
-          class="verse-settings-button"
-          @clicked="emit('open-verse-settings', verse._id)">
-          <IconEllipsis class="icon-ellipsis" />
-        </ButtonIcon>
       </div>
       <!-- ------------------------------------------------------- Indicator -->
       <svg
@@ -49,19 +41,14 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  to: {
-    type: String,
-    required: false,
-    default: ''
+  active: {
+    type: Boolean,
+    required: true
   }
 })
 
-const emit = defineEmits(['open-verse-settings'])
-
 // ======================================================================== Data
 const offset = ref('middle')
-const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
 
 // ==================================================================== Computed
 const height = computed(() => offset.value === 'middle' ? 50 : 76)
@@ -93,10 +80,31 @@ onMounted(() => { setOffsetPosition() })
   position: absolute;
   left: 0;
   top: 50%;
+  z-index: 1;
   .orb {
     &:before {
       background-color: var(--orb-primary-color);
-      filter: drop-shadow(0 0 torem(16) var(--orb-secondary-color));
+      filter: drop-shadow(0 0 torem(16) var(--orb-secondary-color)) blur(torem(10));
+    }
+    &:after {
+      background: radial-gradient(circle, var(--orb-primary-color) 10%, var(--orb-secondary-color) 30%, rgba(255, 255, 255, 0) 66%);
+    }
+  }
+  .verse-title,
+  .indicator {
+    opacity: 0;
+  }
+  &.active {
+    z-index: 2;
+    .orb {
+      transform: scale(1.5);
+      &:after {
+        animation: hoverRing 2000ms ease-in-out infinite;
+      }
+    }
+    .verse-title,
+    .indicator {
+      opacity: 1;
     }
   }
 }
@@ -106,9 +114,9 @@ onMounted(() => { setOffsetPosition() })
   width: torem(40);
   height: torem(40);
   border-radius: 50%;
-  filter: blur(torem(10));
   transition: transform 200ms ease-in-out;
-  &:before {
+  &:before,
+  &:after {
     content: '';
     position: absolute;
     top: 0;
@@ -117,8 +125,8 @@ onMounted(() => { setOffsetPosition() })
     height: 100%;
     border-radius: 50%;
   }
-  &:hover {
-    transform: scale(1.5);
+  &:after {
+    opacity: 0;
   }
 }
 
@@ -148,6 +156,7 @@ onMounted(() => { setOffsetPosition() })
   border-radius: torem(25);
   background-color: $drippyCore;
   padding: torem(8) torem(16);
+  transition: opacity 200ms ease-in-out;
 }
 
 .label {
@@ -164,6 +173,7 @@ onMounted(() => { setOffsetPosition() })
   top: 100%;
   left: calc(50% - 2px);
   transform-origin: center top;
+  transition: opacity 200ms ease-in-out;
 }
 
 .verse-settings-button {
@@ -190,6 +200,15 @@ onMounted(() => { setOffsetPosition() })
     :deep(circle) {
       fill: $drippyCore;
     }
+  }
+}
+
+@keyframes hoverRing {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
   }
 }
 </style>

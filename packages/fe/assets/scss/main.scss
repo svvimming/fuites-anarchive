@@ -321,3 +321,52 @@ span.error {
     @include linkShadow;
   }
 }
+
+.global-markdown-content {  
+  p {
+    font-size: torem(16);
+    line-height: 1.3;
+    margin-bottom: torem(18);
+    color: $woodsmoke;
+  }
+  a {
+    position: relative;
+    color: $billyBlue;
+    font-weight: 600;
+    
+    &:before {
+      content: '';
+      position: absolute;
+      top: calc(100% - torem(3));
+      left: 0;
+      width: 100%;
+      height: 0;
+      border-bottom: 1px solid rgba($billyBlue, 1);
+    }
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: torem(0.5);
+    em {
+      letter-spacing: torem(0.5);
+    }
+  }
+  h4 {
+    font-size: torem(18);
+    margin-top: torem(36);
+    margin-bottom: torem(18);
+  }
+  h5,
+  h6 {
+    font-size: torem(12);
+    font-weight: 400;
+  }
+  hr {
+    border-top: 1px solid rgba(#B2B9CC, 0.5);
+    margin-bottom: torem(20);
+  }
+}

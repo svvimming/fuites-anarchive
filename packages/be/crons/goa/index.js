@@ -41,6 +41,8 @@ try {
   console.log(e)
 }
 
+const { HexToHsl, HslToHex } = require('@Module_Utilities')
+
 // ///////////////////////////////////////////////////////////////////// Modules
 require('@Module_Database')
 require('@Module_Thingie')
@@ -112,40 +114,84 @@ const getPageCenterOfMass = thingies => {
 }
 
 /**
- * @method averageHexColors
- * @desc Takes an array of hex colors and returns their average as a hex color
- * @param {[String]} hexColors - Array of hex color codes (with or without # prefix)
- * @returns {String} - Averaged hex color with # prefix, or random hex color if no input
+ * @method hexColorsToHslAverage
+ * @desc Takes an array of hex colors, averages them in HSL space and returns HSL
+ * @param {[String]} hexColors - Array of hex color codes (with or without #)
+ * @returns {{h:number,s:number,l:number}} - Averaged color as HSL object
  */
 
-const averageHexColors = hexColors => {
+const hexColorsToHslAverage = hexColors => {
   // Return random color if no colors provided
   if (!hexColors || hexColors.length === 0) {
-    const randomColor = Math.floor(Math.random() * 16777215).toString(16)
-    return `#${randomColor.padStart(6, '0')}`
+    return { h: Math.random() * 360, s: Math.random() * 100, l: Math.random() * 100 }
   }
-  // Remove # prefix if present and convert to RGB components
-  const rgbColors = hexColors.map(hex => {
-    const cleanHex = hex.replace('#', '')
-    return {
-      r: parseInt(cleanHex.substring(0, 2), 16),
-      g: parseInt(cleanHex.substring(2, 4), 16),
-      b: parseInt(cleanHex.substring(4, 6), 16)
+  // Convert hex colors to HSL colors
+  const hslColors = hexColors
+    .filter(Boolean)
+    .map(hex => HexToHsl(hex))
+  // Return random color if no colors provided
+  if (hslColors.length === 0) {
+    return { h: Math.random() * 360, s: Math.random() * 100, l: Math.random() * 100 }
+  }
+  // Calculate the average saturation and lightness
+  const n = hslColors.length
+  const avgS = hslColors.reduce((sum, c) => sum + c.s, 0) / n
+  const avgL = hslColors.reduce((sum, c) => sum + c.l, 0) / n
+  // Calculate the average hue
+  const vector = hslColors.reduce((acc, c) => {
+    const rad = (c.h * Math.PI) / 180
+    acc.x += Math.cos(rad)
+    acc.y += Math.sin(rad)
+    return acc
+  }, { x: 0, y: 0 })
+  const meanX = vector.x / n
+  const meanY = vector.y / n
+  let avgH = Math.atan2(meanY, meanX) * (180 / Math.PI)
+  if (avgH < 0) avgH += 360
+  // If hues cancel out (near-zero vector), fall back to first non-gray hue or 0
+  if (Number.isNaN(avgH) || (Math.abs(meanX) < 1e-6 && Math.abs(meanY) < 1e-6)) {
+    const firstColored = hslColors.find(c => c.s > 0)
+    avgH = firstColored ? firstColored.h : 0
+  }
+  // Return the average HSL color
+  return { h: avgH, s: avgS, l: avgL }
+}
+
+/**
+ * @method getVersePortalColors
+ * @desc Takes the primary and secondary colors of a verse and return two contrasting colors
+ * @param {[String]} primaryColors - Array of primary hex color codes (with or without #)
+ * @param {[String]} secondaryColors - Array of secondary hex color codes (with or without #)
+ * @returns {{primary:string,secondary:string}} - Primary and secondary colors as hex colors
+ */
+
+const getVersePortalColors = (primaryColors, secondaryColors) => {
+  // Calculate the average primary and secondary colors
+  const primaryHSL = hexColorsToHslAverage(primaryColors)
+  const secondaryHSL = hexColorsToHslAverage(secondaryColors)
+  // Distance of hues in the circle (0-360)
+  let hueDiff = Math.abs(primaryHSL.h - secondaryHSL.h)
+  if (hueDiff > 180) {
+    hueDiff = 360 - hueDiff
+  }
+  // If the hues are too close (<40°), we move the second one away
+  if (hueDiff < 40) {
+    secondaryHSL.h = (primaryHSL.h + 80) % 360
+  }
+  // If the lightness values are too close (<15), move the second one away
+  const lightnessDiff = Math.abs(primaryHSL.l - secondaryHSL.l)
+  if (lightnessDiff < 15) {
+    if (secondaryHSL.l >= primaryHSL.l) {
+      secondaryHSL.l = (((primaryHSL.l + 30) % 100) + 100) % 100
+    } else {
+      secondaryHSL.l = (((primaryHSL.l - 30) % 100) + 100) % 100
     }
-  })
-  // Calculate average for each RGB component
-  const avgColor = rgbColors.reduce((acc, curr) => ({
-    r: acc.r + curr.r,
-    g: acc.g + curr.g,
-    b: acc.b + curr.b
-  }), { r: 0, g: 0, b: 0 })
-  // Divide by number of colors to get average
-  avgColor.r = Math.round(avgColor.r / rgbColors.length)
-  avgColor.g = Math.round(avgColor.g / rgbColors.length)
-  avgColor.b = Math.round(avgColor.b / rgbColors.length)
-  // Convert back to hex
-  const toHex = n => n.toString(16).padStart(2, '0')
-  return `#${toHex(avgColor.r)}${toHex(avgColor.g)}${toHex(avgColor.b)}`
+  }
+  // Return the primary and secondary colors as hex colors
+  return {
+    primary: HslToHex(primaryHSL.h, primaryHSL.s, primaryHSL.l),
+    secondary: HslToHex(secondaryHSL.h, secondaryHSL.s, secondaryHSL.l)
+  }
 }
 
 /**
@@ -237,11 +283,8 @@ const pagePreaccelerator = async verse => {
         socket.emit('cron|page-state-update|initialize', updated)
       }
     }
-    // Calculate average primary and secondary colors for this verse
-    const primary = averageHexColors(primaryColors)
-    const secondary = averageHexColors(secondaryColors)
-    // Return the average colors of this verse
-    return { primary, secondary }
+    // Return computed primary and secondary verse colors
+    return getVersePortalColors(primaryColors, secondaryColors)
   } catch (e) {
     console.log('======================== [Function: GOA - pagePreaccelerator]')
     console.log(e)
