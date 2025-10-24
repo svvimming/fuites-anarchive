@@ -26,13 +26,13 @@ const { $io, $bus } = useNuxtApp()
 
 // ======================================================================== Data
 const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
+const { pocketAuth } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const websocketStore = useWebsocketStore()
 const { socket } = storeToRefs(websocketStore)
 
 // ==================================================================== Watchers
-watch(authenticated, async (val) => {
+watch(pocketAuth, async (val) => {
   /**
    * Initialize websocket connection to backend
    */

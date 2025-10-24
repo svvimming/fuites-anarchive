@@ -21,19 +21,19 @@
         data-push-right="off-1_sm-2_mi-1_ti-0">
         <!-- ------------------------------------------------------ Site Nav -->
         <div
-          v-show="authenticated"
+          v-show="pocketAuth"
           class="logo-container">
           <SiteLogo v-once />
         </div>
         <ButtonBasic
-          v-if="authenticated"
+          v-if="pocketAuth"
           theme="clear"
           class="info-button"
           @clicked="toggleInfoModal">
           Info
         </ButtonBasic>
         <!-- ----------------------------------------------------- Verse Nav -->
-        <template v-if="authenticated">
+        <template v-if="pocketAuth">
 
           <div class="verse-list-header">
             <div class="list-heading">
@@ -66,7 +66,7 @@
               </ButtonBasic>
               
               <ButtonIcon
-                v-if="authenticated"
+                v-if="pocketAuth"
                 class="verse-settings-button"
                 @clicked="emit('open-verse-settings', verse._id)">
                 <IconEllipsis class="icon-ellipsis" />
@@ -116,7 +116,7 @@ const emit = defineEmits(['open-verse-settings'])
 // ======================================================================== Data
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
+const { pocketAuth } = storeToRefs(pocketStore)
 const positionData = ref([])
 const versesCtnRef = ref(null)
 const randomOffsets = ref([])

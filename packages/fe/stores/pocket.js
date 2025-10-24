@@ -31,7 +31,8 @@ export const usePocketStore = defineStore('pocket', () => {
   
   // ================================================================== Computed
   const token = computed(() => pocket.value?.data.token)
-  const authenticated = computed(() => pocket.value.authenticated && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
+  const pocketAuth = computed(() => pocket.value.authenticated)
+  const authenticated = computed(() => pocketAuth.value && pocket.value.data.verses.some(item => item._id === verse.value.data._id))
   const hidePrivateVerse = computed(() => verse.value.data?.settings?.private && !pocket.value.data.verses.some(item => item._id === verse.value.data._id))
   
   // =================================================================== actions
@@ -317,6 +318,7 @@ export const usePocketStore = defineStore('pocket', () => {
     drippy,
     // ----- computed
     token,
+    pocketAuth,
     authenticated,
     hidePrivateVerse,
     // ----- actions

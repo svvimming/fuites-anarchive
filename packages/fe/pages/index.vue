@@ -1,33 +1,37 @@
 <template>
   <div class="multiverse">
     <!-- ======================================================= Landing Nav -->
-    <LandingNav v-show="!authenticated" />
+    <LandingNav v-show="!pocketAuth" />
     <!-- ======================================================== Info Modal -->
     <MultiverseInfoModal v-if="infoMarkdown" :markdown="infoMarkdown" />
     <!-- =========================================== Create New Verse Button -->
-    <ButtonDashed
-      v-if="authenticated"
-      :stylized="createVerseButtonText"
-      :active="createVerseButtonActive"
-      :flat-dashes="4"
-      class="new-verse-button"
-      @clicked="handleCreateNewVerseClick">
-      <template #icon-after>
-        <IconPlus class="icon" />
-      </template>
-    </ButtonDashed>
+    <ClientOnly>
+      <ButtonDashed
+        v-if="pocketAuth"
+        :stylized="createVerseButtonText"
+        :active="createVerseButtonActive"
+        :flat-dashes="4"
+        class="new-verse-button"
+        @clicked="handleCreateNewVerseClick">
+        <template #icon-after>
+          <IconPlus class="icon" />
+        </template>
+      </ButtonDashed>
+    </ClientOnly>
     <!-- ================================================ Enter Token Button -->
-    <ButtonDashed
-      v-if="authenticated"
-      :stylized="changeTokenButtonText"
-      :active="enterTokenButtonActive"
-      :flat-dashes="4"
-      class="change-token-button"
-      @clicked="handleEnterTokenClick">
-      <template #icon-after>
-        <IconKey class="icon" />
-      </template>
-    </ButtonDashed>
+    <ClientOnly>
+      <ButtonDashed
+        v-if="pocketAuth"
+        :stylized="changeTokenButtonText"
+        :active="enterTokenButtonActive"
+        :flat-dashes="4"
+        class="change-token-button"
+        @clicked="handleEnterTokenClick">
+        <template #icon-after>
+          <IconKey class="icon" />
+        </template>
+      </ButtonDashed>
+    </ClientOnly>
     <!-- =============================================== Community and Terms -->
     <div class="community-and-terms">
       <ButtonBasic
@@ -88,7 +92,7 @@ definePageMeta({ layout: 'multiverse' })
 const generalStore = useGeneralStore()
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const { pocket, authenticated } = storeToRefs(pocketStore)
+const { pocket, pocketAuth } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { verse } = storeToRefs(verseStore)
 const createVerseButtonActive = ref(false)
@@ -133,7 +137,7 @@ await generalStore.setSiteData({ key: 'settings', value: SettingsData })
 // Check local storage for auth token and try to authenticate if found
 if (process.client) {
   const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
-  if (!authenticated.value && localStorageAuthToken) {
+  if (!pocketAuth.value && localStorageAuthToken) {
     await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
   }
 }
