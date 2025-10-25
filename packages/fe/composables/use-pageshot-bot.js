@@ -127,6 +127,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const handleWebsocketConnected = websocket => {
+    console.log('pageshot bot', 'handleWebsocketConnected')
     fileReader.value = new FileReader()
     fileReader.value.onload = (e) => {
       websocket.emit('module|print-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
@@ -177,7 +178,6 @@ export const usePageshotBot = stageRef => {
 
   // ===================================================================== Hooks
   $bus.$on('socket.io-connected', handleWebsocketConnected)
-  console.log('pageshot bot', 'socket.io-connected', socket.value.id)
 
   onBeforeUnmount(() => {
     console.log('pageshot bot', 'onBeforeUnmount')
