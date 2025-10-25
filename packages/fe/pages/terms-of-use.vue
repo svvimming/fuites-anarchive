@@ -42,8 +42,14 @@ definePageMeta({ layout: 'empty' })
 
 // ======================================================================== Data
 // fetch Info Markdown
-const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
-
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
+// Site data
+const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
+// Set site data
+if (!siteData.value?.content) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 const backgroundVerses = [
   { color: '#73E575', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
   { color: '#D14CA9', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
@@ -55,7 +61,9 @@ const backgroundVerses = [
 ]
 
 // ==================================================================== Computed
-const termsOfUseMarkdown = computed(() => markdown.value?.find(item => item.path === '/terms-of-use') || null)
+const markdown = computed(() => siteData.value?.content || [])
+const termsOfUseMarkdown = computed(() => markdown.value.find(item => item.path === '/terms-of-use'))
+
 </script>
 
 <style lang="scss" scoped>
