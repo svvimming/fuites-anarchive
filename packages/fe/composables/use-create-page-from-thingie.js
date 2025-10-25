@@ -14,6 +14,7 @@ export const useCreatePageFromThingie = () => {
    */
 
    const createNewPageFromThingie = async (thingie, newAt) => {
+    console.log('createNewPageFromThingie composable', 'thingie', thingie, 'newAt', newAt)
     const created = await verseStore.postCreatePage({
       initiatorPocket: pocket.value.data._id,
       creatorThingie: thingie,

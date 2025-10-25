@@ -50,6 +50,7 @@ export const usePageshotBot = stageRef => {
       callback: (data) => {
         // Set the blob
         blob.value = data
+        console.log('pageshot bot', 'init blob', blob.value)
         // If the destination is server, upload the print
         if (destination === 'server') {
           uploadPrint()
@@ -93,6 +94,7 @@ export const usePageshotBot = stageRef => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
+    console.log('pageshot bot', 'blob', blob.value, 'data', data)
     const chunk = blob.value.slice(index, index + Math.min(chunksize, (blobsize.value - index)), mimetype.value)
     nextChunkPayload.value = {
       socket_id: socket.value.id,
