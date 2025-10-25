@@ -54,6 +54,10 @@ const backgroundVerses = [
   { color: '#E57373', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() }
 ]
 
+watch(markdown, (newVal) => {
+  console.log('community-guidelines', newVal)
+}, { immediate: true })
+
 // ==================================================================== Computed
 const communityGuidelinesMarkdown = computed(() => markdown.value?.find(item => item.path === '/community-guidelines') || null)
 </script>

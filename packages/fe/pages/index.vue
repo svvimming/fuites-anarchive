@@ -142,6 +142,10 @@ if (process.client) {
   }
 }
 
+watch(markdown, (newVal) => {
+  console.log('index', newVal)
+}, { immediate: true })
+
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
