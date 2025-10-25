@@ -147,10 +147,6 @@ if (process.client) {
   }
 }
 
-watch(content, (newVal) => {
-  console.log('index', newVal)
-}, { immediate: true })
-
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)

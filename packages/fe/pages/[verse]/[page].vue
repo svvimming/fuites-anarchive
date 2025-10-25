@@ -75,9 +75,14 @@ const {
   mouseOverScene,
   portalEditing
 } = storeToRefs(generalStore)
-
+// fetch page data
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
-
+// fetch Info Markdown
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
+// Set content data
+if (content.value) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)

@@ -152,6 +152,7 @@ const route = useRoute()
 const id = route.query.id
 const pocketStore = usePocketStore()
 const { invite } = storeToRefs(pocketStore)
+const generalStore = useGeneralStore()
 const { $diceware } = useNuxtApp()
 const description = ref(null)
 const initialHeight = ref(false)
@@ -166,7 +167,12 @@ const generateAllowed = ref(true)
 
 // fetch Invite
 await useAsyncData('invite', async () => await pocketStore.getInvite({ invite_id: id }), { server: false })
-
+// fetch Info Markdown
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
+// Set content data
+if (content.value) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 // ==================================================================== Computed
 const inviteVerses = computed(() => invite.value.data?.verses || [])
 const inviteStatus = computed(() => invite.value.data?.status || 'loading')

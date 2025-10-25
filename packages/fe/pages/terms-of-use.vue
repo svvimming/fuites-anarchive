@@ -60,10 +60,6 @@ const backgroundVerses = [
   { color: '#E57373', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() }
 ]
 
-watch(content, (newVal) => {
-  console.log('terms-of-use', newVal)
-}, { immediate: true })
-
 // ==================================================================== Computed
 const markdown = computed(() => content.value || siteData.value?.content || [])
 const termsOfUseMarkdown = computed(() => markdown.value.find(item => item.path === '/terms-of-use'))
