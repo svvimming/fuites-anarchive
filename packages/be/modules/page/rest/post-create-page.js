@@ -33,7 +33,6 @@ const useCreatePageName = creatorThingie => {
 MC.app.post('/post-create-page', async (req, res) => {
   try {
     const body = req.body
-    console.log('body', body)
     const verse = body.verse
     const initiatorPocket = body.initiatorPocket
     const creatorThingie = body.creatorThingie

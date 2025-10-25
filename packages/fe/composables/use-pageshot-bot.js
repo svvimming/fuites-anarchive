@@ -72,6 +72,7 @@ export const usePageshotBot = stageRef => {
 
   const uploadPrint = () => {
     if (blob.value) {
+      console.log('pageshot bot', 'upload print', blob.value)
       socket.value.emit('module|print-upload-initialize|payload', {
         socket_id: socket.value.id,
         page_ref: page.value.data._id,
@@ -176,8 +177,10 @@ export const usePageshotBot = stageRef => {
 
   // ===================================================================== Hooks
   $bus.$on('socket.io-connected', handleWebsocketConnected)
+  console.log('pageshot bot', 'socket.io-connected', socket.value.id)
 
   onBeforeUnmount(() => {
+    console.log('pageshot bot', 'onBeforeUnmount')
     resetUploader()
     $bus.$off('socket.io-connected', handleWebsocketConnected)
   })
