@@ -42,14 +42,7 @@ definePageMeta({ layout: 'empty' })
 
 // ======================================================================== Data
 // fetch Info Markdown
-const { data: content } = await useAsyncData(async () => queryCollection('content').all())
-// Site data
-const generalStore = useGeneralStore()
-const { siteData } = storeToRefs(generalStore)
-// Set site data
-if (!siteData.value?.content) {
-  await generalStore.setSiteData({ key: 'content', value: content.value })
-}
+const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
 
 const backgroundVerses = [
   { color: '#73E575', opacity: Math.random() * 0.25 + 0.5, rx: Math.random(), ry: Math.random() },
@@ -62,9 +55,7 @@ const backgroundVerses = [
 ]
 
 // ==================================================================== Computed
-const markdown = computed(() => content.value || siteData.value?.content || [])
-const communityGuidelinesMarkdown = computed(() => markdown.value.find(item => item.path === '/community-guidelines'))
-
+const communityGuidelinesMarkdown = computed(() => markdown.value?.find(item => item.path === '/community-guidelines') || null)
 </script>
 
 <style lang="scss" scoped>

@@ -85,7 +85,6 @@
 <script setup>
 // ======================================================================= Setup
 import SettingsData from '@/data/settings.json'
-// import InfoMarkdown from '@/content/info.md'
 
 definePageMeta({ layout: 'multiverse' })
 
@@ -132,10 +131,9 @@ const changeTokenButtonText = [
 // fetch Verse
 await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 // fetch Info Markdown
-const { data: content } = await useAsyncData(async () => queryCollection('content').all())
+const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
-await generalStore.setSiteData({ key: 'content', value: content.value })
 // Check local storage for auth token and try to authenticate if found
 if (process.client) {
   const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
@@ -147,7 +145,6 @@ if (process.client) {
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
-const markdown = computed(() => content.value || siteData.value?.content || [])
 const infoMarkdown = computed(() => markdown.value.find(item => item.path === '/info'))
 
 // ===================================================================== Methods
