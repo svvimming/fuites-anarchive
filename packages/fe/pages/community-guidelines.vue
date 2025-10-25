@@ -55,7 +55,7 @@ const backgroundVerses = [
 ]
 
 // ==================================================================== Computed
-const communityGuidelinesMarkdown = computed(() => markdown.value.find(item => item.path === '/community-guidelines'))
+const communityGuidelinesMarkdown = computed(() => markdown.value?.find(item => item.path === '/community-guidelines') || null)
 </script>
 
 <style lang="scss" scoped>

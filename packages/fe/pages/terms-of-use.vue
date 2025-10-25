@@ -55,7 +55,7 @@ const backgroundVerses = [
 ]
 
 // ==================================================================== Computed
-const termsOfUseMarkdown = computed(() => markdown.value.find(item => item.path === '/terms-of-use'))
+const termsOfUseMarkdown = computed(() => markdown.value?.find(item => item.path === '/terms-of-use') || null)
 </script>
 
 <style lang="scss" scoped>
