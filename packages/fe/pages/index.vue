@@ -90,6 +90,7 @@ definePageMeta({ layout: 'multiverse' })
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
 const { pocket, pocketAuth } = storeToRefs(pocketStore)
@@ -131,9 +132,13 @@ const changeTokenButtonText = [
 // fetch Verse
 await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 // fetch Info Markdown
-const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+// Set content data
+if (content.value) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 // Check local storage for auth token and try to authenticate if found
 if (process.client) {
   const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
@@ -142,13 +147,14 @@ if (process.client) {
   }
 }
 
-watch(markdown, (newVal) => {
+watch(content, (newVal) => {
   console.log('index', newVal)
 }, { immediate: true })
 
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
+const markdown = computed(() => content.value || siteData.value?.content || [])
 const infoMarkdown = computed(() => markdown.value.find(item => item.path === '/info'))
 
 // ===================================================================== Methods
