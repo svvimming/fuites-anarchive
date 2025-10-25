@@ -77,12 +77,7 @@ const {
 } = storeToRefs(generalStore)
 // fetch page data
 const { data } = await useAsyncData(`page-${route.fullPath}`, async () => await verseStore.getVerse({ verse: route.params.verse }), { server: false })
-// fetch Info Markdown
-const { data: content } = await useAsyncData(async () => queryCollection('content').all())
-// Set content data
-if (content.value) {
-  await generalStore.setSiteData({ key: 'content', value: content.value })
-}
+
 const pageRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)
@@ -103,9 +98,14 @@ const controller = ref({
   arrowUp: false,
   arrowDown: false
 })
-
+// Init drag and drop events
 useHandleThingieDragEvents(pageRef, stageRef)
-
+// fetch Info Markdown
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
+// Set content data
+if (content.value) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 // ==================================================================== Computed
 const pageName = computed(() => route.params.page)
 const bounds = computed(() => page.value.data?.bounds || { x: 2372, y: 2000 })
