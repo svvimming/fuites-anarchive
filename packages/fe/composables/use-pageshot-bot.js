@@ -30,6 +30,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const initPageshot = options => {
+    status.value = 'working'
     const { destination } = options
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
     const layers = stage.value.getLayers()
@@ -50,7 +51,6 @@ export const usePageshotBot = stageRef => {
       callback: (data) => {
         // Set the blob
         blob.value = data
-        console.log('pageshot bot', 'init blob', blob.value)
         // If the destination is server, upload the print
         if (destination === 'server') {
           uploadPrint()
@@ -72,7 +72,6 @@ export const usePageshotBot = stageRef => {
 
   const uploadPrint = () => {
     if (blob.value) {
-      console.log('pageshot bot', 'upload print', blob.value)
       socket.value.emit('module|print-upload-initialize|payload', {
         socket_id: socket.value.id,
         page_ref: page.value.data._id,
@@ -95,7 +94,6 @@ export const usePageshotBot = stageRef => {
     goal.value = data.goal
     const chunksize = data.chunksize
     const index = place.value * chunksize
-    console.log('pageshot bot', 'blob', blob.value, 'data', data)
     const chunk = blob.value.slice(index, index + Math.min(chunksize, (blobsize.value - index)), mimetype.value)
     nextChunkPayload.value = {
       socket_id: socket.value.id,
@@ -112,9 +110,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const fileUploadComplete = () => {
-    place.value = 0
-    nextChunkPayload.value = false
-    printId.value = ''
+    resetUploader()
     status.value = 'complete'
     if (cloned.value) {
       cloned.value.destroy()
@@ -127,7 +123,6 @@ export const usePageshotBot = stageRef => {
    */
 
   const handleWebsocketConnected = websocket => {
-    console.log('pageshot bot', 'handleWebsocketConnected')
     fileReader.value = new FileReader()
     fileReader.value.onload = (e) => {
       websocket.emit('module|print-upload-chunk|payload', Object.assign(nextChunkPayload.value, { chunk: e.target.result }))
@@ -144,14 +139,8 @@ export const usePageshotBot = stageRef => {
     place.value = 0
     nextChunkPayload.value = false
     printId.value = ''
-    status.value = 'ready'
     blob.value = false
     goal.value = 0
-    fileReader.value
-    if (cloned.value) {
-      cloned.value.destroy()
-      cloned.value = null
-    }
   }
 
   /**
@@ -180,9 +169,11 @@ export const usePageshotBot = stageRef => {
   $bus.$on('socket.io-connected', handleWebsocketConnected)
 
   onBeforeUnmount(() => {
-    console.log('pageshot bot', 'onBeforeUnmount')
-    resetUploader()
     $bus.$off('socket.io-connected', handleWebsocketConnected)
+    if (cloned.value) {
+      cloned.value.destroy()
+      cloned.value = null
+    }
   })
 
   return { initPageshot, status }

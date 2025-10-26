@@ -49,12 +49,29 @@ MC.socket.listeners.push({
           print.upload_status = 1
           await print.save()
           // Add print ref to the relevant Page
-          await MC.model.Page.findOneAndUpdate({ _id: print.page_ref }, {
+          const updated = await MC.model.Page.findOneAndUpdate({ _id: print.page_ref }, {
             init_screencap: false,
             $push: {
               print_refs: print._id
             }
+          }).populate({
+            path: 'portal_refs',
+            sort: { createdAt: 1 },
+            populate: [
+              {
+                path: 'thingie_ref',
+                select: 'colors'
+              },
+              {
+                path: 'vertices.page_ref',
+                select: 'print_refs'
+              }
+            ]
           })
+          // Broadcast page updates to the socket connection
+          MC.socket.io
+            .to(`${updated.verse}|pages`)
+            .emit('module|post-update-page|payload', { page: updated })
           // File upload complete
           return socket.emit('module|print-upload-complete|payload')
         }

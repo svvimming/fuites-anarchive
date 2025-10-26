@@ -67,6 +67,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['loaded'])
+
 // ======================================================================== Data
 const config = useRuntimeConfig()
 const buffer = ref(false)
@@ -197,6 +199,9 @@ const initSoundThingie = async () => {
 // ======================================================================= Hooks
 onMounted(() => {
   if (audioContext.value) { initSoundThingie() }
+  setTimeout(() => {
+    emit('loaded', true)
+  }, 200)
 })
 
 onBeforeUnmount(() => {

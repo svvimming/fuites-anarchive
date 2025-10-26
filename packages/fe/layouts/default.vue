@@ -33,8 +33,6 @@ const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
 const collectorStore = useCollectorStore()
-const websocketStore = useWebsocketStore()
-const { socket } = storeToRefs(websocketStore)
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
 const doubleClickEventListener = ref(false)
@@ -44,9 +42,7 @@ watch(() => page.value.data, async () => {
   /**
    * Initialize websocket connection to backend
    */
-  if (!socket.value?.connected) {
-    await $io.connect()
-  }
+  await $io.connect()
   /**
    * Add keydown/up event listeners
    */
