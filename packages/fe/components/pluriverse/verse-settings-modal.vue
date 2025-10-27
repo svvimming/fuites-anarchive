@@ -1,7 +1,7 @@
 <template>
   <ZeroAlert
     mode="alert"
-    alert-id="multiverse-verse-settings-modal">
+    alert-id="pluriverse-verse-settings-modal">
     <div class="verse-settings-modal">
 
       <span class="modal-heading">{{ modalHeading }}</span>
@@ -160,15 +160,15 @@ const notInitiatorPocket = computed(() => verseHasInitiator.value !== pocket.val
 
 // ==================================================================== Watchers
 watch(() => props.verse?._id, (val) => {
-  const alert = alertStore.getAlert('multiverse-verse-settings-modal')
+  const alert = alertStore.getAlert('pluriverse-verse-settings-modal')
   if (val) {
     inviteUrl.value = ''
     generating.value = false
     initRangeValues()
     initStateValues()
-    alertStore.openAlert('multiverse-verse-settings-modal')
+    alertStore.openAlert('pluriverse-verse-settings-modal')
   } else if (alert.status === 'open') {
-    alertStore.closeAlert('multiverse-verse-settings-modal')
+    alertStore.closeAlert('pluriverse-verse-settings-modal')
   }
 })
 

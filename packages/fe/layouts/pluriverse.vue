@@ -1,5 +1,5 @@
 <template>
-  <div class="multiverse-layout">
+  <div class="pluriverse-layout">
 
     <slot />
 
@@ -44,7 +44,7 @@ watch(pocketAuth, async (val) => {
 
  const handleWebsocketConnected = socket => {
   // Join rooms
-  socket.emit('join-room', 'multiverse')
+  socket.emit('join-room', 'pluriverse')
   // Listen for events
   socket.on('module|post-update-verse|payload', (data) => {
     verseStore.updateVerse(data.verse)
@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse-layout {
+.pluriverse-layout {
   position: relative;
   width: 100vw;
   height: 100vh;
