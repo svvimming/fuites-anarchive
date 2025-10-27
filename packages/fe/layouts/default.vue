@@ -67,7 +67,7 @@ watch(() => page.value.data, async () => {
   socket.emit('join-room', `${namespace}|thingies`)
   socket.emit('join-room', `${namespace}|pages`)
   socket.emit('join-room', `${namespace}|portals`)
-  socket.emit('join-room', 'multiverse')
+  socket.emit('join-room', 'pluriverse')
   // Listen for events
   socket.on('module|update-thingie|payload', (data) => {
     // If the update originated from this session and was updating a thingie 'at'

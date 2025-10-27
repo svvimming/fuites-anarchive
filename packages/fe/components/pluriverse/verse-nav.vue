@@ -1,5 +1,5 @@
 <template>
-  <div class="multiverse-verse-nav">
+  <div class="pluriverse-verse-nav">
     <!-- ======================================================== Background -->
     <div class="background-panel">
       <div
@@ -83,11 +83,11 @@
 
         </template>
       </div>
-      <!-- ----------------------------------------- Multiverse Visual Right -->
+      <!-- ----------------------------------------- Pluriverse Visual Right -->
       <div class="col-9_ulg-8_xlg-7_md-6_sm-hidden">
         <div ref="versesCtnRef" class="verse-portals">
           <template v-for="(verse, index) in verses">
-            <MultiversePortal
+            <PluriversePortal
               v-if="verse._id"
               :key="`${verse._id}-portal`"
               :verse="verse"
@@ -180,9 +180,9 @@ const getPortalPosition = index => {
 }
 
 const toggleInfoModal = () => {
-  const alert = alertStore.getAlert('multiverse-info-modal')
+  const alert = alertStore.getAlert('pluriverse-info-modal')
   if (alert) {
-    alertStore.openAlert('multiverse-info-modal')
+    alertStore.openAlert('pluriverse-info-modal')
   }
 }
 
@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse-verse-nav {
+.pluriverse-verse-nav {
   height: 100%;
   [class~="grid"],
   [class*="grid-"],

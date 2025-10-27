@@ -172,9 +172,9 @@
       "heading": "Compost",
       "message": "If there is a thingie you want to discard from this page, throw it here in the compost, where someone else can grab it."
     },
-    "multiverse-link": {
+    "pluriverse-link": {
       "heading": "Verses",
-      "message": "This leads to the multiverse where you can see the verses you have access to."
+      "message": "This leads to the pluriverse where you can see the verses you have access to."
     },
     "thingie": {
       "heading": "Thingie",
@@ -182,11 +182,15 @@
     },
     "portal": {
       "heading": "Portal",
-      "message": "A portal is a passageway to another page, click on one to see where it takes you!<br><br>To make a new portal, a shift + click anywhere on the page will let you enter the name of an existing page you want to connect to this one."
+      "message": "A portal is a passageway to another page, click on one to see where it takes you!<br><br>Hold shift for more options..."
+    },
+    "portal-shift": {
+      "heading": "Portal",
+      "message": "To make a new portal, a shift + click anywhere on the page will let you enter the name of an existing page you want to connect to this one.<br><br>Hold shift and drag a portal to move it. Hold shift and double click it to delete it.<br><br>(Some portals are made by the <em>tunneler</em> when a thingie moves from one page to another. These portals can't be deleted manually.)"
     },
     "canvas": {
       "heading": "Page",
-      "message": "You can navigate around the page by scrolling or using the arrow keys. To zoom in and out, hold shift and use the + and - keys."
+      "message": "You can navigate around the page by scrolling or using the arrow keys. To zoom in and out, hold shift and use the + and - keys.<br><br>Press shift + p to save a screenshot of the page."
     },
     "caddy-handle": {
       "heading": "Caddy",

@@ -2,15 +2,15 @@
   <div id="verse-metadata">
     <!-- --------------------------------------------------------- To Verses -->
     <Tooltip
-      tooltip="multiverse-link"
+      tooltip="pluriverse-link"
       contact="bottom-right"
       :drippy-scene="4"
-      class="to-multiverse-tooltip">
+      class="to-pluriverse-tooltip">
       <ButtonIcon
         tag="nuxt-link"
         to="/"
-        class="to-multiverse">
-        <IconMultiverse class="icon"/>
+        class="to-pluriverse">
+        <IconPluriverse class="icon"/>
       </ButtonIcon>
     </Tooltip>
 
@@ -58,12 +58,12 @@ watch(mouseOverScene, val => {
   align-items: center;
 }
 
-.to-multiverse-tooltip {
+.to-pluriverse-tooltip {
   position: relative;
   z-index: 2;
 }
 
-:deep(.to-multiverse) {
+:deep(.to-pluriverse) {
   position: relative;
   display: flex;
   justify-content: center;

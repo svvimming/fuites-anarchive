@@ -21,7 +21,7 @@
 
 <script setup>
 // ====================================================================== Import
-import { useMouse, useElementBounding } from '@vueuse/core'
+import { useMouse, useElementBounding, useMagicKeys } from '@vueuse/core'
 
 // ======================================================================== Data
 const { x, y } = useMouse({ type: 'client' })
@@ -31,10 +31,18 @@ const sideY = ref('bottom')
 const { width, height } = useElementBounding(cursorTooltipRef)
 const generalStore = useGeneralStore()
 const { siteData, mouseOverScene } = storeToRefs(generalStore)
+const { shift } = useMagicKeys()
 
 // ==================================================================== Computed
 const tooltips = computed(() => siteData.value?.settings?.tooltips || {})
-const tip = computed(() => tooltips.value[mouseOverScene.value?.type])
+const tip = computed(() => {
+  const hovering = mouseOverScene.value?.type
+  const hoverShift = hovering + '-shift'
+  if (shift.value && tooltips.value[hoverShift]) {
+    return tooltips.value[hoverShift]
+  }
+  return tooltips.value[hovering]
+})
 
 // ==================================================================== Watchers
 watch(tip, () => { setTipSides() })
