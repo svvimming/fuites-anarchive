@@ -87,7 +87,6 @@ const resizeEventListener = ref(false)
 const keyupEventListener = ref(false)
 const keydownEventListener = ref(false)
 const loadedIds = ref([])
-const pageshotReady = ref(false)
 const { initPageshot, status } = usePageshotBot(stageRef)
 const touchLast = ref({ x: 0, y: 0 })
 const lastTouchDistance = ref(0)
@@ -112,7 +111,7 @@ const bounds = computed(() => page.value.data?.bounds || { x: 2372, y: 2000 })
 const pageThingies = computed(() => thingies.value.data.filter(thingie => thingie.location === pageName.value).sort((a, b) => a.zIndex - b.zIndex))
 const pagePortals = computed(() => page.value.data?.filtered_portals || [])
 const portalsActive = computed(() => activeModes.value.portals)
-const textImageIds = computed(() => pageThingies.value.filter(item => ['image', 'text'].includes(item.thingie_type)).map(item => item._id))
+const pageThingieIds = computed(() => pageThingies.value.map(item => item._id))
 
 // ==================================================================== Watchers
 watch(data, async (val) => {
@@ -136,13 +135,6 @@ watch(data, async (val) => {
   }
 }, { immediate: true })
 
-watch(loadedIds, (ids) => {
-  pageshotReady.value = textImageIds.value.every(id => ids.includes(id))
-  if (page.value?.data?.init_screencap && pageshotReady.value && status.value !== 'complete') {
-    initPageshot({ destination: 'server' })
-  }
-}, { deep: true })
-
 // position scene to center on editing thingie on mobile devices
 watch(editing, id => {
   if (small.value && id) {
@@ -165,8 +157,11 @@ watch(editing, id => {
  */
 
 const handleRecordLoad = id => {
-  if (!loadedIds.value.includes(id)) {
-    loadedIds.value.push(id)
+  if (id && !loadedIds.value.includes(id)) { loadedIds.value.push(id) }
+  if (pageThingieIds.value.length <= 0 || loadedIds.value.length <= 0) { return }
+  const pageshotReady = status.value === 'ready' && pageThingieIds.value.every(id => loadedIds.value.includes(id))
+  if (page.value?.data?.init_screencap && pageshotReady) {
+    initPageshot({ destination: 'server' })
   }
 }
 
