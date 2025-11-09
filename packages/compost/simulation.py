@@ -425,13 +425,15 @@ class Simulation:
         
         # Audio playback for sound chunks
         self.playing_chunks = {}  # Track currently playing chunks: {chunk: channel}
+        self.chunk_volumes = {}  # Track volume for each playing chunk: {chunk: volume}
         self.last_hovered_chunks = set()  # Track chunks that were hovered last frame
+        self.sound_cache = {}  # Cache Sound objects to avoid recreating them
         
         # Initialize pygame mixer for audio playback with multiple channels
         try:
-            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
-            pygame.mixer.set_num_channels(16)  # Allow up to 16 simultaneous sounds
-            print("Audio mixer initialized successfully with 16 channels")
+            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=2048)
+            pygame.mixer.set_num_channels(256)  # Allow up to 256 simultaneous sounds
+            print("Audio mixer initialized successfully with 256 channels (buffer: 2048)")
         except pygame.error as e:
             print(f"Failed to initialize audio mixer: {e}")
 
@@ -465,31 +467,91 @@ class Simulation:
 
     def handle_audio_hover(self, mouse_pos: Tuple[int, int]) -> None:
         """
-        Handle audio playback when hovering over sound chunks.
-        Detects ALL overlapping chunks and plays them simultaneously.
+        Handle proximity-based audio playback for sound chunks using inverse square law.
+        All sound chunks within max_distance play simultaneously with volume based on distance.
         
         Args:
             mouse_pos: (x, y) mouse position
         """
-        hovered_chunks = set(self.get_chunks_at_mouse(mouse_pos))
+        # Get hover configuration
+        hover_cfg = self.config["sound"]["hover"]
+        max_distance = hover_cfg["max_distance"]
+        reference_distance = hover_cfg["reference_distance"]
+        min_volume_threshold = hover_cfg["min_volume_threshold"]
+        epsilon = 1.0  # Small value to prevent division by zero
         
-        # Find newly hovered chunks (not hovered in previous frame)
-        newly_hovered = hovered_chunks - self.last_hovered_chunks
+        cursor_x, cursor_y = mouse_pos
+        currently_playing = set(self.playing_chunks.keys())
+        should_be_playing = set()
         
-        # Start playing audio for newly hovered chunks
-        for chunk in newly_hovered:
-            if chunk.audio_path and chunk not in self.playing_chunks:
-                try:
-                    sound = pygame.mixer.Sound(chunk.audio_path)
-                    channel = sound.play()
+        # Iterate through all chunks with audio
+        for chunk in self.chunks:
+            if not chunk.audio_path:
+                continue
+            
+            # Calculate distance from cursor to chunk center
+            chunk_pos = chunk.body.position
+            dx = cursor_x - chunk_pos.x
+            dy = cursor_y - chunk_pos.y
+            distance = math.sqrt(dx * dx + dy * dy)
+            
+            # Skip chunks beyond max distance
+            if distance > max_distance:
+                continue
+            
+            # Calculate volume using inverse square law
+            # volume = (reference_distance²) / (distance² + epsilon)
+            distance_squared = distance * distance + epsilon
+            volume = (reference_distance * reference_distance) / distance_squared
+            
+            # Clamp volume to [0, 1.0] range
+            volume = max(0.0, min(1.0, volume))
+            
+            # Debug: print chunks that are skipped due to low volume
+            if volume < min_volume_threshold:
+                # Only print occasionally to avoid spam
+                if random.random() < 0.01:  # 1% chance to print
+                    print(f"Chunk skipped: volume {volume:.4f} below threshold {min_volume_threshold} (distance: {distance:.1f})")
+            
+            # Only play if volume is above threshold
+            if volume >= min_volume_threshold:
+                should_be_playing.add(chunk)
+                
+                if chunk in self.playing_chunks:
+                    # Update volume for already playing chunk
+                    channel = self.playing_chunks[chunk]
                     if channel:
-                        self.playing_chunks[chunk] = channel
-                        print(f"Playing audio: {os.path.basename(chunk.audio_path)}")
-                except pygame.error as e:
-                    print(f"Failed to play audio {chunk.audio_path}: {e}")
+                        channel.set_volume(volume)
+                    self.chunk_volumes[chunk] = volume
+                else:
+                    # Start playing new chunk
+                    try:
+                        # Use cached Sound object if available, otherwise create and cache it
+                        if chunk.audio_path not in self.sound_cache:
+                            self.sound_cache[chunk.audio_path] = pygame.mixer.Sound(chunk.audio_path)
+                        sound = self.sound_cache[chunk.audio_path]
+                        channel = sound.play(loops=-1)  # Loop continuously
+                        if channel:
+                            channel.set_volume(volume)
+                            self.playing_chunks[chunk] = channel
+                            self.chunk_volumes[chunk] = volume
+                            print(f"Playing audio: {os.path.basename(chunk.audio_path)} at volume {volume:.3f}")
+                    except pygame.error as e:
+                        print(f"Failed to play audio {chunk.audio_path}: {e}")
+                    except Exception as e:
+                        print(f"Unexpected error playing audio {chunk.audio_path}: {e}")
         
-        # Update tracking for next frame
-        self.last_hovered_chunks = hovered_chunks
+        # Stop chunks that are no longer in range or below threshold
+        chunks_to_stop = currently_playing - should_be_playing
+        for chunk in chunks_to_stop:
+            if chunk in self.playing_chunks:
+                channel = self.playing_chunks[chunk]
+                if channel:
+                    channel.stop()
+                del self.playing_chunks[chunk]
+                if chunk in self.chunk_volumes:
+                    del self.chunk_volumes[chunk]
+                print(f"Stopped audio: {os.path.basename(chunk.audio_path)}")
 
     def cleanup_finished_audio(self) -> None:
         """
@@ -621,19 +683,22 @@ class Simulation:
         glued_chunk_ids = self.get_all_glued_chunk_ids()
         for chunk in self.chunks:
             if id(chunk) not in glued_chunk_ids:
-                chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world)
+                volume = self.chunk_volumes.get(chunk, 0.0)
+                chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
         # Draw glued chunks and glue visuals if enabled
         if self.glue_visuals_enabled:
             for glue in self.glues:
                 for glued_chunk in glue.glued_chunks:
-                    glued_chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world)
+                    volume = self.chunk_volumes.get(glued_chunk.chunk, 0.0)
+                    glued_chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
             for glue in self.glues:
                 glue.draw(self.screen)
         else:
             # Draw glued chunks without tint
             for glue in self.glues:
                 for glued_chunk in glue.glued_chunks:
-                    glued_chunk.chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world)
+                    volume = self.chunk_volumes.get(glued_chunk.chunk, 0.0)
+                    glued_chunk.chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
         # Update worm if it exists
         if self.worm and not self.worm.is_dead:
             available_chunks = self.get_available_chunks_for_worm()
@@ -1196,6 +1261,9 @@ class Simulation:
                 downsized=False,
                 audio_path=audio_path,
             )
+            # Store curve data and original line width for dynamic redrawing
+            chunk.original_line_width = line_w
+            chunk.curve_data = (pts, rgba, surf_w, surf_h, padding)
             new_chunks.append(chunk)
 
         self.chunks.extend(new_chunks)

@@ -1,7 +1,7 @@
 simulation:
   window:
-    width: 1600
-    height: 1000
+    width: 1728
+    height: 1117
     ui_bar_height: 60
   ui_enabled: true
   fps: 60
@@ -128,3 +128,8 @@ sound:
     min_height: 50
     max_width: 800
     max_height: 800
+  # Proximity-based hover with inverse square law
+  hover:
+    max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
+    reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
+    min_volume_threshold: 0.01   # Minimum volume to keep chunk playing

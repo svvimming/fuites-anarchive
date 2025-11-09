@@ -1,8 +1,9 @@
 import pygame
 import pymunk
 import math
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import random
+from utils import hsv_to_rgb_int, build_curve_surface
 
 
 class Chunk:
@@ -31,6 +32,11 @@ class Chunk:
         self.space = space
         self.segment_surface = segment_surface
         self.audio_path = audio_path  # Store audio file path for sound chunks
+        # Store original line properties for sound chunks (curve data for redrawing)
+        self.original_line_width = None
+        self.curve_data = None  # Will store (points_xy01, rgba, width, height, padding) for redrawing
+        self._cached_surfaces = {}  # Cache surfaces by line_width to avoid redrawing every frame
+        self._last_volume = -1.0  # Track last volume to avoid unnecessary redraws
 
         sim_cfg = config["simulation"]
         self.width = sim_cfg["window"]["width"]
@@ -55,6 +61,20 @@ class Chunk:
         # Cache the HSV color once to avoid expensive recalculations
         from utils import calculate_chunk_color
         self.cached_hsv_color = calculate_chunk_color(self.segment_surface)
+
+        # Store original chunk properties for volume-based scaling
+        # Original opacity: default to 255 (full opacity)
+        # Chunks are created with full opacity, this represents the baseline
+        self.original_opacity = 255
+        
+        # Original line width: will be set when chunk is created from sound curve
+        # For image chunks, this will remain None
+        if self.original_line_width is None:
+            # Try to get from config if it's a sound chunk
+            if self.audio_path:
+                snd_cfg = config.get("sound", {})
+                surf_cfg = snd_cfg.get("chunk_surface", {})
+                self.original_line_width = int(surf_cfg.get("line_width", 5))
 
         # Compute a valid random position using bounding-box constraints
         random_x, random_y = self._get_random_position_in_bounds(self.vertices)
@@ -118,7 +138,7 @@ class Chunk:
 
         return random_x, random_y
 
-    def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False) -> None:
+    def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False, volume: float = 0.0) -> None:
         """
         Draw the chunk on a Pygame surface.
         In torus mode, handles drawing the chunk at multiple positions when crossing boundaries.
@@ -127,10 +147,44 @@ class Chunk:
             surface (pygame.Surface): The surface to draw on.
             debug_mode (bool): Whether to draw debug outlines.
             torus_world (bool): Whether the simulation uses torus wrapping.
+            volume (float): Volume level (0.0-1.0) for highlighting active sound chunks.
         """
         pos = self.body.position
         angle_degrees = math.degrees(-self.body.angle)
-        rotated_surface = pygame.transform.rotate(self.segment_surface, angle_degrees)
+        
+        # Calculate perceptual volume and scale original line properties
+        if volume > 0.0 and self.curve_data is not None and self.original_line_width is not None:
+            perceptual_volume = math.pow(volume, 0.7)
+            # Scale original line width: enhance from original based on volume
+            scaled_line_width = max(1, int(self.original_line_width * (1.0 + perceptual_volume * 2.0)))
+            # Scale original opacity: extract from rgba and scale based on volume
+            pts, rgba, surf_w, surf_h, padding = self.curve_data
+            original_alpha = rgba[3]  # Original opacity from curve data (0.0-1.0)
+            # Scale opacity: enhance from original based on volume
+            scaled_alpha = min(1.0, original_alpha * (1.0 + perceptual_volume * 0.5))
+            scaled_rgba = (rgba[0], rgba[1], rgba[2], scaled_alpha)
+            
+            # Cache surfaces by (line_width, alpha_key) to avoid redrawing every frame
+            # Round values for caching to reduce cache size
+            line_cache_key = (scaled_line_width // 2) * 2
+            alpha_cache_key = int(scaled_alpha * 10) / 10.0  # Round to 0.1
+            cache_key = (line_cache_key, alpha_cache_key)
+            
+            if cache_key not in self._cached_surfaces:
+                # Rebuild surface with scaled line width and opacity
+                self._cached_surfaces[cache_key] = build_curve_surface(pts, scaled_rgba, surf_w, surf_h, line_width=line_cache_key, padding=padding)
+            working_surface = self._cached_surfaces[cache_key]
+            # Surface already has opacity baked in, so set alpha to full
+            chunk_alpha = 255
+        else:
+            # At rest or no curve data: use original surface
+            working_surface = self.segment_surface
+            chunk_alpha = self.original_opacity
+        
+        rotated_surface = pygame.transform.rotate(working_surface, angle_degrees)
+        # Apply alpha to the chunk surface
+        rotated_surface.set_alpha(chunk_alpha)
+        
         width, height = surface.get_size()
         
         # Determine if the chunk is crossing boundaries for torus mode
@@ -320,9 +374,9 @@ class GluedChunk:
 
         return (dx, dy)
 
-    def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False):
+    def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False, volume: float = 0.0):
         # Draw the chunk normally
-        self.chunk.draw(surface, debug_mode=debug_mode, torus_world=torus_world)
+        self.chunk.draw(surface, debug_mode=debug_mode, torus_world=torus_world, volume=volume)
         # Draw a small dot at the centroid in the glue's color
         centroid = self.chunk.body.position
         pygame.draw.circle(surface, self.tint_rgb, (int(centroid.x), int(centroid.y)), 5)
