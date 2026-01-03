@@ -26,9 +26,9 @@ worm:
   # --- SUPERABUNDANCE: When there are more than threshold particles ---
   # During superabundance, multiple worms are spawned to handle the increased load
   superabundance:
-    threshold: 1000  # Number of particles that triggers superabundance
+    threshold: 700  # Number of particles that triggers superabundance
     worms_per_upload: 2  # Number of worms spawned per upload during superabundance
-    auto_export_capped_after_ms: 45000  # Auto-export glues capped longer than this during superabundance
+    auto_export_capped_after_ms: 30000  # Auto-export glues capped longer than this during superabundance
   glue:
     enabled: true
     max_glued_chunks: 100

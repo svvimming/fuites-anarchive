@@ -1,8 +1,12 @@
 import pygame
 import sys
 import numpy as np
-from skimage.color import rgb2hsv, rgba2rgb, hsv2rgb
-from typing import List, Tuple, Dict, Any
+import math
+from skimage.color import rgb2hsv, rgba2rgb, hsv2rgb, rgb2gray
+from skimage.segmentation import felzenszwalb
+from skimage.util import img_as_ubyte
+from scipy.spatial import ConvexHull, QhullError
+from typing import List, Tuple, Dict, Any, Optional
 
 
 def resize_image_to_dimensions(image: pygame.Surface, target_width: int, target_height: int, max_width: int, max_height: int) -> pygame.Surface:
@@ -157,6 +161,323 @@ def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
         str: Hex color code.
     """
     return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+
+def calculate_entropy(grayscale: np.ndarray, mask: np.ndarray) -> float:
+    """
+    Calculate the entropy of a masked region in a grayscale image.
+
+    Args:
+        grayscale: Grayscale image as numpy array (0-255 range)
+        mask: Boolean mask where True represents the region to analyze
+
+    Returns:
+        float: Entropy value (0.0 if no pixels or invalid input)
+    """
+    pixel_values = grayscale[mask]
+    if pixel_values.size == 0:
+        return 0.0
+
+    histogram, _ = np.histogram(pixel_values, bins=256, range=(0, 256), density=True)
+    histogram = histogram[histogram > 0]
+
+    if histogram.size == 0:
+        return 0.0
+
+    entropy = -np.sum(histogram * np.log2(histogram))
+    return entropy
+
+
+def process_image_to_chunks(
+    image_rgba: np.ndarray,
+    image_size: Tuple[int, int],
+    config: Dict[str, Any]
+) -> List[Dict[str, Any]]:
+    """
+    Process an RGBA image into chunk data using Felzenszwalb segmentation.
+    Returns serializable chunk data dictionaries.
+
+    Args:
+        image_rgba: RGBA image as numpy array (height, width, 4)
+        image_size: (width, height)
+        config: Configuration dictionary
+
+    Returns:
+        List of chunk data dictionaries with keys:
+        - surface_bytes: RGBA pixel data as bytes
+        - surface_size: (width, height)
+        - vertices: List of (x, y) tuples for convex hull
+        - downsized: bool
+        - cached_hsv_color: (h, s, v) tuple
+    """
+    width, height = image_size
+    chunks_data = []
+
+    # Convert RGBA to RGB for segmentation
+    numpy_image = image_rgba[:, :, :3]  # Drop alpha
+    if numpy_image.dtype != np.uint8:
+        numpy_image = img_as_ubyte(numpy_image)
+
+    # Felzenszwalb segmentation
+    felz_cfg = config.get("segmentation", {}).get("felzenszwalb", {})
+    segments = felzenszwalb(
+        numpy_image,
+        scale=felz_cfg.get("scale", 150),
+        sigma=felz_cfg.get("sigma", 3),
+        min_size=felz_cfg.get("min_size", 20),
+    )
+
+    # Compression config - identify segments to downsize
+    compress_cfg = config.get("compression", {})
+    max_size = compress_cfg.get("max_size", 5000)
+    min_entropy = compress_cfg.get("min_entropy", 4.0)
+    downsample_factor = compress_cfg.get("downsample_factor", 0.5)
+
+    # Calculate entropy for each segment
+    grayscale = rgb2gray(numpy_image)
+    grayscale = img_as_ubyte(grayscale)
+
+    unique_labels = np.unique(segments)
+    labels_to_downsize = []
+
+    for label in unique_labels:
+        mask = segments == label
+        size = np.sum(mask)
+        if size < 3:
+            continue
+        entropy = calculate_entropy(grayscale, mask)
+        if size > max_size and entropy < min_entropy:
+            labels_to_downsize.append(label)
+
+    # Filter config
+    filt_cfg = config.get("segmentation", {}).get("image_filter", {})
+    min_visible = int(filt_cfg.get("min_visible_pixels", 1))
+    min_alpha = int(filt_cfg.get("min_alpha_threshold", 1))
+
+    # Create chunks from segments
+    for segment_label in unique_labels:
+        mask = (segments == segment_label)
+        coords = np.argwhere(mask)
+        if len(coords) < 3:
+            continue
+
+        # Calculate centroid and bounds
+        centroid = coords.mean(axis=0)
+        cy, cx = centroid
+        min_y, min_x = coords.min(axis=0)
+        max_y, max_x = coords.max(axis=0)
+
+        seg_width = max_x - min_x + 1
+        seg_height = max_y - min_y + 1
+
+        # Extract segment surface as RGBA array
+        segment_rgba = np.zeros((seg_height, seg_width, 4), dtype=np.uint8)
+        for y, x in coords:
+            segment_rgba[y - min_y, x - min_x] = image_rgba[y, x]
+
+        # Calculate vertices (shifted to centroid at origin)
+        vertices = [(x - cx, y - cy) for (y, x) in coords]
+        vertices_array = np.array(vertices)
+
+        try:
+            hull = ConvexHull(vertices_array)
+        except QhullError:
+            continue
+        hull_vertices = [tuple(vertices_array[i]) for i in hull.vertices]
+
+        # Calculate hull bounding box
+        hull_xs = [v[0] for v in hull_vertices]
+        hull_ys = [v[1] for v in hull_vertices]
+        hull_width = max(hull_xs) - min(hull_xs)
+        hull_height = max(hull_ys) - min(hull_ys)
+
+        surface_width = max(1, int(math.ceil(hull_width)))
+        surface_height = max(1, int(math.ceil(hull_height)))
+
+        # Create centered surface
+        centered_rgba = np.zeros((surface_height, surface_width, 4), dtype=np.uint8)
+        offset_x = surface_width / 2
+        offset_y = surface_height / 2
+
+        for y in range(seg_height):
+            for x in range(seg_width):
+                if segment_rgba[y, x, 3] > 0:  # Has alpha
+                    blit_x = int(x - (cx - min_x) + offset_x)
+                    blit_y = int(y - (cy - min_y) + offset_y)
+                    if 0 <= blit_x < surface_width and 0 <= blit_y < surface_height:
+                        centered_rgba[blit_y, blit_x] = segment_rgba[y, x]
+
+        # Check minimum visibility
+        visible_count = (centered_rgba[:, :, 3] >= min_alpha).sum()
+        if visible_count < min_visible:
+            continue
+
+        downsized = segment_label in labels_to_downsize
+
+        # Apply downsampling if needed
+        if downsized:
+            new_w = max(1, int(surface_width * downsample_factor))
+            new_h = max(1, int(surface_height * downsample_factor))
+            from skimage.transform import resize as sk_resize
+            centered_rgba = sk_resize(centered_rgba, (new_h, new_w), preserve_range=True, anti_aliasing=False).astype(np.uint8)
+            surface_width, surface_height = new_w, new_h
+            hull_vertices = [(x * downsample_factor, y * downsample_factor) for (x, y) in hull_vertices]
+
+        # Create pygame surface from numpy array
+        surface = pygame.Surface((surface_width, surface_height), pygame.SRCALPHA)
+        pygame.surfarray.blit_array(surface, centered_rgba[:, :, :3].swapaxes(0, 1))
+        alpha_surface = pygame.surfarray.pixels_alpha(surface)
+        alpha_surface[:] = centered_rgba[:, :, 3].swapaxes(0, 1)
+        del alpha_surface
+
+        # Calculate HSV color
+        hsv_color = calculate_chunk_color(surface)
+
+        # Convert surface to bytes for serialization
+        surface_bytes = pygame.image.tostring(surface, 'RGBA')
+
+        chunk_data = {
+            'surface_bytes': surface_bytes,
+            'surface_size': (surface_width, surface_height),
+            'vertices': hull_vertices,
+            'downsized': downsized,
+            'cached_hsv_color': hsv_color,
+        }
+        chunks_data.append(chunk_data)
+
+    return chunks_data
+
+
+def process_sound_to_chunks(
+    song_path: str,
+    config: Dict[str, Any]
+) -> List[Dict[str, Any]]:
+    """
+    Process a sound file into curve-based chunk data using Felzenszwalb segmentation.
+    Returns serializable chunk data dictionaries.
+
+    Args:
+        song_path: Path to the audio file
+        config: Configuration dictionary
+
+    Returns:
+        List of chunk data dictionaries with keys:
+        - surface_bytes: RGBA pixel data as bytes
+        - surface_size: (width, height)
+        - vertices: List of (x, y) tuples for convex hull
+        - downsized: bool (always False for sound)
+        - audio_path: Path to the audio segment file
+        - curve_data: Tuple of (points_list, rgba, width, height, padding)
+        - original_line_width: int
+    """
+    import sys
+    import os
+
+    # Import sound_chunking (heavy dependencies)
+    base_dir = os.path.dirname(__file__)
+    sound_dir = os.path.join(base_dir, "sound")
+    if sound_dir not in sys.path:
+        sys.path.append(sound_dir)
+
+    import sound_chunking as sc
+
+    chunks_data = []
+    snd_cfg = config.get("sound", {})
+    felz = snd_cfg.get("felzenszwalb", {})
+    output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(song_path).split('.')[0]}")
+
+    # Run segmentation
+    saved_paths, kept_segments = sc.split_audio_felzenszwalb_2d(
+        song_path,
+        output_dir=output_dir,
+        scale=int(felz.get("scale", 150)),
+        sigma=float(felz.get("sigma", 3)),
+        min_size=int(felz.get("min_size", 20)),
+        max_shapes=int(snd_cfg.get("max_shapes", 50)),
+        min_area_pixels=int(snd_cfg.get("min_area_pixels", 300)),
+        min_time_seconds=float(snd_cfg.get("min_time_seconds", 0.5)),
+        min_energy_ratio=float(snd_cfg.get("min_energy_ratio", 0.001)),
+        min_loudness_db=float(snd_cfg.get("min_loudness_db", -70.0)),
+        show_plots=False,
+    )
+
+    # Create 2D path visualization
+    _X, _Y, curve_chunks_2d, _profiles = sc.create_2d_path_visualization(
+        kept_segments,
+        song_path,
+        points_per_second=int(snd_cfg.get("points_per_second", 100)),
+        resampled_points_per_chunk=int(snd_cfg.get("resampled_points_per_chunk", 128)),
+        show_plots=False,
+    )
+
+    # Build chunk data from curves
+    surf_cfg = snd_cfg.get("chunk_surface", {})
+    line_w = int(surf_cfg.get("line_width", 6))
+    padding = int(surf_cfg.get("padding", 6))
+
+    # Dynamic sizing by duration
+    size_cfg = snd_cfg.get("duration_size", {})
+    min_sec = float(size_cfg.get("min_seconds", 0.5))
+    max_sec = float(size_cfg.get("max_seconds", 60.0))
+    min_w = int(size_cfg.get("min_width", 200))
+    min_h = int(size_cfg.get("min_height", 200))
+    max_w = int(size_cfg.get("max_width", 500))
+    max_h = int(size_cfg.get("max_height", 500))
+
+    def lerp(a: float, b: float, t: float) -> float:
+        return a + (b - a) * t
+
+    for item in curve_chunks_2d:
+        x_res = np.asarray(item.get("x_resampled", []), dtype=float)
+        y_res = np.asarray(item.get("y_resampled", []), dtype=float)
+        if x_res.size < 2 or y_res.size < 2:
+            continue
+
+        pts = np.stack([x_res, y_res], axis=-1)
+        rgba = item.get("color_rgba", (1.0, 1.0, 1.0, 1.0))
+
+        # Compute per-chunk dimensions based on duration
+        t0 = float(item.get("t_start", 0.0))
+        t1 = float(item.get("t_end", 0.0))
+        duration = max(0.0, t1 - t0)
+        if max_sec > min_sec:
+            u = (duration - min_sec) / (max_sec - min_sec)
+        else:
+            u = 0.0
+        u = float(np.clip(u, 0.0, 1.0))
+        surf_w = int(round(lerp(min_w, max_w, u)))
+        surf_h = int(round(lerp(min_h, max_h, u)))
+
+        # Build surface and vertices using shared functions
+        surface = build_curve_surface(pts, rgba, surf_w, surf_h, line_width=line_w, padding=padding)
+        vertices = convex_hull_vertices_from_curve(pts, surf_w, surf_h, padding=padding, line_width=line_w)
+
+        # Find audio path
+        audio_path = None
+        chunk_idx = item.get("idx", -1)
+        for seg in kept_segments:
+            if seg.get("idx") == chunk_idx:
+                audio_path = seg.get("path")
+                break
+
+        # Store curve data for redrawing (convert numpy to list for serialization)
+        curve_data = (pts.tolist(), rgba, surf_w, surf_h, padding)
+
+        # Convert surface to bytes for serialization
+        surface_bytes = pygame.image.tostring(surface, 'RGBA')
+
+        chunk_data = {
+            'surface_bytes': surface_bytes,
+            'surface_size': (surf_w, surf_h),
+            'vertices': vertices,
+            'downsized': False,
+            'audio_path': audio_path,
+            'curve_data': curve_data,
+            'original_line_width': line_w,
+        }
+        chunks_data.append(chunk_data)
+
+    return chunks_data
 
 
 def quit_program() -> None:

@@ -180,6 +180,8 @@ def main() -> None:
         simulation.draw_ui()
         # Drain any queued uploads (main-thread safe)
         simulation.drain_upload_queue()
+        # Integrate processed chunks from background worker (non-blocking)
+        simulation.drain_processed_chunks()
         # Handle audio hover for sound chunks
         simulation.handle_audio_hover(pygame.mouse.get_pos())
         # Clean up finished audio periodically
@@ -189,6 +191,8 @@ def main() -> None:
         pygame.display.flip()
         clock.tick(config["simulation"]["fps"])
 
+    # Clean up worker process before exiting
+    simulation.cleanup()
     quit_program()
 
 

@@ -11,12 +11,49 @@ from skimage.color import rgba2rgb, rgb2gray
 from skimage.util import img_as_ubyte
 from skimage.transform import resize
 from scipy.spatial import ConvexHull, QhullError
-from utils import scale_image_to_fit, quit_program, resize_image_to_dimensions, build_curve_surface, convex_hull_vertices_from_curve
+from utils import (
+    scale_image_to_fit,
+    quit_program,
+    resize_image_to_dimensions,
+    build_curve_surface,
+    convex_hull_vertices_from_curve,
+    process_image_to_chunks,
+    process_sound_to_chunks
+)
 from worm import Worm, Glue
 from chunk_thingie import Chunk
 import sys
 import io
 from queue import Queue, Empty
+import multiprocessing
+import uuid
+from dataclasses import dataclass
+import traceback
+
+
+# ------------------------------------------------------------
+#  Data structures for async worker communication
+# ------------------------------------------------------------
+@dataclass
+class ChunkData:
+    """Serializable chunk data passed from worker to main thread."""
+    surface_bytes: bytes
+    surface_size: Tuple[int, int]
+    vertices: List[Tuple[float, float]]
+    downsized: bool
+    batch_id: str
+    cached_hsv_color: Optional[Tuple[float, float, float]] = None
+    audio_path: Optional[str] = None
+    curve_data: Optional[Tuple] = None
+    original_line_width: Optional[int] = None
+
+
+@dataclass
+class BatchComplete:
+    """Marker sent when all chunks from a batch have been processed."""
+    batch_id: str
+    upload_type: str  # "image" or "sound"
+
 
 # ------------------------------------------------------------
 #  ChunkFactory: Responsible for creating Chunk objects
@@ -419,7 +456,21 @@ class Simulation:
         self.boundary_walls = []
         # Thread-safe queue for incoming uploads from background server
         self._upload_queue: "Queue[Tuple[bytes, int, int]]" = Queue()
-        
+
+        # Background worker for heavy processing (segmentation, audio analysis)
+        self._worker_input_queue: multiprocessing.Queue = multiprocessing.Queue()
+        self._worker_output_queue: multiprocessing.Queue = multiprocessing.Queue()
+        self._worker_process = multiprocessing.Process(
+            target=worker_loop,
+            args=(self._worker_input_queue, self._worker_output_queue, config),
+            daemon=True
+        )
+        self._worker_process.start()
+
+        # Batch tracking for deferred worm spawning
+        self._pending_batches: Dict[str, int] = {}  # batch_id -> chunks remaining
+        self._batch_upload_types: Dict[str, str] = {}  # batch_id -> upload_type
+
         # Worm scheduling state for sequential spawns after exports
         self._active_worm: Worm = None
         
@@ -1106,40 +1157,44 @@ class Simulation:
     def process_image_surface(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
         """
         Process a provided pygame Surface as if it were uploaded via the UI.
+        Sends heavy processing to background worker for non-blocking operation.
 
         Args:
             image (pygame.Surface): Loaded image surface to process.
             target_width (int, optional): Target width for the image.
             target_height (int, optional): Target height for the image.
         """
-        # Do not reset the current worm here; keep it active so it can continue consuming
-
-        # Scale the image to fit the screen (treat UI bar as overlay)
+        # Scale the image to fit the screen (fast, keep on main thread)
         max_width = self.width
-        max_height = self.height  # Use full height, ignore UI bar
-        
-        # Use target dimensions if provided, otherwise use screen dimensions
+        max_height = self.height
+
         if target_width is not None and target_height is not None:
             print(f"Using target dimensions: {target_width}x{target_height}")
             image = resize_image_to_dimensions(image, target_width, target_height, max_width, max_height)
         else:
-            # No target dimensions, scale to fit screen
-            print(f"No target dimensions provided, scaling to fit screen: {max_width}x{max_height}")
+            print(f"Scaling to fit screen: {max_width}x{max_height}")
             image = scale_image_to_fit(image, max_width, max_height)
-            
-        print(f"Image loaded and scaled to {image.get_size()}.")
 
-        # Segment the image (with size reduction)
-        segments, labels_to_downsize = self.image_processor.segment_image(image)
-        print(f"Segmentation completed. {len(labels_to_downsize)} segments marked for downsizing.")
+        print(f"Image scaled to {image.get_size()}. Sending to background worker...")
 
-        # Create chunks and store them
-        new_chunks = self.chunk_factory.create_chunks_from_segments(image, segments, labels_to_downsize)
-        self.chunks.extend(new_chunks)
-        print(f"Created {len(new_chunks)} new chunks.")
+        # Convert pygame surface to numpy RGBA array
+        # pygame surfarray gives (width, height, channels), we need (height, width, channels)
+        try:
+            rgb_array = pygame.surfarray.array3d(image).swapaxes(0, 1)  # (H, W, 3)
+            alpha_array = pygame.surfarray.array_alpha(image).swapaxes(0, 1)  # (H, W)
+            # Combine into RGBA
+            image_rgba = np.dstack((rgb_array, alpha_array))  # (H, W, 4)
+        except Exception as e:
+            print(f"Failed to convert image to array: {e}")
+            return
 
-        # Create worms based on superabundance status
-        self._spawn_worms_for_upload(upload_type="image")
+        # Generate unique batch ID
+        batch_id = str(uuid.uuid4())[:8]
+        self._batch_upload_types[batch_id] = "image"
+
+        # Send to worker (non-blocking)
+        self._worker_input_queue.put(("image", image_rgba, image.get_size(), batch_id))
+        print(f"Image batch {batch_id} queued for processing")
 
     def upload_sound(self) -> None:
         """
@@ -1162,115 +1217,15 @@ class Simulation:
         """
         Use sound_chunking to segment audio into shapes, generate 2D curve profiles with color mapping,
         and instantiate physics chunks from those curves.
+        Sends heavy processing to background worker for non-blocking operation.
         """
-        # Do not reset the current worm here; keep it active so it can continue consuming
+        # Generate unique batch ID
+        batch_id = str(uuid.uuid4())[:8]
+        self._batch_upload_types[batch_id] = "sound"
 
-        # Lazy-import the sound_chunking module from the local sound directory
-        import sys as _sys
-        import os as _os
-        base_dir = _os.path.dirname(__file__)
-        sound_dir = _os.path.join(base_dir, "sound")
-        if sound_dir not in _sys.path:
-            _sys.path.append(sound_dir)
-        try:
-            import sound_chunking as sc  # type: ignore
-        except Exception as exc:
-            print(f"Unable to import sound_chunking: {exc}")
-            return
-
-        snd_cfg = self.config.get("sound", {})
-        felz = snd_cfg.get("felzenszwalb", {})
-        output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(song_path).split('.')[0]}")
-        # Run segmentation (mirrors defaults used in sound_chunking.main)
-        saved_paths, kept_segments = sc.split_audio_felzenszwalb_2d(
-            song_path,
-            output_dir=output_dir,
-            scale=int(felz.get("scale", 150)),
-            sigma=float(felz.get("sigma", 3)),
-            min_size=int(felz.get("min_size", 20)),
-            max_shapes=int(snd_cfg.get("max_shapes", 50)),
-            min_area_pixels=int(snd_cfg.get("min_area_pixels", 300)),
-            min_time_seconds=float(snd_cfg.get("min_time_seconds", 0.5)),
-            min_energy_ratio=float(snd_cfg.get("min_energy_ratio", 0.001)),
-            min_loudness_db=float(snd_cfg.get("min_loudness_db", -70.0)),
-            show_plots=False,  # Disable matplotlib windows
-        )
-
-        # Create 2D path visualization data (returns curves and their RGBA colors)
-        _X, _Y, curve_chunks_2d, _profiles = sc.create_2d_path_visualization(
-            kept_segments,
-            song_path,
-            points_per_second=int(snd_cfg.get("points_per_second", 100)),
-            resampled_points_per_chunk=int(snd_cfg.get("resampled_points_per_chunk", 128)),
-            show_plots=False,  # Disable matplotlib windows
-        )
-
-        # Build chunks from curve profiles
-        surf_cfg = snd_cfg.get("chunk_surface", {})
-        line_w = int(surf_cfg.get("line_width", 6))
-        padding = int(surf_cfg.get("padding", 6))
-        # Dynamic sizing by duration
-        size_cfg = snd_cfg.get("duration_size", {})
-        min_sec = float(size_cfg.get("min_seconds", 0.5))
-        max_sec = float(size_cfg.get("max_seconds", 60.0))
-        min_w = int(size_cfg.get("min_width", 200))
-        min_h = int(size_cfg.get("min_height", 200))
-        max_w = int(size_cfg.get("max_width", 500))
-        max_h = int(size_cfg.get("max_height", 500))
-
-        def lerp(a: float, b: float, t: float) -> float:
-            return a + (b - a) * t
-
-        new_chunks: List[Chunk] = []
-        for item in curve_chunks_2d:
-            x_res = np.asarray(item.get("x_resampled", []), dtype=float)
-            y_res = np.asarray(item.get("y_resampled", []), dtype=float)
-            if x_res.size < 2 or y_res.size < 2:
-                continue
-            pts = np.stack([x_res, y_res], axis=-1)
-            rgba = item.get("color_rgba", (1.0, 1.0, 1.0, 1.0))
-            # Compute per-chunk dimensions based on duration
-            t0 = float(item.get("t_start", 0.0))
-            t1 = float(item.get("t_end", 0.0))
-            duration = max(0.0, t1 - t0)
-            if max_sec > min_sec:
-                u = (duration - min_sec) / (max_sec - min_sec)
-            else:
-                u = 0.0
-            u = float(np.clip(u, 0.0, 1.0))
-            surf_w = int(round(lerp(min_w, max_w, u)))
-            surf_h = int(round(lerp(min_h, max_h, u)))
-
-            surface = build_curve_surface(pts, rgba, surf_w, surf_h, line_width=line_w, padding=padding)
-            # Use convex hull around actual curve points for physics body
-            vertices = convex_hull_vertices_from_curve(pts, surf_w, surf_h, padding=padding, line_width=line_w)
-            
-            # Find the corresponding kept_segment to get the audio path
-            audio_path = None
-            chunk_idx = item.get("idx", -1)
-            for seg in kept_segments:
-                if seg.get("idx") == chunk_idx:
-                    audio_path = seg.get("path")
-                    break
-            
-            chunk = Chunk(
-                segment_surface=surface,
-                vertices=vertices,
-                config=self.config,
-                space=self.space,
-                downsized=False,
-                audio_path=audio_path,
-            )
-            # Store curve data and original line width for dynamic redrawing
-            chunk.original_line_width = line_w
-            chunk.curve_data = (pts, rgba, surf_w, surf_h, padding)
-            new_chunks.append(chunk)
-
-        self.chunks.extend(new_chunks)
-        print(f"Created {len(new_chunks)} new sound curve chunks.")
-
-        # Create worms based on superabundance status
-        self._spawn_worms_for_upload(upload_type="sound")
+        # Send to worker (non-blocking)
+        self._worker_input_queue.put(("sound", song_path, batch_id))
+        print(f"Sound batch {batch_id} queued for processing: {os.path.basename(song_path)}")
 
     def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
         """
@@ -1313,6 +1268,64 @@ class Simulation:
             finally:
                 processed += 1
 
+    def drain_processed_chunks(self, max_items: int = 15) -> None:
+        """
+        Drain processed chunk data from background worker and create physics bodies.
+        This is the main thread's way of integrating chunks without blocking.
+
+        Args:
+            max_items: Maximum chunks to process per frame (controls gradual appearance)
+        """
+        processed = 0
+        completed_batches = []  # Collect BatchComplete markers
+
+        while processed < max_items:
+            try:
+                item = self._worker_output_queue.get_nowait()
+            except Empty:
+                break
+
+            if isinstance(item, BatchComplete):
+                # Queue is FIFO, so all chunks for this batch are already on the queue
+                # We might not have processed them all yet, so store the marker
+                completed_batches.append(item)
+            elif isinstance(item, ChunkData):
+                # Create chunk from pre-processed data
+                chunk = Chunk.from_data(
+                    surface_bytes=item.surface_bytes,
+                    surface_size=item.surface_size,
+                    vertices=item.vertices,
+                    config=self.config,
+                    space=self.space,
+                    downsized=item.downsized,
+                    cached_hsv_color=item.cached_hsv_color,
+                    audio_path=item.audio_path,
+                    curve_data=item.curve_data,
+                    original_line_width=item.original_line_width,
+                )
+                self.chunks.append(chunk)
+
+                # Track chunks integrated per batch
+                batch_id = item.batch_id
+                self._pending_batches[batch_id] = self._pending_batches.get(batch_id, 0) + 1
+
+                processed += 1
+            else:
+                print(f"Unknown item type from worker: {type(item)}")
+                processed += 1
+
+        # Process completed batches
+        # A batch is truly complete when we've received BatchComplete AND
+        # the output queue has no more chunks for that batch
+        for batch_complete in completed_batches:
+            batch_id = batch_complete.batch_id
+            chunks_added = self._pending_batches.pop(batch_id, 0)
+            upload_type = self._batch_upload_types.pop(batch_id, batch_complete.upload_type)
+            if isinstance(upload_type, tuple):
+                upload_type = upload_type[0]  # Handle legacy format
+            print(f"Batch {batch_id} complete ({chunks_added} chunks). Spawning worms for {upload_type} upload.")
+            self._spawn_worms_for_upload(upload_type=upload_type)
+
     def clear_chunks(self) -> None:
         """
         Remove all chunks from the simulation and reset the worm and all glues.
@@ -1324,6 +1337,25 @@ class Simulation:
         self.worm = None
         self.worms.clear()
         self.glues.clear()  # Clear all glues when clearing chunks
+
+    def cleanup(self) -> None:
+        """
+        Clean up resources before shutdown.
+        Terminates the background worker process gracefully.
+        """
+        print("Shutting down background worker...")
+        try:
+            # Send shutdown signal
+            self._worker_input_queue.put(None)
+            # Wait for worker to finish
+            self._worker_process.join(timeout=2.0)
+            if self._worker_process.is_alive():
+                print("Worker did not exit in time, terminating...")
+                self._worker_process.terminate()
+                self._worker_process.join(timeout=1.0)
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+        print("Cleanup complete.")
 
     def _spawn_worms_for_upload(self, upload_type: str = "image") -> None:
         """Spawn worms for an upload. During superabundance, spawn two; otherwise one.
@@ -1340,3 +1372,134 @@ class Simulation:
             print(f"Normal abundance: {total_particles} total particles. Scheduling {worms_to_spawn} worm for {upload_type} upload.")
         # Schedule sequential spawning (shared with export logic)
         self._schedule_worms(worms_to_spawn)
+
+
+# ------------------------------------------------------------
+#  Background Worker Process Functions
+# ------------------------------------------------------------
+def process_image_task(
+    image_rgba: np.ndarray,
+    image_size: Tuple[int, int],
+    config: Dict[str, Any],
+    batch_id: str,
+    output_queue: multiprocessing.Queue
+) -> None:
+    """
+    Process an image into chunks in the worker process.
+    Uses shared function from utils.py.
+
+    Args:
+        image_rgba: RGBA image as numpy array (height, width, 4)
+        image_size: (width, height)
+        config: Configuration dictionary
+        batch_id: Unique ID for this upload batch
+        output_queue: Queue to send ChunkData objects to main thread
+    """
+    try:
+        chunks_data = process_image_to_chunks(image_rgba, image_size, config)
+
+        # Send each chunk to the output queue
+        for chunk_dict in chunks_data:
+            chunk_data = ChunkData(
+                surface_bytes=chunk_dict['surface_bytes'],
+                surface_size=chunk_dict['surface_size'],
+                vertices=chunk_dict['vertices'],
+                downsized=chunk_dict['downsized'],
+                batch_id=batch_id,
+                cached_hsv_color=chunk_dict['cached_hsv_color'],
+            )
+            output_queue.put(chunk_data)
+
+        # Signal batch completion
+        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="image"))
+
+    except Exception as e:
+        print(f"Worker error processing image: {e}")
+        traceback.print_exc()
+        # Still send completion marker to avoid deadlock
+        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="image"))
+
+
+def process_sound_task(
+    song_path: str,
+    config: Dict[str, Any],
+    batch_id: str,
+    output_queue: multiprocessing.Queue
+) -> None:
+    """
+    Process a sound file into curve-based chunks in the worker process.
+    Uses shared function from utils.py.
+
+    Args:
+        song_path: Path to the audio file
+        config: Configuration dictionary
+        batch_id: Unique ID for this upload batch
+        output_queue: Queue to send ChunkData objects to main thread
+    """
+    try:
+        chunks_data = process_sound_to_chunks(song_path, config)
+
+        # Send each chunk to the output queue
+        for chunk_dict in chunks_data:
+            chunk_data = ChunkData(
+                surface_bytes=chunk_dict['surface_bytes'],
+                surface_size=chunk_dict['surface_size'],
+                vertices=chunk_dict['vertices'],
+                downsized=chunk_dict['downsized'],
+                batch_id=batch_id,
+                audio_path=chunk_dict.get('audio_path'),
+                curve_data=chunk_dict.get('curve_data'),
+                original_line_width=chunk_dict.get('original_line_width'),
+            )
+            output_queue.put(chunk_data)
+
+        # Signal batch completion
+        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="sound"))
+
+    except Exception as e:
+        print(f"Worker error processing sound: {e}")
+        traceback.print_exc()
+        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="sound"))
+
+
+def worker_loop(
+    input_queue: multiprocessing.Queue,
+    output_queue: multiprocessing.Queue,
+    config: Dict[str, Any]
+) -> None:
+    """
+    Main worker loop - processes tasks from input queue.
+    Runs in a separate process to keep main thread responsive.
+    """
+    # Initialize pygame in worker (works without display)
+    import pygame
+    pygame.init()
+
+    print("[Worker] Started background processing worker with pygame initialized")
+
+    while True:
+        try:
+            task = input_queue.get()
+
+            if task is None:
+                print("[Worker] Received shutdown signal")
+                break
+
+            task_type = task[0]
+
+            if task_type == "image":
+                _, image_rgba, image_size, batch_id = task
+                process_image_task(image_rgba, image_size, config, batch_id, output_queue)
+
+            elif task_type == "sound":
+                _, song_path, batch_id = task
+                process_sound_task(song_path, config, batch_id, output_queue)
+
+            else:
+                print(f"[Worker] Unknown task type: {task_type}")
+
+        except Exception as e:
+            print(f"[Worker] Error in main loop: {e}")
+            traceback.print_exc()
+
+    print("[Worker] Shutting down")

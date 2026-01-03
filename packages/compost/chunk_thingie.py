@@ -96,10 +96,118 @@ class Chunk:
 
         self.space.add(self.body, self.shape)
 
-        # if downsized:
-            # print(f"Created a downsized chunk at position ({random_x}, {random_y}) with size {self.segment_surface.get_size()}.")
-        # else:
-            # print(f"Created a chunk at position ({random_x}, {random_y}) with size {self.segment_surface.get_size()}.")
+    @classmethod
+    def from_data(
+        cls,
+        surface_bytes: bytes,
+        surface_size: Tuple[int, int],
+        vertices: List[Tuple[float, float]],
+        config: Dict[str, Any],
+        space: "pymunk.Space",
+        downsized: bool = False,
+        cached_hsv_color: Optional[Tuple[float, float, float]] = None,
+        audio_path: Optional[str] = None,
+        curve_data: Optional[Tuple] = None,
+        original_line_width: Optional[int] = None,
+    ) -> "Chunk":
+        """
+        Create a Chunk from pre-processed data (fast, main-thread safe).
+        This bypasses heavy processing like color calculation.
+
+        Args:
+            surface_bytes: RGBA pixel data as bytes (from numpy array.tobytes())
+            surface_size: (width, height)
+            vertices: Convex hull vertices centered at origin
+            config: Configuration dictionary
+            space: Pymunk physics space
+            downsized: Whether this chunk was downsampled
+            cached_hsv_color: Pre-calculated HSV color (H, S, V) each 0-1
+            audio_path: Path to audio file for sound chunks
+            curve_data: Curve rendering data for sound chunks
+            original_line_width: Line width for sound chunk redrawing
+
+        Returns:
+            Chunk: Fully initialized chunk with physics body
+        """
+        width, height = surface_size
+
+        # Reconstruct pygame surface from bytes
+        # The bytes are in RGBA format from numpy array (height, width, 4)
+        import numpy as np
+        rgba_array = np.frombuffer(surface_bytes, dtype=np.uint8).reshape((height, width, 4))
+
+        # Create pygame surface
+        surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        # Convert numpy array to pygame surface
+        # pygame expects (width, height, channels) but we have (height, width, channels)
+        rgb_transposed = rgba_array[:, :, :3].swapaxes(0, 1)
+        alpha_transposed = rgba_array[:, :, 3].swapaxes(0, 1)
+        pygame.surfarray.blit_array(surface, rgb_transposed)
+        # Set alpha channel
+        alpha_surface = pygame.surfarray.pixels_alpha(surface)
+        alpha_surface[:] = alpha_transposed
+        del alpha_surface  # Release lock
+
+        # Create instance without calling __init__
+        chunk = cls.__new__(cls)
+
+        # Set required attributes manually (mirroring __init__)
+        chunk.config = config
+        chunk.space = space
+        chunk.segment_surface = surface
+        chunk.audio_path = audio_path
+        chunk.original_line_width = original_line_width
+        chunk._cached_surfaces = {}
+        chunk._last_volume = -1.0
+
+        # Handle curve_data - convert list back to numpy array if needed
+        if curve_data is not None:
+            pts, rgba, surf_w, surf_h, padding = curve_data
+            if isinstance(pts, list):
+                pts = np.array(pts)
+            chunk.curve_data = (pts, rgba, surf_w, surf_h, padding)
+        else:
+            chunk.curve_data = None
+
+        sim_cfg = config["simulation"]
+        chunk.width = sim_cfg["window"]["width"]
+        chunk.height = sim_cfg["window"]["height"]
+        chunk.ui_bar_height = sim_cfg["window"]["ui_bar_height"]
+        vel_min = sim_cfg["chunk_velocity_min"]
+        vel_max = sim_cfg["chunk_velocity_max"]
+
+        chunk.vertices = vertices
+
+        # Use pre-calculated HSV color if provided
+        if cached_hsv_color is not None:
+            chunk.cached_hsv_color = cached_hsv_color
+        else:
+            from utils import calculate_chunk_color
+            chunk.cached_hsv_color = calculate_chunk_color(surface)
+
+        chunk.original_opacity = 255
+
+        # Get random position
+        random_x, random_y = chunk._get_random_position_in_bounds(vertices)
+
+        # Setup physics body and shape
+        mass = 1.0
+        moment = pymunk.moment_for_poly(mass, vertices)
+        chunk.body = pymunk.Body(mass, moment)
+        chunk.body.position = (random_x, random_y)
+        chunk.body.velocity = (
+            random.uniform(vel_min, vel_max),
+            random.uniform(vel_min, vel_max),
+        )
+
+        chunk.shape = pymunk.Poly(chunk.body, vertices)
+        chunk.shape.elasticity = 1.0
+        chunk.shape.friction = 5.0
+        chunk.shape.filter = pymunk.ShapeFilter(group=1)
+
+        chunk.space.add(chunk.body, chunk.shape)
+
+        return chunk
 
     def _get_random_position_in_bounds(
         self,

@@ -1,36 +1,44 @@
-[tool.poetry]
+[project]
 name = "fuit-es"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Fuit.es Compost - Interactive sound and image composition"
 readme = "README.md"
-package-mode = false
+requires-python = ">=3.10"
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-pygame = "^2.6.1"
-#noise = "^1.2.2"
-numpy = "^2.1.2"
-matplotlib = "^3.5.3"
-scikit-image = "^0.24.0"
-scikit-learn = "^1.5.2"
-flask = "^3.1.0"
-opencv-python = "^4.10.0.84"
-shapely = "^2.0.6"
-pymunk = "^6.9.0"
-pyaml = "^25.1.0"
-librosa = "^0.11.0"
-ipywidgets = "^8.1.7"
-plotly = "^6.1.1"
-nbformat = "^5.10.4"
-asteroid = "^0.7.0"
-demucs = "^4.0.1"
-soundfile = "^0.13.1"
+dependencies = [
+    "pygame>=2.6.1",
+    "numpy>=2.1.2",
+    "matplotlib>=3.5.3",
+    "scikit-image>=0.24.0",
+    "scipy>=1.14.0",
+    "flask>=3.1.0",
+    "pymunk>=6.9.0",
+    "pyyaml>=6.0.2",  # Code uses 'import yaml'
+    "librosa>=0.11.0",
+    "soundfile>=0.13.1",
+]
 
+[project.optional-dependencies]
+dev = [
+    "ipykernel>=6.29.5",
+]
 
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.5"
+# Unused packages (kept for reference):
+# opencv-python>=4.10.0.84
+# shapely>=2.0.6
+# ipywidgets>=8.1.7
+# nbformat>=5.10.4
+# asteroid>=0.7.0
+# "scikit-learn>=1.5.2",  # Used in notebooks (NMF)
+# "plotly>=6.1.1",  # Used in notebooks
+# "demucs>=4.0.1",  # Used in notebooks
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false  # This is an application, not a library
