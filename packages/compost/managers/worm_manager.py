@@ -145,8 +145,9 @@ class WormManager:
                 glues_list.append(worm.glue)
 
         # Update all glues
+        available_ids = {id(c) for c in available_chunks}
         for glue in glues_list:
-            glue.try_attract_chunks(available_chunks)
+            glue.try_attract_chunks(available_chunks, available_ids)
             glue.update(torus_world)
             if glue_visuals_enabled:
                 glue.draw(screen)

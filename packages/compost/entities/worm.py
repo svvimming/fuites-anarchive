@@ -29,10 +29,12 @@ class Glue:
         self.evaluated_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already evaluated
         # Timestamp (ms) when this glue first became full ("capped"). None if not yet capped
         self.capped_at_ms: Optional[int] = None
-        
+        self.sound_chunk_count: int = 0  # Track sound chunks for efficient cap checking
+
         # Get glue configuration
         self.glue_cfg = config["worm"]["glue"]
         self.max_glued_chunks = self.glue_cfg["max_glued_chunks"]
+        self.sound_cap = self.glue_cfg.get("sound_cap")  # None means no limit
         self.vicinity_cfg = self.glue_cfg["vicinity"]
         self.min_difference = self.vicinity_cfg["min_difference"]
         self.max_difference = self.vicinity_cfg["max_difference"]
@@ -48,6 +50,7 @@ class Glue:
         self.spin_speed = visual_cfg.get("spin_speed", 1.0)
         self.min_quality_steps = visual_cfg.get("min_quality_steps", 6)
         self.pulse_time = 0
+        self._glow_cache: Dict[int, pygame.Surface] = {}  # Cache glow surfaces by radius
         # Compute colors from worm history
         self._init_history_colors()
 
@@ -82,24 +85,6 @@ class Glue:
         mean_s = sum_s / n
         mean_v = sum_v / n
         self.glow_rgb = hsv_to_rgb_int((mean_h, mean_s, mean_v))
-    
-    def is_in_vicinity(self, chunk: Chunk) -> bool:
-        """Check if a chunk's color is in the vicinity of any meal in the worm's history."""
-        # Get this chunk's cached color
-        chunk_color = chunk.cached_hsv_color
-        
-        # Check against each meal in history
-        for entry in self.worm_history:
-            meal_color = entry.hsv_color
-            
-            # Calculate color difference
-            difference = calculate_color_contrast(meal_color, chunk_color, self.config)
-            
-            # Check if difference is within thresholds
-            if self.min_difference <= difference <= self.max_difference:
-                return True
-                
-        return False
     
     def _find_nearest_meal_index(self, chunk: Chunk) -> Optional[Tuple[int, float]]:
         """
@@ -161,11 +146,19 @@ class Glue:
             except Exception:
                 self.capped_at_ms = 0
 
-    def try_attract_chunks(self, available_chunks: List[Chunk]) -> None:
+    def _is_sound_capped(self) -> bool:
+        """Check if sound cap has been reached."""
+        return self.sound_cap is not None and self.sound_chunk_count >= self.sound_cap
+
+    def try_attract_chunks(self, available_chunks: List[Chunk], available_ids: Set[int]) -> None:
         """Attract chunks in a balanced way across history colors (round-robin)."""
         if len(self.glued_chunks) >= self.max_glued_chunks:
             self._record_cap_time()
             return
+
+        # Clean up stale IDs from removed chunks
+        self.evaluated_chunk_ids &= available_ids
+        self.attracted_chunk_ids &= available_ids
 
         # Build candidate lists per meal color
         meal_candidates = self._build_candidate_lists(available_chunks)
@@ -179,12 +172,13 @@ class Glue:
         capacity_remaining = self.max_glued_chunks - len(self.glued_chunks)
         while capacity_remaining > 0:
             progressed = False
+            sound_capped = self._is_sound_capped()
 
             for meal_idx in ordered_meals:
-                candidates = meal_candidates.get(meal_idx, deque())
+                candidates = meal_candidates[meal_idx]
 
-                # Skip already-attracted candidates
-                while candidates and id(candidates[0][1]) in self.attracted_chunk_ids:
+                # Skip sound chunks if sound-capped
+                while candidates and sound_capped and candidates[0][1].audio_path:
                     candidates.popleft()
                 if not candidates:
                     continue
@@ -194,6 +188,8 @@ class Glue:
                 meal_rgb = self.meal_rgbs[meal_idx]
                 self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
                 self.attracted_chunk_ids.add(id(chosen))
+                if chosen.audio_path:
+                    self.sound_chunk_count += 1
                 capacity_remaining -= 1
                 progressed = True
 
@@ -216,29 +212,33 @@ class Glue:
         for glued_chunk in self.glued_chunks:
             glued_chunk.apply_behaviors(self.glued_chunks, torus_world)
             
+    def _get_cached_glow(self, outer_radius: int) -> pygame.Surface:
+        """Get or create cached glow surface for given radius."""
+        if outer_radius not in self._glow_cache:
+            glow = pygame.Surface((outer_radius * 2, outer_radius * 2), pygame.SRCALPHA)
+            for r in range(outer_radius, 0, -1):
+                alpha = max(0, self.glow_alpha_max - (r * self.glow_alpha_max // outer_radius))
+                pygame.draw.circle(glow, self.glow_rgb + (alpha,), (outer_radius, outer_radius), r)
+            self._glow_cache[outer_radius] = glow
+        return self._glow_cache[outer_radius]
+
     def draw(self, surface: pygame.Surface) -> None:
         """Draw the glue as a glowing dot with mixed colors from worm history and a spinning color wheel."""
-        # Create pulsing effect for glow
         pulse_factor = self.pulse_min + (self.pulse_max - self.pulse_min) * math.sin(self.pulse_time)
-        # Draw outer glow (semi-transparent). Use mixed color from worm history
         outer_radius = int(self.glow_radius * 2 * pulse_factor)
-        glow_surface = pygame.Surface((outer_radius * 2, outer_radius * 2), pygame.SRCALPHA)
-        is_full = len(self.glued_chunks) >= self.max_glued_chunks
-        # Keep mixed glow color even when full; we'll draw a white ring instead
-        base_glow_rgb = self.glow_rgb
-        for r in range(outer_radius, 0, -1):
-            alpha = max(0, self.glow_alpha_max - (r * self.glow_alpha_max // outer_radius))
-            pygame.draw.circle(glow_surface, base_glow_rgb + (alpha,), (outer_radius, outer_radius), r)
+        if outer_radius <= 0:
+            return
+
+        # Get cached glow base and copy it
+        glow_surface = self._get_cached_glow(outer_radius).copy()
 
         # Draw the center as a spinning color wheel made from meal colors
         core_radius = int(self.glow_radius * pulse_factor)
         if core_radius > 0 and self.meal_rgbs:
             self._draw_color_wheel(glow_surface, (outer_radius, outer_radius), core_radius, angle_offset=self.pulse_time)
             # If full, draw an outer white ring around the wheel
-            if is_full:
-                white = (255, 255, 255, 255)
-                ring_radius = max(1, core_radius + 2)
-                pygame.draw.circle(glow_surface, white, (outer_radius, outer_radius), ring_radius, self.full_ring_width)
+            if len(self.glued_chunks) >= self.max_glued_chunks:
+                pygame.draw.circle(glow_surface, (255, 255, 255, 255), (outer_radius, outer_radius), max(1, core_radius + 2), self.full_ring_width)
 
         # Draw onto main surface at the glue position
         glow_rect = glow_surface.get_rect(center=(int(self.position[0]), int(self.position[1])))

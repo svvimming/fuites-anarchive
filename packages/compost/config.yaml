@@ -46,6 +46,7 @@ worm:
     enabled: true
     max_glued_chunks: 100
     max_active_glues: 5
+    sound_cap: 10  # Maximum sound chunks per glue (null for no limit)
     vicinity:
       min_difference: 0
       max_difference: 0.07
