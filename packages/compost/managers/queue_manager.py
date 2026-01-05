@@ -47,6 +47,7 @@ class QueueManager:
 
         # File dialog results queue (Dialog threads -> Main thread)
         self._dialog_queue: Queue[Tuple[str, Any]] = Queue()
+        self._dialog_open = False
 
         # Background processing queues (Main <-> Background process)
         self._task_queue: multiprocessing.Queue = multiprocessing.Queue()
@@ -184,16 +185,20 @@ class QueueManager:
         _logger.info("Sound batch %s queued: %s", batch_id, os.path.basename(audio_path))
 
     # ----------------------------------------------------------------
-    # Non-blocking file dialogs (native macOS via osascript)
+    # Non-blocking file dialog (native macOS via osascript)
     # ----------------------------------------------------------------
-    def _open_dialog_async(self, kind: str) -> None:
-        """Open native file dialog in background thread."""
+    IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.bmp', '.heic', '.gif'}
+    AUDIO_EXTS = {'.wav', '.mp3', '.flac', '.ogg', '.m4a', '.aac', '.aiff'}
+
+    def open_file_dialog(self) -> None:
+        """Open file dialog for image or audio (non-blocking)."""
+        if self._dialog_open:
+            return
+        self._dialog_open = True
+
         def _run():
             import subprocess
-            if kind == "image":
-                script = 'POSIX path of (choose file of type {"public.image"} with prompt "Select an image")'
-            else:
-                script = 'POSIX path of (choose file of type {"public.audio"} with prompt "Select an audio file")'
+            script = 'POSIX path of (choose file of type {"public.image", "public.audio"} with prompt "Select an image or audio file")'
             try:
                 result = subprocess.run(
                     ["osascript", "-e", script],
@@ -201,25 +206,29 @@ class QueueManager:
                 )
                 path = result.stdout.strip()
                 if path and os.path.exists(path):
-                    if kind == "image":
-                        surface = pygame.image.load(path).convert_alpha()
+                    ext = os.path.splitext(path)[1].lower()
+                    if ext in self.IMAGE_EXTS:
+                        if ext == '.heic':
+                            import pillow_heif
+                            pillow_heif.register_heif_opener()
+                            from PIL import Image
+                            pil_img = Image.open(path).convert("RGBA")
+                            surface = pygame.image.fromstring(pil_img.tobytes(), pil_img.size, "RGBA")
+                        else:
+                            surface = pygame.image.load(path).convert_alpha()
                         self._dialog_queue.put(("image", surface))
-                    else:
+                    elif ext in self.AUDIO_EXTS:
                         self._dialog_queue.put(("audio", path))
+                    else:
+                        _logger.warning("Unknown file type: %s", ext)
             except subprocess.TimeoutExpired:
                 pass
             except Exception as e:
                 _logger.warning("File dialog error: %s", e)
+            finally:
+                self._dialog_open = False
 
         threading.Thread(target=_run, daemon=True).start()
-
-    def open_image_dialog(self) -> None:
-        """Open image file dialog (non-blocking)."""
-        self._open_dialog_async("image")
-
-    def open_sound_dialog(self) -> None:
-        """Open sound file dialog (non-blocking)."""
-        self._open_dialog_async("audio")
 
     def process_dialogs(self) -> None:
         """Process completed file dialog results. Call from main loop."""

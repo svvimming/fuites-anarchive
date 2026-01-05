@@ -47,14 +47,8 @@ class UIManager:
             self.button_width,
             self.button_height
         )
-        upload_sound_rect = pygame.Rect(
-            upload_rect.right + self.button_gap,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
         clear_rect = pygame.Rect(
-            upload_sound_rect.right + self.button_gap,
+            upload_rect.right + self.button_gap,
             (self.ui_bar_height - self.button_height) // 2,
             self.button_width,
             self.button_height
@@ -71,7 +65,7 @@ class UIManager:
             self.button_width,
             self.button_height
         )
-        return [upload_rect, upload_sound_rect, clear_rect, export_rect, quit_rect]
+        return [upload_rect, clear_rect, export_rect, quit_rect]
 
     def draw_ui(
         self,
@@ -96,14 +90,14 @@ class UIManager:
         ui_bar_rect = pygame.Rect(0, 0, self.width, self.ui_bar_height)
         pygame.draw.rect(self.screen, self.colors["UI_BG"], ui_bar_rect)
 
-        button_texts = ["Upload Image", "Upload Sound", "Clear Canvas", "Export Glues (E)", "Quit"]
+        button_texts = ["Upload (U)", "Clear Canvas", "Export Glues (E)", "Quit"]
         for rect, text in zip(self.buttons, button_texts):
             self._draw_button(rect, text)
 
         # Build right-aligned status texts with shortcuts; lay them out from right edge
         status_texts = [
             f"Chunks: {chunk_count}",
-            f"UI: {'ON' if ui_enabled else 'OFF'} (U)",
+            f"UI: {'ON' if ui_enabled else 'OFF'} (ESC)",
             f"Glue Visuals: {'ON' if glue_visuals_enabled else 'OFF'} (G)",
             f"History: {'ON' if history_panel_enabled else 'OFF'} (H)",
             f"World: {'Torus' if torus_world else 'Rigid Walls'} (T)",
@@ -136,7 +130,7 @@ class UIManager:
         Returns:
             String identifying which button was clicked, or empty string if none
         """
-        button_names = ["upload_image", "upload_sound", "clear", "export", "quit"]
+        button_names = ["upload", "clear", "export", "quit"]
         for rect, name in zip(self.buttons, button_names):
             if rect.collidepoint(mouse_pos):
                 return name

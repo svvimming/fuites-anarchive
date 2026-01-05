@@ -84,7 +84,8 @@ def main() -> None:
                 elif event.key == pygame.K_g:
                     simulation.glue_visuals_enabled = not simulation.glue_visuals_enabled
                 elif event.key == pygame.K_u:
-                    # Toggle UI on/off
+                    simulation.upload_file()
+                elif event.key == pygame.K_ESCAPE:
                     simulation.ui_enabled = not simulation.ui_enabled
                 elif event.key == pygame.K_e:
                     # Export glues shortcut

@@ -139,10 +139,8 @@ class Simulation:
         if not self.ui_enabled:
             return
         button = self.ui_manager.handle_click(mouse_pos)
-        if button == "upload_image":
-            self.upload_image()
-        elif button == "upload_sound":
-            self.upload_sound()
+        if button == "upload":
+            self.upload_file()
         elif button == "clear":
             self.clear_chunks()
         elif button == "export":
@@ -153,13 +151,9 @@ class Simulation:
     # ----------------------------------------------------------------
     # Upload methods
     # ----------------------------------------------------------------
-    def upload_image(self) -> None:
-        """Open image picker (non-blocking)."""
-        self.queue_manager.open_image_dialog()
-
-    def upload_sound(self) -> None:
-        """Open sound picker (non-blocking)."""
-        self.queue_manager.open_sound_dialog()
+    def upload_file(self) -> None:
+        """Open file picker for image or audio (non-blocking)."""
+        self.queue_manager.open_file_dialog()
 
     def process_file_dialogs(self) -> None:
         """Process completed file dialog results."""
