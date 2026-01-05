@@ -1,415 +1,27 @@
+"""Main simulation orchestrator."""
 import pygame
 import pymunk
-import random
 import os
-import math
-import numpy as np
 from tkinter import filedialog
-from typing import List, Tuple, Dict, Any, Set, Optional
-from skimage.segmentation import felzenszwalb
-from skimage.color import rgba2rgb, rgb2gray
-from skimage.util import img_as_ubyte
-from skimage.transform import resize
-from scipy.spatial import ConvexHull, QhullError
-from utils import (
-    scale_image_to_fit,
-    quit_program,
-    resize_image_to_dimensions,
-    build_curve_surface,
-    convex_hull_vertices_from_curve,
-    process_image_to_chunks,
-    process_sound_to_chunks
+from typing import List, Dict, Any, Set, Optional
+
+from entities import Worm, Glue, Chunk
+from managers import (
+    AudioManager,
+    BoundaryManager,
+    ExportManager,
+    QueueManager,
+    WormManager,
 )
-from worm import Worm, Glue
-from chunk_thingie import Chunk
-import sys
-import io
-from queue import Queue, Empty
-import multiprocessing
-import uuid
-from dataclasses import dataclass
-import traceback
+from processors import ImageProcessor
+from ui import UIManager
+from utils.system_utils import quit_program
 
 
-# ------------------------------------------------------------
-#  Data structures for async worker communication
-# ------------------------------------------------------------
-@dataclass
-class ChunkData:
-    """Serializable chunk data passed from worker to main thread."""
-    surface_bytes: bytes
-    surface_size: Tuple[int, int]
-    vertices: List[Tuple[float, float]]
-    downsized: bool
-    batch_id: str
-    cached_hsv_color: Optional[Tuple[float, float, float]] = None
-    audio_path: Optional[str] = None
-    curve_data: Optional[Tuple] = None
-    original_line_width: Optional[int] = None
-
-
-@dataclass
-class BatchComplete:
-    """Marker sent when all chunks from a batch have been processed."""
-    batch_id: str
-    upload_type: str  # "image" or "sound"
-
-
-# ------------------------------------------------------------
-#  ChunkFactory: Responsible for creating Chunk objects
-# ------------------------------------------------------------
-class ChunkFactory:
-    """
-    Converts labeled segments from an image into Chunk objects.
-    """
-
-    def __init__(self, config: Dict[str, Any], space: pymunk.Space) -> None:
-        """
-        Args:
-            config (Dict[str, Any]): Global config dictionary.
-            space (pymunk.Space): Pymunk space for physics objects.
-        """
-        self.config = config
-        self.space = space
-
-    def create_chunks_from_segments(
-        self,
-        img: pygame.Surface,
-        segments: np.ndarray,
-        labels_to_downsize: List[int]
-    ) -> List[Chunk]:
-        """
-        Create chunk objects from the labeled image segments.
-
-        Args:
-            img (pygame.Surface): The original (scaled) image surface.
-            segments (np.ndarray): Label matrix from Felzenszwalb.
-            labels_to_downsize (List[int]): List of segment labels that should be downsized.
-
-        Returns:
-            List[Chunk]: A list of chunk objects.
-        """
-        chunks: List[Chunk] = []
-
-        unique_labels = np.unique(segments)
-        for segment_label in unique_labels:
-            mask = (segments == segment_label)
-            coords = np.argwhere(mask)
-            if len(coords) < 3:
-                continue
-
-            centroid = coords.mean(axis=0)  # (y, x)
-            cy, cx = centroid
-            min_y, min_x = coords.min(axis=0)
-            max_y, max_x = coords.max(axis=0)
-
-            width = max_x - min_x + 1
-            height = max_y - min_y + 1
-
-            # Extract the sub-surface
-            raw_segment_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-            for y, x in coords:
-                raw_segment_surface.set_at((x - min_x, y - min_y), img.get_at((x, y)))
-
-            # Shift coords so centroid is (0,0)
-            vertices = [(x - cx, y - cy) for (y, x) in coords]
-            vertices_array = np.array(vertices)
-
-            # Attempt to form a hull
-            try:
-                hull = ConvexHull(vertices_array)
-            except QhullError:
-                continue
-            hull_vertices = [tuple(vertices_array[i]) for i in hull.vertices]
-
-            # Calculate bounding box of hull
-            hull_xs = [v[0] for v in hull_vertices]
-            hull_ys = [v[1] for v in hull_vertices]
-            hull_width = max(hull_xs) - min(hull_xs)
-            hull_height = max(hull_ys) - min(hull_ys)
-
-            surface_width = max(1, int(math.ceil(hull_width)))
-            surface_height = max(1, int(math.ceil(hull_height)))
-            centered_surface = pygame.Surface((surface_width, surface_height), pygame.SRCALPHA)
-
-            offset_x = surface_width / 2
-            offset_y = surface_height / 2
-
-            # Blit pixels onto centered surface
-            for y in range(height):
-                for x in range(width):
-                    color = raw_segment_surface.get_at((x, y))
-                    if color.a > 0:
-                        blit_x = int(x - (cx - min_x) + offset_x)
-                        blit_y = int(y - (cy - min_y) + offset_y)
-                        if 0 <= blit_x < surface_width and 0 <= blit_y < surface_height:
-                            centered_surface.set_at((blit_x, blit_y), color)
-
-            # --- Minimal visibility filtering (configurable) ---
-            filt_cfg = self.config.get("segmentation", {}).get("image_filter", {})
-            min_visible = int(filt_cfg.get("min_visible_pixels", 1))
-            min_alpha = int(filt_cfg.get("min_alpha_threshold", 1))
-
-            alpha_view = pygame.surfarray.pixels_alpha(centered_surface)
-            visible_count = (alpha_view >= min_alpha).sum()
-            del alpha_view  # Release lock
-
-            if visible_count < min_visible:
-                continue
-
-            # Check if this segment is marked for downsizing
-            downsized = segment_label in labels_to_downsize
-
-            # Create the chunk
-            chunk = Chunk(
-                segment_surface=centered_surface,
-                vertices=hull_vertices,
-                config=self.config,
-                space=self.space,
-                downsized=downsized  # Indicate if this chunk should be downsized
-            )
-            chunks.append(chunk)
-
-        return chunks
-
-# ------------------------------------------------------------
-#  ImageProcessor: Responsible for loading & segmenting images
-# ------------------------------------------------------------
-class ImageProcessor:
-    """
-    Handles image loading, optional scaling, Felzenszwalb segmentation,
-    and compression of low complexity, large segments by marking them for downsizing.
-    """
-
-    def __init__(self, config: Dict[str, Any]) -> None:
-        """
-        Args:
-            config (Dict[str, Any]): The entire config dictionary (for segmentation params, compression thresholds, etc.)
-        """
-        self.config = config
-
-    def load_image_via_dialog(self) -> pygame.Surface:
-        """
-        Opens a file dialog to load an image via Tkinter.
-        
-        Returns:
-            pygame.Surface: The loaded image (with alpha), or None if canceled.
-        """
-        file_path = filedialog.askopenfilename(
-            title="Select an image",
-            filetypes=[("Image files", ("*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif"))],
-        )
-        if file_path and os.path.exists(file_path):
-            try:
-                return pygame.image.load(file_path).convert_alpha()
-            except pygame.error as e:
-                print(f"Unable to load image: {e}")
-        return None
-
-    def segment_image(self, image: pygame.Surface) -> Tuple[np.ndarray, List[int]]:
-        """
-        Perform Felzenszwalb segmentation on a Pygame image surface,
-        then mark segments that are too large and not very complex for downsizing.
-
-        Args:
-            image (pygame.Surface): The surface to segment.
-
-        Returns:
-            Tuple[np.ndarray, List[int]]: The labeled segments array and list of segment labels to downsize.
-        """
-        # Convert Pygame surface to numpy array
-        numpy_image = pygame.surfarray.array3d(image).swapaxes(0, 1)
-
-        # RGBA → RGB if needed
-        if numpy_image.shape[-1] == 4:
-            numpy_image = rgba2rgb(numpy_image)
-            numpy_image = img_as_ubyte(numpy_image)
-            numpy_image = numpy_image[:, :, :3]
-
-        felz_cfg = self.config["segmentation"]["felzenszwalb"]
-        segments = felzenszwalb(
-            numpy_image,
-            scale=felz_cfg["scale"],
-            sigma=felz_cfg["sigma"],
-            min_size=felz_cfg["min_size"],
-        )
-
-        # Compress segments that are too large and not very complex by marking them
-        compress_cfg = self.config.get("compression", {})
-        max_size = compress_cfg.get("max_size", 5000)          # Default threshold
-        min_entropy = compress_cfg.get("min_entropy", 4.0)     # Default entropy threshold
-
-        # Convert RGB image to grayscale for entropy calculation
-        grayscale_image = rgb2gray(numpy_image)
-        grayscale_image = img_as_ubyte(grayscale_image)  # Convert to 0-255
-
-        unique_labels = np.unique(segments)
-        labels_to_downsize: List[int] = []
-
-        for label in unique_labels:
-            mask = segments == label
-            size = np.sum(mask)
-            if size < 3:
-                continue  # Ignore very small segments
-
-            # Calculate entropy
-            entropy = self._calculate_entropy(grayscale_image, mask)
-            # print(f"Segment {label}: size={size}, entropy={entropy}")
-
-            if size > max_size and entropy < min_entropy:
-                # print('entropy', entropy)
-                # Mark this segment for downsizing
-                labels_to_downsize.append(label)
-                # print(f"Marking segment {label} for downsizing.")
-
-        return segments, labels_to_downsize
-
-    def _calculate_entropy(self, grayscale_image: np.ndarray, mask: np.ndarray) -> float:
-        """
-        Calculate the entropy of the given mask in the grayscale image.
-
-        Args:
-            grayscale_image (np.ndarray): Grayscale version of the original image.
-            mask (np.ndarray): Boolean mask where True represents the segment.
-
-        Returns:
-            float: Entropy value.
-        """
-        # Extract the pixel values within the mask
-        pixel_values = grayscale_image[mask]
-
-        if pixel_values.size == 0:
-            return 0.0
-
-        # Calculate histogram
-        histogram, _ = np.histogram(pixel_values, bins=256, range=(0, 256), density=True)
-        histogram = histogram[histogram > 0]  # Remove zero entries to avoid log2 issues
-
-        # Calculate entropy
-        entropy = -np.sum(histogram * np.log2(histogram))
-        return entropy
-
-# ------------------------------------------------------------
-#  UIManager: Responsible for drawing UI elements
-# ------------------------------------------------------------
-class UIManager:
-    """
-    Handles creation and rendering of the UI (buttons, bar, debug text).
-    """
-
-    def __init__(
-        self,
-        config: Dict[str, Any],
-        screen: pygame.Surface,
-        font: pygame.font.Font
-    ) -> None:
-        """
-        Args:
-            config (Dict[str, Any]): Global config dict (for colors, button dims, etc.)
-            screen (pygame.Surface): The main window surface for drawing.
-            font (pygame.font.Font): The font object for text rendering.
-        """
-        self.config = config
-        self.screen = screen
-        self.font = font
-
-        sim_cfg = config["simulation"]
-        self.width = sim_cfg["window"]["width"]
-        self.height = sim_cfg["window"]["height"]
-        self.ui_bar_height = sim_cfg["window"]["ui_bar_height"]
-        self.colors = config["colors"]
-
-        # Button dims
-        self.button_width = sim_cfg["buttons"]["width"]
-        self.button_height = sim_cfg["buttons"]["height"]
-        self.button_gap = sim_cfg["buttons"]["gap"]
-
-        self.buttons = self._create_buttons()
-
-    def _create_buttons(self) -> List[pygame.Rect]:
-        """Create UI button rectangles."""
-        upload_rect = pygame.Rect(
-            10,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
-        upload_sound_rect = pygame.Rect(
-            upload_rect.right + self.button_gap,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
-        clear_rect = pygame.Rect(
-            upload_sound_rect.right + self.button_gap,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
-        export_rect = pygame.Rect(
-            clear_rect.right + self.button_gap,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
-        quit_rect = pygame.Rect(
-            export_rect.right + self.button_gap,
-            (self.ui_bar_height - self.button_height) // 2,
-            self.button_width,
-            self.button_height
-        )
-        return [upload_rect, upload_sound_rect, clear_rect, export_rect, quit_rect]
-
-    def draw_ui(self, debug_mode: bool, torus_world: bool = False, history_panel_enabled: bool = True, glue_visuals_enabled: bool = True, ui_enabled: bool = True, chunk_count: int = 0) -> None:
-        """
-        Draw the UI bar, buttons, and optional debug text.
-
-        Args:
-            debug_mode (bool): Whether to show debug mode status on the UI bar.
-            torus_world (bool): Whether the simulation is in torus world mode.
-            history_panel_enabled (bool): Whether the history panel is visible.
-            glue_visuals_enabled (bool): Whether glue visuals are visible.
-            ui_enabled (bool): Whether UI is currently enabled.
-        """
-        ui_bar_rect = pygame.Rect(0, 0, self.width, self.ui_bar_height)
-        pygame.draw.rect(self.screen, self.colors["UI_BG"], ui_bar_rect)
-
-        button_texts = ["Upload Image", "Upload Sound", "Clear Canvas", "Export Glues (E)", "Quit"]
-        for rect, text in zip(self.buttons, button_texts):
-            self._draw_button(rect, text)
-
-        # Build right-aligned status texts with shortcuts; lay them out from right edge
-        status_texts = [
-            f"Chunks: {chunk_count}",
-            f"UI: {'ON' if ui_enabled else 'OFF'} (U)",
-            f"Glue Visuals: {'ON' if glue_visuals_enabled else 'OFF'} (G)",
-            f"History: {'ON' if history_panel_enabled else 'OFF'} (H)",
-            f"World: {'Torus' if torus_world else 'Rigid Walls'} (T)",
-            f"Debug: {'ON' if debug_mode else 'OFF'} (D)",
-        ]
-        gap = 20
-        x_right = self.width - 10
-        y_center = (self.ui_bar_height) // 2
-        # Place each status block from right to left
-        for text in status_texts:
-            surface = self.font.render(text, True, self.colors["WHITE"])
-            x_right -= surface.get_width()
-            self.screen.blit(surface, (x_right, y_center - surface.get_height() // 2))
-            x_right -= gap
-
-    def _draw_button(self, rect: pygame.Rect, text: str) -> None:
-        """Draw a single button."""
-        pygame.draw.rect(self.screen, self.colors["DARK_GRAY"], rect, border_radius=5)
-        text_surface = self.font.render(text, True, self.colors["WHITE"])
-        text_rect = text_surface.get_rect(center=rect.center)
-        self.screen.blit(text_surface, text_rect)
-
-# ------------------------------------------------------------
-#  Simulation: Orchestrates the physics, UI, and chunk management
-# ------------------------------------------------------------
 class Simulation:
     """
-    Orchestrates the Felzenszwalb-based chunk simulation using the above components.
+    Orchestrates the Felzenszwalb-based chunk simulation.
+    Delegates responsibilities to specialized managers.
     """
 
     def __init__(
@@ -423,10 +35,10 @@ class Simulation:
         Initialize the simulation with provided parameters.
 
         Args:
-            config (Dict[str, Any]): The entire configuration loaded from YAML.
-            space (pymunk.Space): The physics space.
-            screen (pygame.Surface): The main Pygame window surface.
-            font (pygame.font.Font): Font for rendering text/UI.
+            config: The entire configuration loaded from YAML.
+            space: The physics space.
+            screen: The main Pygame window surface.
+            font: Font for rendering text/UI.
         """
         self.config = config
         self.space = space
@@ -434,772 +46,135 @@ class Simulation:
         self.font = font
         self.debug_mode = False
         self.glue_visuals_enabled = config["worm"]["glue"]["visual"].get("enabled", True)
-        self.history_panel_enabled = config["worm"]["history_panel"]["enabled"]
         self.ui_enabled = config["simulation"].get("ui_enabled", True)
-
-        # Build sub-components
-        self.ui_manager = UIManager(config, screen, font)
-        self.chunk_factory = ChunkFactory(config, space)
-        self.image_processor = ImageProcessor(config)
 
         # Local references
         self.width = config["simulation"]["window"]["width"]
         self.height = config["simulation"]["window"]["height"]
         self.ui_bar_height = config["simulation"]["window"]["ui_bar_height"]
         self.colors = config["colors"]
-        self.torus_world = config["simulation"].get("torus_world", False)
 
+        # Core state
         self.chunks: List[Chunk] = []
-        self.worm: Worm = None
-        self.worms: List[Worm] = []
-        self.glues: List[Glue] = []  # List to store all active glues
-        self.boundary_walls = []
-        # Thread-safe queue for incoming uploads from background server
-        self._upload_queue: "Queue[Tuple[bytes, int, int]]" = Queue()
+        self.glues: List[Glue] = []
 
-        # Background worker for heavy processing (segmentation, audio analysis)
-        self._worker_input_queue: multiprocessing.Queue = multiprocessing.Queue()
-        self._worker_output_queue: multiprocessing.Queue = multiprocessing.Queue()
-        self._worker_process = multiprocessing.Process(
-            target=worker_loop,
-            args=(self._worker_input_queue, self._worker_output_queue, config),
-            daemon=True
-        )
-        self._worker_process.start()
+        # Initialize managers
+        self.ui_manager = UIManager(config, screen, font)
+        self.audio_manager = AudioManager(config)
+        self.boundary_manager = BoundaryManager(config, space, self.width, self.height)
+        self.worm_manager = WormManager(config)
+        self.export_manager = ExportManager(config, self.width, self.height)
+        self.queue_manager = QueueManager(config, space, self.width, self.height)
 
-        # Batch tracking for deferred worm spawning
-        self._pending_batches: Dict[str, int] = {}  # batch_id -> chunks remaining
-        self._batch_upload_types: Dict[str, str] = {}  # batch_id -> upload_type
+        # Connect queue manager to chunks list and batch completion callback
+        self.queue_manager.set_chunks_list(self.chunks)
+        self.queue_manager.set_batch_complete_callback(self._on_batch_complete)
 
-        # Worm scheduling state for sequential spawns after exports
-        self._active_worm: Worm = None
-        
-        # Audio playback for sound chunks
-        self.playing_chunks = {}  # Track currently playing chunks: {chunk: channel}
-        self.chunk_volumes = {}  # Track volume for each playing chunk: {chunk: volume}
-        self.last_hovered_chunks = set()  # Track chunks that were hovered last frame
-        self.sound_cache = {}  # Cache Sound objects to avoid recreating them
-        
-        # Initialize pygame mixer for audio playback with multiple channels
-        try:
-            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=2048)
-            pygame.mixer.set_num_channels(256)  # Allow up to 256 simultaneous sounds
-            print("Audio mixer initialized successfully with 256 channels (buffer: 2048)")
-        except pygame.error as e:
-            print(f"Failed to initialize audio mixer: {e}")
+        # Image processor for dialog-based loading
+        self.image_processor = ImageProcessor(config)
 
-        # Create boundaries
-        self._create_boundaries()
+    # ----------------------------------------------------------------
+    # Properties (externally-used only)
+    # ----------------------------------------------------------------
+    @property
+    def torus_world(self) -> bool:
+        return self.boundary_manager.torus_world
 
-    def get_chunks_at_mouse(self, mouse_pos: Tuple[int, int]) -> List[Chunk]:
-        """
-        Find ALL chunks under the mouse cursor using physics collision detection.
-        
-        Args:
-            mouse_pos: (x, y) mouse position
-            
-        Returns:
-            List of Chunk objects found at position
-        """
-        # Get all shapes at the mouse position (not just nearest)
-        point_queries = self.space.point_query(mouse_pos, 0, pymunk.ShapeFilter())
-        
-        found_chunks = []
-        if point_queries:
-            # Find all chunks that own these physics shapes
-            for point_query in point_queries:
-                if point_query.shape:
-                    for chunk in self.chunks:
-                        if chunk.shape == point_query.shape:
-                            found_chunks.append(chunk)
-                            break
-        
-        return found_chunks
+    @torus_world.setter
+    def torus_world(self, value: bool) -> None:
+        self.boundary_manager.torus_world = value
 
-    def handle_audio_hover(self, mouse_pos: Tuple[int, int]) -> None:
-        """
-        Handle proximity-based audio playback for sound chunks using inverse square law.
-        All sound chunks within max_distance play simultaneously with volume based on distance.
-        
-        Args:
-            mouse_pos: (x, y) mouse position
-        """
-        # Get hover configuration
-        hover_cfg = self.config["sound"]["hover"]
-        max_distance = hover_cfg["max_distance"]
-        reference_distance = hover_cfg["reference_distance"]
-        min_volume_threshold = hover_cfg["min_volume_threshold"]
-        epsilon = 1.0  # Small value to prevent division by zero
-        
-        cursor_x, cursor_y = mouse_pos
-        currently_playing = set(self.playing_chunks.keys())
-        should_be_playing = set()
-        
-        # Iterate through all chunks with audio
-        for chunk in self.chunks:
-            if not chunk.audio_path:
-                continue
-            
-            # Calculate distance from cursor to chunk center
-            chunk_pos = chunk.body.position
-            dx = cursor_x - chunk_pos.x
-            dy = cursor_y - chunk_pos.y
-            distance = math.sqrt(dx * dx + dy * dy)
-            
-            # Skip chunks beyond max distance
-            if distance > max_distance:
-                continue
-            
-            # Calculate volume using inverse square law
-            # volume = (reference_distance²) / (distance² + epsilon)
-            distance_squared = distance * distance + epsilon
-            volume = (reference_distance * reference_distance) / distance_squared
-            
-            # Clamp volume to [0, 1.0] range
-            volume = max(0.0, min(1.0, volume))
-            
-            # Debug: print chunks that are skipped due to low volume
-            if volume < min_volume_threshold:
-                # Only print occasionally to avoid spam
-                if random.random() < 0.01:  # 1% chance to print
-                    print(f"Chunk skipped: volume {volume:.4f} below threshold {min_volume_threshold} (distance: {distance:.1f})")
-            
-            # Only play if volume is above threshold
-            if volume >= min_volume_threshold:
-                should_be_playing.add(chunk)
-                
-                if chunk in self.playing_chunks:
-                    # Update volume for already playing chunk
-                    channel = self.playing_chunks[chunk]
-                    if channel:
-                        channel.set_volume(volume)
-                    self.chunk_volumes[chunk] = volume
-                else:
-                    # Start playing new chunk
-                    try:
-                        # Use cached Sound object if available, otherwise create and cache it
-                        if chunk.audio_path not in self.sound_cache:
-                            self.sound_cache[chunk.audio_path] = pygame.mixer.Sound(chunk.audio_path)
-                        sound = self.sound_cache[chunk.audio_path]
-                        channel = sound.play(loops=-1)  # Loop continuously
-                        if channel:
-                            channel.set_volume(volume)
-                            self.playing_chunks[chunk] = channel
-                            self.chunk_volumes[chunk] = volume
-                            print(f"Playing audio: {os.path.basename(chunk.audio_path)} at volume {volume:.3f}")
-                    except pygame.error as e:
-                        print(f"Failed to play audio {chunk.audio_path}: {e}")
-                    except Exception as e:
-                        print(f"Unexpected error playing audio {chunk.audio_path}: {e}")
-        
-        # Stop chunks that are no longer in range or below threshold
-        chunks_to_stop = currently_playing - should_be_playing
-        for chunk in chunks_to_stop:
-            if chunk in self.playing_chunks:
-                channel = self.playing_chunks[chunk]
-                if channel:
-                    channel.stop()
-                del self.playing_chunks[chunk]
-                if chunk in self.chunk_volumes:
-                    del self.chunk_volumes[chunk]
-                print(f"Stopped audio: {os.path.basename(chunk.audio_path)}")
+    # ----------------------------------------------------------------
+    # Delegation methods
+    # ----------------------------------------------------------------
+    def handle_audio_hover(self, mouse_pos) -> None:
+        """Handle proximity-based audio playback."""
+        self.audio_manager.handle_audio_hover(mouse_pos, self.chunks)
 
     def cleanup_finished_audio(self) -> None:
-        """
-        Clean up the playing_chunks dict by removing chunks whose audio channels have finished.
-        This is lightweight and runs every frame to dynamically track individual completions.
-        """
-        # Create a list of chunks to remove (can't modify dict while iterating)
-        finished_chunks = []
-        
-        for chunk, channel in self.playing_chunks.items():
-            if not channel.get_busy():  # Channel is no longer playing
-                finished_chunks.append(chunk)
-        
-        # Remove finished chunks from the tracking dict
-        for chunk in finished_chunks:
-            del self.playing_chunks[chunk]
-
-    def _create_boundaries(self) -> None:
-        """
-        Create boundaries based on the configuration.
-        If torus_world is True, creates a torus world without walls.
-        If False, creates rigid walls around the simulation area.
-        Note: The UI bar is treated as an overlay, with rigid walls at the screen edges.
-        """
-        if not self.torus_world:
-            # Create traditional rigid walls at screen edges
-            static_lines = [
-                pymunk.Segment(self.space.static_body, (0, 0), (self.width, 0), 1),
-                pymunk.Segment(self.space.static_body, (0, 0), (0, self.height), 1),
-                pymunk.Segment(self.space.static_body, (0, self.height), (self.width, self.height), 1),
-                pymunk.Segment(self.space.static_body, (self.width, 0), (self.width, self.height), 1),
-            ]
-            for line in static_lines:
-                line.elasticity = 1.0
-                line.friction = 5.0
-            self.space.add(*static_lines)
-            # Store references to these walls to be able to remove them later
-            self.boundary_walls = static_lines
-        else:
-            # For torus world, no walls are needed
-            self.boundary_walls = []
+        """Clean up finished audio channels."""
+        self.audio_manager.cleanup_finished_audio()
 
     def clear_boundaries(self) -> None:
-        """
-        Remove any existing boundary walls from the space.
-        """
-        # Only attempt removal if there are walls and they were previously added
-        if hasattr(self, 'boundary_walls') and self.boundary_walls:
-            for wall in self.boundary_walls:
-                self.space.remove(wall)
-            self.boundary_walls = []
+        """Remove existing boundary walls."""
+        self.boundary_manager.clear_boundaries()
 
-    def handle_torus_wrapping(self) -> None:
-        """
-        Handle the torus wrapping for all bodies in the space.
-        If a body goes beyond an edge, wrap it to the opposite edge.
-        This creates a seamless torus world effect.
-        Note: The UI bar is treated as an overlay, with wrapping happening across the full screen.
-        """
-        # Check all bodies in the space
-        for body in self.space.bodies:
-            # Skip static bodies
-            if body.body_type == pymunk.Body.STATIC:
-                continue
-                
-            position = body.position
-            
-            # Get the shape if present (to determine object size)
-            shape = None
-            for s in self.space.shapes:
-                if s.body == body:
-                    shape = s
-                    break
-                
-            # Only teleport when completely beyond the boundary
-            # We'll use a small margin to avoid flickering at the boundaries
-            margin = 0
-            if shape:
-                # If we have a shape, use it to determine when to teleport
-                # (only when the entire shape is beyond the boundary)
-                if hasattr(shape, 'radius'):
-                    margin = shape.radius
-                elif hasattr(shape, 'get_vertices'):
-                    vertices = shape.get_vertices()
-                    if vertices:
-                        # Find furthest point from center in each direction
-                        max_x = max(abs(v.x) for v in vertices)
-                        max_y = max(abs(v.y) for v in vertices)
-                        margin = max(max_x, max_y)
-                
-            # Check x-axis boundaries - only teleport when fully beyond boundary
-            if position.x < -margin:
-                body.position = pymunk.Vec2d(self.width + position.x, position.y)
-            elif position.x > self.width + margin:
-                body.position = pymunk.Vec2d(position.x - self.width, position.y)
-                
-            # Check y-axis boundaries - treat top of screen as top boundary (ignore UI bar)
-            if position.y < -margin:
-                body.position = pymunk.Vec2d(position.x, self.height + position.y)
-            elif position.y > self.height + margin:
-                body.position = pymunk.Vec2d(position.x, position.y - self.height)
+    def _create_boundaries(self) -> None:
+        """Create boundaries based on configuration."""
+        self.boundary_manager._create_boundaries()
 
+    def toggle_history_panel(self) -> None:
+        """Toggle history panel visibility."""
+        self.worm_manager.toggle_history_panel()
+
+    def enqueue_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
+        """Enqueue raw image bytes for processing."""
+        self.queue_manager.enqueue_image_bytes(image_bytes, target_width, target_height)
+
+    def drain_upload_queue(self, max_items: int = 4) -> None:
+        """Drain upload queue."""
+        self.queue_manager.drain_upload_queue(max_items)
+
+    def drain_processed_chunks(self, max_items: int = 15) -> None:
+        """Drain processed chunks from worker."""
+        self.queue_manager.drain_processed_chunks(max_items)
+
+    def cleanup(self) -> None:
+        """Clean up resources before shutdown."""
+        self.queue_manager.cleanup()
+        self.audio_manager.stop_all()
+
+    # ----------------------------------------------------------------
+    # Callback for batch completion
+    # ----------------------------------------------------------------
+    def _on_batch_complete(self, upload_type: str) -> None:
+        """Called when a processing batch completes."""
+        print(f"Spawning worms for {upload_type} upload.")
+        self.worm_manager.spawn_worms_for_upload(upload_type, len(self.chunks))
+
+    # ----------------------------------------------------------------
+    # UI methods
+    # ----------------------------------------------------------------
     def draw_ui(self) -> None:
-        """
-        Draw the UI bar, buttons, and debug status.
-        """
+        """Draw the UI bar, buttons, and debug status."""
         if not self.ui_enabled:
             return
         self.ui_manager.draw_ui(
             self.debug_mode,
-            self.torus_world,
-            self.history_panel_enabled,
+            self.boundary_manager.torus_world,
+            self.worm_manager.history_panel_enabled,
             self.glue_visuals_enabled,
             self.ui_enabled,
             len(self.chunks),
         )
 
-    def update_chunks(self) -> None:
-        """
-        Update (draw) all chunks in the simulation and process worm behavior.
-        """
-        # Check if we need to spawn a new worm after export
-        self._check_worm_completion()
-        
-        # Apply torus wrapping if enabled
-        if self.torus_world:
-            self.handle_torus_wrapping()
-        # Draw non-glued chunks
-        glued_chunk_ids = self.get_all_glued_chunk_ids()
-        for chunk in self.chunks:
-            if id(chunk) not in glued_chunk_ids:
-                volume = self.chunk_volumes.get(chunk, 0.0)
-                chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
-        # Draw glued chunks and glue visuals if enabled
-        if self.glue_visuals_enabled:
-            for glue in self.glues:
-                for glued_chunk in glue.glued_chunks:
-                    volume = self.chunk_volumes.get(glued_chunk.chunk, 0.0)
-                    glued_chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
-            for glue in self.glues:
-                glue.draw(self.screen)
-        else:
-            # Draw glued chunks without tint
-            for glue in self.glues:
-                for glued_chunk in glue.glued_chunks:
-                    volume = self.chunk_volumes.get(glued_chunk.chunk, 0.0)
-                    glued_chunk.chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.torus_world, volume=volume)
-        # Update worm if it exists
-        if self.worm and not self.worm.is_dead:
-            available_chunks = self.get_available_chunks_for_worm()
-            next_chunk = self.worm.select_next_chunk(available_chunks)
-            if next_chunk:
-                self.space.remove(next_chunk.shape, next_chunk.body)
-                self.chunks.remove(next_chunk)
-                self.worm.consume_chunk(next_chunk)
-        # Update the current worm's glue if it has just died
-        if self.worm and self.worm.is_dead and self.worm.glue:
-            if self.worm.glue not in self.glues:
-                self.glues.append(self.worm.glue)
-        # Update all glues
-        for glue in self.glues:
-            available_chunks = self.get_available_chunks_for_glue(glue)
-            glue.try_attract_chunks(available_chunks)
-            glue.update()
-            if self.glue_visuals_enabled:
-                glue.draw(self.screen)
-
-        # During superabundance, auto-export clumps (glues) that have been capped > configured time
-        try:
-            superabundance_cfg = self.config["worm"].get("superabundance", {})
-            threshold = superabundance_cfg.get("threshold", 1000)
-            total_particles = len(self.chunks)
-            if total_particles > threshold:
-                now_ms = pygame.time.get_ticks()
-                auto_export_age_ms = int(superabundance_cfg.get("auto_export_capped_after_ms", 60_000))
-                expired_glues = [
-                    g for g in self.glues
-                    if getattr(g, "capped_at_ms", None) is not None
-                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
-                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
-                ]
-                if expired_glues:
-                    # Only skip respawn when active glues exceed threshold
-                    glue_cfg = self.config["worm"].get("glue", {})
-                    max_active = int(glue_cfg.get("max_active_glues", 5))
-                    over_limit = len(self.glues) > max_active
-                    self.export_glues(expired_glues, schedule_worms=not over_limit)
-        except Exception:
-            # Fail-safe: never break the frame loop due to auto-export logic
-            pass
-
-        # If active glues exceed configured limit, auto-export capped-and-old glues (no respawn)
-        try:
-            glue_cfg = self.config["worm"].get("glue", {})
-            max_active = int(glue_cfg.get("max_active_glues", 5))
-            if len(self.glues) > max_active:
-                now_ms = pygame.time.get_ticks()
-                # Reuse superabundance auto-export age param for simplicity
-                age_cfg = self.config["worm"].get("superabundance", {})
-                auto_export_age_ms = int(age_cfg.get("auto_export_capped_after_ms", 60_000))
-                over_limit_candidates = [
-                    g for g in self.glues
-                    if getattr(g, "capped_at_ms", None) is not None
-                    and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
-                    and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
-                ]
-                if over_limit_candidates:
-                    # Do not schedule respawn worms when auto-exporting due to threshold
-                    self.export_glues(over_limit_candidates, schedule_worms=False)
-        except Exception:
-            # Fail-safe: never break the frame loop due to over-limit auto-export logic
-            pass
-        # Draw worm history panels for all worms, compactly offsetting only visible panels
-        panel_spacing = 20
-        x_cursor = 0
-        for worm in self.worms:
-            if worm and worm.panel_enabled and len(worm.history) > 0:
-                worm.draw(self.screen, x_offset=x_cursor)
-                # Advance by effective width plus spacing
-                try:
-                    x_cursor += worm.get_panel_width() + panel_spacing
-                except Exception:
-                    x_cursor += worm.panel_width + panel_spacing
-
-    def get_all_glued_chunk_ids(self) -> Set[int]:
-        """
-        Get the IDs of all chunks that are already glued by any glue.
-        
-        Returns:
-            Set[int]: Set of chunk IDs that are already glued.
-        """
-        glued_chunk_ids = set()
-        
-        # Add chunks from all glues
-        for glue in self.glues:
-            glued_chunk_ids.update(id(glued.chunk) for glued in glue.glued_chunks)
-            
-        # Add chunks from current worm's glue if it exists but isn't in the glues list yet
-        if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in self.glues:
-            glued_chunk_ids.update(id(glued.chunk) for glued in self.worm.glue.glued_chunks)
-            
-        return glued_chunk_ids
-            
-    def get_available_chunks_for_worm(self) -> List[Chunk]:
-        """
-        Get chunks that aren't already glued by any glue.
-        These are the chunks available for the worm to eat.
-        
-        Returns:
-            List[Chunk]: Available chunks for the worm.
-        """
-        # Get IDs of all glued chunks
-        glued_chunk_ids = self.get_all_glued_chunk_ids()
-        
-        # Return only chunks that aren't glued
-        return [chunk for chunk in self.chunks if id(chunk) not in glued_chunk_ids]
-        
-    def get_available_chunks_for_glue(self, current_glue: Glue) -> List[Chunk]:
-        """
-        Get chunks that aren't already glued by any glue.
-        These are the chunks available for a specific glue to attract.
-        
-        Args:
-            current_glue (Glue): The glue that's trying to attract chunks.
-            
-        Returns:
-            List[Chunk]: Available chunks for the glue.
-        """
-        # Get IDs of chunks already attracted by any glue
-        glued_chunk_ids = self.get_all_glued_chunk_ids()
-        
-        # Return only chunks that aren't glued by any glue
-        return [chunk for chunk in self.chunks if id(chunk) not in glued_chunk_ids]
-
-    def handle_button_click(self, mouse_pos: Tuple[int, int]) -> None:
-        """
-        Handle button clicks based on mouse position.
-
-        Args:
-            mouse_pos (Tuple[int, int]): The (x,y) position of the mouse click.
-        """
+    def handle_button_click(self, mouse_pos) -> None:
+        """Handle button clicks based on mouse position."""
         if not self.ui_enabled:
             return
-        upload_rect, upload_sound_rect, clear_rect, export_rect, quit_rect = self.ui_manager.buttons
-        if upload_rect.collidepoint(mouse_pos):
+        button = self.ui_manager.handle_click(mouse_pos)
+        if button == "upload_image":
             self.upload_image()
-        elif upload_sound_rect.collidepoint(mouse_pos):
+        elif button == "upload_sound":
             self.upload_sound()
-        elif clear_rect.collidepoint(mouse_pos):
+        elif button == "clear":
             self.clear_chunks()
-        elif export_rect.collidepoint(mouse_pos):
+        elif button == "export":
             self.export_glues()
-        elif quit_rect.collidepoint(mouse_pos):
+        elif button == "quit":
             quit_program()
 
-    def export_glues(self, glues: Optional[List[Glue]] = None, schedule_worms: bool = True) -> None:
-        """
-        Export each glue's glued chunks to a PNG (without glue visuals) and
-        remove those glued chunks and their glue from the simulation.
-        If schedule_worms is True, schedule one new worm per exported glue.
-        """
-        # Collect glues to export
-        if glues is not None:
-            glues_to_export: List[Glue] = list(glues)
-        else:
-            glues_to_export = list(self.glues)
-            # Include a dead worm's glue not yet appended
-            if self.worm and self.worm.is_dead and self.worm.glue and self.worm.glue not in glues_to_export:
-                glues_to_export.append(self.worm.glue)
-
-        if not glues_to_export:
-            print("No glues to export.")
-            return
-
-        # Ensure export directory exists (packages/compost/exports)
-        base_dir = os.path.dirname(__file__)
-        export_dir = os.path.join(base_dir, "exports")
-        os.makedirs(export_dir, exist_ok=True)
-
-        exported_count = 0
-
-        for glue in glues_to_export:
-            glued_chunks = glue.glued_chunks
-            if not glued_chunks:
-                continue
-
-            # Build list of rotated surfaces and their destination rects (screen coords)
-            rotated_surfaces = []
-            for glued in glued_chunks:
-                chunk = glued.chunk
-                angle_degrees = math.degrees(-chunk.body.angle)
-                rotated_surface = pygame.transform.rotate(chunk.segment_surface, angle_degrees)
-                pos = chunk.body.position
-                rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
-                rotated_surfaces.append((rotated_surface, rect))
-
-            # Create a full-screen transparent surface; blitting will clip to simulation bounds
-            offscreen_full = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-            for rotated_surface, rect in rotated_surfaces:
-                offscreen_full.blit(rotated_surface, rect)
-
-            # Compute the tightest bounding box of visible pixels and crop
-            crop_rect = offscreen_full.get_bounding_rect(min_alpha=1)
-            if crop_rect.width <= 0 or crop_rect.height <= 0:
-                continue
-            image_to_save = offscreen_full.subsurface(crop_rect).copy()
-
-            # Save PNG to file
-            timestamp = pygame.time.get_ticks()
-            rand_suffix = random.randint(0, 999999)
-            filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}.png"
-            filepath = os.path.join(export_dir, filename)
-            try:
-                pygame.image.save(image_to_save, filepath)
-                print(f"Exported glue PNG to: {filepath}")
-            except Exception as exc:
-                print(f"Failed to export glue PNG: {exc}")
-
-            # Export mixed audio if there are sound chunks in this glue
-            self._export_glue_audio(glued_chunks, export_dir, timestamp, rand_suffix, exported_count)
-            exported_count += 1
-
-            # Remove glued chunks' bodies and shapes from space and simulation
-            for glued in list(glued_chunks):
-                chunk = glued.chunk
-                try:
-                    if chunk.shape in self.space.shapes or chunk.body in self.space.bodies:
-                        self.space.remove(chunk.shape, chunk.body)
-                except Exception:
-                    # Ignore if already removed
-                    pass
-                # Remove from simulation's chunk list if present
-                if chunk in self.chunks:
-                    try:
-                        self.chunks.remove(chunk)
-                    except ValueError:
-                        pass
-
-            # Clear glue contents
-            glue.glued_chunks.clear()
-
-        # Remove exported glues from simulation tracking
-        for glue in glues_to_export:
-            if glue in self.glues:
-                try:
-                    self.glues.remove(glue)
-                except ValueError:
-                    pass
-
-        # Clear history panels only for worms whose glue was exported
-        try:
-            exported_histories = {id(glue.worm_history) for glue in glues_to_export}
-        except Exception:
-            exported_histories = set()
-
-        # Unlink and clear only impacted worms
-        for worm in self.worms:
-            if not worm:
-                continue
-            # If this worm's glue was exported, unlink it
-            if getattr(worm, 'glue', None) in glues_to_export:
-                worm.glue = None
-            # If this worm's history fed an exported glue, clear just this worm's panel/history
-            if id(getattr(worm, 'history', [])) in exported_histories:
-                worm.history.clear()
-                worm.last_color = None
-
-        # Schedule one worm per exported glue, sequentially (optional)
-        if schedule_worms:
-            self._schedule_worms(exported_count)
-
-        print(f"Export complete. {exported_count} glue images saved. Removed glued chunks and cleaned up glues. Cleared worm history panels.")
-
-    def _schedule_worms(self, count: int) -> None:
-        """Schedule spawning of 'count' worms sequentially. If none active, spawn immediately."""
-        if count <= 0:
-            return
-        # Initialize counters if missing
-        if not hasattr(self, '_spawn_pending'):
-            self._spawn_pending = 0
-        if not hasattr(self, '_spawn_batch_total'):
-            self._spawn_batch_total = 0
-        self._spawn_pending += count
-        self._spawn_batch_total += count
-        # If no active worm, start immediately
-        if not getattr(self, '_active_worm', None):
-            self._spawn_next_worm()
-
-    def _spawn_next_worm(self) -> None:
-        """Spawn the next worm in the current schedule batch."""
-        if getattr(self, '_spawn_pending', 0) <= 0:
-            return
-        new_worm = Worm(self.config)
-        new_worm.panel_enabled = self.history_panel_enabled
-        self.worm = new_worm
-        self.worms.append(new_worm)
-        self._active_worm = new_worm
-        # Decrement pending and report progress
-        self._spawn_pending -= 1
-        spawned_so_far = self._spawn_batch_total - self._spawn_pending
-        total = self._spawn_batch_total
-        print(f"Spawned new worm {spawned_so_far} of {total}")
-
-    def _check_worm_completion(self) -> None:
-        """Advance scheduling when the active worm finishes eating."""
-        if not getattr(self, '_active_worm', None):
-            return
-        if self._active_worm.is_dead:
-            if getattr(self, '_spawn_pending', 0) > 0:
-                self._spawn_next_worm()
-            else:
-                self._active_worm = None
-                # Reset batch counters
-                self._spawn_batch_total = 0
-                self._spawn_pending = 0
-                print("All scheduled worms have been spawned and completed")
-
-    def _export_glue_audio(self, glued_chunks, export_dir: str, timestamp: int, rand_suffix: int, exported_count: int) -> None:
-        """
-        Export a mixed audio file from all sound chunks in a glue.
-        Positions each audio randomly within the duration of the longest audio.
-        """
-        # Collect all audio files from chunks that have them
-        audio_files = []
-        for glued in glued_chunks:
-            chunk = glued.chunk
-            if chunk.audio_path and os.path.exists(chunk.audio_path):
-                audio_files.append(chunk.audio_path)
-        
-        if not audio_files:
-            return  # No audio to mix
-        
-        try:
-            import librosa
-            import soundfile as sf
-            import numpy as np
-        except ImportError:
-            print("librosa and soundfile required for audio mixing")
-            return
-        
-        try:
-            # Load all audio files and find the longest duration
-            audio_data = []
-            sample_rates = []
-            max_duration = 0.0
-            
-            for audio_file in audio_files:
-                y, sr = librosa.load(audio_file, sr=None)
-                duration = len(y) / sr
-                audio_data.append((y, sr))
-                sample_rates.append(sr)
-                max_duration = max(max_duration, duration)
-            
-            if max_duration == 0:
-                return
-            
-            # Use the most common sample rate (or first one if tie)
-            target_sr = max(set(sample_rates), key=sample_rates.count)
-            
-            # Create output buffer
-            output_samples = int(max_duration * target_sr)
-            mixed_audio = np.zeros(output_samples, dtype=np.float32)
-            
-            # Mix each audio at a random position within the max duration
-            for i, (y, sr) in enumerate(audio_data):
-                # Resample to target sample rate if needed
-                if sr != target_sr:
-                    y = librosa.resample(y, orig_sr=sr, target_sr=target_sr)
-                
-                # Random start position within the available time
-                audio_length = len(y)
-                max_start_samples = max(0, output_samples - audio_length)
-                start_sample = random.randint(0, max_start_samples) if max_start_samples > 0 else 0
-                end_sample = min(start_sample + audio_length, output_samples)
-                
-                # Add to mix with overlap handling
-                mix_length = end_sample - start_sample
-                mixed_audio[start_sample:end_sample] += y[:mix_length]
-                
-                print(f"  Mixed audio {i+1}/{len(audio_data)}: {os.path.basename(audio_files[i])} at {start_sample/target_sr:.2f}s")
-            
-            # Normalize to prevent clipping
-            if np.max(np.abs(mixed_audio)) > 0:
-                mixed_audio = mixed_audio / np.max(np.abs(mixed_audio)) * 0.95
-            
-            # Save mixed audio
-            audio_filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}_mixed.wav"
-            audio_filepath = os.path.join(export_dir, audio_filename)
-            sf.write(audio_filepath, mixed_audio, target_sr)
-            print(f"Exported mixed audio to: {audio_filepath}")
-            
-        except Exception as exc:
-            print(f"Failed to export mixed audio: {exc}")
-
-    def toggle_history_panel(self) -> None:
-        """
-        Toggle the visibility of all worm history panels.
-        """
-        self.history_panel_enabled = not self.history_panel_enabled
-        for worm in self.worms:
-            worm.panel_enabled = self.history_panel_enabled
-
+    # ----------------------------------------------------------------
+    # Upload methods
+    # ----------------------------------------------------------------
     def upload_image(self) -> None:
-        """
-        Let the user pick an image and create chunks from its Felzenszwalb segments.
-        The UI bar is treated as an overlay, so the entire screen is available for image processing.
-        """
+        """Let the user pick an image and create chunks from its segments."""
         image = self.image_processor.load_image_via_dialog()
         if image:
-            self.process_image_surface(image, None, None)
-
-    def process_image_surface(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
-        """
-        Process a provided pygame Surface as if it were uploaded via the UI.
-        Sends heavy processing to background worker for non-blocking operation.
-
-        Args:
-            image (pygame.Surface): Loaded image surface to process.
-            target_width (int, optional): Target width for the image.
-            target_height (int, optional): Target height for the image.
-        """
-        # Scale the image to fit the screen (fast, keep on main thread)
-        max_width = self.width
-        max_height = self.height
-
-        if target_width is not None and target_height is not None:
-            print(f"Using target dimensions: {target_width}x{target_height}")
-            image = resize_image_to_dimensions(image, target_width, target_height, max_width, max_height)
-        else:
-            print(f"Scaling to fit screen: {max_width}x{max_height}")
-            image = scale_image_to_fit(image, max_width, max_height)
-
-        print(f"Image scaled to {image.get_size()}. Sending to background worker...")
-
-        # Convert pygame surface to numpy RGBA array
-        # pygame surfarray gives (width, height, channels), we need (height, width, channels)
-        try:
-            rgb_array = pygame.surfarray.array3d(image).swapaxes(0, 1)  # (H, W, 3)
-            alpha_array = pygame.surfarray.array_alpha(image).swapaxes(0, 1)  # (H, W)
-            # Combine into RGBA
-            image_rgba = np.dstack((rgb_array, alpha_array))  # (H, W, 4)
-        except Exception as e:
-            print(f"Failed to convert image to array: {e}")
-            return
-
-        # Generate unique batch ID
-        batch_id = str(uuid.uuid4())[:8]
-        self._batch_upload_types[batch_id] = "image"
-
-        # Send to worker (non-blocking)
-        self._worker_input_queue.put(("image", image_rgba, image.get_size(), batch_id))
-        print(f"Image batch {batch_id} queued for processing")
+            self.queue_manager.process_image_surface(image, None, None)
 
     def upload_sound(self) -> None:
-        """
-        Let the user pick a sound file and create curve-based chunks from its Felzenszwalb segments.
-        """
+        """Let the user pick a sound file and create curve-based chunks."""
         file_path = filedialog.askopenfilename(
             title="Select an audio file",
             filetypes=[
@@ -1209,297 +184,164 @@ class Simulation:
         )
         if file_path and os.path.exists(file_path):
             try:
-                self.process_sound_file(file_path)
+                self.queue_manager.process_sound_file(file_path)
             except Exception as e:
                 print(f"Failed to process sound: {e}")
 
-    def process_sound_file(self, song_path: str) -> None:
-        """
-        Use sound_chunking to segment audio into shapes, generate 2D curve profiles with color mapping,
-        and instantiate physics chunks from those curves.
-        Sends heavy processing to background worker for non-blocking operation.
-        """
-        # Generate unique batch ID
-        batch_id = str(uuid.uuid4())[:8]
-        self._batch_upload_types[batch_id] = "sound"
+    def process_image_surface(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
+        """Process a provided pygame Surface."""
+        self.queue_manager.process_image_surface(image, target_width, target_height)
 
-        # Send to worker (non-blocking)
-        self._worker_input_queue.put(("sound", song_path, batch_id))
-        print(f"Sound batch {batch_id} queued for processing: {os.path.basename(song_path)}")
+    def process_sound_file(self, song_path: str) -> None:
+        """Process a sound file."""
+        self.queue_manager.process_sound_file(song_path)
 
     def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
-        """
-        Load an image from raw bytes and process it into chunks, like a UI upload.
+        """Load an image from raw bytes and process it."""
+        return self.queue_manager.process_image_bytes(image_bytes, target_width, target_height)
 
-        Args:
-            image_bytes (bytes): Raw image data.
-            target_width (int, optional): Target width for the image.
-            target_height (int, optional): Target height for the image.
+    # ----------------------------------------------------------------
+    # Core update methods
+    # ----------------------------------------------------------------
+    def update_chunks(self) -> None:
+        """Update (draw) all chunks in the simulation and process worm behavior."""
+        # Check if we need to spawn a new worm after export
+        self.worm_manager.check_worm_completion()
 
-        Returns:
-            bool: True if processing succeeded, False otherwise.
-        """
-        try:
-            bytes_io = io.BytesIO(image_bytes)
-            image = pygame.image.load(bytes_io).convert_alpha()
-        except Exception as exc:
-            print(f"Failed to load image from bytes: {exc}")
-            return False
+        # Apply torus wrapping if enabled
+        if self.boundary_manager.torus_world:
+            self.boundary_manager.handle_torus_wrapping()
 
-        self.process_image_surface(image, target_width, target_height)
-        return True
+        # Draw non-glued chunks
+        glued_chunk_ids = self.get_all_glued_chunk_ids()
+        for chunk in self.chunks:
+            if id(chunk) not in glued_chunk_ids:
+                volume = self.audio_manager.get_volume(chunk)
+                chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.boundary_manager.torus_world, volume=volume)
 
-    def enqueue_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
-        """Enqueue raw image bytes and target dimensions to be processed on the main thread."""
-        if image_bytes:
-            self._upload_queue.put((image_bytes, target_width, target_height))
+        # Draw glued chunks and glue visuals
+        self._draw_glued_chunks(glued_chunk_ids)
 
-    def drain_upload_queue(self, max_items: int = 4) -> None:
-        """Drain up to max_items from the upload queue and process them."""
-        processed = 0
-        while processed < max_items:
-            try:
-                data_tuple = self._upload_queue.get_nowait()
-            except Empty:
-                break
-            try:
-                image_bytes, target_width, target_height = data_tuple
-                self.process_image_bytes(image_bytes, target_width, target_height)
-            finally:
-                processed += 1
+        # Update worm + glues (delegated to WormManager)
+        available_chunks = self.get_available_chunks(glued_chunk_ids)
+        self.worm_manager.update_worm_and_glues(
+            self.glues,
+            available_chunks,
+            self.space,
+            self.chunks,
+            self.glue_visuals_enabled,
+            self.screen
+        )
 
-    def drain_processed_chunks(self, max_items: int = 15) -> None:
-        """
-        Drain processed chunk data from background worker and create physics bodies.
-        This is the main thread's way of integrating chunks without blocking.
+        # Auto-export check (delegated to WormManager)
+        expired_glues, schedule_worms = self.worm_manager.get_glues_for_auto_export(
+            self.glues,
+            len(self.chunks)
+        )
+        if expired_glues:
+            self._do_export(expired_glues, schedule_worms)
 
-        Args:
-            max_items: Maximum chunks to process per frame (controls gradual appearance)
-        """
-        processed = 0
-        completed_batches = []  # Collect BatchComplete markers
+        # Draw worm history panels
+        self._draw_history_panels()
 
-        while processed < max_items:
-            try:
-                item = self._worker_output_queue.get_nowait()
-            except Empty:
-                break
+    def _draw_glued_chunks(self, glued_chunk_ids: Set[int]) -> None:
+        """Draw glued chunks and glue visuals."""
+        if self.glue_visuals_enabled:
+            for glue in self.glues:
+                for glued_chunk in glue.glued_chunks:
+                    volume = self.audio_manager.get_volume(glued_chunk.chunk)
+                    glued_chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.boundary_manager.torus_world, volume=volume)
+            for glue in self.glues:
+                glue.draw(self.screen)
+        else:
+            # Draw glued chunks without tint
+            for glue in self.glues:
+                for glued_chunk in glue.glued_chunks:
+                    volume = self.audio_manager.get_volume(glued_chunk.chunk)
+                    glued_chunk.chunk.draw(self.screen, debug_mode=self.debug_mode, torus_world=self.boundary_manager.torus_world, volume=volume)
 
-            if isinstance(item, BatchComplete):
-                # Queue is FIFO, so all chunks for this batch are already on the queue
-                # We might not have processed them all yet, so store the marker
-                completed_batches.append(item)
-            elif isinstance(item, ChunkData):
-                # Create chunk from pre-processed data
-                chunk = Chunk.from_data(
-                    surface_bytes=item.surface_bytes,
-                    surface_size=item.surface_size,
-                    vertices=item.vertices,
-                    config=self.config,
-                    space=self.space,
-                    downsized=item.downsized,
-                    cached_hsv_color=item.cached_hsv_color,
-                    audio_path=item.audio_path,
-                    curve_data=item.curve_data,
-                    original_line_width=item.original_line_width,
-                )
-                self.chunks.append(chunk)
+    def _draw_history_panels(self) -> None:
+        """Draw worm history panels."""
+        panel_spacing = 20
+        x_cursor = 0
+        for worm in self.worm_manager.worms:
+            if worm and worm.panel_enabled and len(worm.history) > 0:
+                worm.draw(self.screen, x_offset=x_cursor)
+                try:
+                    x_cursor += worm.get_panel_width() + panel_spacing
+                except Exception:
+                    x_cursor += worm.panel_width + panel_spacing
 
-                # Track chunks integrated per batch
-                batch_id = item.batch_id
-                self._pending_batches[batch_id] = self._pending_batches.get(batch_id, 0) + 1
+    # ----------------------------------------------------------------
+    # Chunk availability methods
+    # ----------------------------------------------------------------
+    def get_all_glued_chunk_ids(self) -> Set[int]:
+        """Get the IDs of all chunks that are already glued by any glue."""
+        glued_chunk_ids = set()
 
-                processed += 1
-            else:
-                print(f"Unknown item type from worker: {type(item)}")
-                processed += 1
+        for glue in self.glues:
+            glued_chunk_ids.update(id(glued.chunk) for glued in glue.glued_chunks)
 
-        # Process completed batches
-        # A batch is truly complete when we've received BatchComplete AND
-        # the output queue has no more chunks for that batch
-        for batch_complete in completed_batches:
-            batch_id = batch_complete.batch_id
-            chunks_added = self._pending_batches.pop(batch_id, 0)
-            upload_type = self._batch_upload_types.pop(batch_id, batch_complete.upload_type)
-            if isinstance(upload_type, tuple):
-                upload_type = upload_type[0]  # Handle legacy format
-            print(f"Batch {batch_id} complete ({chunks_added} chunks). Spawning worms for {upload_type} upload.")
-            self._spawn_worms_for_upload(upload_type=upload_type)
+        worm = self.worm_manager.current_worm
+        if worm and worm.is_dead and worm.glue and worm.glue not in self.glues:
+            glued_chunk_ids.update(id(glued.chunk) for glued in worm.glue.glued_chunks)
 
+        return glued_chunk_ids
+
+    def get_available_chunks(self, glued_chunk_ids: Set[int]) -> List[Chunk]:
+        """Get chunks available for worm/glue interaction (not already glued)."""
+        return [chunk for chunk in self.chunks if id(chunk) not in glued_chunk_ids]
+
+    def get_chunks_at_mouse(self, mouse_pos) -> List[Chunk]:
+        """Find ALL chunks under the mouse cursor."""
+        point_queries = self.space.point_query(mouse_pos, 0, pymunk.ShapeFilter())
+        found_chunks = []
+        if point_queries:
+            for point_query in point_queries:
+                if point_query.shape:
+                    for chunk in self.chunks:
+                        if chunk.shape == point_query.shape:
+                            found_chunks.append(chunk)
+                            break
+        return found_chunks
+
+    # ----------------------------------------------------------------
+    # Export methods
+    # ----------------------------------------------------------------
+    def export_glues(self, glues: Optional[List[Glue]] = None, schedule_worms: bool = True) -> None:
+        """Export glues to files."""
+        glues_to_export = list(glues) if glues else list(self.glues)
+        worm = self.worm_manager.current_worm
+        if worm and worm.is_dead and worm.glue and worm.glue not in glues_to_export:
+            glues_to_export.append(worm.glue)
+
+        self._do_export(glues_to_export, schedule_worms)
+
+    def _do_export(self, glues_to_export: List[Glue], schedule_worms: bool) -> None:
+        """Perform the actual export."""
+        def on_export_complete(count: int) -> None:
+            if schedule_worms and count > 0:
+                self.worm_manager.schedule_worms(count)
+
+        # Pass the ACTUAL glues list so export_manager can modify it
+        count = self.export_manager.export_glues(
+            glues=glues_to_export,
+            glues_list=self.glues,  # Pass reference to main list
+            worm=self.worm_manager.current_worm,
+            worms=self.worm_manager.worms,
+            space=self.space,
+            chunks=self.chunks,
+            on_complete=on_export_complete
+        )
+
+    # ----------------------------------------------------------------
+    # Clear methods
+    # ----------------------------------------------------------------
     def clear_chunks(self) -> None:
-        """
-        Remove all chunks from the simulation and reset the worm and all glues.
-        """
+        """Remove all chunks from the simulation and reset worms and glues."""
         for chunk in self.chunks:
             self.space.remove(chunk.shape, chunk.body)
         print(f"Removed {len(self.chunks)} chunks from the simulation.")
         self.chunks.clear()
-        self.worm = None
-        self.worms.clear()
-        self.glues.clear()  # Clear all glues when clearing chunks
-
-    def cleanup(self) -> None:
-        """
-        Clean up resources before shutdown.
-        Terminates the background worker process gracefully.
-        """
-        print("Shutting down background worker...")
-        try:
-            # Send shutdown signal
-            self._worker_input_queue.put(None)
-            # Wait for worker to finish
-            self._worker_process.join(timeout=2.0)
-            if self._worker_process.is_alive():
-                print("Worker did not exit in time, terminating...")
-                self._worker_process.terminate()
-                self._worker_process.join(timeout=1.0)
-        except Exception as e:
-            print(f"Error during cleanup: {e}")
-        print("Cleanup complete.")
-
-    def _spawn_worms_for_upload(self, upload_type: str = "image") -> None:
-        """Spawn worms for an upload. During superabundance, spawn two; otherwise one.
-        Worms are scheduled to spawn sequentially (wait for one to finish before next)."""
-        superabundance_cfg = self.config["worm"].get("superabundance", {})
-        threshold = superabundance_cfg.get("threshold", 1000)
-        worms_per_upload = superabundance_cfg.get("worms_per_upload", 2)
-        total_particles = len(self.chunks)
-        is_superabundant = total_particles > threshold
-        worms_to_spawn = worms_per_upload if is_superabundant else 1
-        if is_superabundant:
-            print(f"SUPERABUNDANCE detected! {total_particles} total particles. Scheduling {worms_to_spawn} worms for {upload_type} upload.")
-        else:
-            print(f"Normal abundance: {total_particles} total particles. Scheduling {worms_to_spawn} worm for {upload_type} upload.")
-        # Schedule sequential spawning (shared with export logic)
-        self._schedule_worms(worms_to_spawn)
-
-
-# ------------------------------------------------------------
-#  Background Worker Process Functions
-# ------------------------------------------------------------
-def process_image_task(
-    image_rgba: np.ndarray,
-    image_size: Tuple[int, int],
-    config: Dict[str, Any],
-    batch_id: str,
-    output_queue: multiprocessing.Queue
-) -> None:
-    """
-    Process an image into chunks in the worker process.
-    Uses shared function from utils.py.
-
-    Args:
-        image_rgba: RGBA image as numpy array (height, width, 4)
-        image_size: (width, height)
-        config: Configuration dictionary
-        batch_id: Unique ID for this upload batch
-        output_queue: Queue to send ChunkData objects to main thread
-    """
-    try:
-        chunks_data = process_image_to_chunks(image_rgba, image_size, config)
-
-        # Send each chunk to the output queue
-        for chunk_dict in chunks_data:
-            chunk_data = ChunkData(
-                surface_bytes=chunk_dict['surface_bytes'],
-                surface_size=chunk_dict['surface_size'],
-                vertices=chunk_dict['vertices'],
-                downsized=chunk_dict['downsized'],
-                batch_id=batch_id,
-                cached_hsv_color=chunk_dict['cached_hsv_color'],
-            )
-            output_queue.put(chunk_data)
-
-        # Signal batch completion
-        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="image"))
-
-    except Exception as e:
-        print(f"Worker error processing image: {e}")
-        traceback.print_exc()
-        # Still send completion marker to avoid deadlock
-        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="image"))
-
-
-def process_sound_task(
-    song_path: str,
-    config: Dict[str, Any],
-    batch_id: str,
-    output_queue: multiprocessing.Queue
-) -> None:
-    """
-    Process a sound file into curve-based chunks in the worker process.
-    Uses shared function from utils.py.
-
-    Args:
-        song_path: Path to the audio file
-        config: Configuration dictionary
-        batch_id: Unique ID for this upload batch
-        output_queue: Queue to send ChunkData objects to main thread
-    """
-    try:
-        chunks_data = process_sound_to_chunks(song_path, config)
-
-        # Send each chunk to the output queue
-        for chunk_dict in chunks_data:
-            chunk_data = ChunkData(
-                surface_bytes=chunk_dict['surface_bytes'],
-                surface_size=chunk_dict['surface_size'],
-                vertices=chunk_dict['vertices'],
-                downsized=chunk_dict['downsized'],
-                batch_id=batch_id,
-                audio_path=chunk_dict.get('audio_path'),
-                curve_data=chunk_dict.get('curve_data'),
-                original_line_width=chunk_dict.get('original_line_width'),
-            )
-            output_queue.put(chunk_data)
-
-        # Signal batch completion
-        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="sound"))
-
-    except Exception as e:
-        print(f"Worker error processing sound: {e}")
-        traceback.print_exc()
-        output_queue.put(BatchComplete(batch_id=batch_id, upload_type="sound"))
-
-
-def worker_loop(
-    input_queue: multiprocessing.Queue,
-    output_queue: multiprocessing.Queue,
-    config: Dict[str, Any]
-) -> None:
-    """
-    Main worker loop - processes tasks from input queue.
-    Runs in a separate process to keep main thread responsive.
-    """
-    # Initialize pygame in worker (works without display)
-    import pygame
-    pygame.init()
-
-    print("[Worker] Started background processing worker with pygame initialized")
-
-    while True:
-        try:
-            task = input_queue.get()
-
-            if task is None:
-                print("[Worker] Received shutdown signal")
-                break
-
-            task_type = task[0]
-
-            if task_type == "image":
-                _, image_rgba, image_size, batch_id = task
-                process_image_task(image_rgba, image_size, config, batch_id, output_queue)
-
-            elif task_type == "sound":
-                _, song_path, batch_id = task
-                process_sound_task(song_path, config, batch_id, output_queue)
-
-            else:
-                print(f"[Worker] Unknown task type: {task_type}")
-
-        except Exception as e:
-            print(f"[Worker] Error in main loop: {e}")
-            traceback.print_exc()
-
-    print("[Worker] Shutting down")
+        self.worm_manager.clear()
+        self.glues.clear()

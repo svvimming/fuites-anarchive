@@ -1,11 +1,10 @@
 import pygame
 import random
-import pymunk
 import math
 from typing import List, Tuple, Dict, Any, Optional, Set, Deque
 from collections import deque
-from utils import calculate_chunk_color, calculate_color_contrast, hsv_to_rgb_int, rgb_to_hex
-from chunk_thingie import Chunk, GluedChunk
+from utils.color_utils import calculate_color_contrast, hsv_to_rgb_int
+from entities.chunk import Chunk, GluedChunk
 
 
 class WormHistory:

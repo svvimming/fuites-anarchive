@@ -3,7 +3,8 @@ import pymunk
 import math
 from typing import List, Tuple, Dict, Any, Optional
 import random
-from utils import hsv_to_rgb_int, build_curve_surface
+from utils.color_utils import hsv_to_rgb_int
+from utils.geometry_utils import build_curve_surface
 
 
 class Chunk:
@@ -59,7 +60,7 @@ class Chunk:
             self.vertices = vertices
 
         # Cache the HSV color once to avoid expensive recalculations
-        from utils import calculate_chunk_color
+        from utils.color_utils import calculate_chunk_color
         self.cached_hsv_color = calculate_chunk_color(self.segment_surface)
 
         # Store original chunk properties for volume-based scaling
@@ -182,7 +183,7 @@ class Chunk:
         if cached_hsv_color is not None:
             chunk.cached_hsv_color = cached_hsv_color
         else:
-            from utils import calculate_chunk_color
+            from utils.color_utils import calculate_chunk_color
             chunk.cached_hsv_color = calculate_chunk_color(surface)
 
         chunk.original_opacity = 255

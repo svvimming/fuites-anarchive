@@ -1,3 +1,4 @@
+"""Audio feature extraction utilities."""
 import numpy as np
 import librosa
 import soundfile as sf
@@ -11,28 +12,138 @@ import colorsys
 import warnings
 warnings.filterwarnings("ignore", message=r"n_fft=\d+ is too large for input signal")
 
-# Scriabin-inspired fixed color palette (approximate), indexed by pitch class
-# 0=C, 1=C♯/D♭, 2=D, 3=D♯/E♭, 4=E, 5=F, 6=F♯/G♭, 7=G, 8=G♯/A♭, 9=A, 10=A♯/B♭, 11=B
-# Colors are hand-picked to resemble common reproductions of Scriabin's scheme.
-# Uncomment and use where indicated to switch from equal HSV hues to this palette.
-# import matplotlib.colors as mcolors
+def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
+    """
+    Estimate musical key and map to hue (0-1) using circle of fifths.
+    Uses chroma and Krumhansl-Schmuckler key profiles.
 
-# SCRIABIN_HEX = {
-#     0:  "#ff0000",  # C – red
-#     7:  "#ff7f00",  # G – orange
-#     2:  "#ffff00",  # D – yellow
-#     9:  "#33cc33",  # A – green
-#     4:  "#c3f2ff",  # E – light blue
-#     11: "#8ec9ff",  # B – blue
-#     6:  "#7f8bfd",  # F# – indigo/violet-blue
-#     1:  "#9000ff",  # C# – violet
-#     8:  "#bb75fc",  # G# – lilac
-#     3:  "#b7468b",  # D# – magenta
-#     10: "#a9677c",  # A# – rose
-#     5:  "#ab0034",  # F – deep red
-# }
-# # Convert HEX → normalized RGB (0–1 floats)
-# SCRIABIN_RGB = {pc: mcolors.to_rgb(hexcode) for pc, hexcode in SCRIABIN_HEX.items()}
+    Args:
+        y_sig: Audio signal as numpy array
+        sr: Sample rate
+
+    Returns:
+        float: Hue value in range [0, 1]
+    """
+    # Circle of fifths order (C,G,D,A,E,B,F#,C#,G#,D#,A#,F)
+    circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
+    C = librosa.feature.chroma_cqt(y=y_sig, sr=sr)
+    chroma = np.mean(C, axis=1)
+    pitch_names = ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"]
+
+    # Krumhansl-Schmuckler key profiles
+    major_profile = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
+    minor_profile = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
+
+    best_key = 0
+    best_mode = "major"
+    best_score = -1
+
+    for key in range(12):
+        # Test major
+        rotated_major = np.roll(major_profile, key)
+        major_score = np.corrcoef(chroma, rotated_major)[0, 1]
+        # Test minor
+        rotated_minor = np.roll(minor_profile, key)
+        minor_score = np.corrcoef(chroma, rotated_minor)[0, 1]
+
+        if major_score > best_score:
+            best_score = major_score
+            best_key = key
+            best_mode = "major"
+        if minor_score > best_score:
+            best_score = minor_score
+            best_key = key
+            best_mode = "minor"
+
+    print(f"key: {pitch_names[best_key]} {best_mode}")
+
+    # Map key to circle of fifths position for hue
+    circle_pos = circle_order.index(best_key)
+    H = circle_pos / 12.0
+    return H
+
+
+def estimate_saturation(y_sig: np.ndarray) -> float:
+    """
+    Estimate saturation from spectral flatness.
+    Pure tones = high saturation, noise = low saturation.
+
+    Args:
+        y_sig: Audio signal as numpy array
+
+    Returns:
+        float: Saturation value in range [0, 1]
+    """
+    flatness = librosa.feature.spectral_flatness(y=y_sig)
+    flat_med = float(np.median(flatness))
+    print(f"signal purity: {round(1.0 - flat_med, 2)}")
+    return float(1.0 - flat_med)
+
+
+def estimate_value(y_sig: np.ndarray, sr: int, min_value: float = 0.2,
+                   fmin: float = 27.5, fmax: float = 4186.0) -> float:
+    """
+    Estimate value (brightness) from fundamental frequency (pitch height).
+    Higher pitches = higher value/brightness.
+
+    Args:
+        y_sig: Audio signal as numpy array
+        sr: Sample rate
+        min_value: Minimum value to return (default 0.2)
+        fmin: Minimum frequency in Hz (default 27.5, lowest piano note)
+        fmax: Maximum frequency in Hz (default 4186.0, highest piano note)
+
+    Returns:
+        float: Value in range [min_value, 1.0]
+    """
+    frame_length_optimal = int(np.ceil(sr / fmin) * 2 + 1)
+    frame_length = frame_length_optimal
+
+    f0 = librosa.yin(y_sig, fmin=fmin, fmax=fmax, sr=sr, frame_length=frame_length)
+    f0 = f0[np.isfinite(f0)]
+    f = float(np.median(f0))
+
+    print(f"f0: {round(f, 2)} Hz")
+
+    # Clamp f into [fmin, fmax]
+    f_clamped = np.clip(f, fmin, fmax)
+
+    # Normalize to [0,1] in log-frequency space
+    v = (np.log2(f_clamped) - np.log2(fmin)) / (np.log2(fmax) - np.log2(fmin))
+
+    # Map into [min_value, 1.0]
+    return float(min_value + (1.0 - min_value) * v)
+
+
+def estimate_alpha(y_sig: np.ndarray, min_alpha: float = 0.1,
+                   min_db: float = -70.0, max_db: float = -14.0) -> float:
+    """
+    Map signal loudness (in dBFS) to alpha in [min_alpha, 1.0].
+
+    Args:
+        y_sig: Audio signal as numpy array
+        min_alpha: Minimum alpha value (default 0.1)
+        min_db: dBFS that maps to min_alpha (e.g., -70 dBFS = near-silence)
+        max_db: dBFS that maps to 1.0 (e.g., -14 dBFS = ~0.2 RMS)
+
+    Returns:
+        float: Alpha value in range [min_alpha, 1.0]
+    """
+    # Frame-wise RMS (energy) -> robust scalar via median
+    rms_frames = librosa.feature.rms(y=y_sig)
+    rms_scalar = float(np.median(rms_frames))
+
+    # Convert RMS to dBFS
+    rms_db = 20.0 * np.log10(rms_scalar + 1e-12)
+    print(f"rms_db: {round(rms_db, 2)}")
+
+    # Normalize dB into [0,1] using the chosen thresholds
+    v = (rms_db - min_db) / (max_db - min_db)
+    v = float(np.clip(v, 0.0, 1.0))
+
+    # Map to [min_alpha, 1.0]
+    return float(min_alpha + (1.0 - min_alpha) * v)
+
 
 def split_audio_felzenszwalb_2d(
     audio_path,
@@ -292,115 +403,6 @@ def split_audio_felzenszwalb_2d(
     return saved_paths, kept_segments
 
 
-def estimate_key_hue(y_sig, sr):
-    # Circle of fifths order (C,G,D,A,E,B,F#,C#,G#,D#,A#,F)
-    circle_order = [0,7,2,9,4,11,6,1,8,3,10,5]
-    # n = y_sig.size
-    # n_fft = int(min(2048, n))
-    # hop_len = max(1, n_fft // 4)
-    # C= librosa.feature.chroma_stft(y=y_sig, sr=sr, hop_length=hop_len, n_fft=n_fft)
-    C = librosa.feature.chroma_cqt(y=y_sig, sr=sr)
-
-    chroma = np.mean(C, axis=1)
-    pitch_names = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
-    
-    # Proper key detection using Krumhansl-Schmuckler profiles (commented out)
-    major_profile = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
-    minor_profile = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
-    best_key = 0
-    best_mode = "major"
-    best_score = -1
-    for key in range(12):
-        # Test major
-        rotated_major = np.roll(major_profile, key)
-        major_score = np.corrcoef(chroma, rotated_major)[0,1]
-        # Test minor  
-        rotated_minor = np.roll(minor_profile, key)
-        minor_score = np.corrcoef(chroma, rotated_minor)[0,1]
-        if major_score > best_score:
-            best_score = major_score
-            best_key = key
-            best_mode = "major"
-        if minor_score > best_score:
-            best_score = minor_score
-            best_key = key
-            best_mode = "minor"
-    print(f"key: {pitch_names[best_key]} {best_mode}")
-    # Map key to circle of fifths position for hue
-    circle_pos = circle_order.index(best_key)
-    H = circle_pos / 12.0
-    return H
-    
-    # # Simple dominant pitch class method (current)
-    # rotated = chroma[circle_order]
-    # idx = int(np.argmax(rotated))
-    # pitch_idx = circle_order[idx]
-    # print(f"key: {pitch_names[pitch_idx]}")
-    # # To color by Scriabin's palette instead of equal HSV hue:
-    # # col = SCRIABIN_RGB.get(pitch_idx, (1.0, 1.0, 1.0))
-    # # r, g, b = col
-    # # H = colorsys.rgb_to_hsv(r, g, b)[0]
-    # H = idx / 12.0
-    return H
-
-def estimate_saturation(y_sig):
-    flatness = librosa.feature.spectral_flatness(y=y_sig)
-    flat_med = float(np.median(flatness))
-    print(f"signal purity: {round(1.0 - flat_med, 2)}")
-    return float(1.0 - flat_med)
-
-def estimate_value(y_sig, sr, min_value=0.2, fmin=27.5, fmax=4186.0):
-    frame_length_optimal = int(np.ceil(sr / fmin) * 2 + 1)
-    frame_length = frame_length_optimal
-
-    f0 = librosa.yin(y_sig, fmin=fmin, fmax=fmax, sr=sr, frame_length=frame_length)
-    f0 = f0[np.isfinite(f0)]
-    f = float(np.median(f0))
-
-    print(f"f0: {round(f, 2)} Hz")
-
-    # Clamp f into [fmin, fmax]
-    f_clamped = np.clip(f, fmin, fmax)
-
-    # Normalize to [0,1] in log-frequency space
-    v = (np.log2(f_clamped) - np.log2(fmin)) / (np.log2(fmax) - np.log2(fmin))
-
-    # Map into [min_value, 1.0]
-    return float(min_value + (1.0 - min_value) * v)
-
-# def estimate_alpha(y_sig, min_alpha=0.2, rms_max=0.2):
-#     # Use librosa's frame-wise RMS and reduce to a robust scalar via median
-#     rms_frames = librosa.feature.rms(y=y_sig)
-#     rms_scalar = float(np.median(rms_frames))
-
-#     # Normalize rms into [0,1] with clipping
-#     v = np.clip(rms_scalar / rms_max, 0.0, 1.0)
-
-#     # Map into [min_alpha, 1.0]
-#     return float(min_alpha + (1.0 - min_alpha) * v)
-
-def estimate_alpha(y_sig, min_alpha=0.1, min_db=-70.0, max_db=-14.0):
-    """
-    Map signal loudness (in dBFS) to alpha in [min_alpha, 1.0].
-
-    - min_db: dBFS that maps to min_alpha (e.g., -60 dBFS ≈ near-silence)
-    - max_db: dBFS that maps to 1.0 (e.g., -14 dBFS ≈ ~0.2 RMS)
-    """
-    # Frame-wise RMS (energy) → robust scalar via median
-    rms_frames = librosa.feature.rms(y=y_sig)
-    rms_scalar = float(np.median(rms_frames))
-
-    # Convert RMS to dBFS
-    rms_db = 20.0 * np.log10(rms_scalar)
-    print(f"rms_db: {round(rms_db, 2)}")
-
-    # Normalize dB into [0,1] using the chosen thresholds
-    v = (rms_db - min_db) / (max_db - min_db)
-    v = float(np.clip(v, 0.0, 1.0))
-
-    # Map to [min_alpha, 1.0]
-    return float(min_alpha + (1.0 - min_alpha) * v)
-
 def create_2d_path_visualization(kept_segments, song_path, points_per_second=100, resampled_points_per_chunk=128, show_plots=True):
     """
     Create a random 2D path over the clip timeline and align chunks to Felzenszwalb windows
@@ -474,6 +476,7 @@ def create_2d_path_visualization(kept_segments, song_path, points_per_second=100
         y_masked, sr_masked = sf.read(s["path"])  # reconstructed with the 2D freq-time mask
         if y_masked.ndim == 2:  # convert stereo to mono if needed
             y_masked = y_masked.mean(axis=1)
+
         H = estimate_key_hue(y_masked, sr_masked)
         S = estimate_saturation(y_masked)
         V = estimate_value(y_masked, sr_masked)
@@ -590,33 +593,3 @@ def create_2d_path_visualization(kept_segments, song_path, points_per_second=100
         plt.show()
 
     return X, Y, curve_chunks_2d, curve_profiles_2d
-
-
-def main():
-    # 🚀 RUN THE SEGMENTATION
-    print("🎨 STARTING FELZENSZWALB 2D AUDIO SEGMENTATION")
-    print("=" * 60)
-    song_path = "clips/chop.mp3"
-    shapes, kept_segments = split_audio_felzenszwalb_2d(
-        song_path,
-        output_dir=f"chunks_detailed_{song_path.split('/')[-1].split('.')[0]}",
-        scale=150,      # Lower = more segments
-        sigma=3,        # Lower = sharper boundaries
-        min_size=20,    # Larger = fewer tiny segments
-        max_shapes=100,  # Limit output for testing
-        min_area_pixels=300,
-        min_time_seconds=0.5,  # Minimum duration in seconds
-        min_energy_ratio=0.001,
-        min_loudness_db=-70.0,
-    )
-    
-    # Create 2D path visualization
-    X, Y, curve_chunks_2d, curve_profiles_2d = create_2d_path_visualization(kept_segments, song_path)
-    
-    print(f"\n✅ Processing complete!")
-    print(f"📁 Saved {len(shapes)} audio chunks")
-    print(f"🎨 Created {len(curve_chunks_2d)} 2D curve profiles")
-
-
-if __name__ == "__main__":
-    main()
