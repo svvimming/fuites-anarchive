@@ -1,7 +1,6 @@
 """Entry point for the Compost simulation."""
 import pygame
 import pymunk
-import tkinter as tk
 import yaml
 
 from simulation import Simulation
@@ -27,10 +26,6 @@ def main() -> None:
     """Main loop for the simulation."""
     # Load the configuration
     config = load_config()
-
-    # Initialize Tkinter for file dialogs
-    root = tk.Tk()
-    root.withdraw()
 
     # Pygame initialization
     pygame.init()
@@ -68,6 +63,10 @@ def main() -> None:
     dt = 1.0 / config["simulation"]["fps"]
 
     while running:
+        # Check if simulation requested quit
+        if simulation.should_quit:
+            running = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -78,10 +77,7 @@ def main() -> None:
                     simulation.debug_mode = not simulation.debug_mode
                 elif event.key == pygame.K_t:
                     # Toggle torus world
-                    simulation.torus_world = not simulation.torus_world
-                    # Need to recreate boundaries when switching modes
-                    simulation.clear_boundaries()
-                    simulation._create_boundaries()
+                    simulation.toggle_torus_world()
                 elif event.key == pygame.K_h:
                     # Toggle history panel
                     simulation.toggle_history_panel()
@@ -100,6 +96,9 @@ def main() -> None:
 
         # Process any pending uploads (main-thread safe)
         simulation.process_pending_uploads()
+
+        # Process completed file dialog results (non-blocking)
+        simulation.process_file_dialogs()
 
         # Receive processed chunks from background (non-blocking)
         simulation.receive_chunks()

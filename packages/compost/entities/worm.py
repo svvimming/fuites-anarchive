@@ -207,14 +207,14 @@ class Glue:
         if len(self.glued_chunks) >= self.max_glued_chunks:
             self._record_cap_time()
     
-    def update(self) -> None:
+    def update(self, torus_world: bool = False) -> None:
         """Update the behavior of all glued chunks."""
         # Update pulsing effect
         self.pulse_time += self.pulse_speed
-        
+
         # Apply flocking behavior
         for glued_chunk in self.glued_chunks:
-            glued_chunk.apply_behaviors(self.glued_chunks)
+            glued_chunk.apply_behaviors(self.glued_chunks, torus_world)
             
     def draw(self, surface: pygame.Surface) -> None:
         """Draw the glue as a glowing dot with mixed colors from worm history and a spinning color wheel."""

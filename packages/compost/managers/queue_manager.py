@@ -1,5 +1,7 @@
 """Upload queue and background processing management."""
 import multiprocessing
+import os
+import threading
 import uuid
 import io
 import numpy as np
@@ -42,6 +44,9 @@ class QueueManager:
 
         # Upload queue (HTTP -> Main thread)
         self._upload_queue: Queue[Tuple[bytes, Optional[int], Optional[int]]] = Queue()
+
+        # File dialog results queue (Dialog threads -> Main thread)
+        self._dialog_queue: Queue[Tuple[str, Any]] = Queue()
 
         # Background processing queues (Main <-> Background process)
         self._task_queue: multiprocessing.Queue = multiprocessing.Queue()
@@ -177,6 +182,56 @@ class QueueManager:
         # Send to background process
         self._task_queue.put(("sound", audio_path, batch_id))
         _logger.info("Sound batch %s queued: %s", batch_id, os.path.basename(audio_path))
+
+    # ----------------------------------------------------------------
+    # Non-blocking file dialogs (native macOS via osascript)
+    # ----------------------------------------------------------------
+    def _open_dialog_async(self, kind: str) -> None:
+        """Open native file dialog in background thread."""
+        def _run():
+            import subprocess
+            if kind == "image":
+                script = 'POSIX path of (choose file of type {"public.image"} with prompt "Select an image")'
+            else:
+                script = 'POSIX path of (choose file of type {"public.audio"} with prompt "Select an audio file")'
+            try:
+                result = subprocess.run(
+                    ["osascript", "-e", script],
+                    capture_output=True, text=True, timeout=120
+                )
+                path = result.stdout.strip()
+                if path and os.path.exists(path):
+                    if kind == "image":
+                        surface = pygame.image.load(path).convert_alpha()
+                        self._dialog_queue.put(("image", surface))
+                    else:
+                        self._dialog_queue.put(("audio", path))
+            except subprocess.TimeoutExpired:
+                pass
+            except Exception as e:
+                _logger.warning("File dialog error: %s", e)
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def open_image_dialog(self) -> None:
+        """Open image file dialog (non-blocking)."""
+        self._open_dialog_async("image")
+
+    def open_sound_dialog(self) -> None:
+        """Open sound file dialog (non-blocking)."""
+        self._open_dialog_async("audio")
+
+    def process_dialogs(self) -> None:
+        """Process completed file dialog results. Call from main loop."""
+        while True:
+            try:
+                kind, data = self._dialog_queue.get_nowait()
+                if kind == "image":
+                    self.submit_image(data, None, None)
+                elif kind == "audio":
+                    self.submit_audio(data)
+            except Empty:
+                break
 
     def _process_pending_uploads(self, max_items: int = 4) -> None:
         """

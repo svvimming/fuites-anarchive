@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict, Any, Optional
 import random
 from utils.geometry_utils import build_curve_surface
 from utils.logging_utils import get_logger
-from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, limit_vector, calculate_steering
+from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, limit_vector, calculate_steering, torus_delta
 
 _logger = get_logger(__name__)
 
@@ -425,10 +425,10 @@ class GluedChunk:
         self.separate_force_mult = flocking_cfg["separate_force_mult"]
         self.seek_force_mult = flocking_cfg["seek_force_mult"]
 
-    def apply_behaviors(self, glued_chunks: List['GluedChunk']) -> None:
+    def apply_behaviors(self, glued_chunks: List['GluedChunk'], torus_world: bool = False) -> None:
         """Apply flocking behaviors (separation and seeking) to the chunk."""
-        separate_force = self.separate(glued_chunks)
-        seek_force = self.seek(self.glue_center)
+        separate_force = self.separate(glued_chunks, torus_world)
+        seek_force = self.seek(self.glue_center, torus_world)
 
         # Apply force multipliers
         separate_force = (separate_force[0] * self.separate_force_mult,
@@ -445,17 +445,27 @@ class GluedChunk:
         # Apply force at the body's center, not at local point (0,0)
         self.chunk.body.apply_force_at_world_point(force, self.chunk.body.position)
 
-    def separate(self, glued_chunks: List['GluedChunk']) -> Tuple[float, float]:
+    def separate(self, glued_chunks: List['GluedChunk'], torus_world: bool = False) -> Tuple[float, float]:
         """Calculate separation force to avoid crowding other chunks."""
         sum_x, sum_y = 0.0, 0.0
         count = 0
         pos = self.chunk.body.position
+
+        # Get world dimensions once if needed
+        if torus_world:
+            width = self.config["simulation"]["window"]["width"]
+            height = self.config["simulation"]["window"]["height"]
 
         for other in glued_chunks:
             if other.chunk is not self.chunk:
                 other_pos = other.chunk.body.position
                 dx = pos.x - other_pos.x
                 dy = pos.y - other_pos.y
+
+                # Apply torus wrapping if enabled
+                if torus_world:
+                    dx, dy = torus_delta(dx, dy, width, height)
+
                 d = vector_magnitude(dx, dy)
 
                 if 0 < d < self.desired_separation:
@@ -476,11 +486,17 @@ class GluedChunk:
 
         return (0.0, 0.0)
 
-    def seek(self, target: Tuple[float, float]) -> Tuple[float, float]:
+    def seek(self, target: Tuple[float, float], torus_world: bool = False) -> Tuple[float, float]:
         """Calculate seeking force toward target position."""
         pos = self.chunk.body.position
         dx = target[0] - pos.x
         dy = target[1] - pos.y
+
+        # Get world dimensions once if needed
+        if torus_world:
+            width = self.config["simulation"]["window"]["width"]
+            height = self.config["simulation"]["window"]["height"]
+            dx, dy = torus_delta(dx, dy, width, height)
 
         # Desired velocity toward target at max speed
         desired_x, desired_y = scale_vector(*normalize_vector(dx, dy), self.maxspeed)

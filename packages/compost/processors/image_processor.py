@@ -1,9 +1,7 @@
 """Image segmentation using Felzenszwalb algorithm."""
-import os
 import math
 import pygame
 import numpy as np
-from tkinter import filedialog
 from typing import Dict, Any, List, Tuple, Optional
 from skimage.segmentation import felzenszwalb
 from skimage.color import rgb2gray
@@ -17,26 +15,6 @@ from utils.logging_utils import get_logger
 
 _logger = get_logger(__name__)
 
-
-def pick_image_file() -> Optional[pygame.Surface]:
-    """
-    Open a file dialog to select and load an image.
-
-    Returns:
-        pygame.Surface with alpha, or None if canceled/failed.
-    """
-    file_path = filedialog.askopenfilename(
-        title="Select an image",
-        filetypes=[("Image files", ("*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif"))],
-    )
-    if file_path and os.path.exists(file_path):
-        try:
-            surface = pygame.image.load(file_path).convert_alpha()
-            _logger.info("Loaded image: %s", file_path)
-            return surface
-        except pygame.error as e:
-            _logger.warning("Unable to load image: %s", e)
-    return None
 
 def _identify_downsize_labels(
     segments: np.ndarray,

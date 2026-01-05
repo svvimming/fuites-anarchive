@@ -60,6 +60,44 @@ def calculate_steering(
     return limit_vector(steer_x, steer_y, max_force)
 
 
+def torus_delta(
+    dx: float,
+    dy: float,
+    width: float,
+    height: float
+) -> Tuple[float, float]:
+    """
+    Calculate the shortest delta vector accounting for torus wrapping.
+
+    In a torus world, the shortest distance between two points may wrap
+    around the edges. This function returns the delta that represents
+    the shortest path.
+
+    Args:
+        dx: Delta x (target.x - current.x)
+        dy: Delta y (target.y - current.y)
+        width: World width
+        height: World height
+
+    Returns:
+        Tuple of (wrapped_dx, wrapped_dy) representing shortest distance
+
+    Example:
+        In an 800-wide world:
+        - dx = 780 (naive distance)
+        - Returns dx = -20 (shorter wrapped distance)
+    """
+    # Wrap x-axis: if distance > half width, use wrapped distance
+    if abs(dx) > width / 2:
+        dx = dx - width if dx > 0 else dx + width
+
+    # Wrap y-axis: if distance > half height, use wrapped distance
+    if abs(dy) > height / 2:
+        dy = dy - height if dy > 0 else dy + height
+
+    return (dx, dy)
+
+
 # -----------------------------------------------------------------------------
 # Image Analysis Utilities
 # -----------------------------------------------------------------------------

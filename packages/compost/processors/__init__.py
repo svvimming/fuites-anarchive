@@ -7,7 +7,6 @@ from processors.background import (
 )
 
 from processors.image_processor import (
-    pick_image_file,
     segment_image,
 )
 
@@ -21,7 +20,6 @@ __all__ = [
     'BatchComplete',
     'background_loop',
     # Image segmentation
-    'pick_image_file',
     'segment_image',
     # Audio segmentation
     'segment_audio',

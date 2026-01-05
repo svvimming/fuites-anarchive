@@ -115,7 +115,8 @@ class WormManager:
         space: pymunk.Space,
         chunks_list: List[Chunk],
         glue_visuals_enabled: bool,
-        screen: pygame.Surface
+        screen: pygame.Surface,
+        torus_world: bool = False
     ) -> None:
         """
         Update current worm (feeding) and all glues (attraction/update).
@@ -127,6 +128,7 @@ class WormManager:
             chunks_list: Reference to simulation's chunks list
             glue_visuals_enabled: Whether to draw glue visuals
             screen: Pygame screen for rendering
+            torus_world: Whether torus wrapping is enabled
         """
         # Update worm (feeding)
         worm = self.current_worm
@@ -145,7 +147,7 @@ class WormManager:
         # Update all glues
         for glue in glues_list:
             glue.try_attract_chunks(available_chunks)
-            glue.update()
+            glue.update(torus_world)
             if glue_visuals_enabled:
                 glue.draw(screen)
 
