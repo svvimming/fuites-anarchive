@@ -3,20 +3,20 @@ name = "fuit-es"
 version = "0.1.0"
 description = "Fuit.es Compost - Interactive sound and image composition"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13,<3.14"
 authors = [
     {name = "Your Name", email = "you@example.com"}
 ]
 
 dependencies = [
     "pygame>=2.6.1",
-    "numpy>=2.1.2",
-    "matplotlib>=3.5.3",
-    "scikit-image>=0.24.0",
-    "scipy>=1.14.0",
-    "flask>=3.1.0",
-    "pymunk>=6.9.0",
-    "pyyaml>=6.0.2",  # Code uses 'import yaml'
+    "numpy>=2.3.5",
+    "matplotlib>=3.10.8",
+    "scikit-image>=0.26.0",
+    "scipy>=1.16.3",
+    "flask>=3.1.2",
+    "pymunk>=7.2.0",
+    "pyyaml>=6.0.3",
     "librosa>=0.11.0",
     "soundfile>=0.13.1",
     "pillow-heif>=1.1.1",
@@ -24,7 +24,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ipykernel>=6.29.5",
+    "ipykernel>=7.1.0",
+    "scikit-learn>=1.5.2",
+    "plotly>=6.1.1",
+    "demucs>=4.0.1",
 ]
 
 # Unused packages (kept for reference):
@@ -33,9 +36,6 @@ dev = [
 # ipywidgets>=8.1.7
 # nbformat>=5.10.4
 # asteroid>=0.7.0
-# "scikit-learn>=1.5.2",  # Used in notebooks (NMF)
-# "plotly>=6.1.1",  # Used in notebooks
-# "demucs>=4.0.1",  # Used in notebooks
 
 [build-system]
 requires = ["hatchling"]
