@@ -59,7 +59,7 @@ def main() -> None:
         host=host,
         port=port,
         config=config,
-        enqueue_callback=simulation.enqueue_image_bytes
+        on_upload_callback=simulation.on_upload_received
     )
     upload_server.start()
 
@@ -98,11 +98,11 @@ def main() -> None:
         screen.fill(config["colors"]["WHITE"])
         simulation.draw_ui()
 
-        # Drain any queued uploads (main-thread safe)
-        simulation.drain_upload_queue()
+        # Process any pending uploads (main-thread safe)
+        simulation.process_pending_uploads()
 
-        # Integrate processed chunks from background worker (non-blocking)
-        simulation.drain_processed_chunks()
+        # Receive processed chunks from background (non-blocking)
+        simulation.receive_chunks()
 
         # Handle audio hover for sound chunks
         simulation.handle_audio_hover(pygame.mouse.get_pos())

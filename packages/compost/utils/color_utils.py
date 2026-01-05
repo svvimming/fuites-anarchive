@@ -3,6 +3,9 @@ import numpy as np
 import pygame
 from typing import Tuple, Dict, Any
 from skimage.color import rgb2hsv, hsv2rgb
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 def calculate_chunk_color(surface: pygame.Surface) -> Tuple[float, float, float]:
@@ -41,7 +44,7 @@ def calculate_chunk_color(surface: pygame.Surface) -> Tuple[float, float, float]
         return (mean_h, mean_s, mean_v)
 
     except (ValueError, pygame.error) as e:
-        print(f"Warning: Error calculating HSV values: {e}")
+        _logger.warning("Error calculating HSV values: %s", e)
         return (0.0, 0.0, 0.0)
 
 

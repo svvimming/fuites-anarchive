@@ -4,7 +4,10 @@ import math
 from typing import List, Tuple, Dict, Any, Optional, Set, Deque
 from collections import deque
 from utils.color_utils import calculate_color_contrast, hsv_to_rgb_int
+from utils.logging_utils import get_logger
 from entities.chunk import Chunk, GluedChunk
+
+_logger = get_logger(__name__)
 
 
 class WormHistory:
@@ -40,6 +43,10 @@ class Glue:
         self.pulse_speed = visual_cfg.get("pulse_speed", 0.05)
         self.pulse_min = visual_cfg.get("pulse_min", 0.7)
         self.pulse_max = visual_cfg.get("pulse_max", 1.0)
+        self.glow_alpha_max = visual_cfg.get("glow_alpha_max", 150)
+        self.full_ring_width = visual_cfg.get("full_ring_width", 2)
+        self.spin_speed = visual_cfg.get("spin_speed", 1.0)
+        self.min_quality_steps = visual_cfg.get("min_quality_steps", 6)
         self.pulse_time = 0
         # Compute colors from worm history
         self._init_history_colors()
@@ -94,95 +101,111 @@ class Glue:
                 
         return False
     
-    def try_attract_chunks(self, available_chunks: List[Chunk]) -> None:
-        """Attract chunks in a balanced way across history colors (lowest-count first, round-robin)."""
-        # Skip if we've reached the maximum number of glued chunks
-        if len(self.glued_chunks) >= self.max_glued_chunks:
-            # If already full and no timestamp recorded yet, record it now
-            if self.capped_at_ms is None:
-                try:
-                    self.capped_at_ms = pygame.time.get_ticks()
-                except Exception:
-                    # Fallback in unlikely case pygame isn't initialized here
-                    self.capped_at_ms = 0
-            return
+    def _find_nearest_meal_index(self, chunk: Chunk) -> Optional[Tuple[int, float]]:
+        """
+        Find the meal index with smallest color difference within vicinity thresholds.
 
-        # Build candidate lists per history color (by nearest in-vicinity meal)
-        # Keep (diff, chunk) so we can pick nearest-first within each color group
+        Returns:
+            (meal_index, difference) or None if no match
+        """
+        best_idx: Optional[int] = None
+        best_diff: Optional[float] = None
+
+        for idx, entry in enumerate(self.worm_history):
+            diff = calculate_color_contrast(entry.hsv_color, chunk.cached_hsv_color, self.config)
+            if self.min_difference <= diff <= self.max_difference:
+                if best_diff is None or diff < best_diff:
+                    best_diff = diff
+                    best_idx = idx
+
+        if best_idx is not None and best_diff is not None:
+            return (best_idx, best_diff)
+        return None
+
+    def _build_candidate_lists(
+        self,
+        available_chunks: List[Chunk]
+    ) -> Dict[int, Deque[Tuple[float, Chunk]]]:
+        """
+        Build candidate lists per meal color, sorted by color difference.
+
+        Returns:
+            Dict mapping meal_index to deque of (difference, chunk) tuples
+        """
         meal_to_candidates: Dict[int, List[Tuple[float, Chunk]]] = {}
-
-        # Pre-calc for speed
-        min_diff = self.min_difference
-        max_diff = self.max_difference
 
         for chunk in available_chunks:
             chunk_id = id(chunk)
-            # Skip if we already attracted this chunk earlier
-            if chunk_id in self.attracted_chunk_ids:
-                continue
-            # Skip if we already evaluated this chunk earlier
-            if chunk_id in self.evaluated_chunk_ids:
+            if chunk_id in self.attracted_chunk_ids or chunk_id in self.evaluated_chunk_ids:
                 continue
 
-            # Find the nearest meal index within vicinity thresholds
-            best_idx: Optional[int] = None
-            best_diff: Optional[float] = None
-            for idx, entry in enumerate(self.worm_history):
-                diff = calculate_color_contrast(entry.hsv_color, chunk.cached_hsv_color, self.config)
-                if min_diff <= diff <= max_diff:
-                    if best_diff is None or diff < best_diff:
-                        best_diff = diff
-                        best_idx = idx
+            match = self._find_nearest_meal_index(chunk)
+            if match is not None:
+                meal_idx, diff = match
+                meal_to_candidates.setdefault(meal_idx, []).append((diff, chunk))
 
-            if best_idx is not None:
-                meal_to_candidates.setdefault(best_idx, []).append((best_diff, chunk))
-            # Mark as evaluated (whether it was added to candidates or not)
             self.evaluated_chunk_ids.add(chunk_id)
 
-        if not meal_to_candidates:
+        # Sort and convert to deques
+        result: Dict[int, Deque[Tuple[float, Chunk]]] = {}
+        for idx, candidates in meal_to_candidates.items():
+            result[idx] = deque(sorted(candidates, key=lambda t: t[0]))
+
+        return result
+
+    def _record_cap_time(self) -> None:
+        """Record the timestamp when glue became full."""
+        if self.capped_at_ms is None:
+            try:
+                self.capped_at_ms = pygame.time.get_ticks()
+            except Exception:
+                self.capped_at_ms = 0
+
+    def try_attract_chunks(self, available_chunks: List[Chunk]) -> None:
+        """Attract chunks in a balanced way across history colors (round-robin)."""
+        if len(self.glued_chunks) >= self.max_glued_chunks:
+            self._record_cap_time()
             return
 
-        # Sort each meal group by nearest (smallest difference) first, then convert to deque for O(1) popleft
-        for idx in list(meal_to_candidates.keys()):
-            sorted_list = sorted(meal_to_candidates[idx], key=lambda t: t[0])
-            meal_to_candidates[idx] = deque(sorted_list)  # type: ignore[assignment]
+        # Build candidate lists per meal color
+        meal_candidates = self._build_candidate_lists(available_chunks)
+        if not meal_candidates:
+            return
 
         # Rank meals from lowest candidate count to highest
-        ordered_meals = sorted(meal_to_candidates.keys(), key=lambda k: len(meal_to_candidates[k]))
+        ordered_meals = sorted(meal_candidates.keys(), key=lambda k: len(meal_candidates[k]))
 
-        # Round-robin pick: one from each meal in ascending order until capacity reached
+        # Round-robin pick until capacity reached
         capacity_remaining = self.max_glued_chunks - len(self.glued_chunks)
         while capacity_remaining > 0:
             progressed = False
+
             for meal_idx in ordered_meals:
-                candidates: Deque[Tuple[float, Chunk]] = meal_to_candidates.get(meal_idx, deque())  # type: ignore[assignment]
-                # Drop any already-attracted candidates from the head of the list
+                candidates = meal_candidates.get(meal_idx, deque())
+
+                # Skip already-attracted candidates
                 while candidates and id(candidates[0][1]) in self.attracted_chunk_ids:
                     candidates.popleft()
                 if not candidates:
                     continue
 
-                # Pick the next candidate for this meal
-                _diff, chosen = candidates.popleft()
-                # Color the dot with the RGB of the meal that attracted this chunk
+                # Pick next candidate
+                _, chosen = candidates.popleft()
                 meal_rgb = self.meal_rgbs[meal_idx]
                 self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
                 self.attracted_chunk_ids.add(id(chosen))
                 capacity_remaining -= 1
                 progressed = True
+
                 if capacity_remaining <= 0:
                     break
 
-            # If we made no progress in this pass, no more candidates are available
             if not progressed:
                 break
 
-        # If we've just reached or exceeded capacity and haven't recorded the cap time, do it now
-        if self.capped_at_ms is None and len(self.glued_chunks) >= self.max_glued_chunks:
-            try:
-                self.capped_at_ms = pygame.time.get_ticks()
-            except Exception:
-                self.capped_at_ms = 0
+        # Record cap time if now full
+        if len(self.glued_chunks) >= self.max_glued_chunks:
+            self._record_cap_time()
     
     def update(self) -> None:
         """Update the behavior of all glued chunks."""
@@ -204,7 +227,7 @@ class Glue:
         # Keep mixed glow color even when full; we'll draw a white ring instead
         base_glow_rgb = self.glow_rgb
         for r in range(outer_radius, 0, -1):
-            alpha = max(0, 150 - (r * 150 // outer_radius))  # Fades from 150 to 0 alpha
+            alpha = max(0, self.glow_alpha_max - (r * self.glow_alpha_max // outer_radius))
             pygame.draw.circle(glow_surface, base_glow_rgb + (alpha,), (outer_radius, outer_radius), r)
 
         # Draw the center as a spinning color wheel made from meal colors
@@ -215,8 +238,7 @@ class Glue:
             if is_full:
                 white = (255, 255, 255, 255)
                 ring_radius = max(1, core_radius + 2)
-                ring_width = 2
-                pygame.draw.circle(glow_surface, white, (outer_radius, outer_radius), ring_radius, ring_width)
+                pygame.draw.circle(glow_surface, white, (outer_radius, outer_radius), ring_radius, self.full_ring_width)
 
         # Draw onto main surface at the glue position
         glow_rect = glow_surface.get_rect(center=(int(self.position[0]), int(self.position[1])))
@@ -227,11 +249,10 @@ class Glue:
         num_segments = len(self.meal_rgbs)
         if num_segments <= 0:
             return
-        # Convert offset to radians for rotation; use a moderate spin speed
-        spin_speed = 1.0
-        start_angle = angle_offset * spin_speed
+        # Convert offset to radians for rotation
+        start_angle = angle_offset * self.spin_speed
         segment_angle = 2 * math.pi / num_segments
-        steps_per_segment = max(6, int(radius / 2))  # quality vs perf
+        steps_per_segment = max(self.min_quality_steps, int(radius / 2))
         cx, cy = center
         for idx, color in enumerate(self.meal_rgbs):
             a0 = start_angle + idx * segment_angle
@@ -350,14 +371,13 @@ class Worm:
     def mark_as_dead(self) -> None:
         """Mark the worm as dead and create glue at the last meal site if enabled."""
         self.is_dead = True
-        
+        _logger.debug("Worm died after consuming %d chunks", len(self.history))
+
         # Create glue at the last meal site if enabled and we have at least one meal
         if self.glue_enabled and self.last_chunk is not None and len(self.history) > 0:
-            # Get position of last chunk
             position = (self.last_chunk.body.position.x, self.last_chunk.body.position.y)
-            
-            # Create new glue at this position
             self.glue = Glue(position, self.history, self.config)
+            _logger.debug("Created glue at (%.1f, %.1f)", position[0], position[1])
 
     def draw(self, surface: pygame.Surface, x_offset: int = 0) -> None:
         """

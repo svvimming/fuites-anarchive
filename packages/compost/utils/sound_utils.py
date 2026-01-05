@@ -1,30 +1,40 @@
-"""Audio feature extraction utilities."""
+"""Audio feature extraction and segmentation utilities."""
+import os
+import time
+import colorsys
+import warnings
+from typing import List, Dict, Any, Tuple, Optional
+
 import numpy as np
 import librosa
 import soundfile as sf
-import os
 import matplotlib.pyplot as plt
 from matplotlib.patches import Wedge
 from skimage.segmentation import felzenszwalb, mark_boundaries
 from skimage.util import img_as_ubyte
-import time
-import colorsys
-import warnings
+
+from utils.logging_utils import get_logger
+
 warnings.filterwarnings("ignore", message=r"n_fft=\d+ is too large for input signal")
+
+_logger = get_logger(__name__)
+
+
+# -----------------------------------------------------------------------------
+# Feature Estimation Functions
+# -----------------------------------------------------------------------------
 
 def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
     """
     Estimate musical key and map to hue (0-1) using circle of fifths.
-    Uses chroma and Krumhansl-Schmuckler key profiles.
 
     Args:
         y_sig: Audio signal as numpy array
         sr: Sample rate
 
     Returns:
-        float: Hue value in range [0, 1]
+        Hue value in range [0, 1]
     """
-    # Circle of fifths order (C,G,D,A,E,B,F#,C#,G#,D#,A#,F)
     circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
     C = librosa.feature.chroma_cqt(y=y_sig, sr=sr)
     chroma = np.mean(C, axis=1)
@@ -39,10 +49,8 @@ def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
     best_score = -1
 
     for key in range(12):
-        # Test major
         rotated_major = np.roll(major_profile, key)
         major_score = np.corrcoef(chroma, rotated_major)[0, 1]
-        # Test minor
         rotated_minor = np.roll(minor_profile, key)
         minor_score = np.corrcoef(chroma, rotated_minor)[0, 1]
 
@@ -55,12 +63,10 @@ def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
             best_key = key
             best_mode = "minor"
 
-    print(f"key: {pitch_names[best_key]} {best_mode}")
+    _logger.debug("Key: %s %s", pitch_names[best_key], best_mode)
 
-    # Map key to circle of fifths position for hue
     circle_pos = circle_order.index(best_key)
-    H = circle_pos / 12.0
-    return H
+    return circle_pos / 12.0
 
 
 def estimate_saturation(y_sig: np.ndarray) -> float:
@@ -72,251 +78,347 @@ def estimate_saturation(y_sig: np.ndarray) -> float:
         y_sig: Audio signal as numpy array
 
     Returns:
-        float: Saturation value in range [0, 1]
+        Saturation value in range [0, 1]
     """
     flatness = librosa.feature.spectral_flatness(y=y_sig)
     flat_med = float(np.median(flatness))
-    print(f"signal purity: {round(1.0 - flat_med, 2)}")
+    _logger.debug("Signal purity: %.2f", 1.0 - flat_med)
     return float(1.0 - flat_med)
 
 
-def estimate_value(y_sig: np.ndarray, sr: int, min_value: float = 0.2,
-                   fmin: float = 27.5, fmax: float = 4186.0) -> float:
+def estimate_value(
+    y_sig: np.ndarray,
+    sr: int,
+    min_value: float = 0.2,
+    fmin: float = 27.5,
+    fmax: float = 4186.0
+) -> float:
     """
-    Estimate value (brightness) from fundamental frequency (pitch height).
+    Estimate value (brightness) from fundamental frequency.
     Higher pitches = higher value/brightness.
 
     Args:
         y_sig: Audio signal as numpy array
         sr: Sample rate
-        min_value: Minimum value to return (default 0.2)
-        fmin: Minimum frequency in Hz (default 27.5, lowest piano note)
-        fmax: Maximum frequency in Hz (default 4186.0, highest piano note)
+        min_value: Minimum value to return
+        fmin: Minimum frequency in Hz (lowest piano note)
+        fmax: Maximum frequency in Hz (highest piano note)
 
     Returns:
-        float: Value in range [min_value, 1.0]
+        Value in range [min_value, 1.0]
     """
-    frame_length_optimal = int(np.ceil(sr / fmin) * 2 + 1)
-    frame_length = frame_length_optimal
-
+    frame_length = int(np.ceil(sr / fmin) * 2 + 1)
     f0 = librosa.yin(y_sig, fmin=fmin, fmax=fmax, sr=sr, frame_length=frame_length)
     f0 = f0[np.isfinite(f0)]
     f = float(np.median(f0))
 
-    print(f"f0: {round(f, 2)} Hz")
+    _logger.debug("F0: %.2f Hz", f)
 
-    # Clamp f into [fmin, fmax]
     f_clamped = np.clip(f, fmin, fmax)
-
-    # Normalize to [0,1] in log-frequency space
     v = (np.log2(f_clamped) - np.log2(fmin)) / (np.log2(fmax) - np.log2(fmin))
-
-    # Map into [min_value, 1.0]
     return float(min_value + (1.0 - min_value) * v)
 
 
-def estimate_alpha(y_sig: np.ndarray, min_alpha: float = 0.1,
-                   min_db: float = -70.0, max_db: float = -14.0) -> float:
+def estimate_alpha(
+    y_sig: np.ndarray,
+    min_alpha: float = 0.1,
+    min_db: float = -70.0,
+    max_db: float = -14.0
+) -> float:
     """
     Map signal loudness (in dBFS) to alpha in [min_alpha, 1.0].
 
     Args:
         y_sig: Audio signal as numpy array
-        min_alpha: Minimum alpha value (default 0.1)
-        min_db: dBFS that maps to min_alpha (e.g., -70 dBFS = near-silence)
-        max_db: dBFS that maps to 1.0 (e.g., -14 dBFS = ~0.2 RMS)
+        min_alpha: Minimum alpha value
+        min_db: dBFS that maps to min_alpha
+        max_db: dBFS that maps to 1.0
 
     Returns:
-        float: Alpha value in range [min_alpha, 1.0]
+        Alpha value in range [min_alpha, 1.0]
     """
-    # Frame-wise RMS (energy) -> robust scalar via median
     rms_frames = librosa.feature.rms(y=y_sig)
     rms_scalar = float(np.median(rms_frames))
-
-    # Convert RMS to dBFS
     rms_db = 20.0 * np.log10(rms_scalar + 1e-12)
-    print(f"rms_db: {round(rms_db, 2)}")
 
-    # Normalize dB into [0,1] using the chosen thresholds
+    _logger.debug("RMS dB: %.2f", rms_db)
+
     v = (rms_db - min_db) / (max_db - min_db)
     v = float(np.clip(v, 0.0, 1.0))
-
-    # Map to [min_alpha, 1.0]
     return float(min_alpha + (1.0 - min_alpha) * v)
 
 
-def split_audio_felzenszwalb_2d(
-    audio_path,
-    output_dir="chunks_detailed_{song_path.split('/')[-1].split('.')[0]}",
-    n_fft=2048,
-    hop_length=512,
-    scale=150,
-    sigma=3,
-    min_size=20,
-    min_area_pixels=300,
-    min_time_seconds=0.5,
-    min_energy_ratio=1e-3,
-    min_loudness_db=-70.0,   # NEW loudness threshold
-    max_shapes=None,
-    show_plots=True,  # NEW parameter to control visualizations
-):
+# -----------------------------------------------------------------------------
+# Internal Helpers for Audio Segmentation
+# -----------------------------------------------------------------------------
+
+def _prepare_spectrogram(
+    audio_path: str,
+    n_fft: int,
+    hop_length: int
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int, float]:
     """
-    🎨 TRUE 2D FELZENSZWALB AUDIO SEGMENTATION (no connected-components)
+    Load audio and prepare spectrogram for segmentation.
 
-    This function treats audio spectrograms like images and segments them into irregular 2D shapes.
-    Unlike traditional time-based chunking, this extracts spectral "objects" from music.
+    Returns:
+        (y, D, S, img, sr, duration) tuple
+    """
+    _logger.info("Loading audio: %s", audio_path)
+    y, sr = librosa.load(audio_path, sr=None)
+    duration = len(y) / sr
+    _logger.info("Duration: %.2fs, Sample Rate: %dHz", duration, sr)
 
-    HOW IT WORKS:
-    1) Compute STFT (frequency × time matrix)
-    2) Treat magnitude spectrogram as a grayscale image
-    3) Run Felzenszwalb segmentation to get label regions
-    4) For EACH LABEL (as a whole), reconstruct its audio by masking the original STFT
-    5) Save each label's audio as its own file
+    _logger.info("Computing STFT (n_fft=%d, hop_length=%d)", n_fft, hop_length)
+    D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length, window="hann", center=True)
+    S = np.abs(D)
+    freq_bins, time_frames = S.shape
+    _logger.info("Spectrogram shape: %d freq x %d time", freq_bins, time_frames)
 
-    PARAMETERS:
-    - n_fft: Frequency resolution (higher = more freq detail, less time detail)
-    - hop_length: Time resolution (lower = more time detail, less freq detail)
-    - scale/sigma/min_size: Felzenszwalb controls
-    - min_area_pixels / min_time_seconds / min_energy_ratio: filters to skip tiny/short/quiet labels
+    # Normalize to 0-255 for segmentation
+    S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
+    S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
+    img = img_as_ubyte(S_db_norm)
+
+    return y, D, S, img, sr, duration
+
+
+def _check_time_filter(
+    chunk_mask: np.ndarray,
+    min_time_seconds: float,
+    sr: int,
+    hop_length: int
+) -> bool:
+    """Check if segment passes time duration filter."""
+    time_mask = np.any(chunk_mask, axis=0)
+    min_time_frames = int(min_time_seconds * sr / hop_length)
+    return time_mask.sum() >= min_time_frames
+
+
+def _check_energy_filter(
+    S: np.ndarray,
+    chunk_mask: np.ndarray,
+    total_energy: float,
+    min_energy_ratio: float
+) -> Tuple[bool, float]:
+    """Check if segment passes energy filter. Returns (passed, energy_ratio)."""
+    energy = float(S[chunk_mask].sum())
+    energy_ratio = energy / total_energy
+    return energy_ratio >= min_energy_ratio, energy_ratio
+
+
+def _check_loudness_filter(y_seg: np.ndarray, min_loudness_db: float) -> Tuple[bool, float]:
+    """Check if segment passes loudness filter. Returns (passed, rms_db)."""
+    rms_frames = librosa.feature.rms(y=y_seg)
+    rms_scalar = float(np.median(rms_frames))
+    rms_db = 20.0 * np.log10(rms_scalar + 1e-12)
+    return rms_db >= min_loudness_db, rms_db
+
+
+def _check_tuning_filter(y_seg: np.ndarray, sr: int) -> bool:
+    """Check if segment has valid pitch content for tuning estimation."""
+    pitch, mag = librosa.piptrack(y=y_seg, sr=sr, threshold=0.1)
+    pitch_mask = pitch > 0
+
+    if not pitch_mask.any():
+        _logger.debug("No pitch detected")
+        return False
+
+    threshold = np.median(mag[pitch_mask])
+    filtered_frequencies = pitch[(mag >= threshold) & pitch_mask]
+    filtered_frequencies = filtered_frequencies[filtered_frequencies > 0]
+
+    if not np.any(filtered_frequencies):
+        _logger.debug("Filtered by empty frequency set")
+        return False
+
+    return True
+
+
+def _reconstruct_segment_audio(
+    D: np.ndarray,
+    chunk_mask: np.ndarray,
+    times: np.ndarray,
+    t0: int,
+    t1: int,
+    sr: int,
+    hop_length: int,
+    original_length: int
+) -> Optional[np.ndarray]:
+    """Reconstruct audio for a masked segment. Returns normalized audio or None."""
+    T = D.shape[1]
+    D_masked = D * chunk_mask.astype(D.dtype)
+    y_rec = librosa.istft(D_masked, hop_length=hop_length, length=original_length)
+
+    start_samp = int(times[t0] * sr)
+    end_samp = min(original_length, int(times[min(t1 + 1, T - 1)] * sr))
+    y_seg = y_rec[start_samp:end_samp]
+
+    if y_seg.size == 0:
+        return None
+
+    # Normalize to avoid clipping
+    peak = np.max(np.abs(y_seg))
+    if peak > 1.0:
+        y_seg = 0.98 * y_seg / peak
+
+    return y_seg
+
+
+def _create_segmentation_visualization(
+    S_db: np.ndarray,
+    img: np.ndarray,
+    segments: np.ndarray,
+    S_db_norm: np.ndarray,
+    output_dir: str,
+    num_labels: int
+) -> None:
+    """Create and save segmentation visualization plots."""
+    _logger.info("Creating visualizations...")
+
+    _, axes = plt.subplots(2, 2, figsize=(16, 10))
+
+    axes[0, 0].imshow(S_db, aspect='auto', origin='lower', cmap='magma')
+    axes[0, 0].set_title('Original Spectrogram (dB)')
+    axes[0, 0].set_ylabel('Frequency Bins')
+
+    axes[0, 1].imshow(img, aspect='auto', origin='lower', cmap='gray')
+    axes[0, 1].set_title('Normalized Image (0-255)')
+    axes[0, 1].set_ylabel('Frequency Bins')
+
+    axes[1, 0].imshow(segments, aspect='auto', origin='lower', cmap='tab20')
+    axes[1, 0].set_title(f'Felzenszwalb Segments ({num_labels} labels)')
+    axes[1, 0].set_xlabel('Time Frames')
+    axes[1, 0].set_ylabel('Frequency Bins')
+
+    boundary_img = mark_boundaries(np.dstack([S_db_norm] * 3), segments)
+    axes[1, 1].imshow(boundary_img, aspect='auto', origin='lower')
+    axes[1, 1].set_title('Segmentation Boundaries')
+    axes[1, 1].set_xlabel('Time Frames')
+
+    plt.tight_layout()
+    viz_path = os.path.join(output_dir, "felzenszwalb_analysis.png")
+    plt.savefig(viz_path, dpi=160, bbox_inches='tight')
+    _logger.info("Saved visualization: %s", viz_path)
+    plt.show()
+
+
+# -----------------------------------------------------------------------------
+# Main Audio Segmentation Function
+# -----------------------------------------------------------------------------
+
+def split_audio_felzenszwalb_2d(
+    audio_path: str,
+    output_dir: str = "chunks_detailed",
+    n_fft: int = 2048,
+    hop_length: int = 512,
+    scale: int = 150,
+    sigma: float = 3,
+    min_size: int = 20,
+    min_area_pixels: int = 300,
+    min_time_seconds: float = 0.5,
+    min_energy_ratio: float = 1e-3,
+    min_loudness_db: float = -70.0,
+    max_shapes: Optional[int] = None,
+    show_plots: bool = True,
+) -> Tuple[List[str], List[Dict[str, Any]]]:
+    """
+    Segment audio using 2D Felzenszwalb algorithm on spectrogram.
+
+    Treats audio spectrograms like images and extracts spectral "objects".
+
+    Args:
+        audio_path: Path to audio file
+        output_dir: Directory for output files
+        n_fft: FFT size (frequency resolution)
+        hop_length: Hop size (time resolution)
+        scale: Felzenszwalb scale parameter
+        sigma: Felzenszwalb sigma parameter
+        min_size: Felzenszwalb minimum segment size
+        min_area_pixels: Minimum area in pixels
+        min_time_seconds: Minimum duration in seconds
+        min_energy_ratio: Minimum energy ratio
+        min_loudness_db: Minimum loudness in dBFS
+        max_shapes: Maximum number of shapes to extract
+        show_plots: Whether to show visualization plots
+
+    Returns:
+        (saved_paths, kept_segments) tuple
     """
     start_time = time.time()
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"🎵 LOADING AUDIO: {audio_path}")
+    # Prepare spectrogram
+    y, D, S, img, sr, _ = _prepare_spectrogram(audio_path, n_fft, hop_length)
 
-    # 1) Load audio
-    y, sr = librosa.load(audio_path, sr=None)
-    duration = len(y) / sr
-    print(f"   ⏱️  Duration: {duration:.2f}s, Sample Rate: {sr}Hz")
-
-    # 2) Complex STFT and magnitude
-    print(f"📊 COMPUTING STFT...")
-    print(f"   🔧 n_fft={n_fft}, hop_length={hop_length}")
-    D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length, window="hann", center=True)
-    S = np.abs(D)  # (freq_bins, time_frames)
-    freq_bins, time_frames = S.shape
-    print(f"   📏 Spectrogram shape: {freq_bins} freq × {time_frames} time")
-
-    # 3) Log scale + normalize to 0..255 for segmentation
-    print(f"🎨 PREPARING IMAGE FOR SEGMENTATION...")
-    S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
-    S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
-    img = img_as_ubyte(S_db_norm)  # 2D grayscale image
-    print(f"   🖼️  Image range: {img.min()}-{img.max()} (8-bit grayscale)")
-
-    # 4) Felzenszwalb segmentation on 2D spectrogram image
-    print(f"🧩 RUNNING FELZENSZWALB SEGMENTATION...")
-    print(f"   ⚙️  scale={scale}, sigma={sigma}, min_size={min_size}")
+    # Run segmentation
+    _logger.info("Running Felzenszwalb (scale=%d, sigma=%d, min_size=%d)", scale, sigma, min_size)
     segments = felzenszwalb(img, scale=scale, sigma=sigma, min_size=min_size, channel_axis=None)
     unique_labels = np.unique(segments)
-    print(f"   🎯 Found {len(unique_labels)} initial segments (labels)")
+    _logger.info("Found %d initial segments", len(unique_labels))
 
-    # 5) Process each label as a single region (no CC)
-    print(f"🔍 EXTRACTING 2D SHAPES (one per label)...")
+    # Prepare for filtering
     total_energy = float(S.sum()) + 1e-12
     T = S.shape[1]
     times = librosa.frames_to_time(np.arange(T), sr=sr, hop_length=hop_length)
 
+    # Filter counters
+    filter_stats = {
+        'time': 0, 'time_empty': 0, 'energy': 0,
+        'area': 0, 'loudness': 0, 'tuning': 0
+    }
+
     saved_paths = []
-    shape_index = 0
-    filtered_shapes = 0
-    filtered_by_area = 0
-    filtered_by_energy = 0
-    filtered_by_time = 0
-    filtered_by_time_empty = 0
-    filtered_by_loudness = 0  # NEW counter
-    filtered_by_tuning = 0  # NEW counter for tuning filter
     kept_segments = []
+    shape_index = 0
 
-    for _, label in enumerate(unique_labels):
-        chunk_mask = (segments == label)          # use the label mask directly
+    for label in unique_labels:
+        chunk_mask = (segments == label)
 
-        # Filter 1: Time span too short
-        time_mask = np.any(chunk_mask, axis=0)
-        min_time_frames = int(min_time_seconds * sr / hop_length)
-        if time_mask.sum() < min_time_frames:
-            filtered_shapes += 1
-            filtered_by_time += 1
+        # Filter 1: Time span
+        if not _check_time_filter(chunk_mask, min_time_seconds, sr, hop_length):
+            filter_stats['time'] += 1
             continue
 
-        # Filter 2: Energy too low
-        energy = float(S[chunk_mask].sum())
-        energy_ratio = energy / total_energy
-        if energy_ratio < min_energy_ratio:
-            filtered_shapes += 1
-            filtered_by_energy += 1
+        # Filter 2: Energy
+        passed, energy_ratio = _check_energy_filter(S, chunk_mask, total_energy, min_energy_ratio)
+        if not passed:
+            filter_stats['energy'] += 1
             continue
 
-        # Filter 3: Area too small  
+        # Filter 3: Area
         area = int(chunk_mask.sum())
-        
         if area < min_area_pixels:
-            filtered_shapes += 1
-            filtered_by_area += 1
+            filter_stats['area'] += 1
             continue
-        
-        # Calculate shape boundaries
+
+        # Calculate boundaries
+        time_mask = np.any(chunk_mask, axis=0)
         t0 = int(np.argmax(time_mask))
         t1 = int(len(time_mask) - np.argmax(time_mask[::-1]) - 1)
         freq_mask = np.any(chunk_mask, axis=1)
         f0 = int(np.argmax(freq_mask))
         f1 = int(len(freq_mask) - np.argmax(freq_mask[::-1]) - 1)
-
         time_span = times[t1] - times[t0] if t1 > t0 else 0
         freq_span = f1 - f0 + 1
 
-        # 🎵 RECONSTRUCT AUDIO: Mask the complex STFT with this label region
-        D_masked = D * chunk_mask.astype(D.dtype)
-        y_rec = librosa.istft(D_masked, hop_length=hop_length, length=len(y))
-
-        # Slice to the time span of this shape for a concise chunk
-        start_samp = int(times[t0] * sr)
-        end_samp = min(len(y), int(times[min(t1 + 1, T - 1)] * sr))
-        y_seg = y_rec[start_samp:end_samp]
-        if y_seg.size == 0:
-            filtered_shapes += 1
-            filtered_by_time_empty += 1
+        # Reconstruct audio
+        y_seg = _reconstruct_segment_audio(D, chunk_mask, times, t0, t1, sr, hop_length, len(y))
+        if y_seg is None:
+            filter_stats['time_empty'] += 1
             continue
 
-        # Normalize to avoid clipping
-        peak = np.max(np.abs(y_seg))      
-        if peak > 1.0: 
-            y_seg = 0.98 * y_seg / peak
-        
-        # Loudness filter
-        rms_frames = librosa.feature.rms(y=y_seg)
-        rms_scalar = float(np.median(rms_frames))
-        rms_db = 20.0 * np.log10(rms_scalar + 1e-12)
-        if rms_db < min_loudness_db:
-            filtered_shapes += 1
-            filtered_by_loudness += 1
+        # Filter 4: Loudness
+        passed, rms_db = _check_loudness_filter(y_seg, min_loudness_db)
+        if not passed:
+            filter_stats['loudness'] += 1
             continue
-        
-        # Replicate the exact sequence from librosa.estimate_tuning -> pitch_tuning
-        pitch, mag = librosa.piptrack(y=y_seg, sr=sr, threshold=0.1)
-        
-        # Only count magnitude where frequency is > 0
-        pitch_mask = pitch > 0
-        
-        if pitch_mask.any():
-            threshold = np.median(mag[pitch_mask])
-        else:
-            print("no pitch")
-            threshold = 0.0
-        
-        # Apply the same filtering as estimate_tuning
-        filtered_frequencies = pitch[(mag >= threshold) & pitch_mask]
-        
-        # Trim out any DC components (same as pitch_tuning function)
-        filtered_frequencies = filtered_frequencies[filtered_frequencies > 0]
-        
-        # Check if empty (this is what triggers the warning)
-        if not np.any(filtered_frequencies):
-            filtered_shapes += 1
-            filtered_by_tuning += 1
-            print("filtered by empty frequency set (would cause tuning warning)")
+
+        # Filter 5: Tuning (pitch content)
+        if not _check_tuning_filter(y_seg, sr):
+            filter_stats['tuning'] += 1
             continue
-        
+
+        # Save segment
         filename = f"felzen_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_f{freq_span}.wav"
         out_path = os.path.join(output_dir, filename)
         sf.write(out_path, y_seg, sr)
@@ -334,95 +436,68 @@ def split_audio_felzenszwalb_2d(
             "freq_span": int(freq_span),
             "time_span_sec": float(time_span),
             "energy_ratio": float(energy_ratio),
-            "loudness_db": float(rms_db),  # NEW
+            "loudness_db": float(rms_db),
             "path": out_path,
         })
 
-        print(f"   🎵 Shape {shape_index:2d}: {time_span:.2f}s × {freq_span:3d}bins, "
-              f"energy={energy_ratio:.1e}, loudness={rms_db:.1f} dBFS → {filename}")
+        _logger.info(
+            "Shape %2d: %.2fs x %3d bins, energy=%.1e, loudness=%.1f dBFS",
+            shape_index, time_span, freq_span, energy_ratio, rms_db
+        )
 
         shape_index += 1
-
         if max_shapes is not None and shape_index >= max_shapes:
             break
 
-    # 6) Create and display visualization (only if show_plots is True)
+    # Visualization
     if show_plots:
-        print(f"📊 CREATING VISUALIZATIONS...")
+        S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
+        S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
+        _create_segmentation_visualization(S_db, img, segments, S_db_norm, output_dir, len(unique_labels))
 
-        fig, axes = plt.subplots(2, 2, figsize=(16, 10))
-
-        # Original spectrogram
-        axes[0,0].imshow(S_db, aspect='auto', origin='lower', cmap='magma')
-        axes[0,0].set_title('Original Spectrogram (dB)')
-        axes[0,0].set_ylabel('Frequency Bins')
-
-        # Normalized image for segmentation
-        axes[0,1].imshow(img, aspect='auto', origin='lower', cmap='gray')
-        axes[0,1].set_title('Normalized Image (0-255)')
-        axes[0,1].set_ylabel('Frequency Bins')
-
-        # Segmentation labels
-        axes[1,0].imshow(segments, aspect='auto', origin='lower', cmap='tab20')
-        axes[1,0].set_title(f'Felzenszwalb Segments ({len(unique_labels)} labels)')
-        axes[1,0].set_xlabel('Time Frames')
-        axes[1,0].set_ylabel('Frequency Bins')
-
-        # Boundaries overlay
-        boundary_img = mark_boundaries(np.dstack([S_db_norm]*3), segments)
-        axes[1,1].imshow(boundary_img, aspect='auto', origin='lower')
-        axes[1,1].set_title('Segmentation Boundaries')
-        axes[1,1].set_xlabel('Time Frames')
-
-        plt.tight_layout()
-        viz_path = os.path.join(output_dir, "felzenszwalb_analysis.png")
-        plt.savefig(viz_path, dpi=160, bbox_inches='tight')
-        print(f"   💾 Saved visualization: {viz_path}")
-        plt.show()
-
-    # Summary statistics
+    # Summary
     total_time = time.time() - start_time
-    print(f"\n📊 SUMMARY:")
-    print(f"   ⏱️  Processing time: {total_time:.2f}s")
-    print(f"   🧩 Total labels found: {len(unique_labels)}")
-    print(f"   🧩 Label regions processed (kept + filtered): {shape_index + filtered_shapes}")
-    print(f"   ❌ Filtered out: {filtered_shapes}")
-    print(f"      └─ By time (< {min_time_seconds}s duration): {filtered_by_time}")
-    print(f"      └─ By time (empty): {filtered_by_time_empty}")
-    print(f"      └─ By energy (< {min_energy_ratio:.1e} ratio): {filtered_by_energy}")
-    print(f"      └─ By area (< {min_area_pixels} pixels): {filtered_by_area}")
-    print(f"      └─ By loudness (< {min_loudness_db:.1f} dBFS): {filtered_by_loudness}")
-    print(f"      └─ By empty frequency set (tuning): {filtered_by_tuning}")
-    print(f"   ✅ Audio chunks saved: {shape_index}")
-    print(f"   📁 Output directory: {output_dir}/")
-    if saved_paths:
-        print(f"   🎵 Average chunk duration: {np.mean([len(sf.read(p)[0])/sr for p in saved_paths[:5]]):.2f}s")
-    else:
-        print(f"   🎵 Average chunk duration: n/a")
+    total_filtered = sum(filter_stats.values())
+
+    _logger.info("Processing time: %.2fs", total_time)
+    _logger.info("Total labels: %d, Kept: %d, Filtered: %d", len(unique_labels), shape_index, total_filtered)
+    _logger.debug("  By time (<%ss): %d", min_time_seconds, filter_stats['time'])
+    _logger.debug("  By time (empty): %d", filter_stats['time_empty'])
+    _logger.debug("  By energy (<%.1e): %d", min_energy_ratio, filter_stats['energy'])
+    _logger.debug("  By area (<%d px): %d", min_area_pixels, filter_stats['area'])
+    _logger.debug("  By loudness (<%.1f dB): %d", min_loudness_db, filter_stats['loudness'])
+    _logger.debug("  By tuning: %d", filter_stats['tuning'])
 
     return saved_paths, kept_segments
 
 
-def create_2d_path_visualization(kept_segments, song_path, points_per_second=100, resampled_points_per_chunk=128, show_plots=True):
-    """
-    Create a random 2D path over the clip timeline and align chunks to Felzenszwalb windows
-    """
-    # Random 2D path over the clip timeline → chunks aligned to Felzenszwalb windows if available
-    rng = np.random.default_rng(2)
+# -----------------------------------------------------------------------------
+# Internal Helpers for 2D Path Visualization
+# -----------------------------------------------------------------------------
 
-    # Parameters
-    clip_path = song_path
-    clip_duration_sec = librosa.get_duration(path=clip_path)
+def _build_random_2d_path(
+    clip_duration_sec: float,
+    points_per_second: int,
+    seed: int = 2
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Build a smooth randomized 2D path over the clip timeline.
 
-    # Build smooth randomized 2D path (x(t), y(t)) over [0, clip_duration]
+    Returns:
+        (T, X, Y) arrays for time, x-coordinates, y-coordinates
+    """
+    rng = np.random.default_rng(seed)
+
     T = np.linspace(0.0, clip_duration_sec, max(3, int(np.ceil(clip_duration_sec * points_per_second))), endpoint=True)
     num_points = T.size
+
     if num_points < 3:
         raise RuntimeError("Not enough points to build 2D path")
 
-    dt = (clip_duration_sec / (num_points - 1))
+    dt = clip_duration_sec / (num_points - 1)
+
+    # Angle noise with smoothing
     ang_noise = rng.normal(loc=0.0, scale=0.03, size=num_points)
-    # Ensure odd kernel size and not bigger than signal length so output matches input length
     ang_kernel_size = min(401, num_points)
     if ang_kernel_size % 2 == 0:
         ang_kernel_size -= 1
@@ -430,6 +505,7 @@ def create_2d_path_visualization(kept_segments, song_path, points_per_second=100
     ang_rate = np.convolve(ang_noise, ang_kernel, mode="same")
     heading = np.cumsum(ang_rate)
 
+    # Speed noise with smoothing
     spd_noise = rng.normal(loc=0.0, scale=0.03, size=num_points)
     spd_kernel_size = min(201, num_points)
     if spd_kernel_size % 2 == 0:
@@ -442,154 +518,218 @@ def create_2d_path_visualization(kept_segments, song_path, points_per_second=100
     X = np.cumsum(vx) * dt
     Y = np.cumsum(vy) * dt
 
-    # Normalize to [0, 1] for stable plotting
+    # Normalize to [0, 1]
     if np.max(X) > np.min(X):
         X = (X - np.min(X)) / (np.max(X) - np.min(X))
     if np.max(Y) > np.min(Y):
         Y = (Y - np.min(Y)) / (np.max(Y) - np.min(Y))
 
-    # Helper to build chunks either from Felzenszwalb windows or fallback to fixed window/hop
+    return T, X, Y
+
+
+def _extract_segment_curve(
+    segment: Dict[str, Any],
+    T: np.ndarray,
+    X: np.ndarray,
+    Y: np.ndarray,
+    resampled_points: int
+) -> Dict[str, Any]:
+    """Extract curve data for a single segment."""
+    num_points = len(T)
+    t0 = float(segment["t0_sec"])
+    t1 = float(segment["t1_sec"])
+
+    start = int(np.searchsorted(T, t0, side='left'))
+    end = int(np.searchsorted(T, t1, side='right'))
+    end = max(start + 2, end)
+    start = max(0, min(start, num_points - 2))
+    end = min(end, num_points)
+
+    t_seg = T[start:end]
+    x_seg = X[start:end]
+    y_seg = Y[start:end]
+
+    # Resample to fixed length
+    t_norm = (t_seg - t_seg[0]) / (t_seg[-1] - t_seg[0])
+    tau = np.linspace(0.0, 1.0, resampled_points)
+    x_res = np.interp(tau, t_norm, x_seg)
+    y_res = np.interp(tau, t_norm, y_seg)
+
+    return {
+        "t": t_seg,
+        "x": x_seg,
+        "y": y_seg,
+        "t_norm": tau,
+        "x_resampled": x_res,
+        "y_resampled": y_res,
+    }
+
+
+def _compute_segment_color(segment: Dict[str, Any]) -> Tuple[float, float, float, float]:
+    """Compute RGBA color for a segment based on its audio features."""
+    y_masked, sr_masked = sf.read(segment["path"])
+    if y_masked.ndim == 2:
+        y_masked = y_masked.mean(axis=1)
+
+    H = estimate_key_hue(y_masked, sr_masked)
+    S = estimate_saturation(y_masked)
+    V = estimate_value(y_masked, sr_masked)
+    A = estimate_alpha(y_masked)
+
+    _logger.debug("H=%.2f, S=%.2f, V=%.2f, A=%.2f", H, S, V, A)
+
+    r, g, b = colorsys.hsv_to_rgb(H, S, V)
+    return (r, g, b, A)
+
+
+def _draw_path_visualizations(
+    X: np.ndarray,
+    Y: np.ndarray,
+    curve_chunks: List[Dict[str, Any]]
+) -> None:
+    """Draw visualization plots for the 2D path and chunks."""
+    overlay_idxs = list(range(min(100, len(curve_chunks))))
+    cmap = plt.get_cmap('tab20')
+
+    colors = {}
+    for i in overlay_idxs:
+        col = curve_chunks[i].get("color_rgba", cmap(i % cmap.N))
+        colors[i] = col
+
+    # Figure 1: Full path with chunks
+    _, ax1 = plt.subplots(1, 1, figsize=(7, 6))
+    ax1.plot(X, Y, color="#333", linewidth=1.5, label="full path")
+    for i in overlay_idxs:
+        ax1.plot(curve_chunks[i]["x"], curve_chunks[i]["y"], linewidth=5.0, color=colors[i])
+    ax1.set_title("Random 2D path with aligned time chunks (Felzenszwalb)")
+    ax1.set_xlabel("x")
+    ax1.set_ylabel("y")
+    ax1.axis('equal')
+    ax1.grid(True, alpha=0.25)
+    plt.tight_layout()
+    plt.show()
+
+    # Figure 2: Individual chunks
+    N = len(overlay_idxs)
+    if N > 0:
+        cols = 4
+        rows = int(np.ceil(N / cols))
+        fig2, axes2 = plt.subplots(rows, cols, figsize=(cols * 3.0, rows * 3.0))
+        axes2 = np.atleast_2d(axes2).reshape(rows, cols)
+        for idx in range(rows * cols):
+            r = idx // cols
+            c = idx % cols
+            ax = axes2[r, c]
+            if idx < N:
+                k = overlay_idxs[idx]
+                ax.plot(curve_chunks[k]["x_resampled"], curve_chunks[k]["y_resampled"],
+                        color=colors[k], linewidth=5.0)
+                t0 = curve_chunks[k]["t_start"]
+                t1 = curve_chunks[k]["t_end"]
+                ax.set_title(f"chunk {k}\n[{t0:.2f}s, {t1:.2f}s]", fontsize=8)
+                ax.axis('equal')
+                ax.grid(True, alpha=0.25)
+            else:
+                ax.axis('off')
+        fig2.suptitle(f"Felzenszwalb-aligned {N} 2D chunk profiles")
+        plt.tight_layout()
+        plt.show()
+
+    # Figure 3: Color wheel
+    _draw_color_wheel()
+
+
+def _draw_color_wheel() -> None:
+    """Draw pitch-class color circle (circle of fifths)."""
+    circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
+    pitch_names = ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"]
+
+    _, ax = plt.subplots(1, 1, figsize=(6, 6))
+    R_outer = 1.0
+    R_inner = 0.6
+
+    for k in range(12):
+        pitch = circle_order[k]
+        H = k / 12.0
+        r_col, g_col, b_col = colorsys.hsv_to_rgb(H, 1.0, 1.0)
+        theta_center = 90.0 - k * (360.0 / 12.0)
+        theta1 = theta_center - (180.0 / 12.0)
+        theta2 = theta_center + (180.0 / 12.0)
+        wedge = Wedge((0.0, 0.0), R_outer, theta1, theta2, width=R_outer - R_inner,
+                      facecolor=(r_col, g_col, b_col), edgecolor='white')
+        ax.add_patch(wedge)
+        theta_mid = np.deg2rad(theta_center)
+        tx = (R_outer + 0.08) * np.cos(theta_mid)
+        ty = (R_outer + 0.08) * np.sin(theta_mid)
+        ax.text(tx, ty, pitch_names[pitch], ha='center', va='center', fontsize=10)
+
+    guide = Wedge((0.0, 0.0), R_outer, 0, 360, width=0.0, facecolor='none', edgecolor='#999999')
+    ax.add_patch(guide)
+    ax.set_xlim(-1.25, 1.25)
+    ax.set_ylim(-1.25, 1.25)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_title("Pitch-class color circle (circle of fifths order)")
+    plt.tight_layout()
+    plt.show()
+
+
+# -----------------------------------------------------------------------------
+# Main 2D Path Visualization Function
+# -----------------------------------------------------------------------------
+
+def create_2d_path_visualization(
+    kept_segments: List[Dict[str, Any]],
+    song_path: str,
+    points_per_second: int = 100,
+    resampled_points_per_chunk: int = 128,
+    show_plots: bool = True
+) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]], np.ndarray]:
+    """
+    Create a random 2D path over the clip timeline and align chunks.
+
+    Args:
+        kept_segments: List of segment dictionaries from split_audio_felzenszwalb_2d
+        song_path: Path to the audio file
+        points_per_second: Resolution of the path
+        resampled_points_per_chunk: Number of points per chunk after resampling
+        show_plots: Whether to display visualization plots
+
+    Returns:
+        (X, Y, curve_chunks_2d, curve_profiles_2d) tuple
+    """
+    clip_duration_sec = librosa.get_duration(path=song_path)
+    T, X, Y = _build_random_2d_path(clip_duration_sec, points_per_second)
+
     curve_chunks_2d = []
     curve_profiles_2d = []
 
-    # Load audio for feature-based coloring (kept for duration only)
-    y_full, sr_full = librosa.load(clip_path, sr=None)
+    for seg in kept_segments:
+        _logger.debug("Processing chunk %d...", seg['idx'])
 
-    for s in kept_segments:
-        print(f"\nProcessing chunk {s['idx']}...")
-        t0 = float(s["t0_sec"])
-        t1 = float(s["t1_sec"])
-        start = int(np.searchsorted(T, t0, side='left'))
-        end = int(np.searchsorted(T, t1, side='right'))
-        end = max(start + 2, end)
-        start = max(0, min(start, num_points - 2))
-        end = min(end, num_points)
-        t_seg = T[start:end]
-        x_seg = X[start:end]
-        y_seg = Y[start:end]
-        # Resample to fixed profile length
-        t_norm = (t_seg - t_seg[0]) / (t_seg[-1] - t_seg[0])
-        tau = np.linspace(0.0, 1.0, resampled_points_per_chunk)
-        x_res = np.interp(tau, t_norm, x_seg)
-        y_res = np.interp(tau, t_norm, y_seg)
-        # Audio slice and HSVA-derived color (use EXACT masked chunk audio)
-        y_masked, sr_masked = sf.read(s["path"])  # reconstructed with the 2D freq-time mask
-        if y_masked.ndim == 2:  # convert stereo to mono if needed
-            y_masked = y_masked.mean(axis=1)
+        # Extract curve
+        curve_data = _extract_segment_curve(seg, T, X, Y, resampled_points_per_chunk)
 
-        H = estimate_key_hue(y_masked, sr_masked)
-        S = estimate_saturation(y_masked)
-        V = estimate_value(y_masked, sr_masked)
-        A = estimate_alpha(y_masked)
-        print(f"H (key): {round(H, 2)}, S (purity): {round(S, 2)}, V (pitch height): {round(V, 2)}, A (loudness): {round(A, 2)}")
-        # S = 1
-        # V = 1
-        # A = 1
-        r, g, b = colorsys.hsv_to_rgb(H, S, V)
-        rgba = (r, g, b, A)
+        # Compute color
+        rgba = _compute_segment_color(seg)
 
         curve_chunks_2d.append({
-            "idx": int(s["idx"]),
-            "t_start": float(t0),
-            "t_end": float(t1),
-            "t": t_seg,
-            "x": x_seg,
-            "y": y_seg,
-            "t_norm": tau,
-            "x_resampled": x_res,
-            "y_resampled": y_res,
+            "idx": int(seg["idx"]),
+            "t_start": float(seg["t0_sec"]),
+            "t_end": float(seg["t1_sec"]),
+            "t": curve_data["t"],
+            "x": curve_data["x"],
+            "y": curve_data["y"],
+            "t_norm": curve_data["t_norm"],
+            "x_resampled": curve_data["x_resampled"],
+            "y_resampled": curve_data["y_resampled"],
             "color_rgba": rgba,
         })
-        curve_profiles_2d.append(np.stack([x_res, y_res], axis=-1))
+        curve_profiles_2d.append(np.stack([curve_data["x_resampled"], curve_data["y_resampled"]], axis=-1))
 
-    curve_profiles_2d = np.asarray(curve_profiles_2d) if len(curve_profiles_2d) else np.empty((0, resampled_points_per_chunk, 2))
+    curve_profiles_2d = np.asarray(curve_profiles_2d) if curve_profiles_2d else np.empty((0, resampled_points_per_chunk, 2))
 
-    # Only show visualizations if requested
     if show_plots:
-        # Figure 1: full 2D path with overlaid subset of chunks (color-matched to grid)
-        fig1, ax1 = plt.subplots(1, 1, figsize=(7, 6))
-        ax1.plot(X, Y, color="#333", linewidth=1.5, label="full path")
-
-        # Choose subset indices to overlay (deterministic: first up to 15)
-        overlay_idxs = list(range(min(100, len(curve_chunks_2d))))
-        cmap = plt.get_cmap('tab20')
-        # Use per-chunk RGBA if available; fallback to colormap
-        colors = {}
-        for i in overlay_idxs:
-            col = curve_chunks_2d[i].get("color_rgba", None)
-            if col is None:
-                col = cmap(i % cmap.N)
-            colors[i] = col
-            ax1.plot(curve_chunks_2d[i]["x"], curve_chunks_2d[i]["y"], linewidth=5.0, color=col)
-        ax1.set_title("Random 2D path with aligned time chunks (Felzenszwalb)")
-        ax1.set_xlabel("x")
-        ax1.set_ylabel("y")
-        ax1.axis('equal')
-        ax1.grid(True, alpha=0.25)
-        plt.tight_layout()
-        plt.show()
-
-        # Figure 2: separate subplots for each overlaid chunk, using the same color
-        N = len(overlay_idxs)
-        if N > 0:
-            cols = 4
-            rows = int(np.ceil(N / cols))
-            fig2, axes2 = plt.subplots(rows, cols, figsize=(cols * 3.0, rows * 3.0))
-            axes2 = np.atleast_2d(axes2).reshape(rows, cols)
-            for idx in range(rows * cols):
-                r = idx // cols
-                c = idx % cols
-                ax = axes2[r, c]
-                if idx < N:
-                    k = overlay_idxs[idx]
-                    ax.plot(curve_chunks_2d[k]["x_resampled"], curve_chunks_2d[k]["y_resampled"], color=colors[k], linewidth=5.0)
-                    t0 = curve_chunks_2d[k]["t_start"]
-                    t1 = curve_chunks_2d[k]["t_end"]
-                    ax.set_title(f"chunk {k}\n[{t0:.2f}s, {t1:.2f}s]", fontsize=8)
-                    ax.axis('equal')
-                    ax.grid(True, alpha=0.25)
-                else:
-                    ax.axis('off')
-            fig2.suptitle("Felzenszwalb-aligned " + f"{N} 2D chunk profiles (color-matched)")
-            plt.tight_layout()
-            plt.show()
-
-        # Figure 3: Pitch-class color mapping arranged around a circle (circle of fifths order)
-        circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
-        pitch_names = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
-        fig3, ax3 = plt.subplots(1, 1, figsize=(6, 6))
-        R_outer = 1.0
-        R_inner = 0.6
-        for k in range(12):
-            pitch = circle_order[k]
-            H = k / 12.0
-            # # To try Scriabin's palette instead of equal spacing, uncomment:
-            # r_col, g_col, b_col = SCRIABIN_RGB.get(pitch, (1.0, 1.0, 1.0))
-            # # set the S and V to 1 and convert back to rgb:
-            # h, s, v = colorsys.rgb_to_hsv(r_col, g_col, b_col)
-            # s = 1.0
-            # v = 1.0
-            # r_col, g_col, b_col = colorsys.hsv_to_rgb(h, s, v)
-
-            r_col, g_col, b_col = colorsys.hsv_to_rgb(H, 1.0, 1.0)
-            theta_center = 90.0 - k * (360.0 / 12.0)  # C at top (90°), increasing k clockwise
-            theta1 = theta_center - (180.0 / 12.0)    # 15° before center
-            theta2 = theta_center + (180.0 / 12.0)    # 15° after center
-            wedge = Wedge((0.0, 0.0), R_outer, theta1, theta2, width=R_outer - R_inner, facecolor=(r_col, g_col, b_col), edgecolor='white')
-            ax3.add_patch(wedge)
-            theta_mid = np.deg2rad(theta_center)
-            tx = (R_outer + 0.08) * np.cos(theta_mid)
-            ty = (R_outer + 0.08) * np.sin(theta_mid)
-            ax3.text(tx, ty, pitch_names[pitch], ha='center', va='center', fontsize=10)
-        # Outer ring guide
-        guide = Wedge((0.0, 0.0), R_outer, 0, 360, width=0.0, facecolor='none', edgecolor='#999999')
-        ax3.add_patch(guide)
-        ax3.set_xlim(-1.25, 1.25)
-        ax3.set_ylim(-1.25, 1.25)
-        ax3.set_aspect('equal')
-        ax3.axis('off')
-        ax3.set_title("Pitch-class color circle (circle of fifths order)")
-        plt.tight_layout()
-        plt.show()
+        _draw_path_visualizations(X, Y, curve_chunks_2d)
 
     return X, Y, curve_chunks_2d, curve_profiles_2d

@@ -45,9 +45,10 @@ class BoundaryManager:
                 pymunk.Segment(self.space.static_body, (0, self.height), (self.width, self.height), 1),
                 pymunk.Segment(self.space.static_body, (self.width, 0), (self.width, self.height), 1),
             ]
+            physics_cfg = self.config.get("physics", {}).get("chunk", {})
             for line in static_lines:
-                line.elasticity = 1.0
-                line.friction = 5.0
+                line.elasticity = physics_cfg.get("elasticity", 1.0)
+                line.friction = physics_cfg.get("friction", 5.0)
             self.space.add(*static_lines)
             # Store references to these walls to be able to remove them later
             self.boundary_walls = static_lines

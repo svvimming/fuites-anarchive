@@ -29,6 +29,8 @@ from utils.sound_utils import (
     create_2d_path_visualization,
 )
 
+from utils.logging_utils import get_logger
+
 __all__ = [
     # Color
     'calculate_chunk_color',
@@ -51,4 +53,6 @@ __all__ = [
     'estimate_alpha',
     'split_audio_felzenszwalb_2d',
     'create_2d_path_visualization',
+    # Logging
+    'get_logger',
 ]

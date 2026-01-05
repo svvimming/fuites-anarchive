@@ -13,9 +13,12 @@ from managers import (
     QueueManager,
     WormManager,
 )
-from processors import ImageProcessor
+from processors import pick_image_file
 from ui import UIManager
 from utils.system_utils import quit_program
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 class Simulation:
@@ -70,9 +73,6 @@ class Simulation:
         self.queue_manager.set_chunks_list(self.chunks)
         self.queue_manager.set_batch_complete_callback(self._on_batch_complete)
 
-        # Image processor for dialog-based loading
-        self.image_processor = ImageProcessor(config)
-
     # ----------------------------------------------------------------
     # Properties (externally-used only)
     # ----------------------------------------------------------------
@@ -107,17 +107,21 @@ class Simulation:
         """Toggle history panel visibility."""
         self.worm_manager.toggle_history_panel()
 
-    def enqueue_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
-        """Enqueue raw image bytes for processing."""
-        self.queue_manager.enqueue_image_bytes(image_bytes, target_width, target_height)
+    def on_upload_received(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
+        """Handle incoming image upload (from HTTP server)."""
+        self.queue_manager.on_upload_received(image_bytes, target_width, target_height)
 
-    def drain_upload_queue(self, max_items: int = 4) -> None:
-        """Drain upload queue."""
-        self.queue_manager.drain_upload_queue(max_items)
+    def process_pending_uploads(self, max_items: int = None) -> None:
+        """Process pending uploads from HTTP queue."""
+        if max_items is None:
+            max_items = self.config.get("queue", {}).get("max_upload_drain", 4)
+        self.queue_manager._process_pending_uploads(max_items)
 
-    def drain_processed_chunks(self, max_items: int = 15) -> None:
-        """Drain processed chunks from worker."""
-        self.queue_manager.drain_processed_chunks(max_items)
+    def receive_chunks(self, max_items: int = None) -> None:
+        """Receive processed chunks from background."""
+        if max_items is None:
+            max_items = self.config.get("queue", {}).get("max_chunk_drain", 15)
+        self.queue_manager.receive_chunks(max_items)
 
     def cleanup(self) -> None:
         """Clean up resources before shutdown."""
@@ -129,7 +133,7 @@ class Simulation:
     # ----------------------------------------------------------------
     def _on_batch_complete(self, upload_type: str) -> None:
         """Called when a processing batch completes."""
-        print(f"Spawning worms for {upload_type} upload.")
+        _logger.info("Spawning worms for %s upload", upload_type)
         self.worm_manager.spawn_worms_for_upload(upload_type, len(self.chunks))
 
     # ----------------------------------------------------------------
@@ -168,13 +172,13 @@ class Simulation:
     # Upload methods
     # ----------------------------------------------------------------
     def upload_image(self) -> None:
-        """Let the user pick an image and create chunks from its segments."""
-        image = self.image_processor.load_image_via_dialog()
+        """Let the user pick an image and submit for processing."""
+        image = pick_image_file()
         if image:
-            self.queue_manager.process_image_surface(image, None, None)
+            self.queue_manager.submit_image(image, None, None)
 
     def upload_sound(self) -> None:
-        """Let the user pick a sound file and create curve-based chunks."""
+        """Let the user pick an audio file and submit for processing."""
         file_path = filedialog.askopenfilename(
             title="Select an audio file",
             filetypes=[
@@ -184,21 +188,17 @@ class Simulation:
         )
         if file_path and os.path.exists(file_path):
             try:
-                self.queue_manager.process_sound_file(file_path)
+                self.queue_manager.submit_audio(file_path)
             except Exception as e:
-                print(f"Failed to process sound: {e}")
+                _logger.warning("Failed to submit audio: %s", e)
 
-    def process_image_surface(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
-        """Process a provided pygame Surface."""
-        self.queue_manager.process_image_surface(image, target_width, target_height)
+    def submit_image(self, image: pygame.Surface, target_width: int = None, target_height: int = None) -> None:
+        """Submit an image for background processing."""
+        self.queue_manager.submit_image(image, target_width, target_height)
 
-    def process_sound_file(self, song_path: str) -> None:
-        """Process a sound file."""
-        self.queue_manager.process_sound_file(song_path)
-
-    def process_image_bytes(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> bool:
-        """Load an image from raw bytes and process it."""
-        return self.queue_manager.process_image_bytes(image_bytes, target_width, target_height)
+    def submit_audio(self, audio_path: str) -> None:
+        """Submit an audio file for background processing."""
+        self.queue_manager.submit_audio(audio_path)
 
     # ----------------------------------------------------------------
     # Core update methods
@@ -341,7 +341,7 @@ class Simulation:
         """Remove all chunks from the simulation and reset worms and glues."""
         for chunk in self.chunks:
             self.space.remove(chunk.shape, chunk.body)
-        print(f"Removed {len(self.chunks)} chunks from the simulation.")
+        _logger.info("Removed %d chunks from the simulation", len(self.chunks))
         self.chunks.clear()
         self.worm_manager.clear()
         self.glues.clear()

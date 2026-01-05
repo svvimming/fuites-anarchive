@@ -1,4 +1,4 @@
-"""Upload and worker queue management."""
+"""Upload queue and background processing management."""
 import multiprocessing
 import uuid
 import io
@@ -8,13 +8,16 @@ import pymunk
 from queue import Queue, Empty
 from typing import Dict, Any, List, Tuple, Callable, Optional
 
-from processors import ChunkData, BatchComplete, worker_loop
+from processors import ChunkData, BatchComplete, background_loop
 from utils.image_utils import scale_image_to_fit, resize_image_to_dimensions
+from utils.logging_utils import get_logger
 from entities import Chunk
+
+_logger = get_logger(__name__)
 
 
 class QueueManager:
-    """Manages queues for async upload and worker processing."""
+    """Manages queues for async upload and background processing."""
 
     def __init__(
         self,
@@ -40,9 +43,9 @@ class QueueManager:
         # Upload queue (HTTP -> Main thread)
         self._upload_queue: Queue[Tuple[bytes, Optional[int], Optional[int]]] = Queue()
 
-        # Worker queues (Main <-> Worker process)
-        self._worker_input_queue: multiprocessing.Queue = multiprocessing.Queue()
-        self._worker_output_queue: multiprocessing.Queue = multiprocessing.Queue()
+        # Background processing queues (Main <-> Background process)
+        self._task_queue: multiprocessing.Queue = multiprocessing.Queue()
+        self._results_queue: multiprocessing.Queue = multiprocessing.Queue()
 
         # Batch tracking
         self._pending_batches: Dict[str, int] = {}  # batch_id -> chunks remaining
@@ -54,13 +57,13 @@ class QueueManager:
         # Callback for batch completion
         self._on_batch_complete: Optional[Callable[[str], None]] = None
 
-        # Start worker process
-        self._worker_process = multiprocessing.Process(
-            target=worker_loop,
-            args=(self._worker_input_queue, self._worker_output_queue, config),
+        # Start background process
+        self._background_process = multiprocessing.Process(
+            target=background_loop,
+            args=(self._task_queue, self._results_queue, config),
             daemon=True
         )
-        self._worker_process.start()
+        self._background_process.start()
 
     def set_chunks_list(self, chunks: List[Chunk]) -> None:
         """Set reference to the main chunks list."""
@@ -70,14 +73,14 @@ class QueueManager:
         """Set callback for when a batch completes processing."""
         self._on_batch_complete = callback
 
-    def enqueue_image_bytes(
+    def on_upload_received(
         self,
         image_bytes: bytes,
         target_width: Optional[int] = None,
         target_height: Optional[int] = None
     ) -> None:
         """
-        Enqueue raw image bytes and target dimensions to be processed on the main thread.
+        Handle incoming image upload (callback from HTTP server).
 
         Args:
             image_bytes: Raw image data
@@ -87,14 +90,14 @@ class QueueManager:
         if image_bytes:
             self._upload_queue.put((image_bytes, target_width, target_height))
 
-    def process_image_bytes(
+    def _load_and_submit_image(
         self,
         image_bytes: bytes,
         target_width: Optional[int] = None,
         target_height: Optional[int] = None
     ) -> bool:
         """
-        Load an image from raw bytes and process it into chunks.
+        Load image from raw bytes and submit for processing.
 
         Args:
             image_bytes: Raw image data
@@ -102,27 +105,26 @@ class QueueManager:
             target_height: Optional target height
 
         Returns:
-            True if processing succeeded, False otherwise
+            True if submission succeeded, False otherwise
         """
         try:
             bytes_io = io.BytesIO(image_bytes)
             image = pygame.image.load(bytes_io).convert_alpha()
         except Exception as exc:
-            print(f"Failed to load image from bytes: {exc}")
+            _logger.warning("Failed to load image from bytes: %s", exc)
             return False
 
-        self.process_image_surface(image, target_width, target_height)
+        self.submit_image(image, target_width, target_height)
         return True
 
-    def process_image_surface(
+    def submit_image(
         self,
         image: pygame.Surface,
         target_width: Optional[int] = None,
         target_height: Optional[int] = None
     ) -> None:
         """
-        Process a provided pygame Surface.
-        Sends heavy processing to background worker for non-blocking operation.
+        Submit an image for background segmentation processing.
 
         Args:
             image: Loaded image surface to process
@@ -134,13 +136,13 @@ class QueueManager:
         max_height = self.height
 
         if target_width is not None and target_height is not None:
-            print(f"Using target dimensions: {target_width}x{target_height}")
+            _logger.debug("Using target dimensions: %dx%d", target_width, target_height)
             image = resize_image_to_dimensions(image, target_width, target_height, max_width, max_height)
         else:
-            print(f"Scaling to fit screen: {max_width}x{max_height}")
+            _logger.debug("Scaling to fit screen: %dx%d", max_width, max_height)
             image = scale_image_to_fit(image, max_width, max_height)
 
-        print(f"Image scaled to {image.get_size()}. Sending to background worker...")
+        _logger.debug("Image scaled to %s, sending to background", image.get_size())
 
         # Convert pygame surface to numpy RGBA array
         try:
@@ -149,40 +151,39 @@ class QueueManager:
             # Combine into RGBA
             image_rgba = np.dstack((rgb_array, alpha_array))  # (H, W, 4)
         except Exception as e:
-            print(f"Failed to convert image to array: {e}")
+            _logger.warning("Failed to convert image to array: %s", e)
             return
 
         # Generate unique batch ID
         batch_id = str(uuid.uuid4())[:8]
         self._batch_upload_types[batch_id] = "image"
 
-        # Send to worker (non-blocking)
-        self._worker_input_queue.put(("image", image_rgba, image.get_size(), batch_id))
-        print(f"Image batch {batch_id} queued for processing")
+        # Send to background process
+        self._task_queue.put(("image", image_rgba, image.get_size(), batch_id))
+        _logger.info("Image batch %s queued for processing", batch_id)
 
-    def process_sound_file(self, song_path: str) -> None:
+    def submit_audio(self, audio_path: str) -> None:
         """
-        Process a sound file.
-        Sends heavy processing to background worker for non-blocking operation.
+        Submit an audio file for background segmentation processing.
 
         Args:
-            song_path: Path to the audio file
+            audio_path: Path to the audio file
         """
         import os
         # Generate unique batch ID
         batch_id = str(uuid.uuid4())[:8]
         self._batch_upload_types[batch_id] = "sound"
 
-        # Send to worker (non-blocking)
-        self._worker_input_queue.put(("sound", song_path, batch_id))
-        print(f"Sound batch {batch_id} queued for processing: {os.path.basename(song_path)}")
+        # Send to background process
+        self._task_queue.put(("sound", audio_path, batch_id))
+        _logger.info("Sound batch %s queued: %s", batch_id, os.path.basename(audio_path))
 
-    def drain_upload_queue(self, max_items: int = 4) -> None:
+    def _process_pending_uploads(self, max_items: int = 4) -> None:
         """
-        Drain up to max_items from the upload queue and process them.
+        Process pending uploads from the upload queue.
 
         Args:
-            max_items: Maximum items to process
+            max_items: Maximum items to process per call
         """
         processed = 0
         while processed < max_items:
@@ -192,24 +193,24 @@ class QueueManager:
                 break
             try:
                 image_bytes, target_width, target_height = data_tuple
-                self.process_image_bytes(image_bytes, target_width, target_height)
+                self._load_and_submit_image(image_bytes, target_width, target_height)
             finally:
                 processed += 1
 
-    def drain_processed_chunks(self, max_items: int = 15) -> None:
+    def receive_chunks(self, max_items: int = 15) -> None:
         """
-        Drain processed chunk data from background worker and create physics bodies.
-        This is the main thread's way of integrating chunks without blocking.
+        Receive processed chunks from background and create physics bodies.
+        Call this each frame to integrate completed chunks without blocking.
 
         Args:
-            max_items: Maximum chunks to process per frame (controls gradual appearance)
+            max_items: Maximum chunks to integrate per frame (controls gradual appearance)
         """
         processed = 0
         completed_batches = []  # Collect BatchComplete markers
 
         while processed < max_items:
             try:
-                item = self._worker_output_queue.get_nowait()
+                item = self._results_queue.get_nowait()
             except Empty:
                 break
 
@@ -218,8 +219,8 @@ class QueueManager:
                 # We might not have processed them all yet, so store the marker
                 completed_batches.append(item)
             elif isinstance(item, ChunkData):
-                # Create chunk from pre-processed data
-                chunk = Chunk.from_data(
+                # Create chunk from segment data
+                chunk = Chunk.from_segment(
                     surface_bytes=item.surface_bytes,
                     surface_size=item.surface_size,
                     vertices=item.vertices,
@@ -239,7 +240,7 @@ class QueueManager:
 
                 processed += 1
             else:
-                print(f"Unknown item type from worker: {type(item)}")
+                _logger.warning("Unknown item type from background: %s", type(item))
                 processed += 1
 
         # Process completed batches
@@ -249,7 +250,7 @@ class QueueManager:
             upload_type = self._batch_upload_types.pop(batch_id, batch_complete.upload_type)
             if isinstance(upload_type, tuple):
                 upload_type = upload_type[0]  # Handle legacy format
-            print(f"Batch {batch_id} complete ({chunks_added} chunks).")
+            _logger.info("Batch %s complete (%d chunks)", batch_id, chunks_added)
 
             if self._on_batch_complete:
                 self._on_batch_complete(upload_type)
@@ -257,18 +258,18 @@ class QueueManager:
     def cleanup(self) -> None:
         """
         Clean up resources before shutdown.
-        Terminates the background worker process gracefully.
+        Terminates the background process gracefully.
         """
-        print("Shutting down background worker...")
+        _logger.info("Shutting down background process...")
         try:
             # Send shutdown signal
-            self._worker_input_queue.put(None)
-            # Wait for worker to finish
-            self._worker_process.join(timeout=2.0)
-            if self._worker_process.is_alive():
-                print("Worker did not exit in time, terminating...")
-                self._worker_process.terminate()
-                self._worker_process.join(timeout=1.0)
+            self._task_queue.put(None)
+            # Wait for background process to finish
+            self._background_process.join(timeout=2.0)
+            if self._background_process.is_alive():
+                _logger.warning("Background process did not exit in time, terminating")
+                self._background_process.terminate()
+                self._background_process.join(timeout=1.0)
         except Exception as e:
-            print(f"Error during cleanup: {e}")
-        print("Cleanup complete.")
+            _logger.warning("Error during cleanup: %s", e)
+        _logger.info("Cleanup complete")

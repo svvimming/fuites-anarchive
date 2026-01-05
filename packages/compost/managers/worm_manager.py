@@ -3,6 +3,9 @@ import pygame
 import pymunk
 from typing import Dict, Any, List, Optional, Tuple
 from entities import Worm, Glue, Chunk
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 class WormManager:
@@ -52,7 +55,7 @@ class WormManager:
         self._spawn_pending -= 1
         spawned_so_far = self._spawn_batch_total - self._spawn_pending
         total = self._spawn_batch_total
-        print(f"Spawned new worm {spawned_so_far} of {total}")
+        _logger.info("Spawned worm %d of %d", spawned_so_far, total)
 
     def check_worm_completion(self) -> None:
         """Advance scheduling when the active worm finishes eating."""
@@ -66,7 +69,7 @@ class WormManager:
                 # Reset batch counters
                 self._spawn_batch_total = 0
                 self._spawn_pending = 0
-                print("All scheduled worms have been spawned and completed")
+                _logger.debug("All scheduled worms completed")
 
     def spawn_worms_for_upload(self, upload_type: str, total_particles: int) -> None:
         """
@@ -84,9 +87,9 @@ class WormManager:
         worms_to_spawn = worms_per_upload if is_superabundant else 1
 
         if is_superabundant:
-            print(f"SUPERABUNDANCE detected! {total_particles} total particles. Scheduling {worms_to_spawn} worms for {upload_type} upload.")
+            _logger.info("SUPERABUNDANCE: %d particles, scheduling %d worms for %s", total_particles, worms_to_spawn, upload_type)
         else:
-            print(f"Normal abundance: {total_particles} total particles. Scheduling {worms_to_spawn} worm for {upload_type} upload.")
+            _logger.debug("Normal abundance: %d particles, scheduling %d worm for %s", total_particles, worms_to_spawn, upload_type)
 
         # Schedule sequential spawning
         self.schedule_worms(worms_to_spawn)

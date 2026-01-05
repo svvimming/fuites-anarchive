@@ -4,6 +4,9 @@ import pygame
 import random
 import math
 from typing import Dict, Any, List, Optional, Callable
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 class ExportManager:
@@ -60,7 +63,7 @@ class ExportManager:
             glues_to_export.append(worm.glue)
 
         if not glues_to_export:
-            print("No glues to export.")
+            _logger.debug("No glues to export")
             return 0
 
         exported_count = 0
@@ -98,9 +101,9 @@ class ExportManager:
             filepath = os.path.join(self.export_dir, filename)
             try:
                 pygame.image.save(image_to_save, filepath)
-                print(f"Exported glue PNG to: {filepath}")
+                _logger.info("Exported glue PNG: %s", filepath)
             except Exception as exc:
-                print(f"Failed to export glue PNG: {exc}")
+                _logger.warning("Failed to export glue PNG: %s", exc)
 
             # Export mixed audio if there are sound chunks in this glue
             self._export_glue_audio(glued_chunks, timestamp, rand_suffix, exported_count)
@@ -153,7 +156,7 @@ class ExportManager:
                     w.history.clear()
                     w.last_color = None
 
-        print(f"Export complete. {exported_count} glue images saved. Removed glued chunks and cleaned up glues.")
+        _logger.info("Export complete: %d glue images saved", exported_count)
 
         if on_complete:
             on_complete(exported_count)
@@ -192,7 +195,7 @@ class ExportManager:
             import soundfile as sf
             import numpy as np
         except ImportError:
-            print("librosa and soundfile required for audio mixing")
+            _logger.warning("librosa and soundfile required for audio mixing")
             return
 
         try:
@@ -234,7 +237,7 @@ class ExportManager:
                 mix_length = end_sample - start_sample
                 mixed_audio[start_sample:end_sample] += y[:mix_length]
 
-                print(f"  Mixed audio {i+1}/{len(audio_data)}: {os.path.basename(audio_files[i])} at {start_sample/target_sr:.2f}s")
+                _logger.debug("Mixed audio %d/%d: %s at %.2fs", i+1, len(audio_data), os.path.basename(audio_files[i]), start_sample/target_sr)
 
             # Normalize to prevent clipping
             if np.max(np.abs(mixed_audio)) > 0:
@@ -244,7 +247,7 @@ class ExportManager:
             audio_filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}_mixed.wav"
             audio_filepath = os.path.join(self.export_dir, audio_filename)
             sf.write(audio_filepath, mixed_audio, target_sr)
-            print(f"Exported mixed audio to: {audio_filepath}")
+            _logger.info("Exported mixed audio: %s", audio_filepath)
 
         except Exception as exc:
-            print(f"Failed to export mixed audio: {exc}")
+            _logger.warning("Failed to export mixed audio: %s", exc)

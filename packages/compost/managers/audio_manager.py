@@ -4,6 +4,9 @@ import math
 import os
 import random
 from typing import Dict, Set, Tuple, Any, List
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 class AudioManager:
@@ -23,12 +26,19 @@ class AudioManager:
         self.sound_cache: Dict[str, pygame.mixer.Sound] = {}  # {path: Sound}
 
         # Initialize pygame mixer for audio playback with multiple channels
+        mixer_cfg = config.get("audio", {}).get("mixer", {})
         try:
-            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=2048)
-            pygame.mixer.set_num_channels(256)  # Allow up to 256 simultaneous sounds
-            print("Audio mixer initialized successfully with 256 channels (buffer: 2048)")
+            pygame.mixer.init(
+                frequency=mixer_cfg.get("frequency", 22050),
+                size=mixer_cfg.get("size", -16),
+                channels=mixer_cfg.get("channels", 2),
+                buffer=mixer_cfg.get("buffer", 2048)
+            )
+            max_channels = mixer_cfg.get("max_channels", 256)
+            pygame.mixer.set_num_channels(max_channels)
+            _logger.info("Audio mixer initialized (%d channels)", max_channels)
         except pygame.error as e:
-            print(f"Failed to initialize audio mixer: {e}")
+            _logger.warning("Failed to initialize audio mixer: %s", e)
 
     def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
         """
@@ -73,11 +83,10 @@ class AudioManager:
             # Clamp volume to [0, 1.0] range
             volume = max(0.0, min(1.0, volume))
 
-            # Debug: print chunks that are skipped due to low volume
+            # Debug: log chunks that are skipped due to low volume (rarely)
             if volume < min_volume_threshold:
-                # Only print occasionally to avoid spam
-                if random.random() < 0.01:  # 1% chance to print
-                    print(f"Chunk skipped: volume {volume:.4f} below threshold {min_volume_threshold} (distance: {distance:.1f})")
+                if random.random() < 0.01:
+                    _logger.debug("Chunk skipped: volume %.4f < threshold (distance: %.1f)", volume, distance)
 
             # Only play if volume is above threshold
             if volume >= min_volume_threshold:
@@ -101,11 +110,11 @@ class AudioManager:
                             channel.set_volume(volume)
                             self.playing_chunks[chunk] = channel
                             self.chunk_volumes[chunk] = volume
-                            print(f"Playing audio: {os.path.basename(chunk.audio_path)} at volume {volume:.3f}")
+                            _logger.debug("Playing: %s at volume %.3f", os.path.basename(chunk.audio_path), volume)
                     except pygame.error as e:
-                        print(f"Failed to play audio {chunk.audio_path}: {e}")
+                        _logger.warning("Failed to play audio %s: %s", chunk.audio_path, e)
                     except Exception as e:
-                        print(f"Unexpected error playing audio {chunk.audio_path}: {e}")
+                        _logger.warning("Unexpected error playing audio %s: %s", chunk.audio_path, e)
 
         # Stop chunks that are no longer in range or below threshold
         chunks_to_stop = currently_playing - should_be_playing
@@ -117,7 +126,7 @@ class AudioManager:
                 del self.playing_chunks[chunk]
                 if chunk in self.chunk_volumes:
                     del self.chunk_volumes[chunk]
-                print(f"Stopped audio: {os.path.basename(chunk.audio_path)}")
+                _logger.debug("Stopped: %s", os.path.basename(chunk.audio_path))
 
     def cleanup_finished_audio(self) -> None:
         """

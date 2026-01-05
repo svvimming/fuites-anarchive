@@ -1,61 +1,91 @@
-"""Image processing and segmentation."""
+"""Image segmentation using Felzenszwalb algorithm."""
 import os
 import math
 import pygame
-import pymunk
 import numpy as np
 from tkinter import filedialog
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from skimage.segmentation import felzenszwalb
-from skimage.color import rgba2rgb, rgb2gray
+from skimage.color import rgb2gray
 from skimage.util import img_as_ubyte
 from skimage.transform import resize as sk_resize
 from scipy.spatial import ConvexHull, QhullError
 
-from entities.chunk import Chunk
 from utils.color_utils import calculate_chunk_color
 from utils.math_utils import calculate_entropy
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
-class ImageProcessor:
+def pick_image_file() -> Optional[pygame.Surface]:
     """
-    Handles image loading, optional scaling, Felzenszwalb segmentation,
-    and compression of low complexity, large segments by marking them for downsizing.
+    Open a file dialog to select and load an image.
+
+    Returns:
+        pygame.Surface with alpha, or None if canceled/failed.
     """
+    file_path = filedialog.askopenfilename(
+        title="Select an image",
+        filetypes=[("Image files", ("*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif"))],
+    )
+    if file_path and os.path.exists(file_path):
+        try:
+            surface = pygame.image.load(file_path).convert_alpha()
+            _logger.info("Loaded image: %s", file_path)
+            return surface
+        except pygame.error as e:
+            _logger.warning("Unable to load image: %s", e)
+    return None
 
-    def __init__(self, config: Dict[str, Any]) -> None:
-        """
-        Args:
-            config (Dict[str, Any]): The entire config dictionary
-        """
-        self.config = config
+def _identify_downsize_labels(
+    segments: np.ndarray,
+    grayscale: np.ndarray,
+    max_size: int,
+    min_entropy: float
+) -> List[int]:
+    """Identify segment labels that should be downsampled (large + low entropy)."""
+    labels_to_downsize = []
+    for label in np.unique(segments):
+        mask = segments == label
+        size = np.sum(mask)
+        if size < 3:
+            continue
+        ent = calculate_entropy(grayscale, mask)
+        if size > max_size and ent < min_entropy:
+            labels_to_downsize.append(label)
+    return labels_to_downsize
 
-    def load_image_via_dialog(self) -> pygame.Surface:
-        """
-        Opens a file dialog to load an image via Tkinter.
 
-        Returns:
-            pygame.Surface: The loaded image (with alpha), or None if canceled.
-        """
-        file_path = filedialog.askopenfilename(
-            title="Select an image",
-            filetypes=[("Image files", ("*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif"))],
-        )
-        if file_path and os.path.exists(file_path):
-            try:
-                return pygame.image.load(file_path).convert_alpha()
-            except pygame.error as e:
-                print(f"Unable to load image: {e}")
+def _compute_hull_vertices(
+    coords: np.ndarray,
+    centroid: Tuple[float, float]
+) -> Optional[List[Tuple[float, float]]]:
+    """
+    Compute convex hull vertices centered at origin.
+
+    Returns:
+        List of (x, y) vertices, or None if hull computation fails
+    """
+    cy, cx = centroid
+    vertices = [(x - cx, y - cy) for (y, x) in coords]
+    vertices_array = np.array(vertices)
+
+    try:
+        hull = ConvexHull(vertices_array)
+    except QhullError:
         return None
 
-def process_image_to_chunks(
+    return [tuple(vertices_array[i]) for i in hull.vertices]
+
+
+def segment_image(
     image_rgba: np.ndarray,
     image_size: Tuple[int, int],
     config: Dict[str, Any]
 ) -> List[Dict[str, Any]]:
     """
-    Process an RGBA image into chunk data using Felzenszwalb segmentation.
-    Returns serializable chunk data dictionaries for async worker processing.
+    Segment an RGBA image into chunk data using Felzenszwalb algorithm.
 
     Args:
         image_rgba: RGBA image as numpy array (height, width, 4)
@@ -63,18 +93,12 @@ def process_image_to_chunks(
         config: Configuration dictionary
 
     Returns:
-        List of chunk data dictionaries with keys:
-        - surface_bytes: RGBA pixel data as bytes
-        - surface_size: (width, height)
-        - vertices: List of (x, y) tuples for convex hull
-        - downsized: bool
-        - cached_hsv_color: (h, s, v) tuple
+        List of chunk data dictionaries
     """
-    width, height = image_size
     chunks_data = []
 
     # Convert RGBA to RGB for segmentation
-    numpy_image = image_rgba[:, :, :3]  # Drop alpha
+    numpy_image = image_rgba[:, :, :3]
     if numpy_image.dtype != np.uint8:
         numpy_image = img_as_ubyte(numpy_image)
 
@@ -87,27 +111,18 @@ def process_image_to_chunks(
         min_size=felz_cfg.get("min_size", 20),
     )
 
-    # Compression config - identify segments to downsize
-    compress_cfg = config.get("compression", {})
-    max_size = compress_cfg.get("max_size", 5000)
-    min_entropy_threshold = compress_cfg.get("min_entropy", 4.0)
-    downsample_factor = compress_cfg.get("downsample_factor", 0.5)
-
-    # Calculate entropy for each segment
-    grayscale = rgb2gray(numpy_image)
-    grayscale = img_as_ubyte(grayscale)
-
     unique_labels = np.unique(segments)
-    labels_to_downsize = []
+    _logger.debug("Felzenszwalb found %d segments", len(unique_labels))
 
-    for label in unique_labels:
-        mask = segments == label
-        size = np.sum(mask)
-        if size < 3:
-            continue
-        ent = calculate_entropy(grayscale, mask)
-        if size > max_size and ent < min_entropy_threshold:
-            labels_to_downsize.append(label)
+    # Identify segments to downsize
+    compress_cfg = config.get("compression", {})
+    grayscale = img_as_ubyte(rgb2gray(numpy_image))
+    labels_to_downsize = _identify_downsize_labels(
+        segments, grayscale,
+        max_size=compress_cfg.get("max_size", 5000),
+        min_entropy=compress_cfg.get("min_entropy", 4.0)
+    )
+    downsample_factor = compress_cfg.get("downsample_factor", 0.5)
 
     # Filter config
     filt_cfg = config.get("segmentation", {}).get("image_filter", {})
@@ -135,15 +150,10 @@ def process_image_to_chunks(
         for y, x in coords:
             segment_rgba[y - min_y, x - min_x] = image_rgba[y, x]
 
-        # Calculate vertices (shifted to centroid at origin)
-        vertices = [(x - cx, y - cy) for (y, x) in coords]
-        vertices_array = np.array(vertices)
-
-        try:
-            hull = ConvexHull(vertices_array)
-        except QhullError:
+        # Compute convex hull vertices
+        hull_vertices = _compute_hull_vertices(coords, centroid)
+        if hull_vertices is None:
             continue
-        hull_vertices = [tuple(vertices_array[i]) for i in hull.vertices]
 
         # Calculate hull bounding box
         hull_xs = [v[0] for v in hull_vertices]
@@ -204,4 +214,5 @@ def process_image_to_chunks(
         }
         chunks_data.append(chunk_data)
 
+    _logger.info("Created %d chunks from image", len(chunks_data))
     return chunks_data

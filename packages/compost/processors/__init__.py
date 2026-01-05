@@ -1,32 +1,28 @@
-"""Processing modules for image and sound segmentation."""
+"""Processing modules for image and audio segmentation."""
 
-from processors.worker import (
+from processors.background import (
     ChunkData,
     BatchComplete,
-    process_image_task,
-    process_sound_task,
-    worker_loop,
+    background_loop,
 )
 
 from processors.image_processor import (
-    ImageProcessor,
-    process_image_to_chunks,
+    pick_image_file,
+    segment_image,
 )
 
 from processors.sound_processor import (
-    process_sound_to_chunks,
+    segment_audio,
 )
 
 __all__ = [
-    # Worker
+    # Background process
     'ChunkData',
     'BatchComplete',
-    'process_image_task',
-    'process_sound_task',
-    'worker_loop',
-    # Image processing
-    'ImageProcessor',
-    'process_image_to_chunks',
-    # Sound processing
-    'process_sound_to_chunks',
+    'background_loop',
+    # Image segmentation
+    'pick_image_file',
+    'segment_image',
+    # Audio segmentation
+    'segment_audio',
 ]

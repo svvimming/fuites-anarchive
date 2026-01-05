@@ -15,6 +15,19 @@ simulation:
     height: 40
     gap: 10
 
+# --- Physics constants ---
+physics:
+  chunk:
+    elasticity: 1.0
+    friction: 5.0
+    mass: 1.0
+    shape_filter_group: 1
+
+# --- Queue processing limits ---
+queue:
+  max_upload_drain: 4      # Max uploads to process per frame
+  max_chunk_drain: 15      # Max chunks to integrate per frame
+
 worm:
   max_chunks: 15
   appetite:
@@ -57,6 +70,10 @@ worm:
       pulse_speed: 0.05
       pulse_min: 0.7
       pulse_max: 1.0
+      glow_alpha_max: 150  # Maximum alpha for glow effect
+      full_ring_width: 2   # Width of white ring when glue is full
+      spin_speed: 1.0      # Rotation speed of color wheel
+      min_quality_steps: 6 # Minimum steps per segment for color wheel quality
   history_panel:
     enabled: true
     display_area:
@@ -133,3 +150,19 @@ sound:
     max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
     reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
     min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
+
+# --- Audio mixer settings ---
+audio:
+  mixer:
+    frequency: 22050
+    size: -16
+    channels: 2
+    buffer: 2048
+    max_channels: 256
+
+# --- Drawing constants ---
+drawing:
+  volume_scaling:
+    perceptual_exponent: 0.7    # Volume perception curve
+    line_width_multiplier: 2.0  # How much louder chunks get thicker
+    alpha_boost: 0.5            # How much louder chunks get brighter

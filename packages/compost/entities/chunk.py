@@ -3,8 +3,11 @@ import pymunk
 import math
 from typing import List, Tuple, Dict, Any, Optional
 import random
-from utils.color_utils import hsv_to_rgb_int
 from utils.geometry_utils import build_curve_surface
+from utils.logging_utils import get_logger
+from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, limit_vector, calculate_steering
+
+_logger = get_logger(__name__)
 
 
 class Chunk:
@@ -80,25 +83,11 @@ class Chunk:
         # Compute a valid random position using bounding-box constraints
         random_x, random_y = self._get_random_position_in_bounds(self.vertices)
 
-        # Setup the chunk's body and shape
-        mass = 1.0
-        moment = pymunk.moment_for_poly(mass, self.vertices)
-        self.body = pymunk.Body(mass, moment)
-        self.body.position = (random_x, random_y)
-        self.body.velocity = (
-            random.uniform(vel_min, vel_max),
-            random.uniform(vel_min, vel_max),
-        )
-
-        self.shape = pymunk.Poly(self.body, self.vertices)
-        self.shape.elasticity = 1.0
-        self.shape.friction = 5.0
-        self.shape.filter = pymunk.ShapeFilter(group=1)
-
-        self.space.add(self.body, self.shape)
+        # Setup physics body and shape using shared method
+        self._setup_physics_body(self.vertices, random_x, random_y, vel_min, vel_max)
 
     @classmethod
-    def from_data(
+    def from_segment(
         cls,
         surface_bytes: bytes,
         surface_size: Tuple[int, int],
@@ -112,8 +101,8 @@ class Chunk:
         original_line_width: Optional[int] = None,
     ) -> "Chunk":
         """
-        Create a Chunk from pre-processed data (fast, main-thread safe).
-        This bypasses heavy processing like color calculation.
+        Create a Chunk from segmentation result data.
+        Fast and main-thread safe - bypasses heavy processing.
 
         Args:
             surface_bytes: RGBA pixel data as bytes (from numpy array.tobytes())
@@ -188,25 +177,9 @@ class Chunk:
 
         chunk.original_opacity = 255
 
-        # Get random position
+        # Get random position and setup physics
         random_x, random_y = chunk._get_random_position_in_bounds(vertices)
-
-        # Setup physics body and shape
-        mass = 1.0
-        moment = pymunk.moment_for_poly(mass, vertices)
-        chunk.body = pymunk.Body(mass, moment)
-        chunk.body.position = (random_x, random_y)
-        chunk.body.velocity = (
-            random.uniform(vel_min, vel_max),
-            random.uniform(vel_min, vel_max),
-        )
-
-        chunk.shape = pymunk.Poly(chunk.body, vertices)
-        chunk.shape.elasticity = 1.0
-        chunk.shape.friction = 5.0
-        chunk.shape.filter = pymunk.ShapeFilter(group=1)
-
-        chunk.space.add(chunk.body, chunk.shape)
+        chunk._setup_physics_body(vertices, random_x, random_y, vel_min, vel_max)
 
         return chunk
 
@@ -247,120 +220,195 @@ class Chunk:
 
         return random_x, random_y
 
+    def _setup_physics_body(
+        self,
+        vertices: List[Tuple[float, float]],
+        pos_x: float,
+        pos_y: float,
+        vel_min: float,
+        vel_max: float
+    ) -> None:
+        """
+        Set up pymunk body and shape for the chunk.
+
+        Args:
+            vertices: Polygon vertices for the physics shape
+            pos_x: Initial x position
+            pos_y: Initial y position
+            vel_min: Minimum velocity for random initial velocity
+            vel_max: Maximum velocity for random initial velocity
+        """
+        # Get physics constants from config
+        physics_cfg = self.config.get("physics", {}).get("chunk", {})
+        mass = physics_cfg.get("mass", 1.0)
+        elasticity = physics_cfg.get("elasticity", 1.0)
+        friction = physics_cfg.get("friction", 5.0)
+        shape_filter_group = physics_cfg.get("shape_filter_group", 1)
+
+        # Create body
+        moment = pymunk.moment_for_poly(mass, vertices)
+        self.body = pymunk.Body(mass, moment)
+        self.body.position = (pos_x, pos_y)
+        self.body.velocity = (
+            random.uniform(vel_min, vel_max),
+            random.uniform(vel_min, vel_max),
+        )
+
+        # Create shape
+        self.shape = pymunk.Poly(self.body, vertices)
+        self.shape.elasticity = elasticity
+        self.shape.friction = friction
+        self.shape.filter = pymunk.ShapeFilter(group=shape_filter_group)
+
+        # Add to physics space
+        self.space.add(self.body, self.shape)
+
+    def _get_volume_scaled_surface(
+        self,
+        volume: float
+    ) -> Tuple[pygame.Surface, int]:
+        """
+        Get surface scaled by volume for sound chunks.
+
+        Args:
+            volume: Volume level (0.0-1.0)
+
+        Returns:
+            (surface, alpha) tuple
+        """
+        drawing_cfg = self.config.get("drawing", {}).get("volume_scaling", {})
+        perceptual_exp = drawing_cfg.get("perceptual_exponent", 0.7)
+        line_mult = drawing_cfg.get("line_width_multiplier", 2.0)
+        alpha_boost = drawing_cfg.get("alpha_boost", 0.5)
+
+        perceptual_volume = math.pow(volume, perceptual_exp)
+
+        # Scale line width
+        scaled_line_width = max(1, int(self.original_line_width * (1.0 + perceptual_volume * line_mult)))
+
+        # Scale opacity
+        pts, rgba, surf_w, surf_h, padding = self.curve_data
+        original_alpha = rgba[3]
+        scaled_alpha = min(1.0, original_alpha * (1.0 + perceptual_volume * alpha_boost))
+        scaled_rgba = (rgba[0], rgba[1], rgba[2], scaled_alpha)
+
+        # Cache by rounded values
+        line_cache_key = (scaled_line_width // 2) * 2
+        alpha_cache_key = int(scaled_alpha * 10) / 10.0
+        cache_key = (line_cache_key, alpha_cache_key)
+
+        if cache_key not in self._cached_surfaces:
+            self._cached_surfaces[cache_key] = build_curve_surface(
+                pts, scaled_rgba, surf_w, surf_h,
+                line_width=line_cache_key, padding=padding
+            )
+
+        return self._cached_surfaces[cache_key], 255
+
+    def _get_torus_positions(
+        self,
+        pos_x: float,
+        pos_y: float,
+        rect: pygame.Rect,
+        width: int,
+        height: int
+    ) -> List[Tuple[float, float]]:
+        """
+        Calculate all positions to draw chunk at for torus wrapping.
+
+        Args:
+            pos_x: Current x position
+            pos_y: Current y position
+            rect: Bounding rectangle of rotated surface
+            width: Screen width
+            height: Screen height
+
+        Returns:
+            List of (x, y) positions to draw at
+        """
+        positions = [(pos_x, pos_y)]
+
+        # Horizontal wrap
+        if rect.left < 0:
+            positions.append((pos_x + width, pos_y))
+        elif rect.right > width:
+            positions.append((pos_x - width, pos_y))
+
+        # Vertical wrap
+        if rect.top < 0:
+            positions.append((pos_x, pos_y + height))
+        elif rect.bottom > height:
+            positions.append((pos_x, pos_y - height))
+
+        # Corner wrap
+        if rect.left < 0 and rect.top < 0:
+            positions.append((pos_x + width, pos_y + height))
+        elif rect.left < 0 and rect.bottom > height:
+            positions.append((pos_x + width, pos_y - height))
+        elif rect.right > width and rect.top < 0:
+            positions.append((pos_x - width, pos_y + height))
+        elif rect.right > width and rect.bottom > height:
+            positions.append((pos_x - width, pos_y - height))
+
+        return positions
+
+    def _draw_debug_outline(
+        self,
+        surface: pygame.Surface,
+        center_x: float,
+        center_y: float
+    ) -> None:
+        """Draw debug physics outline at given center position."""
+        colors = self.config["colors"]
+        cos_a = math.cos(self.body.angle)
+        sin_a = math.sin(self.body.angle)
+        transformed_vertices = [
+            (
+                v.x * cos_a - v.y * sin_a + center_x,
+                v.x * sin_a + v.y * cos_a + center_y
+            )
+            for v in self.shape.get_vertices()
+        ]
+        pygame.draw.polygon(surface, colors["RED"], transformed_vertices, width=1)
+
     def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False, volume: float = 0.0) -> None:
         """
         Draw the chunk on a Pygame surface.
-        In torus mode, handles drawing the chunk at multiple positions when crossing boundaries.
-        The UI bar is treated as an overlay only - wrapping happens across the full screen.
+
         Args:
-            surface (pygame.Surface): The surface to draw on.
-            debug_mode (bool): Whether to draw debug outlines.
-            torus_world (bool): Whether the simulation uses torus wrapping.
-            volume (float): Volume level (0.0-1.0) for highlighting active sound chunks.
+            surface: The surface to draw on
+            debug_mode: Whether to draw debug outlines
+            torus_world: Whether the simulation uses torus wrapping
+            volume: Volume level (0.0-1.0) for highlighting active sound chunks
         """
         pos = self.body.position
         angle_degrees = math.degrees(-self.body.angle)
-        
-        # Calculate perceptual volume and scale original line properties
+
+        # Get working surface (volume-scaled for sound chunks, or original)
         if volume > 0.0 and self.curve_data is not None and self.original_line_width is not None:
-            perceptual_volume = math.pow(volume, 0.7)
-            # Scale original line width: enhance from original based on volume
-            scaled_line_width = max(1, int(self.original_line_width * (1.0 + perceptual_volume * 2.0)))
-            # Scale original opacity: extract from rgba and scale based on volume
-            pts, rgba, surf_w, surf_h, padding = self.curve_data
-            original_alpha = rgba[3]  # Original opacity from curve data (0.0-1.0)
-            # Scale opacity: enhance from original based on volume
-            scaled_alpha = min(1.0, original_alpha * (1.0 + perceptual_volume * 0.5))
-            scaled_rgba = (rgba[0], rgba[1], rgba[2], scaled_alpha)
-            
-            # Cache surfaces by (line_width, alpha_key) to avoid redrawing every frame
-            # Round values for caching to reduce cache size
-            line_cache_key = (scaled_line_width // 2) * 2
-            alpha_cache_key = int(scaled_alpha * 10) / 10.0  # Round to 0.1
-            cache_key = (line_cache_key, alpha_cache_key)
-            
-            if cache_key not in self._cached_surfaces:
-                # Rebuild surface with scaled line width and opacity
-                self._cached_surfaces[cache_key] = build_curve_surface(pts, scaled_rgba, surf_w, surf_h, line_width=line_cache_key, padding=padding)
-            working_surface = self._cached_surfaces[cache_key]
-            # Surface already has opacity baked in, so set alpha to full
-            chunk_alpha = 255
+            working_surface, chunk_alpha = self._get_volume_scaled_surface(volume)
         else:
-            # At rest or no curve data: use original surface
             working_surface = self.segment_surface
             chunk_alpha = self.original_opacity
-        
+
         rotated_surface = pygame.transform.rotate(working_surface, angle_degrees)
-        # Apply alpha to the chunk surface
         rotated_surface.set_alpha(chunk_alpha)
-        
+
         width, height = surface.get_size()
-        
-        # Determine if the chunk is crossing boundaries for torus mode
+
+        # Get positions to draw at (handles torus wrapping)
         if torus_world:
-            # Get the bounding rectangle of the rotated surface
             rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
-            
-            # Check if the chunk is crossing any of the screen boundaries
-            positions_to_draw = [(pos.x, pos.y)]
-            
-            # Check horizontal boundaries
-            if rect.left < 0:
-                positions_to_draw.append((pos.x + width, pos.y))
-            elif rect.right > width:
-                positions_to_draw.append((pos.x - width, pos.y))
-                
-            # Check vertical boundaries - treat top of screen as top boundary (ignore UI bar)
-            if rect.top < 0:
-                positions_to_draw.append((pos.x, pos.y + height))
-            elif rect.bottom > height:
-                positions_to_draw.append((pos.x, pos.y - height))
-                
-            # Check corners (diagonal wrapping)
-            if rect.left < 0 and rect.top < 0:
-                positions_to_draw.append((pos.x + width, pos.y + height))
-            elif rect.left < 0 and rect.bottom > height:
-                positions_to_draw.append((pos.x + width, pos.y - height))
-            elif rect.right > width and rect.top < 0:
-                positions_to_draw.append((pos.x - width, pos.y + height))
-            elif rect.right > width and rect.bottom > height:
-                positions_to_draw.append((pos.x - width, pos.y - height))
-            
-            # Draw the chunk at all required positions
-            for x, y in positions_to_draw:
-                rect = rotated_surface.get_rect(center=(int(x), int(y)))
-                surface.blit(rotated_surface, rect)
-                
-                # Draw debug outline if needed
-                if debug_mode:
-                    colors = self.config["colors"]
-                    cos_a = math.cos(self.body.angle)
-                    sin_a = math.sin(self.body.angle)
-                    transformed_vertices = [
-                        (
-                            v.x * cos_a - v.y * sin_a + x,
-                            v.x * sin_a + v.y * cos_a + y
-                        )
-                        for v in self.shape.get_vertices()
-                    ]
-                    pygame.draw.polygon(surface, colors["RED"], transformed_vertices, width=1)
+            positions = self._get_torus_positions(pos.x, pos.y, rect, width, height)
         else:
-            # Standard drawing for non-torus mode
-            rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
+            positions = [(pos.x, pos.y)]
+
+        # Draw at all positions
+        for x, y in positions:
+            rect = rotated_surface.get_rect(center=(int(x), int(y)))
             surface.blit(rotated_surface, rect)
-            
             if debug_mode:
-                colors = self.config["colors"]
-                cos_a = math.cos(self.body.angle)
-                sin_a = math.sin(self.body.angle)
-                transformed_vertices = [
-                    (
-                        v.x * cos_a - v.y * sin_a + pos.x,
-                        v.x * sin_a + v.y * cos_a + pos.y
-                    )
-                    for v in self.shape.get_vertices()
-                ]
-                pygame.draw.polygon(surface, colors["RED"], transformed_vertices, width=1) 
+                self._draw_debug_outline(surface, x, y) 
 
 
 class GluedChunk:
@@ -399,89 +447,47 @@ class GluedChunk:
 
     def separate(self, glued_chunks: List['GluedChunk']) -> Tuple[float, float]:
         """Calculate separation force to avoid crowding other chunks."""
-        sum_x, sum_y = 0, 0
+        sum_x, sum_y = 0.0, 0.0
         count = 0
-
-        # Get current position
         pos = self.chunk.body.position
 
-        # Check distance to every other chunk
         for other in glued_chunks:
             if other.chunk is not self.chunk:
                 other_pos = other.chunk.body.position
-                # Calculate distance between chunks
                 dx = pos.x - other_pos.x
                 dy = pos.y - other_pos.y
-                d = math.sqrt(dx*dx + dy*dy)
+                d = vector_magnitude(dx, dy)
 
-                # If they're too close, calculate repulsion
-                if d > 0 and d < self.desired_separation:
-                    # Weighted by distance (closer = stronger force)
-                    # Use inverse square law for more natural separation
-                    force_strength = (self.desired_separation - d) / self.desired_separation
-                    force_strength = min(force_strength, 1.0)  # Cap at 1.0
-                    
-                    # Normalize the direction vector
-                    dx /= d
-                    dy /= d
-                    # Add to the sum with distance-based weighting
-                    sum_x += dx * force_strength
-                    sum_y += dy * force_strength
+                if 0 < d < self.desired_separation:
+                    # Force strength inversely proportional to distance
+                    force_strength = min(1.0, (self.desired_separation - d) / self.desired_separation)
+                    norm_x, norm_y = normalize_vector(dx, dy)
+                    sum_x += norm_x * force_strength
+                    sum_y += norm_y * force_strength
                     count += 1
 
-        # Average the forces
         if count > 0:
-            sum_x /= count
-            sum_y /= count
-
-            # Scale to maximum speed
-            magnitude = math.sqrt(sum_x*sum_x + sum_y*sum_y)
-            if magnitude > 0:
-                sum_x = (sum_x / magnitude) * self.maxspeed
-                sum_y = (sum_y / magnitude) * self.maxspeed
-
-            # Convert to steering force by subtracting current velocity
+            # Average and scale to desired velocity
+            sum_x, sum_y = sum_x / count, sum_y / count
+            desired_x, desired_y = scale_vector(*normalize_vector(sum_x, sum_y), self.maxspeed)
+            # Calculate steering force
             vel = self.chunk.body.velocity
-            sum_x -= vel.x
-            sum_y -= vel.y
+            return calculate_steering(desired_x, desired_y, vel.x, vel.y, self.maxforce)
 
-            # Limit to maximum force
-            magnitude = math.sqrt(sum_x*sum_x + sum_y*sum_y)
-            if magnitude > self.maxforce:
-                sum_x = (sum_x / magnitude) * self.maxforce
-                sum_y = (sum_y / magnitude) * self.maxforce
-
-        return (sum_x, sum_y)
+        return (0.0, 0.0)
 
     def seek(self, target: Tuple[float, float]) -> Tuple[float, float]:
         """Calculate seeking force toward target position."""
-        # Vector pointing from location to target
         pos = self.chunk.body.position
         dx = target[0] - pos.x
         dy = target[1] - pos.y
 
-        # Calculate distance to target
-        distance = math.sqrt(dx*dx + dy*dy)
-        
-        # Normalize and scale to maximum speed
-        if distance > 0:
-            dx = (dx / distance) * self.maxspeed
-            dy = (dy / distance) * self.maxspeed
-        else:
-            dx = dy = 0
+        # Desired velocity toward target at max speed
+        desired_x, desired_y = scale_vector(*normalize_vector(dx, dy), self.maxspeed)
 
-        # Convert to steering force by subtracting current velocity
+        # Calculate steering force
         vel = self.chunk.body.velocity
-        dx -= vel.x
-        dy -= vel.y
-
-        # Limit to maximum force
-        magnitude = math.sqrt(dx*dx + dy*dy)
-        if magnitude > self.maxforce:
-            dx = (dx / magnitude) * self.maxforce
-            dy = (dy / magnitude) * self.maxforce
-
-        return (dx, dy)
+        return calculate_steering(desired_x, desired_y, vel.x, vel.y, self.maxforce)
 
     def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False, volume: float = 0.0):
         # Draw the chunk normally

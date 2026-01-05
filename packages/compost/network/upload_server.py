@@ -4,6 +4,9 @@ from flask import Flask, request, jsonify
 from urllib.request import urlopen, Request
 from urllib.parse import urlparse
 from typing import Dict, Any, Callable
+from utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 class UploadServer:
@@ -14,7 +17,7 @@ class UploadServer:
         host: str,
         port: int,
         config: Dict[str, Any],
-        enqueue_callback: Callable[[bytes, int, int], None]
+        on_upload_callback: Callable[[bytes, int, int], None]
     ):
         """
         Initialize the upload server.
@@ -23,12 +26,12 @@ class UploadServer:
             host: Host address to bind to
             port: Port to listen on
             config: Server configuration
-            enqueue_callback: Callback to enqueue image bytes (bytes, width, height)
+            on_upload_callback: Callback when upload is received (bytes, width, height)
         """
         self.host = host
         self.port = port
         self.config = config
-        self.enqueue_callback = enqueue_callback
+        self._on_upload = on_upload_callback
         self.app = None
         self.thread = None
 
@@ -46,7 +49,7 @@ class UploadServer:
             daemon=True
         )
         self.thread.start()
-        print(f"Upload server listening on http://{self.host}:{self.port}")
+        _logger.info("Upload server listening on http://%s:%d", self.host, self.port)
 
     def _create_app(self) -> Flask:
         """Create Flask app with routes."""
@@ -73,10 +76,10 @@ class UploadServer:
                     if at_obj:
                         if "width" in at_obj:
                             target_width = at_obj.get("width")
-                            print(f"Extracted target width from JSON: {target_width}")
+                            _logger.debug("Extracted target width: %s", target_width)
                         if "height" in at_obj:
                             target_height = at_obj.get("height")
-                            print(f"Extracted target height from JSON: {target_height}")
+                            _logger.debug("Extracted target height: %s", target_height)
 
             if not url:
                 return jsonify({"ok": False, "error": "missing 'url'"}), 400
@@ -109,13 +112,13 @@ class UploadServer:
             if not data:
                 return jsonify({"ok": False, "error": "empty response"}), 502
 
-            # Enqueue for main-thread processing and return quickly
+            # Queue for main-thread processing and return quickly
             try:
                 if target_width is not None and target_height is not None:
-                    print(f"Enqueueing image with target dimensions: {target_width}x{target_height}")
+                    _logger.debug("Upload received: %dx%d", target_width, target_height)
                 else:
-                    print("Enqueueing image without target dimensions")
-                self.enqueue_callback(data, target_width, target_height)
+                    _logger.debug("Upload received (no target dimensions)")
+                self._on_upload(data, target_width, target_height)
                 return jsonify({"ok": True}), 200
             except Exception as exc:
                 return jsonify({"ok": False, "error": str(exc)}), 500

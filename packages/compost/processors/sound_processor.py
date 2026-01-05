@@ -1,5 +1,4 @@
-"""Sound processing and curve generation."""
-import sys
+"""Audio segmentation and curve generation."""
 import os
 import pygame
 import numpy as np
@@ -8,16 +7,16 @@ from typing import List, Dict, Any
 from utils.geometry_utils import build_curve_surface, convex_hull_vertices_from_curve
 from utils.sound_utils import split_audio_felzenszwalb_2d, create_2d_path_visualization
 
-def process_sound_to_chunks(
-    song_path: str,
+
+def segment_audio(
+    audio_path: str,
     config: Dict[str, Any]
 ) -> List[Dict[str, Any]]:
     """
-    Process a sound file into curve-based chunk data using Felzenszwalb segmentation.
-    Returns serializable chunk data dictionaries for async worker processing.
+    Segment an audio file into curve-based chunk data using Felzenszwalb algorithm.
 
     Args:
-        song_path: Path to the audio file
+        audio_path: Path to the audio file
         config: Configuration dictionary
 
     Returns:
@@ -25,23 +24,19 @@ def process_sound_to_chunks(
         - surface_bytes: RGBA pixel data as bytes
         - surface_size: (width, height)
         - vertices: List of (x, y) tuples for convex hull
-        - downsized: bool (always False for sound)
+        - downsized: bool (always False for audio)
         - audio_path: Path to the audio segment file
         - curve_data: Tuple of (points_list, rgba, width, height, padding)
         - original_line_width: int
     """
-    # Import sound_chunking (heavy dependencies, lazy loaded)
-    base_dir = os.path.dirname(os.path.dirname(__file__))  # Go up to package root
-    sound_dir = os.path.join(base_dir, "sound")
-
     chunks_data = []
     snd_cfg = config.get("sound", {})
     felz = snd_cfg.get("felzenszwalb", {})
-    output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(song_path).split('.')[0]}")
+    output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(audio_path).split('.')[0]}")
 
     # Run segmentation
     saved_paths, kept_segments = split_audio_felzenszwalb_2d(
-        song_path,
+        audio_path,
         output_dir=output_dir,
         scale=int(felz.get("scale", 150)),
         sigma=float(felz.get("sigma", 3)),
@@ -57,7 +52,7 @@ def process_sound_to_chunks(
     # Create 2D path visualization
     _X, _Y, curve_chunks_2d, _profiles = create_2d_path_visualization(
         kept_segments,
-        song_path,
+        audio_path,
         points_per_second=int(snd_cfg.get("points_per_second", 100)),
         resampled_points_per_chunk=int(snd_cfg.get("resampled_points_per_chunk", 128)),
         show_plots=False,
