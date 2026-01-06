@@ -127,8 +127,11 @@ server:
 sound:
   felzenszwalb:
     scale: 150
-    sigma: 3
+    # sigma: 3
+    sigma: 1 #for mel
     min_size: 20
+  use_mel: true        # Use mel spectrogram (perceptual) vs STFT (linear)
+  n_mels: 128           # Number of mel frequency bins (only used when use_mel=true)
   min_area_pixels: 300
   min_time_seconds: 0.5
   min_energy_ratio: 0.001
@@ -140,6 +143,7 @@ sound:
     line_width: 5
     padding: 6
   # Dynamic sizing by duration (linear between min and max)
+  max_part_duration: 60  # Split large audio files into parts (seconds). Set to 0 to disable.
   duration_size:
     min_seconds: 0.5
     max_seconds: 30.0
@@ -152,21 +156,13 @@ sound:
     max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
     reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
     min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
-  # Split large audio files into parts (seconds). Set to 0 to disable.
-  max_part_duration: 30
-
-# --- Audio mixer settings ---
-audio:
-  mixer:
-    frequency: 22050
-    size: -16
-    channels: 2
-    buffer: 2048
-    max_channels: 256
-
-# --- Drawing constants ---
-drawing:
-  volume_scaling:
-    perceptual_exponent: 0.7    # Volume perception curve
-    line_width_multiplier: 2.0  # How much louder chunks get thicker
-    alpha_boost: 0.5            # How much louder chunks get brighter
+    volume_scaling:
+      perceptual_exponent: 0.7    # Volume perception curve
+      line_width_multiplier: 2.0  # How much louder chunks get thicker
+      alpha_boost: 0.5            # How much louder chunks get brighter
+    mixer:
+      frequency: 22050
+      size: -16
+      channels: 2
+      buffer: 2048
+      max_channels: 256

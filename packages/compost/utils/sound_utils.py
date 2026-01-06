@@ -157,8 +157,10 @@ def _prepare_spectrogram(
     n_fft: int,
     hop_length: int,
     offset: Optional[float] = None,
-    duration: Optional[float] = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int, float]:
+    duration: Optional[float] = None,
+    use_mel: bool = False,
+    n_mels: int = 128
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int, float, Optional[np.ndarray], Optional[np.ndarray]]:
     """
     Load audio and prepare spectrogram for segmentation.
 
@@ -168,9 +170,12 @@ def _prepare_spectrogram(
         hop_length: Hop length for STFT
         offset: Start offset in seconds (None for beginning)
         duration: Duration in seconds to load (None for full file)
+        use_mel: Whether to use mel spectrogram for segmentation
+        n_mels: Number of mel frequency bins
 
     Returns:
-        (y, D, S, img, sr, duration) tuple
+        (y, D, S, img, sr, duration, mel_basis, M) tuple
+        mel_basis and M are None when use_mel=False
     """
     if offset is not None or duration is not None:
         _logger.info("Loading audio: %s (offset=%.1fs, duration=%.1fs)",
@@ -187,12 +192,27 @@ def _prepare_spectrogram(
     freq_bins, time_frames = S.shape
     _logger.info("Spectrogram shape: %d freq x %d time", freq_bins, time_frames)
 
-    # Normalize to 0-255 for segmentation
-    S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
-    S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
-    img = img_as_ubyte(S_db_norm)
+    mel_basis = None
+    M = None
 
-    return y, D, S, img, sr, actual_duration
+    if use_mel:
+        # Compute mel spectrogram for segmentation
+        _logger.info("Computing mel spectrogram (n_mels=%d)", n_mels)
+        M = librosa.feature.melspectrogram(S=S, sr=sr, n_mels=n_mels)
+        mel_basis = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=n_mels)
+        _logger.info("Mel spectrogram shape: %d mel x %d time", M.shape[0], M.shape[1])
+
+        # Normalize mel spectrogram to 0-255
+        M_db = librosa.power_to_db(M, ref=np.max)
+        M_db_norm = (M_db - M_db.min()) / max(1e-12, (M_db.max() - M_db.min()))
+        img = img_as_ubyte(M_db_norm)
+    else:
+        # Normalize STFT spectrogram to 0-255
+        S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
+        S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
+        img = img_as_ubyte(S_db_norm)
+
+    return y, D, S, img, sr, actual_duration, mel_basis, M
 
 
 def _check_time_filter(
@@ -247,6 +267,37 @@ def _check_tuning_filter(y_seg: np.ndarray, sr: int) -> bool:
     return True
 
 
+def _mel_mask_to_stft_mask(
+    mel_mask: np.ndarray,
+    mel_basis: np.ndarray,
+    freq_bins: int,
+    time_frames: int
+) -> np.ndarray:
+    """
+    Map a mel-space mask back to STFT-space for audio reconstruction.
+
+    Args:
+        mel_mask: Boolean mask in mel space (n_mels, time_frames)
+        mel_basis: Mel filterbank matrix (n_mels, freq_bins)
+        freq_bins: Number of STFT frequency bins
+        time_frames: Number of time frames
+
+    Returns:
+        Boolean mask in STFT space (freq_bins, time_frames)
+    """
+    n_mels = mel_mask.shape[0]
+    stft_mask = np.zeros((freq_bins, time_frames), dtype=bool)
+
+    for mel_bin in range(n_mels):
+        if np.any(mel_mask[mel_bin, :]):
+            # Get STFT bins that contribute to this mel bin
+            stft_bins_active = mel_basis[mel_bin, :] > 0
+            # Activate those STFT bins for time frames where mel bin is active
+            stft_mask[stft_bins_active, :] |= mel_mask[mel_bin, :][np.newaxis, :]
+
+    return stft_mask
+
+
 def _reconstruct_segment_audio(
     D: np.ndarray,
     chunk_mask: np.ndarray,
@@ -255,11 +306,34 @@ def _reconstruct_segment_audio(
     t1: int,
     sr: int,
     hop_length: int,
-    original_length: int
+    original_length: int,
+    mel_basis: Optional[np.ndarray] = None
 ) -> Optional[np.ndarray]:
-    """Reconstruct audio for a masked segment. Returns normalized audio or None."""
+    """
+    Reconstruct audio for a masked segment.
+
+    Args:
+        D: Complex STFT matrix
+        chunk_mask: Boolean mask (in mel or STFT space)
+        times: Time array for frames
+        t0, t1: Start and end frame indices
+        sr: Sample rate
+        hop_length: Hop length
+        original_length: Original audio length in samples
+        mel_basis: Mel filterbank matrix (if mask is in mel space)
+
+    Returns:
+        Normalized audio segment or None if empty
+    """
     T = D.shape[1]
-    D_masked = D * chunk_mask.astype(D.dtype)
+
+    # Convert mel mask to STFT mask if needed
+    if mel_basis is not None:
+        stft_mask = _mel_mask_to_stft_mask(chunk_mask, mel_basis, D.shape[0], D.shape[1])
+    else:
+        stft_mask = chunk_mask
+
+    D_masked = D * stft_mask.astype(D.dtype)
     y_rec = librosa.istft(D_masked, hop_length=hop_length, length=original_length)
 
     start_samp = int(times[t0] * sr)
@@ -278,38 +352,43 @@ def _reconstruct_segment_audio(
 
 
 def _create_segmentation_visualization(
-    S_db: np.ndarray,
+    spec_db: np.ndarray,
     img: np.ndarray,
     segments: np.ndarray,
-    S_db_norm: np.ndarray,
+    spec_db_norm: np.ndarray,
     output_dir: str,
-    num_labels: int
+    num_labels: int,
+    use_mel: bool = False
 ) -> None:
     """Create and save segmentation visualization plots."""
     _logger.info("Creating visualizations...")
 
+    freq_label = 'Mel Bins' if use_mel else 'Frequency Bins'
+    spec_title = 'Mel Spectrogram (dB)' if use_mel else 'Spectrogram (dB)'
+
     _, axes = plt.subplots(2, 2, figsize=(16, 10))
 
-    axes[0, 0].imshow(S_db, aspect='auto', origin='lower', cmap='magma')
-    axes[0, 0].set_title('Original Spectrogram (dB)')
-    axes[0, 0].set_ylabel('Frequency Bins')
+    axes[0, 0].imshow(spec_db, aspect='auto', origin='lower', cmap='magma')
+    axes[0, 0].set_title(f'Original {spec_title}')
+    axes[0, 0].set_ylabel(freq_label)
 
     axes[0, 1].imshow(img, aspect='auto', origin='lower', cmap='gray')
     axes[0, 1].set_title('Normalized Image (0-255)')
-    axes[0, 1].set_ylabel('Frequency Bins')
+    axes[0, 1].set_ylabel(freq_label)
 
     axes[1, 0].imshow(segments, aspect='auto', origin='lower', cmap='tab20')
     axes[1, 0].set_title(f'Felzenszwalb Segments ({num_labels} labels)')
     axes[1, 0].set_xlabel('Time Frames')
-    axes[1, 0].set_ylabel('Frequency Bins')
+    axes[1, 0].set_ylabel(freq_label)
 
-    boundary_img = mark_boundaries(np.dstack([S_db_norm] * 3), segments)
+    boundary_img = mark_boundaries(np.dstack([spec_db_norm] * 3), segments)
     axes[1, 1].imshow(boundary_img, aspect='auto', origin='lower')
     axes[1, 1].set_title('Segmentation Boundaries')
     axes[1, 1].set_xlabel('Time Frames')
 
     plt.tight_layout()
-    viz_path = os.path.join(output_dir, "felzenszwalb_analysis.png")
+    suffix = "_mel" if use_mel else ""
+    viz_path = os.path.join(output_dir, f"felzenszwalb{suffix}_analysis.png")
     plt.savefig(viz_path, dpi=160, bbox_inches='tight')
     _logger.info("Saved visualization: %s", viz_path)
     plt.show()
@@ -326,6 +405,8 @@ def segment_spectrogram_felzenszwalb_2d(
     duration: Optional[float] = None,
     n_fft: int = 2048,
     hop_length: int = 512,
+    use_mel: bool = False,
+    n_mels: int = 128,
     scale: int = 150,
     sigma: float = 3,
     min_size: int = 20,
@@ -348,6 +429,8 @@ def segment_spectrogram_felzenszwalb_2d(
         duration: Duration in seconds to process (None for full file)
         n_fft: FFT size (frequency resolution)
         hop_length: Hop size (time resolution)
+        use_mel: Use mel spectrogram for segmentation (perceptual frequency scale)
+        n_mels: Number of mel frequency bins (only used when use_mel=True)
         scale: Felzenszwalb scale parameter
         sigma: Felzenszwalb sigma parameter
         min_size: Felzenszwalb minimum segment size
@@ -365,7 +448,13 @@ def segment_spectrogram_felzenszwalb_2d(
     os.makedirs(output_dir, exist_ok=True)
 
     # Prepare spectrogram
-    y, D, S, img, sr, _ = _prepare_spectrogram(audio_path, n_fft, hop_length, offset, duration)
+    y, D, S, img, sr, _, mel_basis, M = _prepare_spectrogram(
+        audio_path, n_fft, hop_length, offset, duration,
+        use_mel=use_mel, n_mels=n_mels
+    )
+
+    # Use mel or STFT spectrogram for energy calculations
+    spec_for_energy = M if use_mel else S
 
     # Run segmentation
     _logger.info("Running Felzenszwalb (scale=%d, sigma=%d, min_size=%d)", scale, sigma, min_size)
@@ -374,8 +463,8 @@ def segment_spectrogram_felzenszwalb_2d(
     _logger.info("Found %d initial segments", len(unique_labels))
 
     # Prepare for filtering
-    total_energy = float(S.sum()) + 1e-12
-    T = S.shape[1]
+    total_energy = float(spec_for_energy.sum()) + 1e-12
+    T = spec_for_energy.shape[1]
     times = librosa.frames_to_time(np.arange(T), sr=sr, hop_length=hop_length)
 
     # Filter counters
@@ -397,7 +486,7 @@ def segment_spectrogram_felzenszwalb_2d(
             continue
 
         # Filter 2: Energy
-        passed, energy_ratio = _check_energy_filter(S, chunk_mask, total_energy, min_energy_ratio)
+        passed, energy_ratio = _check_energy_filter(spec_for_energy, chunk_mask, total_energy, min_energy_ratio)
         if not passed:
             filter_stats['energy'] += 1
             continue
@@ -408,7 +497,7 @@ def segment_spectrogram_felzenszwalb_2d(
             filter_stats['area'] += 1
             continue
 
-        # Calculate boundaries
+        # Calculate boundaries (in segmentation space: mel or STFT)
         time_mask = np.any(chunk_mask, axis=0)
         t0 = int(np.argmax(time_mask))
         t1 = int(len(time_mask) - np.argmax(time_mask[::-1]) - 1)
@@ -418,8 +507,11 @@ def segment_spectrogram_felzenszwalb_2d(
         time_span = times[t1] - times[t0] if t1 > t0 else 0
         freq_span = f1 - f0 + 1
 
-        # Reconstruct audio
-        y_seg = _reconstruct_segment_audio(D, chunk_mask, times, t0, t1, sr, hop_length, len(y))
+        # Reconstruct audio (pass mel_basis for mel-to-STFT conversion)
+        y_seg = _reconstruct_segment_audio(
+            D, chunk_mask, times, t0, t1, sr, hop_length, len(y),
+            mel_basis=mel_basis
+        )
         if y_seg is None:
             filter_stats['time_empty'] += 1
             continue
@@ -436,30 +528,43 @@ def segment_spectrogram_felzenszwalb_2d(
             continue
 
         # Save segment
-        filename = f"felzen_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_f{freq_span}.wav"
+        prefix = "felzen_mel" if use_mel else "felzen"
+        freq_label = "mel" if use_mel else "f"
+        filename = f"{prefix}_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_{freq_label}{freq_span}.wav"
         out_path = os.path.join(output_dir, filename)
         sf.write(out_path, y_seg, sr)
         saved_paths.append(out_path)
 
-        kept_segments.append({
+        # Build segment metadata
+        segment_info = {
             "idx": int(shape_index),
             "label": int(label),
             "t0_frame": int(t0),
             "t1_frame": int(t1),
             "t0_sec": float(times[t0]),
             "t1_sec": float(times[min(t1 + 1, T - 1)]),
-            "f0_bin": int(f0),
-            "f1_bin": int(f1),
-            "freq_span": int(freq_span),
             "time_span_sec": float(time_span),
             "energy_ratio": float(energy_ratio),
             "loudness_db": float(rms_db),
             "path": out_path,
-        })
+            "use_mel": use_mel,
+        }
 
+        if use_mel:
+            segment_info["mel_f0_bin"] = int(f0)
+            segment_info["mel_f1_bin"] = int(f1)
+            segment_info["mel_freq_span"] = int(freq_span)
+        else:
+            segment_info["f0_bin"] = int(f0)
+            segment_info["f1_bin"] = int(f1)
+            segment_info["freq_span"] = int(freq_span)
+
+        kept_segments.append(segment_info)
+
+        bin_label = "mel_bins" if use_mel else "bins"
         _logger.info(
-            "Shape %2d: %.2fs x %3d bins, energy=%.1e, loudness=%.1f dBFS",
-            shape_index, time_span, freq_span, energy_ratio, rms_db
+            "Shape %2d: %.2fs x %3d %s, energy=%.1e, loudness=%.1f dBFS",
+            shape_index, time_span, freq_span, bin_label, energy_ratio, rms_db
         )
 
         shape_index += 1
@@ -468,15 +573,21 @@ def segment_spectrogram_felzenszwalb_2d(
 
     # Visualization
     if show_plots:
-        S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
-        S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
-        _create_segmentation_visualization(S_db, img, segments, S_db_norm, output_dir, len(unique_labels))
+        if use_mel:
+            M_db = librosa.power_to_db(M, ref=np.max)
+            M_db_norm = (M_db - M_db.min()) / max(1e-12, (M_db.max() - M_db.min()))
+            _create_segmentation_visualization(M_db, img, segments, M_db_norm, output_dir, len(unique_labels), use_mel=True)
+        else:
+            S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
+            S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
+            _create_segmentation_visualization(S_db, img, segments, S_db_norm, output_dir, len(unique_labels), use_mel=False)
 
     # Summary
     total_time = time.time() - start_time
     total_filtered = sum(filter_stats.values())
 
-    _logger.info("Processing time: %.2fs", total_time)
+    mode_str = f"mel ({n_mels} bins)" if use_mel else "STFT"
+    _logger.info("Processing time: %.2fs [%s mode]", total_time, mode_str)
     _logger.info("Total labels: %d, Kept: %d, Filtered: %d", len(unique_labels), shape_index, total_filtered)
     _logger.debug("  By time (<%ss): %d", min_time_seconds, filter_stats['time'])
     _logger.debug("  By time (empty): %d", filter_stats['time_empty'])

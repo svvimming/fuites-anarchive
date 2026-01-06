@@ -26,7 +26,7 @@ class AudioManager:
         self.sound_cache: Dict[str, pygame.mixer.Sound] = {}  # {path: Sound}
 
         # Initialize pygame mixer for audio playback with multiple channels
-        mixer_cfg = config.get("audio", {}).get("mixer", {})
+        mixer_cfg = config.get("sound", {}).get("hover", {}).get("mixer", {})
         try:
             pygame.mixer.init(
                 frequency=mixer_cfg.get("frequency", 22050),

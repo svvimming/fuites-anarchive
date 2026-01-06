@@ -276,7 +276,7 @@ class Chunk:
         Returns:
             (surface, alpha) tuple
         """
-        drawing_cfg = self.config.get("drawing", {}).get("volume_scaling", {})
+        drawing_cfg = self.config.get("sound", {}).get("hover", {}).get("volume_scaling", {})
         perceptual_exp = drawing_cfg.get("perceptual_exponent", 0.7)
         line_mult = drawing_cfg.get("line_width_multiplier", 2.0)
         alpha_boost = drawing_cfg.get("alpha_boost", 0.5)

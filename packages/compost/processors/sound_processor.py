@@ -53,6 +53,8 @@ def segment_audio(
         output_dir=output_dir,
         offset=offset,
         duration=duration,
+        use_mel=bool(snd_cfg.get("use_mel", False)),
+        n_mels=int(snd_cfg.get("n_mels", 128)),
         scale=int(felz.get("scale", 150)),
         sigma=float(felz.get("sigma", 3)),
         min_size=int(felz.get("min_size", 20)),
