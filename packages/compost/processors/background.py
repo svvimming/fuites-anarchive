@@ -12,6 +12,11 @@ from utils.logging_utils import get_logger
 
 _logger = get_logger(__name__)
 
+# Global state for pool workers (set by init_worker)
+_results_queue: Optional[multiprocessing.Queue] = None
+_config: Optional[Dict[str, Any]] = None
+_pygame_initialized: bool = False
+
 
 @dataclass
 class ChunkData:
@@ -34,47 +39,46 @@ class BatchComplete:
     upload_type: str  # "image" or "sound"
 
 
-def background_loop(
-    task_queue: multiprocessing.Queue,
-    results_queue: multiprocessing.Queue,
-    config: Dict[str, Any]
-) -> None:
-    """
-    Main background loop - processes segmentation tasks.
-    Runs in a separate process to keep main thread responsive.
-    """
-    # Initialize pygame in background (works without display)
-    import pygame
-    pygame.init()
+def init_worker(results_queue: multiprocessing.Queue, config: Dict[str, Any]) -> None:
+    """Initialize worker process with shared queue and config."""
+    global _results_queue, _config, _pygame_initialized
+    _results_queue = results_queue
+    _config = config
 
-    _logger.info("[Background] Started segmentation process")
+    # Initialize pygame once per worker (headless - no dock icon)
+    if not _pygame_initialized:
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        import pygame
+        pygame.init()
+        _pygame_initialized = True
+        _logger.info("[Worker %s] Initialized", multiprocessing.current_process().name)
 
-    while True:
-        try:
-            task = task_queue.get()
 
-            if task is None:
-                _logger.debug("[Background] Received shutdown signal")
-                break
+def process_task(task: Tuple) -> None:
+    """Process a single task (called by Pool)."""
+    global _results_queue, _config
 
-            task_type = task[0]
+    try:
+        task_type = task[0]
 
-            if task_type == "image":
-                _, image_rgba, image_size, batch_id = task
-                _process_image(image_rgba, image_size, config, batch_id, results_queue)
+        if task_type == "image":
+            _, image_rgba, image_size, batch_id = task
+            _process_image(image_rgba, image_size, _config, batch_id, _results_queue)
 
-            elif task_type == "sound":
-                _, audio_path, batch_id = task
-                _process_audio(audio_path, config, batch_id, results_queue)
+        elif task_type == "sound":
+            _, audio_path, batch_id, part_index, offset, duration = task
+            _process_audio(
+                audio_path, _config, batch_id, _results_queue,
+                part_index, offset, duration
+            )
 
-            else:
-                _logger.warning("[Background] Unknown task type: %s", task_type)
+        else:
+            _logger.warning("[Worker] Unknown task type: %s", task_type)
 
-        except Exception as e:
-            _logger.error("[Background] Error in main loop: %s", e)
-            traceback.print_exc()
-
-    _logger.info("[Background] Shutting down")
+    except Exception as e:
+        _logger.error("[Worker] Error processing task: %s", e)
+        traceback.print_exc()
 
 
 def _process_image(
@@ -114,11 +118,14 @@ def _process_audio(
     audio_path: str,
     config: Dict[str, Any],
     batch_id: str,
-    results_queue: multiprocessing.Queue
+    results_queue: multiprocessing.Queue,
+    part_index: Optional[int] = None,
+    offset: Optional[float] = None,
+    duration: Optional[float] = None
 ) -> None:
-    """Process an audio file into chunks and send results to queue."""
+    """Process an audio file (or part of it) into chunks and send results to queue."""
     try:
-        chunks_data = segment_audio(audio_path, config)
+        chunks_data = segment_audio(audio_path, config, part_index, offset, duration)
 
         # Send each chunk to the results queue
         for chunk_dict in chunks_data:

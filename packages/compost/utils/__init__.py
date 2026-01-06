@@ -25,7 +25,7 @@ from utils.sound_utils import (
     estimate_saturation,
     estimate_value,
     estimate_alpha,
-    split_audio_felzenszwalb_2d,
+    segment_spectrogram_felzenszwalb_2d,
     create_2d_path_visualization,
 )
 
@@ -51,7 +51,7 @@ __all__ = [
     'estimate_saturation',
     'estimate_value',
     'estimate_alpha',
-    'split_audio_felzenszwalb_2d',
+    'segment_spectrogram_felzenszwalb_2d',
     'create_2d_path_visualization',
     # Logging
     'get_logger',

@@ -155,18 +155,31 @@ def estimate_alpha(
 def _prepare_spectrogram(
     audio_path: str,
     n_fft: int,
-    hop_length: int
+    hop_length: int,
+    offset: Optional[float] = None,
+    duration: Optional[float] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int, float]:
     """
     Load audio and prepare spectrogram for segmentation.
 
+    Args:
+        audio_path: Path to audio file
+        n_fft: FFT window size
+        hop_length: Hop length for STFT
+        offset: Start offset in seconds (None for beginning)
+        duration: Duration in seconds to load (None for full file)
+
     Returns:
         (y, D, S, img, sr, duration) tuple
     """
-    _logger.info("Loading audio: %s", audio_path)
-    y, sr = librosa.load(audio_path, sr=None)
-    duration = len(y) / sr
-    _logger.info("Duration: %.2fs, Sample Rate: %dHz", duration, sr)
+    if offset is not None or duration is not None:
+        _logger.info("Loading audio: %s (offset=%.1fs, duration=%.1fs)",
+                     audio_path, offset or 0.0, duration or -1.0)
+    else:
+        _logger.info("Loading audio: %s", audio_path)
+    y, sr = librosa.load(audio_path, sr=None, offset=offset or 0.0, duration=duration)
+    actual_duration = len(y) / sr
+    _logger.info("Duration: %.2fs, Sample Rate: %dHz", actual_duration, sr)
 
     _logger.info("Computing STFT (n_fft=%d, hop_length=%d)", n_fft, hop_length)
     D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length, window="hann", center=True)
@@ -179,7 +192,7 @@ def _prepare_spectrogram(
     S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
     img = img_as_ubyte(S_db_norm)
 
-    return y, D, S, img, sr, duration
+    return y, D, S, img, sr, actual_duration
 
 
 def _check_time_filter(
@@ -306,9 +319,11 @@ def _create_segmentation_visualization(
 # Main Audio Segmentation Function
 # -----------------------------------------------------------------------------
 
-def split_audio_felzenszwalb_2d(
+def segment_spectrogram_felzenszwalb_2d(
     audio_path: str,
     output_dir: str = "chunks_detailed",
+    offset: Optional[float] = None,
+    duration: Optional[float] = None,
     n_fft: int = 2048,
     hop_length: int = 512,
     scale: int = 150,
@@ -329,6 +344,8 @@ def split_audio_felzenszwalb_2d(
     Args:
         audio_path: Path to audio file
         output_dir: Directory for output files
+        offset: Start offset in seconds (None for beginning)
+        duration: Duration in seconds to process (None for full file)
         n_fft: FFT size (frequency resolution)
         hop_length: Hop size (time resolution)
         scale: Felzenszwalb scale parameter
@@ -348,7 +365,7 @@ def split_audio_felzenszwalb_2d(
     os.makedirs(output_dir, exist_ok=True)
 
     # Prepare spectrogram
-    y, D, S, img, sr, _ = _prepare_spectrogram(audio_path, n_fft, hop_length)
+    y, D, S, img, sr, _ = _prepare_spectrogram(audio_path, n_fft, hop_length, offset, duration)
 
     # Run segmentation
     _logger.info("Running Felzenszwalb (scale=%d, sigma=%d, min_size=%d)", scale, sigma, min_size)
@@ -478,7 +495,7 @@ def split_audio_felzenszwalb_2d(
 def _build_random_2d_path(
     clip_duration_sec: float,
     points_per_second: int,
-    seed: int = 2
+    seed: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Build a smooth randomized 2D path over the clip timeline.
@@ -689,7 +706,7 @@ def create_2d_path_visualization(
     Create a random 2D path over the clip timeline and align chunks.
 
     Args:
-        kept_segments: List of segment dictionaries from split_audio_felzenszwalb_2d
+        kept_segments: List of segment dictionaries from segment_spectrogram_felzenszwalb_2d
         song_path: Path to the audio file
         points_per_second: Resolution of the path
         resampled_points_per_chunk: Number of points per chunk after resampling

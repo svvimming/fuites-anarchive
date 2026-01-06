@@ -3,7 +3,8 @@
 from processors.background import (
     ChunkData,
     BatchComplete,
-    background_loop,
+    init_worker,
+    process_task,
 )
 
 from processors.image_processor import (
@@ -18,7 +19,8 @@ __all__ = [
     # Background process
     'ChunkData',
     'BatchComplete',
-    'background_loop',
+    'init_worker',
+    'process_task',
     # Image segmentation
     'segment_image',
     # Audio segmentation

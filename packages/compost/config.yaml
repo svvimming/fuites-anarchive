@@ -25,6 +25,7 @@ physics:
 
 # --- Queue processing limits ---
 queue:
+  background_workers: 4    # Number of parallel background processes
   max_upload_drain: 4      # Max uploads to process per frame
   max_chunk_drain: 15      # Max chunks to integrate per frame
 
@@ -141,7 +142,7 @@ sound:
   # Dynamic sizing by duration (linear between min and max)
   duration_size:
     min_seconds: 0.5
-    max_seconds: 60.0
+    max_seconds: 30.0
     min_width: 50
     min_height: 50
     max_width: 800
@@ -151,6 +152,8 @@ sound:
     max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
     reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
     min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
+  # Split large audio files into parts (seconds). Set to 0 to disable.
+  max_part_duration: 30
 
 # --- Audio mixer settings ---
 audio:

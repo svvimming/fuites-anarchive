@@ -2,22 +2,28 @@
 import os
 import pygame
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from utils.geometry_utils import build_curve_surface, convex_hull_vertices_from_curve
-from utils.sound_utils import split_audio_felzenszwalb_2d, create_2d_path_visualization
+from utils.sound_utils import segment_spectrogram_felzenszwalb_2d, create_2d_path_visualization
 
 
 def segment_audio(
     audio_path: str,
-    config: Dict[str, Any]
+    config: Dict[str, Any],
+    part_index: Optional[int] = None,
+    offset: Optional[float] = None,
+    duration: Optional[float] = None
 ) -> List[Dict[str, Any]]:
     """
-    Segment an audio file into curve-based chunk data using Felzenszwalb algorithm.
+    Segment an audio file (or part of it) into curve-based chunk data.
 
     Args:
         audio_path: Path to the audio file
         config: Configuration dictionary
+        part_index: Part index if splitting large files (None for whole file)
+        offset: Start offset in seconds for this part (None for whole file)
+        duration: Duration in seconds for this part (None for whole file)
 
     Returns:
         List of chunk data dictionaries with keys:
@@ -32,12 +38,21 @@ def segment_audio(
     chunks_data = []
     snd_cfg = config.get("sound", {})
     felz = snd_cfg.get("felzenszwalb", {})
-    output_dir = os.path.join("sound_chunks", f"chunks_detailed_{os.path.basename(audio_path).split('.')[0]}")
+
+    # Build output directory name (include part index if splitting)
+    basename = os.path.basename(audio_path).split('.')[0]
+    if part_index is not None:
+        dir_name = f"chunks_detailed_{basename}_part_{part_index:03d}"
+    else:
+        dir_name = f"chunks_detailed_{basename}"
+    output_dir = os.path.join("sound_chunks", dir_name)
 
     # Run segmentation
-    saved_paths, kept_segments = split_audio_felzenszwalb_2d(
+    saved_paths, kept_segments = segment_spectrogram_felzenszwalb_2d(
         audio_path,
         output_dir=output_dir,
+        offset=offset,
+        duration=duration,
         scale=int(felz.get("scale", 150)),
         sigma=float(felz.get("sigma", 3)),
         min_size=int(felz.get("min_size", 20)),
@@ -100,12 +115,12 @@ def segment_audio(
         surface = build_curve_surface(pts, rgba, surf_w, surf_h, line_width=line_w, padding=padding)
         vertices = convex_hull_vertices_from_curve(pts, surf_w, surf_h, padding=padding, line_width=line_w)
 
-        # Find audio path
-        audio_path = None
+        # Find audio path for this chunk
+        chunk_audio_path = None
         chunk_idx = item.get("idx", -1)
         for seg in kept_segments:
             if seg.get("idx") == chunk_idx:
-                audio_path = seg.get("path")
+                chunk_audio_path = seg.get("path")
                 break
 
         # Store curve data for redrawing (convert numpy to list for serialization)
@@ -119,7 +134,7 @@ def segment_audio(
             'surface_size': (surf_w, surf_h),
             'vertices': vertices,
             'downsized': False,
-            'audio_path': audio_path,
+            'audio_path': chunk_audio_path,
             'curve_data': curve_data,
             'original_line_width': line_w,
         }

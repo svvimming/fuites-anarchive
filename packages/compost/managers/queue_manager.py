@@ -10,9 +10,10 @@ import pymunk
 from queue import Queue, Empty
 from typing import Dict, Any, List, Tuple, Callable, Optional
 
-from processors import ChunkData, BatchComplete, background_loop
+from processors import ChunkData, BatchComplete, init_worker, process_task
 from utils.image_utils import scale_image_to_fit, resize_image_to_dimensions
 from utils.logging_utils import get_logger
+from utils.system_utils import open_file_dialog_sync
 from entities import Chunk
 
 _logger = get_logger(__name__)
@@ -49,8 +50,7 @@ class QueueManager:
         self._dialog_queue: Queue[Tuple[str, Any]] = Queue()
         self._dialog_open = False
 
-        # Background processing queues (Main <-> Background process)
-        self._task_queue: multiprocessing.Queue = multiprocessing.Queue()
+        # Results queue (workers -> main thread)
         self._results_queue: multiprocessing.Queue = multiprocessing.Queue()
 
         # Batch tracking
@@ -63,13 +63,14 @@ class QueueManager:
         # Callback for batch completion
         self._on_batch_complete: Optional[Callable[[str], None]] = None
 
-        # Start background process
-        self._background_process = multiprocessing.Process(
-            target=background_loop,
-            args=(self._task_queue, self._results_queue, config),
-            daemon=True
+        # Start worker pool
+        num_workers = config.get("queue", {}).get("background_workers", 4)
+        self._pool = multiprocessing.Pool(
+            processes=num_workers,
+            initializer=init_worker,
+            initargs=(self._results_queue, config)
         )
-        self._background_process.start()
+        _logger.info("Started worker pool with %d processes", num_workers)
 
     def set_chunks_list(self, chunks: List[Chunk]) -> None:
         """Set reference to the main chunks list."""
@@ -164,24 +165,55 @@ class QueueManager:
         batch_id = str(uuid.uuid4())[:8]
         self._batch_upload_types[batch_id] = "image"
 
-        # Send to background process
-        self._task_queue.put(("image", image_rgba, image.get_size(), batch_id))
+        # Send to worker pool
+        task = ("image", image_rgba, image.get_size(), batch_id)
+        self._pool.apply_async(process_task, args=(task,))
         _logger.info("Image batch %s queued for processing", batch_id)
 
     def submit_audio(self, audio_path: str) -> None:
         """
         Submit an audio file for background segmentation processing.
 
+        Large files are automatically split into parts based on
+        config['sound']['max_part_duration']. Each part gets its own
+        batch_id and triggers independent worm spawning.
+
         Args:
             audio_path: Path to the audio file
         """
-        import os
-        # Generate unique batch ID
+        import librosa
+
+        max_part_duration = self.config.get("sound", {}).get("max_part_duration", 0)
+
+        if max_part_duration > 0:
+            # Get duration without loading full audio
+            total_duration = librosa.get_duration(path=audio_path)
+
+            if total_duration > max_part_duration:
+                # Submit multiple parts
+                part_index = 0
+                offset = 0.0
+                while offset < total_duration:
+                    duration = min(max_part_duration, total_duration - offset)
+                    if duration < 1.0:  # Skip trailing parts < 1s
+                        break
+                    batch_id = str(uuid.uuid4())[:8]
+                    self._batch_upload_types[batch_id] = "sound"
+                    task = ("sound", audio_path, batch_id, part_index, offset, duration)
+                    self._pool.apply_async(process_task, args=(task,))
+                    _logger.info(
+                        "Sound batch %s queued: %s part %d (%.1fs-%.1fs)",
+                        batch_id, os.path.basename(audio_path), part_index, offset, offset + duration
+                    )
+                    part_index += 1
+                    offset += max_part_duration
+                return
+
+        # No splitting - submit as single part (part_index=None means whole file)
         batch_id = str(uuid.uuid4())[:8]
         self._batch_upload_types[batch_id] = "sound"
-
-        # Send to background process
-        self._task_queue.put(("sound", audio_path, batch_id))
+        task = ("sound", audio_path, batch_id, None, None, None)
+        self._pool.apply_async(process_task, args=(task,))
         _logger.info("Sound batch %s queued: %s", batch_id, os.path.basename(audio_path))
 
     # ----------------------------------------------------------------
@@ -191,21 +223,18 @@ class QueueManager:
     AUDIO_EXTS = {'.wav', '.mp3', '.flac', '.ogg', '.m4a', '.aac', '.aiff'}
 
     def open_file_dialog(self) -> None:
-        """Open file dialog for image or audio (non-blocking)."""
+        """Open file dialog for image or audio (non-blocking, multiple selection)."""
         if self._dialog_open:
             return
         self._dialog_open = True
 
         def _run():
-            import subprocess
-            script = 'POSIX path of (choose file of type {"public.image", "public.audio"} with prompt "Select an image or audio file")'
             try:
-                result = subprocess.run(
-                    ["osascript", "-e", script],
-                    capture_output=True, text=True, timeout=120
-                )
-                path = result.stdout.strip()
-                if path and os.path.exists(path):
+                paths = open_file_dialog_sync(self.IMAGE_EXTS, self.AUDIO_EXTS)
+
+                for path in paths:
+                    if not os.path.exists(path):
+                        continue
                     ext = os.path.splitext(path)[1].lower()
                     if ext in self.IMAGE_EXTS:
                         if ext == '.heic':
@@ -221,8 +250,7 @@ class QueueManager:
                         self._dialog_queue.put(("audio", path))
                     else:
                         _logger.warning("Unknown file type: %s", ext)
-            except subprocess.TimeoutExpired:
-                pass
+
             except Exception as e:
                 _logger.warning("File dialog error: %s", e)
             finally:
@@ -322,18 +350,13 @@ class QueueManager:
     def cleanup(self) -> None:
         """
         Clean up resources before shutdown.
-        Terminates the background process gracefully.
+        Terminates worker pool gracefully.
         """
-        _logger.info("Shutting down background process...")
+        _logger.info("Shutting down worker pool...")
         try:
-            # Send shutdown signal
-            self._task_queue.put(None)
-            # Wait for background process to finish
-            self._background_process.join(timeout=2.0)
-            if self._background_process.is_alive():
-                _logger.warning("Background process did not exit in time, terminating")
-                self._background_process.terminate()
-                self._background_process.join(timeout=1.0)
+            self._pool.close()
+            self._pool.join()
         except Exception as e:
             _logger.warning("Error during cleanup: %s", e)
+            self._pool.terminate()
         _logger.info("Cleanup complete")
