@@ -2,11 +2,42 @@
 import pygame
 import math
 import os
-import random
-from typing import Dict, Set, Tuple, Any, List
+from dataclasses import dataclass
+from typing import Dict, Tuple, Any, List
 from utils.logging_utils import get_logger
+from utils.sound_utils import inverse_square_volume
 
 _logger = get_logger(__name__)
+
+
+class VolumeSmoother:
+    """Pluggable volume smoothing with attack/release."""
+
+    def __init__(self, attack: float = 0.4, release: float = 0.4):
+        self.attack = attack
+        self.release = release
+
+    def smooth(self, current: float, target: float) -> float:
+        factor = self.attack if target > current else self.release
+        return current + (target - current) * factor
+
+
+@dataclass
+class ChunkAudioState:
+    """Bundles playback state for a single chunk."""
+    channel: pygame.mixer.Channel
+    current_volume: float = 0.0
+    target_volume: float = 0.0
+
+    def update_volume(self, target: float, smoother: VolumeSmoother = None) -> None:
+        self.target_volume = target
+        self.current_volume = smoother.smooth(self.current_volume, target) if smoother else target
+        if self.channel:
+            self.channel.set_volume(self.current_volume)
+
+    def stop(self) -> None:
+        if self.channel:
+            self.channel.stop()
 
 
 class AudioManager:
@@ -20,12 +51,21 @@ class AudioManager:
             config: Global configuration dict
         """
         self.config = config
-        self.playing_chunks: Dict = {}  # {chunk: channel}
-        self.chunk_volumes: Dict = {}   # {chunk: volume}
-        self.last_hovered_chunks: Set = set()
-        self.sound_cache: Dict[str, pygame.mixer.Sound] = {}  # {path: Sound}
+        self.active_chunks: Dict[Any, ChunkAudioState] = {}
+        self.sound_cache: Dict[str, pygame.mixer.Sound] = {}
+        self.smoother = self._init_smoother(config)
 
-        # Initialize pygame mixer for audio playback with multiple channels
+        self._init_mixer(config)
+
+    def _init_smoother(self, config: Dict[str, Any]) -> VolumeSmoother:
+        """Create smoother from config, or None if disabled."""
+        cfg = config.get("sound", {}).get("hover", {}).get("smoother", {})
+        if not cfg.get("enabled", False):
+            return None
+        return VolumeSmoother(cfg.get("attack", 0.4), cfg.get("release", 0.4))
+
+    def _init_mixer(self, config: Dict[str, Any]) -> None:
+        """Initialize pygame mixer."""
         mixer_cfg = config.get("sound", {}).get("hover", {}).get("mixer", {})
         try:
             pygame.mixer.init(
@@ -40,120 +80,89 @@ class AudioManager:
         except pygame.error as e:
             _logger.warning("Failed to initialize audio mixer: %s", e)
 
-    def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
-        """
-        Handle proximity-based audio playback for sound chunks using inverse square law.
-        All sound chunks within max_distance play simultaneously with volume based on distance.
+    def _get_sound(self, path: str) -> pygame.mixer.Sound:
+        """Get or create cached Sound object."""
+        if path not in self.sound_cache:
+            self.sound_cache[path] = pygame.mixer.Sound(path)
+        return self.sound_cache[path]
 
-        Args:
-            mouse_pos: (x, y) mouse position
-            chunks: List of all chunks to check for audio
-        """
-        # Get hover configuration
+    def _start_chunk(self, chunk, target_volume: float) -> bool:
+        """Start playing a chunk. Returns True on success."""
+        try:
+            sound = self._get_sound(chunk.audio_path)
+            channel = sound.play(loops=-1)
+            if channel:
+                channel.set_volume(0.0)
+                self.active_chunks[chunk] = ChunkAudioState(channel, 0.0, target_volume)
+                _logger.debug("Playing: %s", os.path.basename(chunk.audio_path))
+                return True
+        except pygame.error as e:
+            _logger.warning("Failed to play audio %s: %s", chunk.audio_path, e)
+        except Exception as e:
+            _logger.warning("Unexpected error playing audio %s: %s", chunk.audio_path, e)
+        return False
+
+    def _stop_chunk(self, chunk) -> None:
+        """Stop a playing chunk."""
+        if chunk in self.active_chunks:
+            self.active_chunks[chunk].stop()
+            del self.active_chunks[chunk]
+            _logger.debug("Stopped: %s", os.path.basename(chunk.audio_path))
+
+    def _distance_to_cursor(self, chunk, cursor_x: float, cursor_y: float) -> float:
+        """Calculate distance from chunk center to cursor."""
+        pos = chunk.body.position
+        dx = cursor_x - pos.x
+        dy = cursor_y - pos.y
+        return math.sqrt(dx * dx + dy * dy)
+
+    def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
+        """Handle proximity-based audio playback for chunks near the cursor."""
         hover_cfg = self.config["sound"]["hover"]
         max_distance = hover_cfg["max_distance"]
-        reference_distance = hover_cfg["reference_distance"]
-        min_volume_threshold = hover_cfg["min_volume_threshold"]
-        epsilon = 1.0  # Small value to prevent division by zero
+        reference = hover_cfg["reference_distance"]
+        threshold = hover_cfg["min_volume_threshold"]
 
         cursor_x, cursor_y = mouse_pos
-        currently_playing = set(self.playing_chunks.keys())
-        should_be_playing = set()
+        should_play = set()
 
-        # Iterate through all chunks with audio
         for chunk in chunks:
             if not chunk.audio_path:
                 continue
 
-            # Calculate distance from cursor to chunk center
-            chunk_pos = chunk.body.position
-            dx = cursor_x - chunk_pos.x
-            dy = cursor_y - chunk_pos.y
-            distance = math.sqrt(dx * dx + dy * dy)
-
-            # Skip chunks beyond max distance
+            distance = self._distance_to_cursor(chunk, cursor_x, cursor_y)
             if distance > max_distance:
                 continue
 
-            # Calculate volume using inverse square law
-            # volume = (reference_distance^2) / (distance^2 + epsilon)
-            distance_squared = distance * distance + epsilon
-            volume = (reference_distance * reference_distance) / distance_squared
+            volume = inverse_square_volume(distance, reference)
+            if volume < threshold:
+                continue
 
-            # Clamp volume to [0, 1.0] range
-            volume = max(0.0, min(1.0, volume))
+            should_play.add(chunk)
 
-            # Debug: log chunks that are skipped due to low volume (rarely)
-            if volume < min_volume_threshold:
-                if random.random() < 0.01:
-                    _logger.debug("Chunk skipped: volume %.4f < threshold (distance: %.1f)", volume, distance)
+            if chunk in self.active_chunks:
+                self.active_chunks[chunk].update_volume(volume, self.smoother)
+            else:
+                self._start_chunk(chunk, volume)
 
-            # Only play if volume is above threshold
-            if volume >= min_volume_threshold:
-                should_be_playing.add(chunk)
-
-                if chunk in self.playing_chunks:
-                    # Update volume for already playing chunk
-                    channel = self.playing_chunks[chunk]
-                    if channel:
-                        channel.set_volume(volume)
-                    self.chunk_volumes[chunk] = volume
-                else:
-                    # Start playing new chunk
-                    try:
-                        # Use cached Sound object if available, otherwise create and cache it
-                        if chunk.audio_path not in self.sound_cache:
-                            self.sound_cache[chunk.audio_path] = pygame.mixer.Sound(chunk.audio_path)
-                        sound = self.sound_cache[chunk.audio_path]
-                        channel = sound.play(loops=-1)  # Loop continuously
-                        if channel:
-                            channel.set_volume(volume)
-                            self.playing_chunks[chunk] = channel
-                            self.chunk_volumes[chunk] = volume
-                            _logger.debug("Playing: %s at volume %.3f", os.path.basename(chunk.audio_path), volume)
-                    except pygame.error as e:
-                        _logger.warning("Failed to play audio %s: %s", chunk.audio_path, e)
-                    except Exception as e:
-                        _logger.warning("Unexpected error playing audio %s: %s", chunk.audio_path, e)
-
-        # Stop chunks that are no longer in range or below threshold
-        chunks_to_stop = currently_playing - should_be_playing
-        for chunk in chunks_to_stop:
-            if chunk in self.playing_chunks:
-                channel = self.playing_chunks[chunk]
-                if channel:
-                    channel.stop()
-                del self.playing_chunks[chunk]
-                if chunk in self.chunk_volumes:
-                    del self.chunk_volumes[chunk]
-                _logger.debug("Stopped: %s", os.path.basename(chunk.audio_path))
+        # Stop chunks no longer in range
+        for chunk in list(self.active_chunks.keys()):
+            if chunk not in should_play:
+                self._stop_chunk(chunk)
 
     def cleanup_finished_audio(self) -> None:
-        """
-        Clean up the playing_chunks dict by removing chunks whose audio channels have finished.
-        This is lightweight and runs every frame to dynamically track individual completions.
-        """
-        # Create a list of chunks to remove (can't modify dict while iterating)
-        finished_chunks = []
-
-        for chunk, channel in self.playing_chunks.items():
-            if not channel.get_busy():  # Channel is no longer playing
-                finished_chunks.append(chunk)
-
-        # Remove finished chunks from the tracking dict
-        for chunk in finished_chunks:
-            del self.playing_chunks[chunk]
-            if chunk in self.chunk_volumes:
-                del self.chunk_volumes[chunk]
+        """Remove chunks whose channels have stopped playing."""
+        finished = [c for c, state in self.active_chunks.items() if not state.channel.get_busy()]
+        for chunk in finished:
+            del self.active_chunks[chunk]
 
     def stop_all(self) -> None:
         """Stop all playing audio."""
-        for chunk, channel in list(self.playing_chunks.items()):
-            if channel:
-                channel.stop()
-        self.playing_chunks.clear()
-        self.chunk_volumes.clear()
+        for state in self.active_chunks.values():
+            state.stop()
+        self.active_chunks.clear()
 
     def get_volume(self, chunk) -> float:
         """Get the current volume for a chunk."""
-        return self.chunk_volumes.get(chunk, 0.0)
+        state = self.active_chunks.get(chunk)
+        return state.current_volume if state else 0.0

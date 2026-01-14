@@ -19,6 +19,14 @@ warnings.filterwarnings("ignore", message=r"n_fft=\d+ is too large for input sig
 
 _logger = get_logger(__name__)
 
+# -----------------------------------------------------------------------------
+# Volume Calculation Functions
+# -----------------------------------------------------------------------------
+
+def inverse_square_volume(distance: float, reference: float, epsilon: float = 1.0) -> float:
+    """Calculate volume using inverse square law."""
+    return min(1.0, (reference ** 2) / (distance ** 2 + epsilon))
+
 
 # -----------------------------------------------------------------------------
 # Feature Estimation Functions
@@ -73,17 +81,20 @@ def estimate_saturation(y_sig: np.ndarray) -> float:
     """
     Estimate saturation from spectral flatness.
     Pure tones = high saturation, noise = low saturation.
+    Uses log scale to penalize small deviations from purity.
 
     Args:
         y_sig: Audio signal as numpy array
 
     Returns:
-        Saturation value in range [0, 1]
+        Saturation value (log-scaled, ~0-1)
     """
     flatness = librosa.feature.spectral_flatness(y=y_sig)
     flat_med = float(np.median(flatness))
-    _logger.debug("Signal purity: %.2f", 1.0 - flat_med)
-    return float(1.0 - flat_med)
+    eps = 0.0000001
+    saturation = -np.log(flat_med + eps) / -np.log(eps)
+    _logger.debug("Signal purity: %.2f", saturation)
+    return float(saturation)
 
 
 def estimate_value(
@@ -213,6 +224,19 @@ def _prepare_spectrogram(
         img = img_as_ubyte(S_db_norm)
 
     return y, D, S, img, sr, actual_duration, mel_basis, M
+
+
+def _apply_fade(y: np.ndarray, sr: int, fade_ms: float = 100.0) -> np.ndarray:
+    """Apply cosine fade in/out to avoid clicks at segment boundaries."""
+    fade_samples = int(sr * fade_ms / 1000)
+    fade_samples = min(fade_samples, len(y) // 4)
+    if fade_samples < 2:
+        return y
+    fade_in = np.linspace(0, np.pi / 2, fade_samples)
+    fade_out = np.linspace(np.pi / 2, 0, fade_samples)
+    y[:fade_samples] *= np.sin(fade_in) ** 2
+    y[-fade_samples:] *= np.sin(fade_out) ** 2
+    return y
 
 
 def _check_time_filter(
@@ -527,7 +551,8 @@ def segment_spectrogram_felzenszwalb_2d(
             filter_stats['tuning'] += 1
             continue
 
-        # Save segment
+        # Apply fade and save segment
+        y_seg = _apply_fade(y_seg, sr)
         prefix = "felzen_mel" if use_mel else "felzen"
         freq_label = "mel" if use_mel else "f"
         filename = f"{prefix}_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_{freq_label}{freq_span}.wav"
