@@ -5,6 +5,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 
 from utils.geometry_utils import build_curve_surface, convex_hull_vertices_from_curve
+from utils.math_utils import lerp
 from utils.sound_utils import segment_spectrogram_felzenszwalb_2d, create_2d_path_visualization
 
 
@@ -88,9 +89,6 @@ def segment_audio(
     min_h = int(size_cfg.get("min_height", 200))
     max_w = int(size_cfg.get("max_width", 500))
     max_h = int(size_cfg.get("max_height", 500))
-
-    def lerp(a: float, b: float, t: float) -> float:
-        return a + (b - a) * t
 
     for item in curve_chunks_2d:
         x_res = np.asarray(item.get("x_resampled", []), dtype=float)

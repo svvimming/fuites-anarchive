@@ -6,7 +6,7 @@ from utils.color_utils import (
     hsv_to_rgb_int,
 )
 
-from utils.math_utils import calculate_entropy
+from utils.math_utils import calculate_entropy, lerp
 
 from utils.image_utils import (
     scale_image_to_fit,
@@ -38,6 +38,7 @@ __all__ = [
     'hsv_to_rgb_int',
     # Math
     'calculate_entropy',
+    'lerp',
     # Image
     'scale_image_to_fit',
     'resize_image_to_dimensions',

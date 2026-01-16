@@ -152,6 +152,16 @@ class WormManager:
             if glue_visuals_enabled:
                 glue.draw(screen)
 
+    def _find_expired_glues(self, glues_list: List[Glue], min_age_ms: int) -> List[Glue]:
+        """Find glues that are capped and have exceeded the minimum age."""
+        now_ms = pygame.time.get_ticks()
+        return [
+            g for g in glues_list
+            if getattr(g, "capped_at_ms", None) is not None
+            and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
+            and now_ms - int(g.capped_at_ms) >= min_age_ms
+        ]
+
     def get_glues_for_auto_export(
         self,
         glues_list: List[Glue],
@@ -175,27 +185,15 @@ class WormManager:
 
         # Check if we're in superabundance
         if total_chunks > threshold:
-            now_ms = pygame.time.get_ticks()
-            expired_glues = [
-                g for g in glues_list
-                if getattr(g, "capped_at_ms", None) is not None
-                and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
-                and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
-            ]
+            expired_glues = self._find_expired_glues(glues_list, auto_export_age_ms)
             if expired_glues:
                 over_limit = len(glues_list) > max_active
                 return (expired_glues, not over_limit)
 
         # Check if active glues exceed configured limit
         if len(glues_list) > max_active:
-            now_ms = pygame.time.get_ticks()
-            over_limit_candidates = [
-                g for g in glues_list
-                if getattr(g, "capped_at_ms", None) is not None
-                and len(g.glued_chunks) >= getattr(g, "max_glued_chunks", 0)
-                and now_ms - int(g.capped_at_ms) >= auto_export_age_ms
-            ]
-            if over_limit_candidates:
-                return (over_limit_candidates, False)
+            expired_glues = self._find_expired_glues(glues_list, auto_export_age_ms)
+            if expired_glues:
+                return (expired_glues, False)
 
         return ([], False)

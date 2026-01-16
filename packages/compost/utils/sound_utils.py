@@ -57,19 +57,13 @@ def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
     best_score = -1
 
     for key in range(12):
-        rotated_major = np.roll(major_profile, key)
-        major_score = np.corrcoef(chroma, rotated_major)[0, 1]
-        rotated_minor = np.roll(minor_profile, key)
-        minor_score = np.corrcoef(chroma, rotated_minor)[0, 1]
-
-        if major_score > best_score:
-            best_score = major_score
-            best_key = key
-            best_mode = "major"
-        if minor_score > best_score:
-            best_score = minor_score
-            best_key = key
-            best_mode = "minor"
+        for profile, mode in [(major_profile, "major"), (minor_profile, "minor")]:
+            rotated = np.roll(profile, key)
+            score = np.corrcoef(chroma, rotated)[0, 1]
+            if score > best_score:
+                best_score = score
+                best_key = key
+                best_mode = mode
 
     _logger.debug("Key: %s %s", pitch_names[best_key], best_mode)
 
@@ -163,6 +157,11 @@ def estimate_alpha(
 # Internal Helpers for Audio Segmentation
 # -----------------------------------------------------------------------------
 
+def _normalize_db(db_array: np.ndarray) -> np.ndarray:
+    """Normalize dB array to [0, 1] range."""
+    return (db_array - db_array.min()) / max(1e-12, (db_array.max() - db_array.min()))
+
+
 def _prepare_spectrogram(
     audio_path: str,
     n_fft: int,
@@ -215,13 +214,11 @@ def _prepare_spectrogram(
 
         # Normalize mel spectrogram to 0-255
         M_db = librosa.power_to_db(M, ref=np.max)
-        M_db_norm = (M_db - M_db.min()) / max(1e-12, (M_db.max() - M_db.min()))
-        img = img_as_ubyte(M_db_norm)
+        img = img_as_ubyte(_normalize_db(M_db))
     else:
         # Normalize STFT spectrogram to 0-255
         S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
-        S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
-        img = img_as_ubyte(S_db_norm)
+        img = img_as_ubyte(_normalize_db(S_db))
 
     return y, D, S, img, sr, actual_duration, mel_basis, M
 
@@ -598,14 +595,11 @@ def segment_spectrogram_felzenszwalb_2d(
 
     # Visualization
     if show_plots:
-        if use_mel:
-            M_db = librosa.power_to_db(M, ref=np.max)
-            M_db_norm = (M_db - M_db.min()) / max(1e-12, (M_db.max() - M_db.min()))
-            _create_segmentation_visualization(M_db, img, segments, M_db_norm, output_dir, len(unique_labels), use_mel=True)
-        else:
-            S_db = librosa.amplitude_to_db(S + 1e-12, ref=np.max)
-            S_db_norm = (S_db - S_db.min()) / max(1e-12, (S_db.max() - S_db.min()))
-            _create_segmentation_visualization(S_db, img, segments, S_db_norm, output_dir, len(unique_labels), use_mel=False)
+        spec_db = librosa.power_to_db(M, ref=np.max) if use_mel else librosa.amplitude_to_db(S + 1e-12, ref=np.max)
+        _create_segmentation_visualization(
+            spec_db, img, segments, _normalize_db(spec_db),
+            output_dir, len(unique_labels), use_mel=use_mel
+        )
 
     # Summary
     total_time = time.time() - start_time

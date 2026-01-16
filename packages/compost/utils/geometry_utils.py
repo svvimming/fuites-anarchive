@@ -5,6 +5,46 @@ from typing import List, Tuple
 from scipy.spatial import ConvexHull
 
 
+def _transform_curve_to_pixels(
+    points_xy01: np.ndarray,
+    width: int,
+    height: int,
+    padding: int
+) -> Tuple[np.ndarray, np.ndarray, float, float]:
+    """
+    Transform normalized curve points to pixel coordinates.
+
+    Args:
+        points_xy01: Nx2 points in [0,1] range
+        width: surface width
+        height: surface height
+        padding: padding inside surface border
+
+    Returns:
+        (px, py, drawing_center_x, drawing_center_y) where px/py are pixel coordinate arrays
+    """
+    draw_width = width - 2 * padding
+    draw_height = height - 2 * padding
+
+    x = points_xy01[:, 0].astype(float)
+    y = points_xy01[:, 1].astype(float)
+    x_min, x_max = float(np.min(x)), float(np.max(x))
+    y_min, y_max = float(np.min(y)), float(np.max(y))
+    extent_x = max(x_max - x_min, 1e-6)
+    extent_y = max(y_max - y_min, 1e-6)
+    center_x01 = 0.5 * (x_min + x_max)
+    center_y01 = 0.5 * (y_min + y_max)
+
+    scale_uniform = min(draw_width / extent_x, draw_height / extent_y)
+    drawing_center_x = padding + draw_width / 2.0
+    drawing_center_y = padding + draw_height / 2.0
+
+    px = drawing_center_x + scale_uniform * (x - center_x01)
+    py = drawing_center_y - scale_uniform * (y - center_y01)
+
+    return px, py, drawing_center_x, drawing_center_y
+
+
 def build_curve_surface(points_xy01: np.ndarray, rgba: Tuple[float, float, float, float], width: int, height: int, line_width: int = 4, padding: int = 4) -> pygame.Surface:
     """
     Build a transparent surface and draw a polyline representing the curve.
@@ -21,33 +61,12 @@ def build_curve_surface(points_xy01: np.ndarray, rgba: Tuple[float, float, float
         pygame.Surface: surface with the curve drawn.
     """
     surf = pygame.Surface((width, height), pygame.SRCALPHA)
-    if points_xy01 is None or len(points_xy01) < 2:
-        return surf
-    # Calculate effective drawing area (accounting for padding)
-    draw_width = width - 2 * padding
-    draw_height = height - 2 * padding
+    # if points_xy01 is None or len(points_xy01) < 2:
+    #     return surf
 
-    # Normalize curve extents per-chunk and scale uniformly to fit drawing area
-    x = points_xy01[:, 0].astype(float)
-    y = points_xy01[:, 1].astype(float)
-    x_min, x_max = float(np.min(x)), float(np.max(x))
-    y_min, y_max = float(np.min(y)), float(np.max(y))
-    extent_x = max(x_max - x_min, 1e-6)
-    extent_y = max(y_max - y_min, 1e-6)
-    center_x01 = 0.5 * (x_min + x_max)
-    center_y01 = 0.5 * (y_min + y_max)
-
-    # Uniform scale to preserve aspect ratio
-    scale_uniform = min(draw_width / extent_x, draw_height / extent_y)
-    drawing_center_x = padding + draw_width / 2.0
-    drawing_center_y = padding + draw_height / 2.0
-
-    # Map to pixel coords, centered in drawing area; flip Y for screen coords
-    px = drawing_center_x + scale_uniform * (x - center_x01)
-    py = drawing_center_y - scale_uniform * (y - center_y01)
+    px, py, _, _ = _transform_curve_to_pixels(points_xy01, width, height, padding)
 
     pts = [(int(x), int(y)) for x, y in zip(px, py)]
-    # Clamp color to 0..255
     r = max(0, min(255, int(rgba[0] * 255)))
     g = max(0, min(255, int(rgba[1] * 255)))
     b = max(0, min(255, int(rgba[2] * 255)))
@@ -75,31 +94,10 @@ def convex_hull_vertices_from_curve(points_xy01: np.ndarray, width: int, height:
     Returns:
         List of (x,y) vertices for physics body, centered at origin
     """
-    if points_xy01 is None or len(points_xy01) < 3:
-        # Fallback to small rectangle if insufficient points
-        return [(-10, -10), (10, -10), (10, 10), (-10, 10)]
+    # if points_xy01 is None or len(points_xy01) < 3:
+    #     return [(-10, -10), (10, -10), (10, 10), (-10, 10)]
 
-    # Calculate effective drawing area (same as in build_curve_surface)
-    draw_width = width - 2 * padding
-    draw_height = height - 2 * padding
-
-    # Normalize curve extents per-chunk and scale uniformly to fit drawing area
-    x = points_xy01[:, 0].astype(float)
-    y = points_xy01[:, 1].astype(float)
-    x_min, x_max = float(np.min(x)), float(np.max(x))
-    y_min, y_max = float(np.min(y)), float(np.max(y))
-    extent_x = max(x_max - x_min, 1e-6)
-    extent_y = max(y_max - y_min, 1e-6)
-    center_x01 = 0.5 * (x_min + x_max)
-    center_y01 = 0.5 * (y_min + y_max)
-
-    scale_uniform = min(draw_width / extent_x, draw_height / extent_y)
-    drawing_center_x = padding + draw_width / 2.0
-    drawing_center_y = padding + draw_height / 2.0
-
-    # Map to pixel coords, centered in drawing area; flip Y for screen coords
-    px = drawing_center_x + scale_uniform * (x - center_x01)
-    py = drawing_center_y - scale_uniform * (y - center_y01)
+    px, py, drawing_center_x, drawing_center_y = _transform_curve_to_pixels(points_xy01, width, height, padding)
 
     # Stack into Nx2 array for ConvexHull
     points_px = np.column_stack([px, py])

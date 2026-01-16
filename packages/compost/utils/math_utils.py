@@ -31,6 +31,11 @@ def scale_vector(dx: float, dy: float, scale: float) -> Tuple[float, float]:
     return (dx * scale, dy * scale)
 
 
+def lerp(a: float, b: float, t: float) -> float:
+    """Linear interpolation between a and b by factor t."""
+    return a + (b - a) * t
+
+
 def limit_vector(dx: float, dy: float, max_magnitude: float) -> Tuple[float, float]:
     """
     Limit a vector's magnitude to a maximum value.
