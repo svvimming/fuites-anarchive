@@ -1,7 +1,7 @@
 simulation:
   window:
-    width: 1600
-    height: 1000
+    width: 1728
+    height: 1117
     ui_bar_height: 60
   ui_enabled: true
   fps: 60
@@ -15,6 +15,20 @@ simulation:
     height: 40
     gap: 10
 
+# --- Physics constants ---
+physics:
+  chunk:
+    elasticity: 1.0
+    friction: 5.0
+    mass: 1.0
+    shape_filter_group: 1
+
+# --- Queue processing limits ---
+queue:
+  background_workers: 4    # Number of parallel background processes
+  max_upload_drain: 4      # Max uploads to process per frame
+  max_chunk_drain: 15      # Max chunks to integrate per frame
+
 worm:
   max_chunks: 15
   appetite:
@@ -23,9 +37,17 @@ worm:
     hue_weight: 0.6
     saturation_weight: 0.2
     value_weight: 0.2
+  # --- SUPERABUNDANCE: When there are more than threshold particles ---
+  # During superabundance, multiple worms are spawned to handle the increased load
+  superabundance:
+    threshold: 700  # Number of particles that triggers superabundance
+    worms_per_upload: 2  # Number of worms spawned per upload during superabundance
+    auto_export_capped_after_ms: 30000  # Auto-export glues capped longer than this during superabundance
   glue:
     enabled: true
     max_glued_chunks: 100
+    max_active_glues: 5
+    sound_cap: 10  # Maximum sound chunks per glue (null for no limit)
     vicinity:
       min_difference: 0
       max_difference: 0.07
@@ -50,16 +72,21 @@ worm:
       pulse_speed: 0.05
       pulse_min: 0.7
       pulse_max: 1.0
+      glow_alpha_max: 150  # Maximum alpha for glow effect
+      full_ring_width: 2   # Width of white ring when glue is full
+      spin_speed: 1.0      # Rotation speed of color wheel
+      min_quality_steps: 6 # Minimum steps per segment for color wheel quality
   history_panel:
     enabled: true
     display_area:
       x: 10
       y: 70
       width: 300
-      height: 400
-    chunk_preview_size: 50
-    text_height: 20
-    spacing: 10
+      height: 700
+    chunk_preview_size: 36
+    text_height: 18
+    spacing: 6
+    show_hsv_text: false
 
 segmentation:
   # --- Felzenszwalb Segmentation ---
@@ -72,6 +99,10 @@ segmentation:
     scale: 150
     sigma: 3
     min_size: 20
+  # Minimal visibility filtering for image segments (post-segmentation)
+  image_filter:
+    min_visible_pixels: 30         # Skip segments with fewer visible pixels than this
+    min_alpha_threshold: 8         # Alpha threshold (0-255) to consider a pixel visible
 
 compression:
   max_size: 10000
@@ -91,3 +122,51 @@ server:
   port: 5055
   max_download_bytes: 26214400 # 25MB
   download_timeout_sec: 15
+
+# --- Sound processing (for sound_chunking integration) ---
+sound:
+  felzenszwalb:
+    scale: 150
+    # sigma: 3
+    sigma: 1 #for mel
+    min_size: 20
+  use_mel: true        # Use mel spectrogram (perceptual) vs STFT (linear)
+  n_mels: 256           # Number of mel frequency bins (only used when use_mel=true)
+  min_area_pixels: 300
+  min_time_seconds: 0.5
+  min_energy_ratio: 0.001
+  min_loudness_db: -70.0
+  max_shapes: 200
+  points_per_second: 100
+  resampled_points_per_chunk: 128
+  chunk_surface:
+    line_width: 2
+    padding: 4
+  # Dynamic sizing by duration (linear between min and max)
+  max_part_duration: 60  # Split large audio files into parts (seconds). Set to 0 to disable.
+  duration_size:
+    min_seconds: 0.5
+    max_seconds: 60.0
+    min_width: 50
+    min_height: 50
+    max_width: 800
+    max_height: 800
+  # Proximity-based hover with inverse square law
+  hover:
+    max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
+    reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
+    min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
+    smoother:
+      enabled: true
+      attack: 0.2   # [0-1] (higher = faster)
+      release: 0.2   # [0-1] (higher = faster)
+    volume_scaling:
+      perceptual_exponent: 0.7    # Volume perception curve
+      line_width_multiplier: 20.0  # How much louder chunks get thicker
+      alpha_boost: 0.5            # How much louder chunks get brighter
+    mixer:
+      frequency: 22050
+      size: -16
+      channels: 2
+      buffer: 2048
+      max_channels: 256
