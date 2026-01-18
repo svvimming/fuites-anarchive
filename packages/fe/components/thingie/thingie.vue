@@ -38,7 +38,8 @@
       :colors="thingie.colors"
       :position="thingie.at"
       :location="thingie.location"
-      :stroke-width="thingie.stroke_width" />
+      :stroke-width="thingie.stroke_width"
+      @loaded="handleSetLoaded" />
 
     <ThingieText
       v-if="type === 'text'"

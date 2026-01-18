@@ -41,9 +41,9 @@ MC.app.post('/post-update-verse', async (req, res) => {
       return SendData(res, 404, 'Verse not found')
     }
 
-    // Broadcast the update to all clients via the multiverse room
+    // Broadcast the update to all clients via the pluriverse room
     MC.socket.io
-      .to('multiverse')
+      .to('pluriverse')
       .emit('module|post-update-verse|payload', { verse: updated })
 
     SendData(res, 200, 'Verse successfully updated')

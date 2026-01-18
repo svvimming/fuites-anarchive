@@ -1,13 +1,13 @@
 <template>
   <ZeroAlert
     mode="modal"
-    alert-id="multiverse-info-modal"
-    class="multiverse-info-modal-alert">
+    alert-id="pluriverse-info-modal"
+    class="pluriverse-info-modal-alert">
     <div ref="alertRef" class="alert-message">
 
       <button
         class="close-button"
-        @click="alertStore.closeAlert('multiverse-info-modal')">
+        @click="alertStore.closeAlert('pluriverse-info-modal')">
         <IconClose />
       </button>
       
@@ -43,16 +43,16 @@ const alertStore = useZeroAlertStore()
 const alertRef = ref(null)
 
 onClickOutside(alertRef, () => {
-  const alert = alertStore.getAlert('multiverse-info-modal')
+  const alert = alertStore.getAlert('pluriverse-info-modal')
   if (alert.status === 'open') {
-    alertStore.closeAlert('multiverse-info-modal')
+    alertStore.closeAlert('pluriverse-info-modal')
   }
 })
 </script>
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse-info-modal-alert {
+.pluriverse-info-modal-alert {
   z-index: 1000 !important;
   &.open {
     transform: translateY(0);

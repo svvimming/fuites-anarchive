@@ -27,8 +27,8 @@ MC.app.post('/post-update-page', async (req, res) => {
       })
     MC.socket.io
       .to(`${verse}|pages`)
-      .emit('module|post-update-page|payload', updated)
-    SendData(res, 200, 'Page succesfully updated', updated)
+      .emit('module|post-update-page|payload', { page: updated })
+    SendData(res, 200, 'Page succesfully updated', { page: updated })
   } catch (e) {
     console.log('================= [Endpoint: /post-update-page]')
     console.log(e)

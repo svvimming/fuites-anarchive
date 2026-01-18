@@ -30,6 +30,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const initPageshot = options => {
+    status.value = 'working'
     const { destination } = options
     const bounds = page.value?.data.bounds || { x: 2372, y: 2000 }
     const layers = stage.value.getLayers()
@@ -109,9 +110,7 @@ export const usePageshotBot = stageRef => {
    */
 
   const fileUploadComplete = () => {
-    place.value = 0
-    nextChunkPayload.value = false
-    printId.value = ''
+    resetUploader()
     status.value = 'complete'
     if (cloned.value) {
       cloned.value.destroy()
@@ -140,14 +139,8 @@ export const usePageshotBot = stageRef => {
     place.value = 0
     nextChunkPayload.value = false
     printId.value = ''
-    status.value = 'ready'
     blob.value = false
     goal.value = 0
-    fileReader.value
-    if (cloned.value) {
-      cloned.value.destroy()
-      cloned.value = null
-    }
   }
 
   /**
@@ -176,8 +169,11 @@ export const usePageshotBot = stageRef => {
   $bus.$on('socket.io-connected', handleWebsocketConnected)
 
   onBeforeUnmount(() => {
-    resetUploader()
     $bus.$off('socket.io-connected', handleWebsocketConnected)
+    if (cloned.value) {
+      cloned.value.destroy()
+      cloned.value = null
+    }
   })
 
   return { initPageshot, status }

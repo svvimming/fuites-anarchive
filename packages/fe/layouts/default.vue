@@ -33,8 +33,6 @@ const verseStore = useVerseStore()
 const { verse, page } = storeToRefs(verseStore)
 const pocketStore = usePocketStore()
 const collectorStore = useCollectorStore()
-const websocketStore = useWebsocketStore()
-const { socket } = storeToRefs(websocketStore)
 const keydownEventListener = ref(false)
 const keyupEventListener = ref(false)
 const doubleClickEventListener = ref(false)
@@ -44,9 +42,7 @@ watch(() => page.value.data, async () => {
   /**
    * Initialize websocket connection to backend
    */
-  if (!socket.value?.connected) {
-    await $io.connect()
-  }
+  await $io.connect()
   /**
    * Add keydown/up event listeners
    */
@@ -71,7 +67,7 @@ watch(() => page.value.data, async () => {
   socket.emit('join-room', `${namespace}|thingies`)
   socket.emit('join-room', `${namespace}|pages`)
   socket.emit('join-room', `${namespace}|portals`)
-  socket.emit('join-room', 'multiverse')
+  socket.emit('join-room', 'pluriverse')
   // Listen for events
   socket.on('module|update-thingie|payload', (data) => {
     // If the update originated from this session and was updating a thingie 'at'

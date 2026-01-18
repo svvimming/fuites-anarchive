@@ -1,5 +1,5 @@
 <template>
-  <div class="multiverse-layout">
+  <div class="pluriverse-layout">
 
     <slot />
 
@@ -26,19 +26,15 @@ const { $io, $bus } = useNuxtApp()
 
 // ======================================================================== Data
 const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
+const { pocketAuth } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
-const websocketStore = useWebsocketStore()
-const { socket } = storeToRefs(websocketStore)
 
 // ==================================================================== Watchers
-watch(authenticated, async (val) => {
+watch(pocketAuth, async (val) => {
   /**
    * Initialize websocket connection to backend
    */
-  if (val && !socket.value?.connected) {
-    await $io.connect()
-  }
+  if (val) { await $io.connect() }
 })
 
 // ===================================================================== Methods
@@ -48,7 +44,7 @@ watch(authenticated, async (val) => {
 
  const handleWebsocketConnected = socket => {
   // Join rooms
-  socket.emit('join-room', 'multiverse')
+  socket.emit('join-room', 'pluriverse')
   // Listen for events
   socket.on('module|post-update-verse|payload', (data) => {
     verseStore.updateVerse(data.verse)
@@ -68,7 +64,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse-layout {
+.pluriverse-layout {
   position: relative;
   width: 100vw;
   height: 100vh;

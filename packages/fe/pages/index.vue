@@ -1,33 +1,37 @@
 <template>
-  <div class="multiverse">
+  <div class="pluriverse">
     <!-- ======================================================= Landing Nav -->
-    <LandingNav v-show="!authenticated" />
+    <LandingNav v-show="!pocketAuth" />
     <!-- ======================================================== Info Modal -->
-    <MultiverseInfoModal v-if="infoMarkdown" :markdown="infoMarkdown" />
+    <PluriverseInfoModal v-if="infoMarkdown" :markdown="infoMarkdown" />
     <!-- =========================================== Create New Verse Button -->
-    <ButtonDashed
-      v-if="authenticated"
-      :stylized="createVerseButtonText"
-      :active="createVerseButtonActive"
-      :flat-dashes="4"
-      class="new-verse-button"
-      @clicked="handleCreateNewVerseClick">
-      <template #icon-after>
-        <IconPlus class="icon" />
-      </template>
-    </ButtonDashed>
+    <ClientOnly>
+      <ButtonDashed
+        v-if="pocketAuth"
+        :stylized="createVerseButtonText"
+        :active="createVerseButtonActive"
+        :flat-dashes="4"
+        class="new-verse-button"
+        @clicked="handleCreateNewVerseClick">
+        <template #icon-after>
+          <IconPlus class="icon" />
+        </template>
+      </ButtonDashed>
+    </ClientOnly>
     <!-- ================================================ Enter Token Button -->
-    <ButtonDashed
-      v-if="authenticated"
-      :stylized="changeTokenButtonText"
-      :active="enterTokenButtonActive"
-      :flat-dashes="4"
-      class="change-token-button"
-      @clicked="handleEnterTokenClick">
-      <template #icon-after>
-        <IconKey class="icon" />
-      </template>
-    </ButtonDashed>
+    <ClientOnly>
+      <ButtonDashed
+        v-if="pocketAuth"
+        :stylized="changeTokenButtonText"
+        :active="enterTokenButtonActive"
+        :flat-dashes="4"
+        class="change-token-button"
+        @clicked="handleEnterTokenClick">
+        <template #icon-after>
+          <IconKey class="icon" />
+        </template>
+      </ButtonDashed>
+    </ClientOnly>
     <!-- =============================================== Community and Terms -->
     <div class="community-and-terms">
       <ButtonBasic
@@ -50,8 +54,8 @@
     <!-- ======================================================== Token Auth -->
     <ZeroAlert
       mode="alert"
-      alert-id="multiverse-auth-alert"
-      class="multiverse-auth-alert">
+      alert-id="pluriverse-auth-alert"
+      class="pluriverse-auth-alert">
       <Auth
         heading="Token"
         message="Enter a token to access your Verses:"
@@ -59,16 +63,16 @@
         @cancel-authentication="handleCloseAuthAlert" />
     </ZeroAlert>
     <!-- ================================================ Create Verse Alert -->
-    <MultiverseCreateVerseAlert
+    <PluriverseCreateVerseAlert
       @close-alert="handleCloseCreateVerseAlert" />
     <!-- ============================================================ Verses -->
     <ClientOnly>
-      <MultiverseVerseNav
+      <PluriverseVerseNav
         :verses="verses"
         @open-verse-settings="setSettingsModalVerseId" />
     </ClientOnly>
     <!-- ============================================== Verse Settings Modal -->
-    <MultiverseVerseSettingsModal
+    <PluriverseVerseSettingsModal
       :verse="editingVerse"
       class="verse-settings-modal-wrapper"
       @close-alert="setSettingsModalVerseId(false)" />
@@ -82,13 +86,14 @@
 // ======================================================================= Setup
 import SettingsData from '@/data/settings.json'
 
-definePageMeta({ layout: 'multiverse' })
+definePageMeta({ layout: 'pluriverse' })
 
 // ======================================================================== Data
 const generalStore = useGeneralStore()
+const { siteData } = storeToRefs(generalStore)
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const { pocket, authenticated } = storeToRefs(pocketStore)
+const { pocket, pocketAuth } = storeToRefs(pocketStore)
 const verseStore = useVerseStore()
 const { verse } = storeToRefs(verseStore)
 const createVerseButtonActive = ref(false)
@@ -125,15 +130,19 @@ const changeTokenButtonText = [
 ]
 
 // fetch Verse
-await useAsyncData('multiverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
+await useAsyncData('pluriverse', async () => await verseStore.getVerse({ verse: 'fog' }), { server: false })
 // fetch Info Markdown
-const { data: markdown } = await useAsyncData(async () => queryCollection('content').all())
+const { data: content } = await useAsyncData(async () => queryCollection('content').all())
 // Set site data
 await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+// Set content data
+if (content.value) {
+  await generalStore.setSiteData({ key: 'content', value: content.value })
+}
 // Check local storage for auth token and try to authenticate if found
 if (process.client) {
   const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
-  if (!authenticated.value && localStorageAuthToken) {
+  if (!pocketAuth.value && localStorageAuthToken) {
     await pocketStore.getAuthPocket({ token: localStorageAuthToken, localStorageAuth: true })
   }
 }
@@ -141,48 +150,49 @@ if (process.client) {
 // ==================================================================== Computed
 const verses = computed(() => pocket.value.data.verses.length ? pocket.value.data.verses : [verse.value.data])
 const editingVerse = computed(() => verses.value.find(item => item._id === settingsModalVerseId.value) || null)
+const markdown = computed(() => content.value || siteData.value?.content || [])
 const infoMarkdown = computed(() => markdown.value.find(item => item.path === '/info'))
 
 // ===================================================================== Methods
 const handleCreateNewVerseClick = () => {
-  const alert = alertStore.getAlert('multiverse-create-verse-alert')
+  const alert = alertStore.getAlert('pluriverse-create-verse-alert')
   if (alert.status === 'closed') {
-    alertStore.openAlert('multiverse-create-verse-alert')
+    alertStore.openAlert('pluriverse-create-verse-alert')
     createVerseButtonActive.value = true
   } else {
-    alertStore.closeAlert('multiverse-create-verse-alert')
+    alertStore.closeAlert('pluriverse-create-verse-alert')
     createVerseButtonActive.value = false
   }
-  if (alertStore.getAlert('multiverse-auth-alert').status === 'open') {
-    alertStore.closeAlert('multiverse-auth-alert')
+  if (alertStore.getAlert('pluriverse-auth-alert').status === 'open') {
+    alertStore.closeAlert('pluriverse-auth-alert')
     enterTokenButtonActive.value = false
   }
   settingsModalVerseId.value = false
 }
 
 const handleEnterTokenClick = () => {
-  const alert = alertStore.getAlert('multiverse-auth-alert')
+  const alert = alertStore.getAlert('pluriverse-auth-alert')
   if (alert.status === 'closed') {
-    alertStore.openAlert('multiverse-auth-alert')
+    alertStore.openAlert('pluriverse-auth-alert')
     enterTokenButtonActive.value = true
   } else {
-    alertStore.closeAlert('multiverse-auth-alert')
+    alertStore.closeAlert('pluriverse-auth-alert')
     enterTokenButtonActive.value = false
   }
-  if (alertStore.getAlert('multiverse-create-verse-alert').status === 'open') {
-    alertStore.closeAlert('multiverse-create-verse-alert')
+  if (alertStore.getAlert('pluriverse-create-verse-alert').status === 'open') {
+    alertStore.closeAlert('pluriverse-create-verse-alert')
     createVerseButtonActive.value = false
   }
   settingsModalVerseId.value = false
 }
 
 const handleCloseAuthAlert = () => {
-  alertStore.closeAlert('multiverse-auth-alert')
+  alertStore.closeAlert('pluriverse-auth-alert')
   enterTokenButtonActive.value = false
 }
 
 const handleCloseCreateVerseAlert = () => {
-  alertStore.closeAlert('multiverse-create-verse-alert')
+  alertStore.closeAlert('pluriverse-create-verse-alert')
   createVerseButtonActive.value = false
 }
 
@@ -190,12 +200,12 @@ const setSettingsModalVerseId = verseId => {
   // Set the verse id for the verse settings modal
   settingsModalVerseId.value = verseId === settingsModalVerseId.value ? false : verseId
   // Close any open alerts when a verse settings modal is opened
-  if (alertStore.getAlert('multiverse-auth-alert').status === 'open') {
-    alertStore.closeAlert('multiverse-auth-alert')
+  if (alertStore.getAlert('pluriverse-auth-alert').status === 'open') {
+    alertStore.closeAlert('pluriverse-auth-alert')
     enterTokenButtonActive.value = false
   }
-  if (alertStore.getAlert('multiverse-create-verse-alert').status === 'open') {
-    alertStore.closeAlert('multiverse-create-verse-alert')
+  if (alertStore.getAlert('pluriverse-create-verse-alert').status === 'open') {
+    alertStore.closeAlert('pluriverse-create-verse-alert')
     createVerseButtonActive.value = false
   }
 }
@@ -204,7 +214,7 @@ const setSettingsModalVerseId = verseId => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse {
+.pluriverse {
   position: relative;
   width: 100%;
   height: 100%;

@@ -1,14 +1,14 @@
 <template>
   <ZeroAlert
     mode="alert"
-    alert-id="multiverse-create-verse-alert">
+    alert-id="pluriverse-create-verse-alert">
 
     <div class="alert-message">
       <!-- ========================================================= Heading -->
       <span class="heading">Create a new Verse</span>
       <span class="body-text">Choose a name for your new partition (aka Verse) and a name for its first page. This name will be used to identify the Verse in the URL and can't be changed once the Verse is created!</span>
       <!-- ====================================================== Verse Name -->
-      <MultiverseCollisionDetectionInput
+      <PluriverseCollisionDetectionInput
         label-text="Verse name"
         placeholder="enter new verse name"
         input-id="create-verse-name-input"

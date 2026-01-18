@@ -1,5 +1,5 @@
 <template>
-  <div class="multiverse-verse-nav">
+  <div class="pluriverse-verse-nav">
     <!-- ======================================================== Background -->
     <div class="background-panel">
       <div
@@ -21,19 +21,19 @@
         data-push-right="off-1_sm-2_mi-1_ti-0">
         <!-- ------------------------------------------------------ Site Nav -->
         <div
-          v-show="authenticated"
+          v-show="pocketAuth"
           class="logo-container">
           <SiteLogo v-once />
         </div>
         <ButtonBasic
-          v-if="authenticated"
+          v-if="pocketAuth"
           theme="clear"
           class="info-button"
           @clicked="toggleInfoModal">
           Info
         </ButtonBasic>
         <!-- ----------------------------------------------------- Verse Nav -->
-        <template v-if="authenticated">
+        <template v-if="pocketAuth">
 
           <div class="verse-list-header">
             <div class="list-heading">
@@ -66,7 +66,7 @@
               </ButtonBasic>
               
               <ButtonIcon
-                v-if="authenticated"
+                v-if="pocketAuth"
                 class="verse-settings-button"
                 @clicked="emit('open-verse-settings', verse._id)">
                 <IconEllipsis class="icon-ellipsis" />
@@ -83,11 +83,11 @@
 
         </template>
       </div>
-      <!-- ----------------------------------------- Multiverse Visual Right -->
+      <!-- ----------------------------------------- Pluriverse Visual Right -->
       <div class="col-9_ulg-8_xlg-7_md-6_sm-hidden">
         <div ref="versesCtnRef" class="verse-portals">
           <template v-for="(verse, index) in verses">
-            <MultiversePortal
+            <PluriversePortal
               v-if="verse._id"
               :key="`${verse._id}-portal`"
               :verse="verse"
@@ -116,7 +116,7 @@ const emit = defineEmits(['open-verse-settings'])
 // ======================================================================== Data
 const alertStore = useZeroAlertStore()
 const pocketStore = usePocketStore()
-const { authenticated } = storeToRefs(pocketStore)
+const { pocketAuth } = storeToRefs(pocketStore)
 const positionData = ref([])
 const versesCtnRef = ref(null)
 const randomOffsets = ref([])
@@ -180,9 +180,9 @@ const getPortalPosition = index => {
 }
 
 const toggleInfoModal = () => {
-  const alert = alertStore.getAlert('multiverse-info-modal')
+  const alert = alertStore.getAlert('pluriverse-info-modal')
   if (alert) {
-    alertStore.openAlert('multiverse-info-modal')
+    alertStore.openAlert('pluriverse-info-modal')
   }
 }
 
@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 // ///////////////////////////////////////////////////////////////////// General
-.multiverse-verse-nav {
+.pluriverse-verse-nav {
   height: 100%;
   [class~="grid"],
   [class*="grid-"],
