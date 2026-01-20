@@ -35,7 +35,7 @@ class Glue:
         self.glue_cfg = config["worm"]["glue"]
         self.max_glued_chunks = self.glue_cfg["max_glued_chunks"]
         self.sound_cap = self.glue_cfg.get("sound_cap")  # None means no limit
-        self.vicinity_cfg = self.glue_cfg["vicinity"]
+        self.vicinity_cfg = self.glue_cfg["color_attraction"]
         self.min_difference = self.vicinity_cfg["min_difference"]
         self.max_difference = self.vicinity_cfg["max_difference"]
         
@@ -285,7 +285,7 @@ class Worm:
         self.max_difference = appetite_cfg["max_difference"]  # Maximum color difference allowed
         
         # Panel configuration
-        panel_cfg = worm_cfg["history_panel"]
+        panel_cfg = config["simulation"]["ui"]["worm_history_panel"]
         self.panel_enabled = panel_cfg["enabled"]
         display_area = panel_cfg["display_area"]
         self.panel_x = display_area["x"]

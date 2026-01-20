@@ -24,7 +24,7 @@ class WormManager:
         self._active_worm: Optional[Worm] = None
         self._spawn_pending: int = 0
         self._spawn_batch_total: int = 0
-        self.history_panel_enabled: bool = config["worm"]["history_panel"]["enabled"]
+        self.history_panel_enabled: bool = config["simulation"]["ui"]["worm_history_panel"]["enabled"]
 
     def schedule_worms(self, count: int) -> None:
         """

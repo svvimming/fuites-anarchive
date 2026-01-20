@@ -45,12 +45,12 @@ class Simulation:
         self.font = font
         self.debug_mode = False
         self.glue_visuals_enabled = config["worm"]["glue"]["visual"].get("enabled", True)
-        self.ui_enabled = config["simulation"].get("ui_enabled", True)
+        self.ui_enabled = config["simulation"]["ui"].get("enabled", True)
 
         # Local references
         self.width = config["simulation"]["window"]["width"]
         self.height = config["simulation"]["window"]["height"]
-        self.ui_bar_height = config["simulation"]["window"]["ui_bar_height"]
+        self.ui_bar_height = config["simulation"]["ui"]["ui_bar_height"]
         self.colors = config["colors"]
 
         # Core state
@@ -96,7 +96,7 @@ class Simulation:
     def process_pending_uploads(self, max_items: int = None) -> None:
         """Process pending uploads from HTTP queue."""
         if max_items is None:
-            max_items = self.config.get("queue", {}).get("max_upload_drain", 4)
+            max_items = self.config.get("queue", {}).get("max_http_upload_drain", 4)
         self.queue_manager._process_pending_uploads(max_items)
 
     def receive_chunks(self, max_items: int = None) -> None:

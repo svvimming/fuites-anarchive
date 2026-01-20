@@ -38,7 +38,9 @@ def segment_audio(
     """
     chunks_data = []
     snd_cfg = config.get("sound", {})
-    felz = snd_cfg.get("felzenszwalb", {})
+    seg_cfg = snd_cfg.get("segmentation", {})
+    felz = seg_cfg.get("felzenszwalb", {})
+    filt_cfg = seg_cfg.get("chunk_filter", {})
 
     # Build output directory name (include part index if splitting)
     basename = os.path.basename(audio_path).split('.')[0]
@@ -54,41 +56,40 @@ def segment_audio(
         output_dir=output_dir,
         offset=offset,
         duration=duration,
-        use_mel=bool(snd_cfg.get("use_mel", False)),
-        n_mels=int(snd_cfg.get("n_mels", 128)),
+        use_mel=bool(seg_cfg.get("mel_spectrogram", {}).get("enabled", False)),
+        n_mels=int(seg_cfg.get("mel_spectrogram", {}).get("n_bins", 128)),
         scale=int(felz.get("scale", 150)),
         sigma=float(felz.get("sigma", 3)),
         min_size=int(felz.get("min_size", 20)),
-        max_shapes=int(snd_cfg.get("max_shapes", 50)),
-        min_area_pixels=int(snd_cfg.get("min_area_pixels", 300)),
-        min_time_seconds=float(snd_cfg.get("min_time_seconds", 0.5)),
-        min_energy_ratio=float(snd_cfg.get("min_energy_ratio", 0.001)),
-        min_loudness_db=float(snd_cfg.get("min_loudness_db", -70.0)),
+        max_shapes=int(filt_cfg.get("max_shapes", 50)),
+        min_area_pixels=int(filt_cfg.get("min_area_pixels", 300)),
+        min_time_seconds=float(filt_cfg.get("min_time_seconds", 0.5)),
+        min_energy_ratio=float(filt_cfg.get("min_energy_ratio", 0.001)),
+        min_loudness_db=float(filt_cfg.get("min_loudness_db", -70.0)),
         show_plots=False,
     )
 
     # Create 2D path visualization
+    dim_cfg = snd_cfg.get("chunk_rendering", {})
     _X, _Y, curve_chunks_2d, _profiles = create_2d_path_visualization(
         kept_segments,
         audio_path,
-        points_per_second=int(snd_cfg.get("points_per_second", 100)),
-        resampled_points_per_chunk=int(snd_cfg.get("resampled_points_per_chunk", 128)),
+        points_per_second=int(dim_cfg.get("points_per_second", 100)),
+        resampled_points_per_chunk=int(dim_cfg.get("resampled_points_per_chunk", 128)),
         show_plots=False,
     )
 
     # Build chunk data from curves
-    surf_cfg = snd_cfg.get("chunk_surface", {})
-    line_w = int(surf_cfg.get("line_width", 6))
-    padding = int(surf_cfg.get("padding", 6))
+    line_w = int(dim_cfg.get("line_width", 6))
+    padding = int(dim_cfg.get("padding", 6))
 
-    # Dynamic sizing by duration
-    size_cfg = snd_cfg.get("duration_size", {})
-    min_sec = float(size_cfg.get("min_seconds", 0.5))
-    max_sec = float(size_cfg.get("max_seconds", 60.0))
-    min_w = int(size_cfg.get("min_width", 200))
-    min_h = int(size_cfg.get("min_height", 200))
-    max_w = int(size_cfg.get("max_width", 500))
-    max_h = int(size_cfg.get("max_height", 500))
+    # Dynamic sizing by duration (bounded by filter min and part max)
+    min_sec = float(filt_cfg.get("min_time_seconds", 0.5))
+    max_sec = float(snd_cfg.get("max_part_duration", 60.0))
+    min_w = int(dim_cfg.get("min_width", 200))
+    min_h = int(dim_cfg.get("min_height", 200))
+    max_w = int(dim_cfg.get("max_width", 500))
+    max_h = int(dim_cfg.get("max_height", 500))
 
     for item in curve_chunks_2d:
         x_res = np.asarray(item.get("x_resampled", []), dtype=float)

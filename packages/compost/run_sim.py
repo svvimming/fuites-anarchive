@@ -38,8 +38,8 @@ def main() -> None:
     # Initialize Pymunk space
     space = pymunk.Space()
     space.gravity = (
-        config["simulation"]["gravity_x"],
-        config["simulation"]["gravity_y"]
+        config["simulation"]["physics"]["gravity"]["x"],
+        config["simulation"]["physics"]["gravity"]["y"]
     )
 
     # Pass the entire config to the Simulation class

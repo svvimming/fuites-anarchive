@@ -59,7 +59,7 @@ class AudioManager:
 
     def _init_smoother(self, config: Dict[str, Any]) -> VolumeSmoother:
         """Create smoother from config, or None if disabled."""
-        cfg = config.get("sound", {}).get("hover", {}).get("smoother", {})
+        cfg = config.get("sound", {}).get("hover", {}).get("volume_smoother", {})
         if not cfg.get("enabled", False):
             return None
         return VolumeSmoother(cfg.get("attack", 0.4), cfg.get("release", 0.4))
@@ -118,10 +118,10 @@ class AudioManager:
 
     def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
         """Handle proximity-based audio playback for chunks near the cursor."""
-        hover_cfg = self.config["sound"]["hover"]
-        max_distance = hover_cfg["max_distance"]
-        reference = hover_cfg["reference_distance"]
-        threshold = hover_cfg["min_volume_threshold"]
+        vol_cfg = self.config["sound"]["hover"]["volume_scaling"]
+        max_distance = vol_cfg["max_distance"]
+        reference = vol_cfg["reference_distance"]
+        threshold = vol_cfg["min_volume_threshold"]
 
         cursor_x, cursor_y = mouse_pos
         should_play = set()

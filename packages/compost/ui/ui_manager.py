@@ -29,13 +29,13 @@ class UIManager:
         sim_cfg = config["simulation"]
         self.width = sim_cfg["window"]["width"]
         self.height = sim_cfg["window"]["height"]
-        self.ui_bar_height = sim_cfg["window"]["ui_bar_height"]
+        self.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
         self.colors = config["colors"]
 
         # Button dims
-        self.button_width = sim_cfg["buttons"]["width"]
-        self.button_height = sim_cfg["buttons"]["height"]
-        self.button_gap = sim_cfg["buttons"]["gap"]
+        self.button_width = sim_cfg["ui"]["buttons"]["width"]
+        self.button_height = sim_cfg["ui"]["buttons"]["height"]
+        self.button_gap = sim_cfg["ui"]["buttons"]["gap"]
 
         self.buttons = self._create_buttons()
 

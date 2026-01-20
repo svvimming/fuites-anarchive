@@ -2,33 +2,57 @@ simulation:
   window:
     width: 1728
     height: 1117
+  ui:
+    enabled: true
     ui_bar_height: 60
-  ui_enabled: true
+    buttons:
+      width: 120
+      height: 40
+      gap: 10
+    worm_history_panel:
+      enabled: true
+      display_area:
+        x: 10
+        y: 70
+        width: 300
+        height: 700
+      chunk_preview_size: 36
+      text_height: 18
+      spacing: 6
+      show_hsv_text: false
   fps: 60
-  gravity_x: 0
-  gravity_y: 0
-  chunk_velocity_min: -200
-  chunk_velocity_max: 200
   torus_world: false
-  buttons:
-    width: 120
-    height: 40
-    gap: 10
+  physics:
+    gravity:
+      x: 0
+      y: 0
+    chunk:
+      elasticity: 1.0
+      friction: 5.0
+      mass: 1.0
+      shape_filter_group: 1
+      velocity_min: -200
+      velocity_max: 200
 
-# --- Physics constants ---
-physics:
-  chunk:
-    elasticity: 1.0
-    friction: 5.0
-    mass: 1.0
-    shape_filter_group: 1
-
-# --- Queue processing limits ---
 queue:
   background_workers: 4    # Number of parallel background processes
-  max_upload_drain: 4      # Max uploads to process per frame
+  max_http_upload_drain: 4      # Max http uploads to process per frame
   max_chunk_drain: 15      # Max chunks to integrate per frame
 
+colors:
+  BLACK: [0, 0, 0]
+  WHITE: [255, 255, 255]
+  DARK_GRAY: [70, 70, 70]
+  UI_BG: [30, 30, 30]
+  RED: [255, 0, 0]
+  PANEL_BG: [40, 40, 40]
+
+server:
+  host: 127.0.0.1
+  port: 5055
+  max_download_bytes: 26214400 # 25MB
+  download_timeout_sec: 15
+  
 worm:
   max_chunks: 15
   appetite:
@@ -48,19 +72,13 @@ worm:
     max_glued_chunks: 100
     max_active_glues: 5
     sound_cap: 10  # Maximum sound chunks per glue (null for no limit)
-    vicinity:
+    color_attraction:
       min_difference: 0
       max_difference: 0.07
       hue_weight: 0.6
       saturation_weight: 0.2
       value_weight: 0.2
     flocking:
-      # maxspeed: 50
-      # maxforce: 10
-      # desired_separation: 30
-      # separate_force_mult: 70
-      # seek_force_mult: 60
-      #     flocking:
       maxspeed: 75
       maxforce: 10
       desired_separation: 30
@@ -76,91 +94,65 @@ worm:
       full_ring_width: 2   # Width of white ring when glue is full
       spin_speed: 1.0      # Rotation speed of color wheel
       min_quality_steps: 6 # Minimum steps per segment for color wheel quality
-  history_panel:
-    enabled: true
-    display_area:
-      x: 10
-      y: 70
-      width: 300
-      height: 700
-    chunk_preview_size: 36
-    text_height: 18
-    spacing: 6
-    show_hsv_text: false
 
-segmentation:
-  # --- Felzenszwalb Segmentation ---
-  # Hyperparameters to adjust:
-  # scale (int, default: 100), sigma (float, default: 0.8), min_size (int, default: 20)
-  # Increase scale -> fewer segments; Decrease scale -> more segments
-  # Increase sigma -> smoother image, fewer segments; Decrease sigma -> sharper details
-  # Increase min_size -> larger minimum segments; Decrease min_size -> smaller segments
-  felzenszwalb:
-    scale: 150
-    sigma: 3
-    min_size: 20
-  # Minimal visibility filtering for image segments (post-segmentation)
-  image_filter:
-    min_visible_pixels: 30         # Skip segments with fewer visible pixels than this
-    min_alpha_threshold: 8         # Alpha threshold (0-255) to consider a pixel visible
-
-compression:
-  max_size: 10000
-  min_entropy: 10
-  downsample_factor: 0.3
-
-colors:
-  BLACK: [0, 0, 0]
-  WHITE: [255, 255, 255]
-  DARK_GRAY: [70, 70, 70]
-  UI_BG: [30, 30, 30]
-  RED: [255, 0, 0]
-  PANEL_BG: [40, 40, 40]
-
-server:
-  host: 127.0.0.1
-  port: 5055
-  max_download_bytes: 26214400 # 25MB
-  download_timeout_sec: 15
+image:
+  segmentation:
+    # --- Felzenszwalb Segmentation ---
+    # Hyperparameters to adjust:
+    # scale (int, default: 100), sigma (float, default: 0.8), min_size (int, default: 20)
+    # Increase scale -> fewer segments; Decrease scale -> more segments
+    # Increase sigma -> smoother image, fewer segments; Decrease sigma -> sharper details
+    # Increase min_size -> larger minimum segments; Decrease min_size -> smaller segments
+    felzenszwalb:
+      scale: 150
+      sigma: 3
+      min_size: 20
+    # Minimal visibility filtering for image segments (post-segmentation)
+    chunk_filter:
+      min_visible_pixels: 30         # Skip segments with fewer visible pixels than this
+      min_alpha_threshold: 8         # Alpha threshold (0-255) to consider a pixel visible
+  compression:
+    max_size: 10000
+    min_entropy: 10
+    downsample_factor: 0.3
 
 # --- Sound processing (for sound_chunking integration) ---
 sound:
-  felzenszwalb:
-    scale: 150
-    # sigma: 3
-    sigma: 1 #for mel
-    min_size: 20
-  use_mel: true        # Use mel spectrogram (perceptual) vs STFT (linear)
-  n_mels: 256           # Number of mel frequency bins (only used when use_mel=true)
-  min_area_pixels: 300
-  min_time_seconds: 0.5
-  min_energy_ratio: 0.001
-  min_loudness_db: -70.0
-  max_shapes: 200
-  points_per_second: 100
-  resampled_points_per_chunk: 128
-  chunk_surface:
+  max_part_duration: 60  # Split large audio files into parts (seconds). Set to 0 to disable.
+  segmentation:
+    felzenszwalb:
+      scale: 150
+      sigma: 1
+      min_size: 20
+    mel_spectrogram:
+      enabled: true       # Use mel spectrogram (perceptual) vs STFT (linear)
+      n_bins: 256         # Number of mel frequency bins
+    chunk_filter:
+      min_area_pixels: 300
+      min_time_seconds: 0.5
+      min_energy_ratio: 0.001
+      min_loudness_db: -70.0
+      max_shapes: 200
+  chunk_rendering:
     line_width: 2
     padding: 4
-  # Dynamic sizing by duration (linear between min and max)
-  max_part_duration: 60  # Split large audio files into parts (seconds). Set to 0 to disable.
-  duration_size:
-    min_seconds: 0.5
-    max_seconds: 60.0
+    points_per_second: 100
+    resampled_points_per_chunk: 128
     min_width: 50
     min_height: 50
     max_width: 800
     max_height: 800
+
   # Proximity-based hover with inverse square law
   hover:
-    max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
-    reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
-    min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
-    smoother:
+    volume_smoother:
       enabled: true
-      attack: 0.2   # [0-1] (higher = faster)
-      release: 0.2   # [0-1] (higher = faster)
+      attack: 0.2   # [0-1] (lower = slower attack)
+      release: 0.2   # [0-1] (lower = slower release)
     volume_scaling:
+      max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
+      reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
+      min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
       perceptual_exponent: 0.7    # Volume perception curve
       line_width_multiplier: 20.0  # How much louder chunks get thicker
       alpha_boost: 0.5            # How much louder chunks get brighter

@@ -43,13 +43,13 @@ def load_config():
 CONFIG = load_config()
 
 # Felzenszwalb segmentation parameters (from config)
-FELZ_CONFIG = CONFIG.get("segmentation", {}).get("felzenszwalb", {})
+FELZ_CONFIG = CONFIG.get("image", {}).get("segmentation", {}).get("felzenszwalb", {})
 SCALE = FELZ_CONFIG.get("scale", 150)
 SIGMA = FELZ_CONFIG.get("sigma", 3)
 MIN_SIZE = FELZ_CONFIG.get("min_size", 20)
 
 # Image filter parameters (from config)
-IMAGE_FILTER = CONFIG.get("segmentation", {}).get("image_filter", {})
+IMAGE_FILTER = CONFIG.get("image", {}).get("segmentation", {}).get("chunk_filter", {})
 MIN_VISIBLE_PIXELS = IMAGE_FILTER.get("min_visible_pixels", 30)
 MIN_ALPHA_THRESHOLD = IMAGE_FILTER.get("min_alpha_threshold", 8)
 

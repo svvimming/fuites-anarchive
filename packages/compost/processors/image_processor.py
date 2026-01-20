@@ -81,7 +81,7 @@ def segment_image(
         numpy_image = img_as_ubyte(numpy_image)
 
     # Felzenszwalb segmentation
-    felz_cfg = config.get("segmentation", {}).get("felzenszwalb", {})
+    felz_cfg = config.get("image", {}).get("segmentation", {}).get("felzenszwalb", {})
     segments = felzenszwalb(
         numpy_image,
         scale=felz_cfg.get("scale", 150),
@@ -93,7 +93,7 @@ def segment_image(
     _logger.debug("Felzenszwalb found %d segments", len(unique_labels))
 
     # Identify segments to downsize
-    compress_cfg = config.get("compression", {})
+    compress_cfg = config.get("image", {}).get("compression", {})
     grayscale = img_as_ubyte(rgb2gray(numpy_image))
     labels_to_downsize = _identify_downsize_labels(
         segments, grayscale,
@@ -103,7 +103,7 @@ def segment_image(
     downsample_factor = compress_cfg.get("downsample_factor", 0.5)
 
     # Filter config
-    filt_cfg = config.get("segmentation", {}).get("image_filter", {})
+    filt_cfg = config.get("image", {}).get("segmentation", {}).get("chunk_filter", {})
     min_visible = int(filt_cfg.get("min_visible_pixels", 1))
     min_alpha = int(filt_cfg.get("min_alpha_threshold", 1))
 

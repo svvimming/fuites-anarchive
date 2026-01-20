@@ -45,13 +45,13 @@ class Chunk:
         sim_cfg = config["simulation"]
         self.width = sim_cfg["window"]["width"]
         self.height = sim_cfg["window"]["height"]
-        self.ui_bar_height = sim_cfg["window"]["ui_bar_height"]
-        vel_min = sim_cfg["chunk_velocity_min"]
-        vel_max = sim_cfg["chunk_velocity_max"]
+        self.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
+        vel_min = sim_cfg["physics"]["chunk"]["velocity_min"]
+        vel_max = sim_cfg["physics"]["chunk"]["velocity_max"]
 
         if downsized:
             # Resize the segment_surface to a smaller size
-            downsample_factor = config["compression"].get("downsample_factor", 0.5)
+            downsample_factor = config["image"]["compression"].get("downsample_factor", 0.5)
             new_width = max(1, int(segment_surface.get_width() * downsample_factor))
             new_height = max(1, int(segment_surface.get_height() * downsample_factor))
             self.segment_surface = pygame.transform.scale(segment_surface, (new_width, new_height))
@@ -77,7 +77,7 @@ class Chunk:
             # Try to get from config if it's a sound chunk
             if self.audio_path:
                 snd_cfg = config.get("sound", {})
-                surf_cfg = snd_cfg.get("chunk_surface", {})
+                surf_cfg = snd_cfg.get("chunk_rendering", {})
                 self.original_line_width = int(surf_cfg.get("line_width", 5))
 
         # Compute a valid random position using bounding-box constraints
@@ -162,9 +162,9 @@ class Chunk:
         sim_cfg = config["simulation"]
         chunk.width = sim_cfg["window"]["width"]
         chunk.height = sim_cfg["window"]["height"]
-        chunk.ui_bar_height = sim_cfg["window"]["ui_bar_height"]
-        vel_min = sim_cfg["chunk_velocity_min"]
-        vel_max = sim_cfg["chunk_velocity_max"]
+        chunk.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
+        vel_min = sim_cfg["physics"]["chunk"]["velocity_min"]
+        vel_max = sim_cfg["physics"]["chunk"]["velocity_max"]
 
         chunk.vertices = vertices
 
@@ -239,7 +239,7 @@ class Chunk:
             vel_max: Maximum velocity for random initial velocity
         """
         # Get physics constants from config
-        physics_cfg = self.config.get("physics", {}).get("chunk", {})
+        physics_cfg = self.config.get("simulation", {}).get("physics", {}).get("chunk", {})
         mass = physics_cfg.get("mass", 1.0)
         elasticity = physics_cfg.get("elasticity", 1.0)
         friction = physics_cfg.get("friction", 5.0)
