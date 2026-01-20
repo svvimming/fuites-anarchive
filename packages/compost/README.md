@@ -14,11 +14,9 @@ Images and audio are segmented into physics-enabled chunks that tumble through a
 # macOS (Homebrew)
 brew install uv
 
-# Or from source
+# Or install from source (must then restart terminal or `source ~/.zshrc` or `source ~/.bashrc`)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-
-After installation, restart your terminal or run `source ~/.bashrc` (or `~/.zshrc`).
 
 ### 2. Install Python 3.13 if needed
 
@@ -26,11 +24,21 @@ After installation, restart your terminal or run `source ~/.bashrc` (or `~/.zshr
 uv python install 3.13
 ```
 
-### 3. Clone and install the repository and navigate to the compost
+### 3. Clone the repository
 
 ```bash
 git clone https://github.com/svvimming/fuites-anarchive.git
+```
+
+### 4. Navigate to compost
+
+```bash
 cd fuites-anarchive/packages/compost
+```
+
+### 5. Install dependencies
+
+```bash
 uv sync
 ```
 
@@ -39,13 +47,13 @@ uv sync
 ### Running the Simulation
 
 ```bash
-# With uv
 uv run run_sim.py
 ```
 
 ### Desktop Shortcut (macOS)
 
-A `Compost.command` file is provided. Double-click to launch, or drag it to your Desktop or Dock for quick access.
+1. Drag `Compost.command` to your Desktop or Dock
+2. Double-click to launch
 
 > **Note:** If macOS Gatekeeper blocks the file, remove the quarantine flag:
 > ```bash
@@ -57,8 +65,8 @@ A `Compost.command` file is provided. Double-click to launch, or drag it to your
 | Key | Action |
 |-----|--------|
 | `U` | Upload file(s) |
-| `E` | Export glues |
-| `D` | Toggle debug mode |
+| `E` | Export glued compositions (saved to `exports/` folder) |
+| `D` | Toggle debug view of thingie boundaries |
 | `T` | Toggle torus world (wraparound edges) |
 | `H` | Toggle history panel |
 | `G` | Toggle glue visuals |
