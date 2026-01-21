@@ -8,6 +8,7 @@ from managers import (
     AudioManager,
     BoundaryManager,
     ExportManager,
+    InputManager,
     QueueManager,
     WormManager,
 )
@@ -64,6 +65,7 @@ class Simulation:
         self.boundary_manager = BoundaryManager(config, space, self.width, self.height)
         self.worm_manager = WormManager(config)
         self.export_manager = ExportManager(config, self.width, self.height)
+        self.input_manager = InputManager(config)
         self.queue_manager = QueueManager(config, space, self.width, self.height)
 
         # Connect queue manager to chunks list and batch completion callback
@@ -88,6 +90,21 @@ class Simulation:
     def toggle_history_panel(self) -> None:
         """Toggle history panel visibility."""
         self.worm_manager.toggle_history_panel()
+
+    def _toggle_audio_in_recording(self) -> None:
+        """Toggle audio input recording."""
+        is_recording, saved_path = self.input_manager.toggle_recording()
+        if not is_recording and saved_path:
+            self.submit_audio(saved_path)
+
+    def _toggle_compost_recording(self) -> None:
+        """Toggle compost output recording."""
+        self.export_manager.toggle_compost_recording()
+
+    def update_compost_recording(self, dt: float) -> None:
+        """Update compost recording each frame."""
+        if self.export_manager.compost_recording:
+            self.export_manager.capture_compost_frame(self.audio_manager, dt)
 
     def on_upload_received(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
         """Handle incoming image upload (from HTTP server)."""
@@ -132,6 +149,8 @@ class Simulation:
             self.glue_visuals_enabled,
             self.ui_enabled,
             len(self.chunks),
+            audio_in_recording=self.input_manager.recording,
+            audio_out_recording=self.export_manager.compost_recording,
         )
 
     def handle_button_click(self, mouse_pos) -> None:
@@ -141,6 +160,10 @@ class Simulation:
         button = self.ui_manager.handle_click(mouse_pos)
         if button == "upload":
             self.upload_file()
+        elif button == "audio_in":
+            self._toggle_audio_in_recording()
+        elif button == "audio_out":
+            self._toggle_compost_recording()
         elif button == "clear":
             self.clear_chunks()
         elif button == "export":

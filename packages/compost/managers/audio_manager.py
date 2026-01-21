@@ -55,6 +55,10 @@ class AudioManager:
         self.sound_cache: Dict[str, pygame.mixer.Sound] = {}
         self.smoother = self._init_smoother(config)
 
+        hover_cfg = config.get("sound", {}).get("hover", {})
+        vol_cfg = hover_cfg.get("volume_scaling", {})
+        self.loops = hover_cfg.get("loops", -1)
+
         self._init_mixer(config)
 
     def _init_smoother(self, config: Dict[str, Any]) -> VolumeSmoother:
@@ -69,10 +73,10 @@ class AudioManager:
         mixer_cfg = config.get("sound", {}).get("hover", {}).get("mixer", {})
         try:
             pygame.mixer.init(
-                frequency=mixer_cfg.get("frequency", 22050),
-                size=mixer_cfg.get("size", -16),
+                frequency=mixer_cfg.get("frequency", 44100),
+                size=mixer_cfg.get("size", 32),
                 channels=mixer_cfg.get("channels", 2),
-                buffer=mixer_cfg.get("buffer", 2048)
+                buffer=mixer_cfg.get("buffer", 512)
             )
             max_channels = mixer_cfg.get("max_channels", 256)
             pygame.mixer.set_num_channels(max_channels)
@@ -90,7 +94,7 @@ class AudioManager:
         """Start playing a chunk. Returns True on success."""
         try:
             sound = self._get_sound(chunk.audio_path)
-            channel = sound.play(loops=-1)
+            channel = sound.play(loops=self.loops)
             if channel:
                 channel.set_volume(0.0)
                 self.active_chunks[chunk] = ChunkAudioState(channel, 0.0, target_volume)

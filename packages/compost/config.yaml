@@ -1,4 +1,5 @@
 simulation:
+  export_dir: "exports"  # Base directory for all exports
   window:
     width: 1728
     height: 1117
@@ -46,6 +47,7 @@ colors:
   UI_BG: [30, 30, 30]
   RED: [255, 0, 0]
   PANEL_BG: [40, 40, 40]
+  RECORDING: [200, 60, 60]  # Red background for recording buttons
 
 server:
   host: 127.0.0.1
@@ -118,6 +120,7 @@ image:
 
 # --- Sound processing (for sound_chunking integration) ---
 sound:
+  chunks_dir: "sound_chunks"  # Directory for processed sound chunks
   max_part_duration: 60  # Split large audio files into parts (seconds). Set to 0 to disable.
   segmentation:
     felzenszwalb:
@@ -133,6 +136,7 @@ sound:
       min_energy_ratio: 0.001
       min_loudness_db: -70.0
       max_shapes: 200
+    file_fade_ms: 100  # Fade baked into WAV files (for loop boundaries)
   chunk_rendering:
     line_width: 2
     padding: 4
@@ -142,23 +146,30 @@ sound:
     min_height: 50
     max_width: 800
     max_height: 800
-
-  # Proximity-based hover with inverse square law
-  hover:
+  hover:   # Proximity-based hover with inverse square law
+    loops: -1         # Looping behavior (-1 = infinite)
     volume_smoother:
       enabled: true
       attack: 0.2   # [0-1] (lower = slower attack)
-      release: 0.2   # [0-1] (lower = slower release)
+      release: 0.2  # [0-1] (lower = slower release)
     volume_scaling:
       max_distance: 300.0        # Maximum distance for audio (beyond this, volume = 0)
-      reference_distance: 50.0     # Distance at which volume = 1.0 (for normalization)
-      min_volume_threshold: 0.01   # Minimum volume to keep chunk playing
+      reference_distance: 50.0   # Distance at which volume = 1.0 (for normalization)
+      min_volume_threshold: 0.01 # Minimum volume to keep chunk playing
       perceptual_exponent: 0.7    # Volume perception curve
       line_width_multiplier: 20.0  # How much louder chunks get thicker
       alpha_boost: 0.5            # How much louder chunks get brighter
     mixer:
-      frequency: 22050
-      size: -16
+      frequency: 44100
+      size: 32
       channels: 2
-      buffer: 2048
+      buffer: 512
       max_channels: 256
+  recording:
+    input:
+      device: 3  # Device name or index (run: uv run python -m sounddevice)
+      sample_rate: 44100  # Match pygame mixer frequency
+      channels: 1  # Mono recording
+      input_dir: "input_recordings"  # Where audio input recordings are saved before processing
+    output:
+      sample_rate: 44100  # Output sample rate

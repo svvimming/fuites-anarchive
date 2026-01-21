@@ -85,6 +85,10 @@ def main() -> None:
                     simulation.glue_visuals_enabled = not simulation.glue_visuals_enabled
                 elif event.key == pygame.K_u:
                     simulation.upload_file()
+                elif event.key == pygame.K_i:
+                    simulation._toggle_audio_in_recording()
+                elif event.key == pygame.K_o:
+                    simulation._toggle_compost_recording()
                 elif event.key == pygame.K_ESCAPE:
                     simulation.ui_enabled = not simulation.ui_enabled
                 elif event.key == pygame.K_e:
@@ -109,6 +113,9 @@ def main() -> None:
 
         # Clean up finished audio periodically
         simulation.cleanup_finished_audio()
+
+        # Capture compost audio if recording (use fixed dt for consistency)
+        simulation.update_compost_recording(dt)
 
         space.step(dt)
         simulation.update_chunks()

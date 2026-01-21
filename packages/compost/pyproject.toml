@@ -21,6 +21,7 @@ dependencies = [
     "numba>=0.61.0,<0.62",  # Pin to 0.61.x for llvmlite 0.44.0 (last version with x86_64 macOS wheels)
     "soundfile>=0.13.1",
     "pillow-heif>=1.1.1",
+    "sounddevice>=0.5.3",
 ]
 
 [project.optional-dependencies]

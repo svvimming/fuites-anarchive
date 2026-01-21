@@ -1,10 +1,15 @@
-"""Export system for glues (images and audio)."""
+"""Export system for glues (images and audio) and compost output recording."""
 import os
+import time
 import pygame
 import random
 import math
-from typing import Dict, Any, List, Optional, Callable
+import numpy as np
+from typing import Dict, Any, List, Optional, Callable, Tuple
+
+from managers.audio_manager import AudioManager
 from utils.logging_utils import get_logger
+from utils.system_utils import resolve_path
 
 _logger = get_logger(__name__)
 
@@ -25,10 +30,18 @@ class ExportManager:
         self.width = width
         self.height = height
 
-        # Ensure export directory exists
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        self.export_dir = os.path.join(base_dir, "exports")
-        os.makedirs(self.export_dir, exist_ok=True)
+        # Ensure export directories exist
+        export_dir_cfg = config.get("simulation", {}).get("export_dir", "exports")
+        self.export_dir = resolve_path(export_dir_cfg)
+        self.glue_dir = os.path.join(self.export_dir, "glues")
+        os.makedirs(self.glue_dir, exist_ok=True)
+
+        # Compost recording state
+        self.compost_recording = False
+        self._compost_buffer: List[np.ndarray] = []
+        self._audio_cache: Dict[str, np.ndarray] = {}
+        self._chunk_positions: Dict[Any, int] = {}
+        self._sample_rate = config.get("sound", {}).get("hover", {}).get("mixer", {}).get("frequency", 48000)
 
     def export_glues(
         self,
@@ -98,7 +111,7 @@ class ExportManager:
             timestamp = pygame.time.get_ticks()
             rand_suffix = random.randint(0, 999999)
             filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}.png"
-            filepath = os.path.join(self.export_dir, filename)
+            filepath = os.path.join(self.glue_dir, filename)
             try:
                 pygame.image.save(image_to_save, filepath)
                 _logger.info("Exported glue PNG: %s", filepath)
@@ -227,13 +240,14 @@ class ExportManager:
 
                 _logger.debug("Mixed audio %d/%d: %s at %.2fs", i+1, len(audio_data), os.path.basename(audio_files[i]), start_sample/target_sr)
 
-            # Normalize to prevent clipping
-            if np.max(np.abs(mixed_audio)) > 0:
-                mixed_audio = mixed_audio / np.max(np.abs(mixed_audio)) * 0.95
+            # Normalize only if clipping
+            peak = np.max(np.abs(mixed_audio))
+            if peak > 1.0:
+                mixed_audio = 0.98 * mixed_audio / peak
 
             # Save mixed audio
             audio_filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}_mixed.wav"
-            audio_filepath = os.path.join(self.export_dir, audio_filename)
+            audio_filepath = os.path.join(self.glue_dir, audio_filename)
             sf.write(audio_filepath, mixed_audio, target_sr)
             _logger.info("Exported mixed audio: %s", audio_filepath)
 
@@ -253,3 +267,111 @@ class ExportManager:
                 space.remove(chunk.shape, chunk.body)
             except Exception:
                 pass
+
+    # ----------------------------------------------------------------
+    # Compost Output Recording
+    # ----------------------------------------------------------------
+
+    def toggle_compost_recording(self) -> Tuple[bool, Optional[str]]:
+        """
+        Toggle compost output recording.
+
+        Returns:
+            Tuple of (is_recording, saved_path_or_none)
+        """
+        if not self.compost_recording:
+            return self._start_compost_recording(), None
+        else:
+            return False, self._stop_compost_recording()
+
+    def _start_compost_recording(self) -> bool:
+        """Start recording compost audio output."""
+        self._compost_buffer = []
+        self._chunk_positions = {}
+        self.compost_recording = True
+        _logger.info("Compost output recording started")
+        return True
+
+    def _get_cached_audio(self, path: str) -> Optional[np.ndarray]:
+        """Load and cache audio file."""
+        if path not in self._audio_cache:
+            try:
+                import librosa
+                y, _ = librosa.load(path, sr=self._sample_rate)
+                self._audio_cache[path] = y
+            except Exception as e:
+                _logger.warning("Failed to load audio %s: %s", path, e)
+                return None
+        return self._audio_cache[path]
+
+    def capture_compost_frame(self, audio_manager: AudioManager, dt: float) -> None:
+        """
+        Capture audio frame during compost recording.
+        Call each frame to mix currently playing audio into buffer.
+
+        Args:
+            audio_manager (AudioManager): Audio manager with active_chunks state
+            dt: Delta time for this frame in seconds
+        """
+        if not self.compost_recording:
+            return
+
+        num_samples = int(dt * self._sample_rate)
+        if num_samples <= 0:
+            return
+
+        frame = np.zeros(num_samples, dtype=np.float32)
+
+        for chunk, state in audio_manager.active_chunks.items():
+            if not chunk.audio_path:
+                continue
+
+            audio = self._get_cached_audio(chunk.audio_path)
+            if audio is None:
+                continue
+
+            audio_len = len(audio)
+            pos = self._chunk_positions.get(chunk, 0)
+
+            for i in range(num_samples):
+                frame[i] += audio[(pos + i) % audio_len] * state.current_volume
+
+            self._chunk_positions[chunk] = (pos + num_samples) % audio_len
+
+        self._compost_buffer.append(frame)
+
+    def _stop_compost_recording(self) -> Optional[str]:
+        """Stop recording and save compost audio output."""
+        self.compost_recording = False
+
+        if not self._compost_buffer:
+            _logger.warning("No compost audio recorded")
+            return None
+
+        try:
+            import soundfile as sf
+        except ImportError:
+            _logger.error("soundfile not installed - run: uv add soundfile")
+            return None
+
+        output = np.concatenate(self._compost_buffer)
+
+        # Normalize only if clipping
+        peak = np.max(np.abs(output))
+        if peak > 1.0:
+            output = 0.98 * output / peak
+
+        comp_dir = os.path.join(self.export_dir, "compost_compositions")
+        os.makedirs(comp_dir, exist_ok=True)
+        timestamp = int(time.time() * 1000)
+        output_path = os.path.join(comp_dir, f"compost_mix_{timestamp}.wav")
+
+        try:
+            sf.write(output_path, output, self._sample_rate)
+            _logger.info("Compost recording saved: %s (%.1f sec)", output_path, len(output) / self._sample_rate)
+        except Exception as e:
+            _logger.error("Failed to save compost recording: %s", e)
+            return None
+
+        self._compost_buffer = []
+        return output_path

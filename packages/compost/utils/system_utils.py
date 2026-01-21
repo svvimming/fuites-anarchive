@@ -1,10 +1,34 @@
 """System utility functions."""
+import os
 import platform
 import subprocess
 import sys
 from typing import List, Set
 
 import pygame
+
+# Project root directory (compost/)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def resolve_path(config_path: str) -> str:
+    """
+    Resolve a config path to an absolute path.
+
+    - Expands ~ to home directory
+    - If absolute, return as-is
+    - If relative, join with project root
+
+    Args:
+        config_path: Path from config (can be relative, absolute, or use ~)
+
+    Returns:
+        Absolute path
+    """
+    expanded = os.path.expanduser(config_path)
+    if os.path.isabs(expanded):
+        return expanded
+    return os.path.join(PROJECT_ROOT, expanded)
 
 
 def quit_program() -> None:

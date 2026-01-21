@@ -30,3 +30,5 @@ images
 *.m4y
 *.m4z
 exports/
+input_recordings/
+sound_chunks/

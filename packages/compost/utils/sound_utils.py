@@ -364,7 +364,7 @@ def _reconstruct_segment_audio(
     if y_seg.size == 0:
         return None
 
-    # Normalize to avoid clipping
+    # Normalize only if clipping
     peak = np.max(np.abs(y_seg))
     if peak > 1.0:
         y_seg = 0.98 * y_seg / peak
@@ -436,6 +436,7 @@ def segment_spectrogram_felzenszwalb_2d(
     min_energy_ratio: float = 1e-3,
     min_loudness_db: float = -70.0,
     max_shapes: Optional[int] = None,
+    file_fade_ms: float = 100.0,
     show_plots: bool = True,
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
@@ -460,6 +461,7 @@ def segment_spectrogram_felzenszwalb_2d(
         min_energy_ratio: Minimum energy ratio
         min_loudness_db: Minimum loudness in dBFS
         max_shapes: Maximum number of shapes to extract
+        file_fade_ms: Fade duration in ms baked into WAV files (for loop boundaries)
         show_plots: Whether to show visualization plots
 
     Returns:
@@ -549,7 +551,7 @@ def segment_spectrogram_felzenszwalb_2d(
             continue
 
         # Apply fade and save segment
-        y_seg = _apply_fade(y_seg, sr)
+        y_seg = _apply_fade(y_seg, sr, file_fade_ms)
         prefix = "felzen_mel" if use_mel else "felzen"
         freq_label = "mel" if use_mel else "f"
         filename = f"{prefix}_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_{freq_label}{freq_span}.wav"

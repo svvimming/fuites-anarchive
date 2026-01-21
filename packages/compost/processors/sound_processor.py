@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Optional
 from utils.geometry_utils import build_curve_surface, convex_hull_vertices_from_curve
 from utils.math_utils import lerp
 from utils.sound_utils import segment_spectrogram_felzenszwalb_2d, create_2d_path_visualization
+from utils.system_utils import resolve_path
 
 
 def segment_audio(
@@ -43,12 +44,14 @@ def segment_audio(
     filt_cfg = seg_cfg.get("chunk_filter", {})
 
     # Build output directory name (include part index if splitting)
+    sound_chunks_dir_cfg = snd_cfg.get("chunks_dir", "sound_chunks")
+    sound_chunks_dir = resolve_path(sound_chunks_dir_cfg)
     basename = os.path.basename(audio_path).split('.')[0]
     if part_index is not None:
         dir_name = f"chunks_detailed_{basename}_part_{part_index:03d}"
     else:
         dir_name = f"chunks_detailed_{basename}"
-    output_dir = os.path.join("sound_chunks", dir_name)
+    output_dir = os.path.join(sound_chunks_dir, dir_name)
 
     # Run segmentation
     saved_paths, kept_segments = segment_spectrogram_felzenszwalb_2d(
@@ -66,6 +69,7 @@ def segment_audio(
         min_time_seconds=float(filt_cfg.get("min_time_seconds", 0.5)),
         min_energy_ratio=float(filt_cfg.get("min_energy_ratio", 0.001)),
         min_loudness_db=float(filt_cfg.get("min_loudness_db", -70.0)),
+        file_fade_ms=float(seg_cfg.get("file_fade_ms", 100.0)),
         show_plots=False,
     )
 
