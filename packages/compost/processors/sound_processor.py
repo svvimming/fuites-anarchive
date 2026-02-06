@@ -75,12 +75,14 @@ def segment_audio(
 
     # Create 2D path visualization
     dim_cfg = snd_cfg.get("chunk_rendering", {})
+    sound_color_cfg = dim_cfg.get("sound_color", {})
     _X, _Y, curve_chunks_2d, _profiles = create_2d_path_visualization(
         kept_segments,
         audio_path,
         points_per_second=int(dim_cfg.get("points_per_second", 100)),
         resampled_points_per_chunk=int(dim_cfg.get("resampled_points_per_chunk", 128)),
         show_plots=False,
+        sound_color_cfg=sound_color_cfg,
     )
 
     # Build chunk data from curves
@@ -107,9 +109,9 @@ def segment_audio(
         # Compute per-chunk dimensions based on duration
         t0 = float(item.get("t_start", 0.0))
         t1 = float(item.get("t_end", 0.0))
-        duration = max(0.0, t1 - t0)
+        chunk_duration = max(0.0, t1 - t0)
         if max_sec > min_sec:
-            u = (duration - min_sec) / (max_sec - min_sec)
+            u = (chunk_duration - min_sec) / (max_sec - min_sec)
         else:
             u = 0.0
         u = float(np.clip(u, 0.0, 1.0))

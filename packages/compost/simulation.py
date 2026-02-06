@@ -125,7 +125,7 @@ class Simulation:
     def cleanup(self) -> None:
         """Clean up resources before shutdown."""
         self.queue_manager.cleanup()
-        self.audio_manager.stop_all()
+        self.audio_manager.cleanup()
 
     # ----------------------------------------------------------------
     # Callback for batch completion

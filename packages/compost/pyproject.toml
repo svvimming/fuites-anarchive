@@ -1,11 +1,11 @@
 [project]
 name = "fuit-es"
 version = "0.1.0"
-description = "Fuit.es Compost - Interactive sound and image composition"
+description = "Fuit.es Digital Compost - Interactive sound and image composition from digital discard"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 authors = [
-    {name = "Your Name", email = "you@example.com"}
+    {name = "Mickaël Achkar", email = "mickael.achkar@gmail.com"}
 ]
 
 dependencies = [

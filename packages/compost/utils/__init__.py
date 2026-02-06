@@ -24,6 +24,7 @@ from utils.sound_utils import (
     estimate_key_hue,
     estimate_saturation,
     estimate_value,
+    estimate_value,
     estimate_alpha,
     segment_spectrogram_felzenszwalb_2d,
     create_2d_path_visualization,
@@ -50,6 +51,7 @@ __all__ = [
     # Sound
     'estimate_key_hue',
     'estimate_saturation',
+    'estimate_value',
     'estimate_value',
     'estimate_alpha',
     'segment_spectrogram_felzenszwalb_2d',

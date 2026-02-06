@@ -27,8 +27,10 @@ def main() -> None:
     # Load the configuration
     config = load_config()
 
-    # Pygame initialization
+    # Mixer is handled by SDAudioManager (sounddevice), not pygame.
+    # Quit SDL's mixer so it doesn't hold the audio device.
     pygame.init()
+    pygame.mixer.quit()
     screen = pygame.display.set_mode(
         (config["simulation"]["window"]["width"], config["simulation"]["window"]["height"])
     )

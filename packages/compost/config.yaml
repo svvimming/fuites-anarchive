@@ -146,6 +146,21 @@ sound:
     min_height: 50
     max_width: 800
     max_height: 800
+    sound_color:
+      saturation_flatness:
+        flatness_floor: 1e-9  # Log scale reference (smaller = wider range)
+      value:
+        min_value: 0.0  # Minimum V output (floor)
+        fmin: 27.5      # Lowest frequency Hz (piano A0)
+        fmax: 4186.0    # Highest frequency Hz (piano C8)
+      alpha:
+        min_alpha: 0.1  # Minimum alpha output (floor)
+        min_db: -70.0   # dB that maps to min_alpha
+        max_db: -14.0   # dB that maps to 1.0
+      hue_saturation_atonal:
+        temperature_scale: 0.0004  # Softmax temperature = scale / (spread + epsilon)
+        temperature_min: 0.01      # Clamp temperature low
+        temperature_max: 0.5       # Clamp temperature high
   hover:   # Proximity-based hover with inverse square law
     loops: -1         # Looping behavior (-1 = infinite)
     volume_smoother:
@@ -160,7 +175,7 @@ sound:
       line_width_multiplier: 20.0  # How much louder chunks get thicker
       alpha_boost: 0.5            # How much louder chunks get brighter
     mixer:
-      frequency: 44100
+      frequency: 48000
       size: 32
       channels: 2
       buffer: 512
@@ -168,8 +183,8 @@ sound:
   recording:
     input:
       device: 3  # Device name or index (run: uv run python -m sounddevice)
-      sample_rate: 44100  # Match pygame mixer frequency
+      sample_rate: 48000  # Match pygame mixer frequency
       channels: 1  # Mono recording
       input_dir: "input_recordings"  # Where audio input recordings are saved before processing
     output:
-      sample_rate: 44100  # Output sample rate
+      sample_rate: 48000  # Output sample rate

@@ -71,7 +71,7 @@ def estimate_key_hue(y_sig: np.ndarray, sr: int) -> float:
     return circle_pos / 12.0
 
 
-def estimate_saturation(y_sig: np.ndarray) -> float:
+def estimate_saturation(y_sig: np.ndarray, flatness_floor: float = 1e-9) -> float:
     """
     Estimate saturation from spectral flatness.
     Pure tones = high saturation, noise = low saturation.
@@ -79,14 +79,15 @@ def estimate_saturation(y_sig: np.ndarray) -> float:
 
     Args:
         y_sig: Audio signal as numpy array
+        flatness_floor: Normalization reference for log scale
+            (smaller = wider dynamic range for saturation)
 
     Returns:
         Saturation value (log-scaled, ~0-1)
     """
     flatness = librosa.feature.spectral_flatness(y=y_sig)
     flat_med = float(np.median(flatness))
-    eps = 0.0000001
-    saturation = -np.log(flat_med + eps) / -np.log(eps)
+    saturation = -np.log(flat_med + 1e-15) / -np.log(float(flatness_floor))
     _logger.debug("Signal purity: %.2f", saturation)
     return float(saturation)
 
@@ -94,34 +95,103 @@ def estimate_saturation(y_sig: np.ndarray) -> float:
 def estimate_value(
     y_sig: np.ndarray,
     sr: int,
-    min_value: float = 0.2,
+    min_value: float = 0.0,
     fmin: float = 27.5,
     fmax: float = 4186.0
 ) -> float:
     """
-    Estimate value (brightness) from fundamental frequency.
-    Higher pitches = higher value/brightness.
+    Estimate value (brightness) from spectral centroid.
+    Brighter timbre = higher value.
 
     Args:
         y_sig: Audio signal as numpy array
         sr: Sample rate
         min_value: Minimum value to return
-        fmin: Minimum frequency in Hz (lowest piano note)
-        fmax: Maximum frequency in Hz (highest piano note)
+        fmin: Minimum frequency in Hz
+        fmax: Maximum frequency in Hz
 
     Returns:
         Value in range [min_value, 1.0]
     """
-    frame_length = int(np.ceil(sr / fmin) * 2 + 1)
-    f0 = librosa.yin(y_sig, fmin=fmin, fmax=fmax, sr=sr, frame_length=frame_length)
-    f0 = f0[np.isfinite(f0)]
-    f = float(np.median(f0))
+    centroid = librosa.feature.spectral_centroid(y=y_sig, sr=sr)
+    centroid_med = float(np.median(centroid))
 
-    _logger.debug("F0: %.2f Hz", f)
+    _logger.debug("Centroid: %.2f Hz", centroid_med)
 
-    f_clamped = np.clip(f, fmin, fmax)
-    v = (np.log2(f_clamped) - np.log2(fmin)) / (np.log2(fmax) - np.log2(fmin))
+    centroid_clamped = np.clip(centroid_med, fmin, fmax)
+    v = (np.log2(centroid_clamped) - np.log2(fmin)) / (np.log2(fmax) - np.log2(fmin))
     return float(min_value + (1.0 - min_value) * v)
+
+def chroma_to_hue_key_blend_with_magnitude(y_sig: np.ndarray, sr: int) -> Tuple[float, float]:
+    """
+    Weighted circular mean of all 24 keys → hue and magnitude.
+
+    Uses Krumhansl-Schmuckler key profiles with Euclidean distance
+    and softmax weighting with dynamic temperature.
+
+    All 24 keys (12 major + 12 minor) are weighted individually, but
+    relative major/minor pairs share the same hue (e.g., C Major and
+    A minor both map to the C position on circle of fifths).
+
+    Magnitude indicates key confidence/certainty:
+    - 1.0 = single key dominates (high certainty)
+    - 0.0 = keys cancel out (low certainty, ambiguous)
+
+    Args:
+        y_sig: Audio signal
+        sr: Sample rate
+
+    Returns:
+        (hue, magnitude) tuple, both in [0, 1]
+    """
+    circle_order = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
+
+    C = librosa.feature.chroma_cqt(y=y_sig, sr=sr)
+    chroma = np.mean(C, axis=1)
+
+    # Normalize chroma to sum to 1 (L1 norm)
+    chroma_norm = chroma / (chroma.sum() + 1e-12)
+
+    # Krumhansl-Schmuckler key profiles (normalize to sum to 1)
+    major_profile = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
+    minor_profile = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
+    major_profile = major_profile / major_profile.sum()
+    minor_profile = minor_profile / minor_profile.sum()
+
+    # Compute Euclidean distance to all 24 keys (12 major + 12 minor)
+    # Each key gets its own weight, but relative major/minor pairs share the same hue
+    # Minor key tonic + 3 semitones = relative major tonic (e.g., Am → C, Em → G)
+    key_distances_24 = np.zeros(24)  # [0-11]: major keys, [12-23]: minor keys
+    key_angles_24 = np.zeros(24)
+
+    for tonic in range(12):
+        major_rotated = np.roll(major_profile, tonic)
+        minor_rotated = np.roll(minor_profile, tonic)
+
+        # Distance for major key with this tonic
+        key_distances_24[tonic] = np.linalg.norm(chroma_norm - major_rotated, 2)
+        # Major key hue: based on tonic position in circle of fifths
+        key_angles_24[tonic] = circle_order.index(tonic) * 2 * np.pi / 12
+
+        # Distance for minor key with this tonic
+        key_distances_24[12 + tonic] = np.linalg.norm(chroma_norm - minor_rotated, 2)
+        # Minor key hue: same as its relative major (tonic + 3 semitones)
+        relative_major_tonic = (tonic + 3) % 12
+        key_angles_24[12 + tonic] = circle_order.index(relative_major_tonic) * 2 * np.pi / 12
+
+    # Softmax with dynamic temperature over all 24 keys
+    spread_dist = np.std(key_distances_24)
+    temperature = np.clip(0.0004 / (spread_dist + 0.000001), 0.01, 0.5)
+    exp_neg_dist = np.exp(-key_distances_24 / temperature)
+    key_weights_24 = exp_neg_dist / exp_neg_dist.sum()
+
+    # Weighted circular mean over all 24 keys
+    x = np.sum(key_weights_24 * np.cos(key_angles_24))
+    y = np.sum(key_weights_24 * np.sin(key_angles_24))
+    hue = (np.arctan2(y, x) / (2 * np.pi)) % 1.0
+    magnitude = float(np.sqrt(x**2 + y**2))
+
+    return float(hue), magnitude
 
 
 def estimate_alpha(
@@ -714,18 +784,60 @@ def _extract_segment_curve(
     }
 
 
-def _compute_segment_color(segment: Dict[str, Any]) -> Tuple[float, float, float, float]:
-    """Compute RGBA color for a segment based on its audio features."""
+def _compute_segment_color(
+    segment: Dict[str, Any],
+    sound_color_cfg: Optional[Dict[str, Any]] = None
+) -> Tuple[float, float, float, float]:
+    """
+    Compute RGBA color for a segment based on its audio features.
+
+    Saturation is blended from two sources:
+    - Spectral flatness (tonal purity): pure tones = high S
+    - Key magnitude (harmonic certainty): clear key = high S
+
+    This blend produces richer saturation that responds to both
+    timbral and harmonic properties of the sound.
+
+    Args:
+        segment: Segment dictionary with "path" key
+        sound_color_cfg: Optional config dict with keys:
+            - saturation_flatness: {flatness_floor: float}
+            - value: {min_value, fmin, fmax}
+            - alpha: {min_alpha, min_db, max_db}
+    """
+    cfg = sound_color_cfg or {}
+    sat_cfg = cfg.get("saturation_flatness", {})
+    val_cfg = cfg.get("value", {})
+    alpha_cfg = cfg.get("alpha", {})
+
     y_masked, sr_masked = sf.read(segment["path"])
     if y_masked.ndim == 2:
         y_masked = y_masked.mean(axis=1)
 
-    H = estimate_key_hue(y_masked, sr_masked)
-    S = estimate_saturation(y_masked)
-    V = estimate_value(y_masked, sr_masked)
-    A = estimate_alpha(y_masked)
+    # Get hue and key magnitude together
+    H, key_mag = chroma_to_hue_key_blend_with_magnitude(y_masked, sr_masked)
 
-    _logger.debug("H=%.2f, S=%.2f, V=%.2f, A=%.2f", H, S, V, A)
+    # Get saturation from spectral flatness
+    S_flatness = estimate_saturation(y_masked, flatness_floor=sat_cfg.get("flatness_floor", 1e-9))
+
+    # Blend saturation using harmonic mean (responds to both timbral and harmonic properties)
+    S = 2 * S_flatness * key_mag / (S_flatness + key_mag + 1e-12)
+
+    V = estimate_value(
+        y_masked, sr_masked,
+        min_value=val_cfg.get("min_value", 0.0),
+        fmin=val_cfg.get("fmin", 27.5),
+        fmax=val_cfg.get("fmax", 4186.0)
+    )
+    A = estimate_alpha(
+        y_masked,
+        min_alpha=alpha_cfg.get("min_alpha", 0.1),
+        min_db=alpha_cfg.get("min_db", -70.0),
+        max_db=alpha_cfg.get("max_db", -14.0)
+    )
+
+    _logger.debug("H=%.2f, S=%.2f (flat=%.2f, keymag=%.2f), V=%.2f, A=%.2f",
+                  H, S, S_flatness, key_mag, V, A)
 
     r, g, b = colorsys.hsv_to_rgb(H, S, V)
     return (r, g, b, A)
@@ -832,7 +944,8 @@ def create_2d_path_visualization(
     song_path: str,
     points_per_second: int = 100,
     resampled_points_per_chunk: int = 128,
-    show_plots: bool = True
+    show_plots: bool = True,
+    sound_color_cfg: Optional[Dict[str, Any]] = None
 ) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]], np.ndarray]:
     """
     Create a random 2D path over the clip timeline and align chunks.
@@ -843,6 +956,7 @@ def create_2d_path_visualization(
         points_per_second: Resolution of the path
         resampled_points_per_chunk: Number of points per chunk after resampling
         show_plots: Whether to display visualization plots
+        sound_color_cfg: Optional config dict for color computation (passed to _compute_segment_color)
 
     Returns:
         (X, Y, curve_chunks_2d, curve_profiles_2d) tuple
@@ -860,7 +974,7 @@ def create_2d_path_visualization(
         curve_data = _extract_segment_curve(seg, T, X, Y, resampled_points_per_chunk)
 
         # Compute color
-        rgba = _compute_segment_color(seg)
+        rgba = _compute_segment_color(seg, sound_color_cfg)
 
         curve_chunks_2d.append({
             "idx": int(seg["idx"]),
