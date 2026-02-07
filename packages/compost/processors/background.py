@@ -30,6 +30,7 @@ class ChunkData:
     audio_path: Optional[str] = None
     curve_data: Optional[Tuple] = None
     original_line_width: Optional[int] = None
+    source_offset: Optional[Tuple[float, float]] = None
 
 
 @dataclass
@@ -101,6 +102,7 @@ def _process_image(
                 downsized=chunk_dict['downsized'],
                 batch_id=batch_id,
                 cached_hsv_color=chunk_dict['cached_hsv_color'],
+                source_offset=chunk_dict.get('source_offset'),
             )
             results_queue.put(chunk_data)
 
@@ -138,6 +140,7 @@ def _process_audio(
                 audio_path=chunk_dict.get('audio_path'),
                 curve_data=chunk_dict.get('curve_data'),
                 original_line_width=chunk_dict.get('original_line_width'),
+                source_offset=chunk_dict.get('source_offset'),
             )
             results_queue.put(chunk_data)
 

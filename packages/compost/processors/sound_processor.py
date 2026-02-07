@@ -144,6 +144,7 @@ def segment_audio(
             'audio_path': chunk_audio_path,
             'curve_data': curve_data,
             'original_line_width': line_w,
+            'source_offset': (float(np.mean(x_res)) * max_w, (1.0 - float(np.mean(y_res))) * max_h),
         }
         chunks_data.append(chunk_data)
 

@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict, Any, Optional
 import random
 from utils.geometry_utils import build_curve_surface
 from utils.logging_utils import get_logger
-from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, limit_vector, calculate_steering, torus_delta
+from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, calculate_steering, torus_delta, lerp
 
 _logger = get_logger(__name__)
 
@@ -99,6 +99,8 @@ class Chunk:
         audio_path: Optional[str] = None,
         curve_data: Optional[Tuple] = None,
         original_line_width: Optional[int] = None,
+        spawn_position: Optional[Tuple[float, float]] = None,
+        spawn_velocity: Optional[Tuple[float, float]] = None,
     ) -> "Chunk":
         """
         Create a Chunk from segmentation result data.
@@ -166,7 +168,22 @@ class Chunk:
         vel_min = sim_cfg["physics"]["chunk"]["velocity_min"]
         vel_max = sim_cfg["physics"]["chunk"]["velocity_max"]
 
-        chunk.vertices = vertices
+        # Handle gradual shrinkage for downsized chunks
+        if downsized:
+            compress_cfg = config.get("image", {}).get("compression", {})
+            downsample_factor = compress_cfg.get("downsample_factor", 0.5)
+            shrink_secs = float(compress_cfg.get("shrink_duration_seconds", 2.0))
+            physics_vertices = [(x * downsample_factor, y * downsample_factor) for x, y in vertices]
+            chunk._shrink_start_ms = pygame.time.get_ticks()
+            chunk._shrink_target_scale = downsample_factor
+            chunk._shrink_duration_ms = shrink_secs * 1000
+        else:
+            physics_vertices = vertices
+            chunk._shrink_start_ms = None
+            chunk._shrink_target_scale = 1.0
+            chunk._shrink_duration_ms = 0
+
+        chunk.vertices = physics_vertices
 
         # Use pre-calculated HSV color if provided
         if cached_hsv_color is not None:
@@ -177,9 +194,18 @@ class Chunk:
 
         chunk.original_opacity = 255
 
-        # Get random position and setup physics
-        random_x, random_y = chunk._get_random_position_in_bounds(vertices)
-        chunk._setup_physics_body(vertices, random_x, random_y, vel_min, vel_max)
+        # Position: use explicit spawn_position or fall back to random
+        if spawn_position is not None:
+            pos_x, pos_y = spawn_position
+        else:
+            pos_x, pos_y = chunk._get_random_position_in_bounds(physics_vertices)
+
+        # Setup physics body (velocity handled below)
+        chunk._setup_physics_body(physics_vertices, pos_x, pos_y, vel_min, vel_max)
+
+        # Override velocity if explicit spawn_velocity provided
+        if spawn_velocity is not None:
+            chunk.body.velocity = spawn_velocity
 
         return chunk
 
@@ -390,6 +416,18 @@ class Chunk:
         else:
             working_surface = self.segment_surface
             chunk_alpha = self.original_opacity
+
+        # Gradual shrinkage animation for entropy-downsized chunks
+        if self._shrink_start_ms is not None:
+            elapsed = pygame.time.get_ticks() - self._shrink_start_ms
+            t = min(1.0, elapsed / self._shrink_duration_ms) if self._shrink_duration_ms > 0 else 1.0
+            scale = lerp(1.0, self._shrink_target_scale, t)
+            new_w = max(1, int(working_surface.get_width() * scale))
+            new_h = max(1, int(working_surface.get_height() * scale))
+            working_surface = pygame.transform.scale(working_surface, (new_w, new_h))
+            if t >= 1.0:
+                self.segment_surface = working_surface
+                self._shrink_start_ms = None
 
         rotated_surface = pygame.transform.rotate(working_surface, angle_degrees)
         rotated_surface.set_alpha(chunk_alpha)

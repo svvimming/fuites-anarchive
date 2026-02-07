@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Tuple, Optional
 from skimage.segmentation import felzenszwalb
 from skimage.color import rgb2gray
 from skimage.util import img_as_ubyte
-from skimage.transform import resize as sk_resize
 from scipy.spatial import ConvexHull, QhullError
 
 from utils.color_utils import calculate_chunk_color
@@ -162,14 +161,6 @@ def segment_image(
 
         downsized = segment_label in labels_to_downsize
 
-        # Apply downsampling if needed
-        if downsized:
-            new_w = max(1, int(surface_width * downsample_factor))
-            new_h = max(1, int(surface_height * downsample_factor))
-            centered_rgba = sk_resize(centered_rgba, (new_h, new_w), preserve_range=True, anti_aliasing=False).astype(np.uint8)
-            surface_width, surface_height = new_w, new_h
-            hull_vertices = [(x * downsample_factor, y * downsample_factor) for (x, y) in hull_vertices]
-
         # Create pygame surface from numpy array
         surface = pygame.Surface((surface_width, surface_height), pygame.SRCALPHA)
         pygame.surfarray.blit_array(surface, centered_rgba[:, :, :3].swapaxes(0, 1))
@@ -189,6 +180,7 @@ def segment_image(
             'vertices': hull_vertices,
             'downsized': downsized,
             'cached_hsv_color': hsv_color,
+            'source_offset': (float(cx), float(cy)),
         }
         chunks_data.append(chunk_data)
 

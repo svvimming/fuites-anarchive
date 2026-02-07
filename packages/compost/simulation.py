@@ -115,11 +115,9 @@ class Simulation:
             max_items = self.config.get("queue", {}).get("max_http_upload_drain", 4)
         self.queue_manager._process_pending_uploads(max_items)
 
-    def receive_chunks(self, max_items: int = None) -> None:
+    def receive_chunks(self) -> None:
         """Receive processed chunks from background."""
-        if max_items is None:
-            max_items = self.config.get("queue", {}).get("max_chunk_drain", 15)
-        self.queue_manager.receive_chunks(max_items)
+        self.queue_manager.receive_chunks()
 
     def cleanup(self) -> None:
         """Clean up resources before shutdown."""
