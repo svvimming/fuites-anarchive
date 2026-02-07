@@ -3,8 +3,10 @@ import random
 import math
 from typing import List, Tuple, Dict, Any, Optional, Set, Deque
 from collections import deque
+import numpy as np
 from utils.color_utils import calculate_color_contrast, hsv_to_rgb_int
 from utils.logging_utils import get_logger
+from utils.math_utils import compute_flocking_forces
 from entities.chunk import Chunk, GluedChunk
 
 _logger = get_logger(__name__)
@@ -39,6 +41,19 @@ class Glue:
         self.min_difference = self.vicinity_cfg["min_difference"]
         self.max_difference = self.vicinity_cfg["max_difference"]
         
+        # Flocking parameters (shared by all glued chunks)
+        flocking_cfg = self.glue_cfg["flocking"]
+        self.maxspeed = flocking_cfg["maxspeed"]
+        self.maxforce = flocking_cfg["maxforce"]
+        self.desired_separation = flocking_cfg["desired_separation"]
+        self.separate_force_mult = flocking_cfg["separate_force_mult"]
+        self.seek_force_mult = flocking_cfg["seek_force_mult"]
+
+        # Cached window dimensions for torus wrapping
+        win_cfg = config["simulation"]["window"]
+        self._win_width = win_cfg["width"]
+        self._win_height = win_cfg["height"]
+
         # Glowing effect parameters from config
         visual_cfg = self.glue_cfg.get("visual", {})
         self.glow_radius = visual_cfg.get("glow_radius", 15)
@@ -186,7 +201,7 @@ class Glue:
                 # Pick next candidate
                 _, chosen = candidates.popleft()
                 meal_rgb = self.meal_rgbs[meal_idx]
-                self.glued_chunks.append(GluedChunk(chosen, self.position, self.config, meal_rgb))
+                self.glued_chunks.append(GluedChunk(chosen, meal_rgb))
                 self.attracted_chunk_ids.add(id(chosen))
                 if chosen.audio_path:
                     self.sound_chunk_count += 1
@@ -205,12 +220,35 @@ class Glue:
     
     def update(self, torus_world: bool = False) -> None:
         """Update the behavior of all glued chunks."""
-        # Update pulsing effect
         self.pulse_time += self.pulse_speed
 
-        # Apply flocking behavior
-        for glued_chunk in self.glued_chunks:
-            glued_chunk.apply_behaviors(self.glued_chunks, torus_world)
+        n = len(self.glued_chunks)
+        if n == 0:
+            return
+
+        # Gather positions and velocities from physics bodies
+        positions = np.empty((n, 2), dtype=np.float64)
+        velocities = np.empty((n, 2), dtype=np.float64)
+        for i, gc in enumerate(self.glued_chunks):
+            p = gc.chunk.body.position
+            v = gc.chunk.body.velocity
+            positions[i] = (p.x, p.y)
+            velocities[i] = (v.x, v.y)
+
+        # Compute all forces in one vectorized call
+        world_size = (self._win_width, self._win_height) if torus_world else None
+        forces = compute_flocking_forces(
+            positions, velocities, self.position,
+            self.desired_separation, self.maxspeed, self.maxforce,
+            self.separate_force_mult, self.seek_force_mult,
+            world_size,
+        )
+
+        # Apply combined forces back to physics bodies
+        for i, gc in enumerate(self.glued_chunks):
+            gc.chunk.body.apply_force_at_world_point(
+                (forces[i, 0], forces[i, 1]), gc.chunk.body.position
+            )
             
     def _get_cached_glow(self, outer_radius: int) -> pygame.Surface:
         """Get or create cached glow surface for given radius."""

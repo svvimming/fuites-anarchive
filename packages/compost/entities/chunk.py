@@ -2,10 +2,11 @@ import pygame
 import pymunk
 import math
 from typing import List, Tuple, Dict, Any, Optional
+import numpy as np
 import random
 from utils.geometry_utils import build_curve_surface
 from utils.logging_utils import get_logger
-from utils.math_utils import vector_magnitude, normalize_vector, scale_vector, calculate_steering, torus_delta, lerp
+from utils.math_utils import lerp
 
 _logger = get_logger(__name__)
 
@@ -124,8 +125,6 @@ class Chunk:
         width, height = surface_size
 
         # Reconstruct pygame surface from bytes
-        # The bytes are in RGBA format from numpy array (height, width, 4)
-        import numpy as np
         rgba_array = np.frombuffer(surface_bytes, dtype=np.uint8).reshape((height, width, 4))
 
         # Create pygame surface
@@ -450,102 +449,12 @@ class Chunk:
 
 
 class GluedChunk:
-    """A chunk that has been attracted to glue and follows flocking behavior."""
-    def __init__(self, chunk: Chunk, glue_center: Tuple[float, float], config: Dict[str, Any], tint_rgb: tuple):
+    """A chunk that has been attracted to glue. Thin wrapper for rendering."""
+    def __init__(self, chunk: Chunk, tint_rgb: tuple):
         self.chunk = chunk
-        self.glue_center = glue_center
-        self.config = config
         self.tint_rgb = tint_rgb
-        flocking_cfg = config["worm"]["glue"]["flocking"]
-        self.maxspeed = flocking_cfg["maxspeed"]
-        self.maxforce = flocking_cfg["maxforce"]
-        self.desired_separation = flocking_cfg["desired_separation"]
-        self.separate_force_mult = flocking_cfg["separate_force_mult"]
-        self.seek_force_mult = flocking_cfg["seek_force_mult"]
-
-    def apply_behaviors(self, glued_chunks: List['GluedChunk'], torus_world: bool = False) -> None:
-        """Apply flocking behaviors (separation and seeking) to the chunk."""
-        separate_force = self.separate(glued_chunks, torus_world)
-        seek_force = self.seek(self.glue_center, torus_world)
-
-        # Apply force multipliers
-        separate_force = (separate_force[0] * self.separate_force_mult,
-                          separate_force[1] * self.separate_force_mult)
-        seek_force = (seek_force[0] * self.seek_force_mult,
-                      seek_force[1] * self.seek_force_mult)
-
-        # Apply forces
-        self.apply_force(separate_force)
-        self.apply_force(seek_force)
-
-    def apply_force(self, force: Tuple[float, float]) -> None:
-        """Apply a force to the chunk's body."""
-        # Apply force at the body's center, not at local point (0,0)
-        self.chunk.body.apply_force_at_world_point(force, self.chunk.body.position)
-
-    def separate(self, glued_chunks: List['GluedChunk'], torus_world: bool = False) -> Tuple[float, float]:
-        """Calculate separation force to avoid crowding other chunks."""
-        sum_x, sum_y = 0.0, 0.0
-        count = 0
-        pos = self.chunk.body.position
-
-        # Get world dimensions once if needed
-        if torus_world:
-            width = self.config["simulation"]["window"]["width"]
-            height = self.config["simulation"]["window"]["height"]
-
-        for other in glued_chunks:
-            if other.chunk is not self.chunk:
-                other_pos = other.chunk.body.position
-                dx = pos.x - other_pos.x
-                dy = pos.y - other_pos.y
-
-                # Apply torus wrapping if enabled
-                if torus_world:
-                    dx, dy = torus_delta(dx, dy, width, height)
-
-                d = vector_magnitude(dx, dy)
-
-                if 0 < d < self.desired_separation:
-                    # Force strength inversely proportional to distance
-                    force_strength = min(1.0, (self.desired_separation - d) / self.desired_separation)
-                    norm_x, norm_y = normalize_vector(dx, dy)
-                    sum_x += norm_x * force_strength
-                    sum_y += norm_y * force_strength
-                    count += 1
-
-        if count > 0:
-            # Average and scale to desired velocity
-            sum_x, sum_y = sum_x / count, sum_y / count
-            desired_x, desired_y = scale_vector(*normalize_vector(sum_x, sum_y), self.maxspeed)
-            # Calculate steering force
-            vel = self.chunk.body.velocity
-            return calculate_steering(desired_x, desired_y, vel.x, vel.y, self.maxforce)
-
-        return (0.0, 0.0)
-
-    def seek(self, target: Tuple[float, float], torus_world: bool = False) -> Tuple[float, float]:
-        """Calculate seeking force toward target position."""
-        pos = self.chunk.body.position
-        dx = target[0] - pos.x
-        dy = target[1] - pos.y
-
-        # Get world dimensions once if needed
-        if torus_world:
-            width = self.config["simulation"]["window"]["width"]
-            height = self.config["simulation"]["window"]["height"]
-            dx, dy = torus_delta(dx, dy, width, height)
-
-        # Desired velocity toward target at max speed
-        desired_x, desired_y = scale_vector(*normalize_vector(dx, dy), self.maxspeed)
-
-        # Calculate steering force
-        vel = self.chunk.body.velocity
-        return calculate_steering(desired_x, desired_y, vel.x, vel.y, self.maxforce)
 
     def draw(self, surface: pygame.Surface, debug_mode: bool = False, torus_world: bool = False, volume: float = 0.0):
-        # Draw the chunk normally
         self.chunk.draw(surface, debug_mode=debug_mode, torus_world=torus_world, volume=volume)
-        # Draw a small dot at the centroid in the glue's color
         centroid = self.chunk.body.position
         pygame.draw.circle(surface, self.tint_rgb, (int(centroid.x), int(centroid.y)), 5)

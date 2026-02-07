@@ -35,7 +35,7 @@ simulation:
       velocity_min: -200
       velocity_max: 200
       explosion:
-        speed_min: 20
+        speed_min: 5
         speed_max: 100
 
 queue:
