@@ -137,6 +137,7 @@ class WormManager:
             if next_chunk:
                 space.remove(next_chunk.shape, next_chunk.body)
                 chunks_list.remove(next_chunk)
+                available_chunks.remove(next_chunk)
                 worm.consume_chunk(next_chunk)
 
         # Add dead worm's glue to glues list
