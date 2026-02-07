@@ -1,7 +1,6 @@
 """Worm lifecycle and scheduling management."""
 import pygame
-import pymunk
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Callable, Dict, Any, List, Optional, Tuple
 from entities import Worm, Glue, Chunk
 from utils.logging_utils import get_logger
 
@@ -112,8 +111,7 @@ class WormManager:
         self,
         glues_list: List[Glue],
         available_chunks: List[Chunk],
-        space: pymunk.Space,
-        chunks_list: List[Chunk],
+        remove_chunk: Callable[[Chunk], bool],
         glue_visuals_enabled: bool,
         screen: pygame.Surface,
         torus_world: bool = False
@@ -124,8 +122,7 @@ class WormManager:
         Args:
             glues_list: Reference to simulation's glues list
             available_chunks: Chunks available for worm/glues
-            space: Pymunk physics space
-            chunks_list: Reference to simulation's chunks list
+            remove_chunk: Callback to remove a chunk from the simulation
             glue_visuals_enabled: Whether to draw glue visuals
             screen: Pygame screen for rendering
             torus_world: Whether torus wrapping is enabled
@@ -135,8 +132,7 @@ class WormManager:
         if worm and not worm.is_dead:
             next_chunk = worm.select_next_chunk(available_chunks)
             if next_chunk:
-                space.remove(next_chunk.shape, next_chunk.body)
-                chunks_list.remove(next_chunk)
+                remove_chunk(next_chunk)
                 available_chunks.remove(next_chunk)
                 worm.consume_chunk(next_chunk)
 

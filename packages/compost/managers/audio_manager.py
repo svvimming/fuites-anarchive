@@ -213,6 +213,14 @@ class AudioManager:
                 state.current_volume = 0.0
                 _logger.debug("Fading out: %s", os.path.basename(chunk.audio_path))
 
+    def on_chunk_removed(self, chunk) -> None:
+        """Immediately remove a chunk's audio state and cached data."""
+        with self._lock:
+            self.active_chunks.pop(chunk, None)
+        path = getattr(chunk, "audio_path", None)
+        if path:
+            self.sound_cache.pop(path, None)
+
     def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
         """Handle proximity-based audio playback for chunks near the cursor."""
         vol_cfg = self.config["sound"]["hover"]["volume_scaling"]
@@ -254,28 +262,6 @@ class AudioManager:
             out_of_range = [c for c in self.active_chunks if c not in should_play]
         for chunk in out_of_range:
             self._stop_chunk(chunk)
-
-    def cleanup_finished_audio(self) -> None:
-        """Remove non-looping chunks that have finished playing.
-
-        The audio callback already cleans up finished chunks during mixing,
-        so this method is only needed for explicit housekeeping between frames.
-        """
-        with self._lock:
-            finished = [
-                c for c, state in self.active_chunks.items()
-                if state.position >= len(state.audio_data) and not state.looping
-            ]
-            for chunk in finished:
-                del self.active_chunks[chunk]
-
-    def evict_cache(self, active_paths: set) -> None:
-        """Remove cached audio for files no longer in the simulation."""
-        stale = [p for p in self.sound_cache if p not in active_paths]
-        for p in stale:
-            del self.sound_cache[p]
-        if stale:
-            _logger.info("Evicted %d cached audio files", len(stale))
 
     def stop_all(self) -> None:
         """Stop all playing audio."""

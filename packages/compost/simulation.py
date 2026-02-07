@@ -79,13 +79,6 @@ class Simulation:
         """Handle proximity-based audio playback."""
         self.audio_manager.handle_audio_hover(mouse_pos, self.chunks)
 
-    def cleanup_finished_audio(self) -> None:
-        """Clean up finished audio and periodically evict stale cache entries."""
-        self.audio_manager.cleanup_finished_audio()
-        self._evict_counter = getattr(self, '_evict_counter', 0) + 1
-        if self._evict_counter % (self.config["simulation"]["fps"] * 30) == 0:
-            active_paths = {c.audio_path for c in self.chunks if c.audio_path}
-            self.audio_manager.evict_cache(active_paths)
 
     def toggle_torus_world(self) -> None:
         """Toggle between torus world and rigid wall boundaries."""
@@ -216,8 +209,7 @@ class Simulation:
         self.worm_manager.update_worm_and_glues(
             self.glues,
             available_chunks,
-            self.space,
-            self.chunks,
+            self.remove_chunk,
             self.glue_visuals_enabled,
             self.screen,
             torus_world
@@ -316,21 +308,37 @@ class Simulation:
         # Pass the ACTUAL glues list so export_manager can modify it
         count = self.export_manager.export_glues(
             glues=glues_to_export,
-            glues_list=self.glues,  # Pass reference to main list
+            glues_list=self.glues,
             worm=self.worm_manager.current_worm,
             worms=self.worm_manager.worms,
-            space=self.space,
-            chunks=self.chunks,
+            remove_chunk=self.remove_chunk,
             on_complete=on_export_complete
         )
 
     # ----------------------------------------------------------------
     # Clear methods
     # ----------------------------------------------------------------
+    def remove_chunk(self, chunk) -> bool:
+        """Remove a single chunk from the simulation (physics, tracking, audio)."""
+        try:
+            if chunk.shape in self.space.shapes or chunk.body in self.space.bodies:
+                self.space.remove(chunk.shape, chunk.body)
+        except Exception:
+            pass
+        try:
+            self.chunks.remove(chunk)
+        except ValueError:
+            return False
+        self.audio_manager.on_chunk_removed(chunk)
+        return True
+
     def clear_chunks(self) -> None:
         """Remove all chunks from the simulation and reset worms and glues."""
         for chunk in self.chunks:
-            self.space.remove(chunk.shape, chunk.body)
+            try:
+                self.space.remove(chunk.shape, chunk.body)
+            except Exception:
+                pass
         _logger.info("Removed %d chunks from the simulation", len(self.chunks))
         self.chunks.clear()
         self.audio_manager.stop_all()

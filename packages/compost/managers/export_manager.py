@@ -46,11 +46,10 @@ class ExportManager:
     def export_glues(
         self,
         glues: List,
-        glues_list: List,  # Reference to simulation's main glues list
+        glues_list: List,
         worm: Optional[Any] = None,
         worms: Optional[List] = None,
-        space: Optional[Any] = None,
-        chunks: Optional[List] = None,
+        remove_chunk: Optional[Callable] = None,
         on_complete: Optional[Callable[[int], None]] = None,
     ) -> int:
         """
@@ -59,10 +58,10 @@ class ExportManager:
 
         Args:
             glues: List of glues to export (will be modified)
+            glues_list: Reference to simulation's main glues list
             worm: Current worm (optional, for checking dead worm's glue)
             worms: List of all worms (for cleanup)
-            space: Pymunk space for removing physics bodies
-            chunks: Main chunks list for removal
+            remove_chunk: Callback to remove a chunk from the simulation
             on_complete: Callback with count of exported glues
 
         Returns:
@@ -122,13 +121,10 @@ class ExportManager:
             self._export_glue_audio(glued_chunks, timestamp, rand_suffix, exported_count)
             exported_count += 1
 
-            # Remove glued chunks' bodies and shapes from space and simulation
-            if space and chunks is not None:
+            # Remove glued chunks from the simulation
+            if remove_chunk is not None:
                 for glued in list(glued_chunks):
-                    chunk = glued.chunk
-                    self._safe_remove_from_space(space, chunk)
-                    if chunk in chunks:
-                        chunks.remove(chunk)
+                    remove_chunk(glued.chunk)
 
             # Clear glue contents
             glue.glued_chunks.clear()
@@ -252,20 +248,6 @@ class ExportManager:
 
         except Exception as exc:
             _logger.warning("Failed to export mixed audio: %s", exc)
-
-    def _safe_remove_from_space(self, space: Any, chunk: Any) -> None:
-        """
-        Safely remove a chunk's body and shape from the physics space.
-
-        Args:
-            space: Pymunk space
-            chunk: Chunk object with body and shape attributes
-        """
-        if chunk.shape in space.shapes or chunk.body in space.bodies:
-            try:
-                space.remove(chunk.shape, chunk.body)
-            except Exception:
-                pass
 
     # ----------------------------------------------------------------
     # Compost Output Recording

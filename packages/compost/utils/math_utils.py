@@ -123,7 +123,7 @@ def _steer_towards(
     steer_x = desired_x - vel_x
     steer_y = desired_y - vel_y
     steer_mag = np.sqrt(steer_x * steer_x + steer_y * steer_y)
-    clamp = np.where(steer_mag > maxforce, maxforce / steer_mag, 1.0)
+    clamp = np.where(steer_mag > maxforce, maxforce / np.maximum(steer_mag, 1e-10), 1.0)
     return steer_x * clamp, steer_y * clamp
 
 
@@ -186,8 +186,8 @@ def compute_flocking_forces(
 
         counts = mask.sum(axis=1).astype(np.float64)
         has_neighbours = counts > 0
-        avg_x = np.where(has_neighbours, weighted_dx.sum(axis=1) / counts, 0.0)
-        avg_y = np.where(has_neighbours, weighted_dy.sum(axis=1) / counts, 0.0)
+        avg_x = np.where(has_neighbours, weighted_dx.sum(axis=1) / np.maximum(counts, 1.0), 0.0)
+        avg_y = np.where(has_neighbours, weighted_dy.sum(axis=1) / np.maximum(counts, 1.0), 0.0)
 
         sx, sy = _steer_towards(avg_x, avg_y, vel_x, vel_y, maxspeed, maxforce)
         sep_x = np.where(has_neighbours, sx, 0.0)
