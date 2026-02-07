@@ -47,8 +47,6 @@ class ExportManager:
         self,
         glues: List,
         glues_list: List,
-        worm: Optional[Any] = None,
-        worms: Optional[List] = None,
         remove_chunk: Optional[Callable] = None,
         on_complete: Optional[Callable[[int], None]] = None,
     ) -> int:
@@ -57,22 +55,15 @@ class ExportManager:
         remove those glued chunks and their glue from the simulation.
 
         Args:
-            glues: List of glues to export (will be modified)
+            glues: List of glues to export
             glues_list: Reference to simulation's main glues list
-            worm: Current worm (optional, for checking dead worm's glue)
-            worms: List of all worms (for cleanup)
             remove_chunk: Callback to remove a chunk from the simulation
             on_complete: Callback with count of exported glues
 
         Returns:
             Number of glues exported
         """
-        # Collect glues to export
         glues_to_export: List = list(glues) if glues else []
-
-        # Include a dead worm's glue not yet appended
-        if worm and worm.is_dead and worm.glue and worm.glue not in glues_to_export:
-            glues_to_export.append(worm.glue)
 
         if not glues_to_export:
             _logger.debug("No glues to export")
@@ -133,25 +124,6 @@ class ExportManager:
         for glue in glues_to_export:
             if glue in glues_list:
                 glues_list.remove(glue)
-
-        # Clear history panels only for worms whose glue was exported
-        exported_histories = {
-            id(glue.worm_history) for glue in glues_to_export
-            if hasattr(glue, 'worm_history')
-        }
-
-        # Unlink and clear only impacted worms
-        if worms:
-            for w in worms:
-                if not w:
-                    continue
-                # If this worm's glue was exported, unlink it
-                if getattr(w, 'glue', None) in glues_to_export:
-                    w.glue = None
-                # If this worm's history fed an exported glue, clear just this worm's panel/history
-                if id(getattr(w, 'history', [])) in exported_histories:
-                    w.history.clear()
-                    w.last_color = None
 
         _logger.info("Export complete: %d glue images saved", exported_count)
 

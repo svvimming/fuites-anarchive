@@ -22,9 +22,10 @@ class WormHistory:
 
 class Glue:
     """Manages a collection of chunks attracted by a single glue point."""
-    def __init__(self, position: Tuple[float, float], worm_history: List[WormHistory], config: Dict[str, Any]):
+    def __init__(self, position: Tuple[float, float], worm_history: List[WormHistory], config: Dict[str, Any], source_worm: Optional['Worm'] = None):
         self.position = position
         self.worm_history = worm_history
+        self.source_worm = source_worm
         self.config = config
         self.glued_chunks: List[GluedChunk] = []
         self.attracted_chunk_ids: Set[int] = set()  # Track IDs of chunks we've already attracted
@@ -416,7 +417,7 @@ class Worm:
         # Create glue at the last meal site if enabled and we have at least one meal
         if self.glue_enabled and self.last_chunk is not None and len(self.history) > 0:
             position = (self.last_chunk.body.position.x, self.last_chunk.body.position.y)
-            self.glue = Glue(position, self.history, self.config)
+            self.glue = Glue(position, self.history, self.config, source_worm=self)
             _logger.debug("Created glue at (%.1f, %.1f)", position[0], position[1])
 
     def draw(self, surface: pygame.Surface, x_offset: int = 0) -> None:

@@ -20,10 +20,17 @@ class WormManager:
         self.config = config
         self.worms: List[Worm] = []
         self.current_worm: Optional[Worm] = None
-        self._active_worm: Optional[Worm] = None
         self._spawn_pending: int = 0
         self._spawn_batch_total: int = 0
         self.history_panel_enabled: bool = config["simulation"]["ui"]["worm_history_panel"]["enabled"]
+
+        # Cache superabundance config
+        sa_cfg = config["worm"].get("superabundance", {})
+        self._sa_threshold: int = sa_cfg.get("threshold", 1000)
+        self._sa_worms_per_upload: int = sa_cfg.get("worms_per_upload", 2)
+        self._sa_auto_export_age_ms: int = int(sa_cfg.get("auto_export_capped_after_ms", 60_000))
+        glue_cfg = config["worm"].get("glue", {})
+        self._max_active_glues: int = int(glue_cfg.get("max_active_glues", 5))
 
     def schedule_worms(self, count: int) -> None:
         """
@@ -37,8 +44,9 @@ class WormManager:
             return
         self._spawn_pending += count
         self._spawn_batch_total += count
-        # If no active worm, start immediately
-        if not self._active_worm:
+        # Only spawn immediately if no worm at all.
+        # A dead worm still needs check_worm_completion to promote its glue first.
+        if self.current_worm is None:
             self._spawn_next_worm()
 
     def _spawn_next_worm(self) -> None:
@@ -49,26 +57,33 @@ class WormManager:
         new_worm.panel_enabled = self.history_panel_enabled
         self.current_worm = new_worm
         self.worms.append(new_worm)
-        self._active_worm = new_worm
         # Decrement pending and report progress
         self._spawn_pending -= 1
         spawned_so_far = self._spawn_batch_total - self._spawn_pending
         total = self._spawn_batch_total
         _logger.info("Spawned worm %d of %d", spawned_so_far, total)
 
-    def check_worm_completion(self, available_chunk_count: int) -> None:
-        """Advance scheduling when the active worm finishes eating."""
-        if not self._active_worm:
+    def check_worm_completion(self, available_chunk_count: int, glues_list: List[Glue]) -> None:
+        """Advance scheduling when the current worm finishes eating."""
+        if self.current_worm is None or not self.current_worm.is_dead:
             return
-        if self._active_worm.is_dead:
-            if self._spawn_pending > 0 and available_chunk_count > 0:
-                self._spawn_next_worm()
-            else:
-                if self._spawn_pending > 0:
-                    _logger.info("Cancelled %d pending worms (no food)", self._spawn_pending)
-                self._active_worm = None
-                self._spawn_batch_total = 0
-                self._spawn_pending = 0
+
+        # Promote glue to simulation list immediately
+        if self.current_worm.glue and self.current_worm.glue not in glues_list:
+            glues_list.append(self.current_worm.glue)
+
+        if self._spawn_pending > 0 and available_chunk_count > 0:
+            self._spawn_next_worm()
+        else:
+            if self._spawn_pending > 0:
+                _logger.info("Cancelled %d pending worms (no food)", self._spawn_pending)
+            self.current_worm = None
+            self._spawn_batch_total = 0
+            self._spawn_pending = 0
+
+    def is_superabundant(self, total_chunks: int) -> bool:
+        """Check if the simulation is in superabundance state."""
+        return total_chunks > self._sa_threshold
 
     def spawn_worms_for_upload(self, upload_type: str, total_particles: int) -> None:
         """
@@ -86,13 +101,10 @@ class WormManager:
             self._spawn_pending = 0
             self._spawn_batch_total = 0
 
-        superabundance_cfg = self.config["worm"].get("superabundance", {})
-        threshold = superabundance_cfg.get("threshold", 1000)
-        worms_per_upload = superabundance_cfg.get("worms_per_upload", 2)
-        is_superabundant = total_particles > threshold
-        worms_to_spawn = worms_per_upload if is_superabundant else 1
+        is_super = self.is_superabundant(total_particles)
+        worms_to_spawn = self._sa_worms_per_upload if is_super else 1
 
-        if is_superabundant:
+        if is_super:
             _logger.info("SUPERABUNDANCE: %d particles, scheduling %d worms for %s", total_particles, worms_to_spawn, upload_type)
         else:
             _logger.debug("Normal abundance: %d particles, scheduling %d worm for %s", total_particles, worms_to_spawn, upload_type)
@@ -106,11 +118,19 @@ class WormManager:
         for worm in self.worms:
             worm.panel_enabled = self.history_panel_enabled
 
+    def cleanup_after_export(self, exported_glues: List[Glue]) -> None:
+        """Clean up worm state after their glues have been exported."""
+        exported_glue_ids = {id(g) for g in exported_glues}
+        for worm in self.worms:
+            if worm.glue is not None and id(worm.glue) in exported_glue_ids:
+                worm.glue = None
+                worm.history.clear()
+                worm.last_color = None
+
     def clear(self) -> None:
         """Clear all worms."""
         self.worms.clear()
         self.current_worm = None
-        self._active_worm = None
         self._spawn_pending = 0
         self._spawn_batch_total = 0
 
@@ -142,11 +162,6 @@ class WormManager:
                 remove_chunk(next_chunk)
                 available_chunks.remove(next_chunk)
                 worm.consume_chunk(next_chunk)
-
-        # Add dead worm's glue to glues list
-        if worm and worm.is_dead and worm.glue:
-            if worm.glue not in glues_list:
-                glues_list.append(worm.glue)
 
         # Update all glues
         available_ids = {id(c) for c in available_chunks}
@@ -181,22 +196,16 @@ class WormManager:
         Returns:
             Tuple of (glues_to_export, schedule_worms)
         """
-        superabundance_cfg = self.config["worm"].get("superabundance", {})
-        threshold = superabundance_cfg.get("threshold", 1000)
-        glue_cfg = self.config["worm"].get("glue", {})
-        max_active = int(glue_cfg.get("max_active_glues", 5))
-        auto_export_age_ms = int(superabundance_cfg.get("auto_export_capped_after_ms", 60_000))
-
         # Check if we're in superabundance
-        if total_chunks > threshold:
-            expired_glues = self._find_expired_glues(glues_list, auto_export_age_ms)
+        if self.is_superabundant(total_chunks):
+            expired_glues = self._find_expired_glues(glues_list, self._sa_auto_export_age_ms)
             if expired_glues:
-                over_limit = len(glues_list) > max_active
+                over_limit = len(glues_list) > self._max_active_glues
                 return (expired_glues, not over_limit)
 
         # Check if active glues exceed configured limit
-        if len(glues_list) > max_active:
-            expired_glues = self._find_expired_glues(glues_list, auto_export_age_ms)
+        if len(glues_list) > self._max_active_glues:
+            expired_glues = self._find_expired_glues(glues_list, self._sa_auto_export_age_ms)
             if expired_glues:
                 return (expired_glues, False)
 
