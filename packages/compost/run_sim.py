@@ -116,13 +116,11 @@ def main() -> None:
         # Clean up finished audio periodically
         simulation.cleanup_finished_audio()
 
-        # Capture compost audio if recording (use fixed dt for consistency)
-        simulation.update_compost_recording(dt)
-
         space.step(dt)
         simulation.update_chunks()
         pygame.display.flip()
         clock.tick(config["simulation"]["fps"])
+        pygame.display.set_caption(f"Compost — {clock.get_fps():.0f} FPS")
 
     # Clean up worker process before exiting
     simulation.cleanup()

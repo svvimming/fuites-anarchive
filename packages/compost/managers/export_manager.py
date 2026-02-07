@@ -39,9 +39,7 @@ class ExportManager:
 
         # Compost recording state
         self.compost_recording = False
-        self._compost_buffer: List[np.ndarray] = []
-        self._audio_cache: Dict[str, np.ndarray] = {}
-        self._chunk_positions: Dict[Any, int] = {}
+        self._audio_manager: Optional[AudioManager] = None
         self._sample_rate = config.get("sound", {}).get("hover", {}).get("mixer", {}).get("frequency", 48000)
         self._glue_sample_rate = config.get("sound", {}).get("recording", {}).get("glue", {}).get("sample_rate", None)
 
@@ -273,7 +271,7 @@ class ExportManager:
     # Compost Output Recording
     # ----------------------------------------------------------------
 
-    def toggle_compost_recording(self) -> Tuple[bool, Optional[str]]:
+    def toggle_compost_recording(self, audio_manager: AudioManager) -> Tuple[bool, Optional[str]]:
         """
         Toggle compost output recording.
 
@@ -281,70 +279,20 @@ class ExportManager:
             Tuple of (is_recording, saved_path_or_none)
         """
         if not self.compost_recording:
-            return self._start_compost_recording(), None
+            self._audio_manager = audio_manager
+            audio_manager.start_recording()
+            self.compost_recording = True
+            _logger.info("Compost output recording started")
+            return True, None
         return False, self._stop_compost_recording()
-
-    def _start_compost_recording(self) -> bool:
-        """Start recording compost audio output."""
-        self._compost_buffer = []
-        self._chunk_positions = {}
-        self.compost_recording = True
-        _logger.info("Compost output recording started")
-        return True
-
-    def _get_cached_audio(self, path: str) -> Optional[np.ndarray]:
-        """Load and cache audio file."""
-        if path not in self._audio_cache:
-            try:
-                import librosa
-                y, _ = librosa.load(path, sr=self._sample_rate)
-                self._audio_cache[path] = y
-            except Exception as e:
-                _logger.warning("Failed to load audio %s: %s", path, e)
-                return None
-        return self._audio_cache[path]
-
-    def capture_compost_frame(self, audio_manager: AudioManager, dt: float) -> None:
-        """
-        Capture audio frame during compost recording.
-        Call each frame to mix currently playing audio into buffer.
-
-        Args:
-            audio_manager (AudioManager): Audio manager with active_chunks state
-            dt: Delta time for this frame in seconds
-        """
-        if not self.compost_recording:
-            return
-
-        num_samples = int(dt * self._sample_rate)
-        if num_samples <= 0:
-            return
-
-        frame = np.zeros(num_samples, dtype=np.float32)
-
-        for chunk, state in audio_manager.active_chunks.items():
-            if not chunk.audio_path:
-                continue
-
-            audio = self._get_cached_audio(chunk.audio_path)
-            if audio is None:
-                continue
-
-            audio_len = len(audio)
-            pos = self._chunk_positions.get(chunk, 0)
-
-            for i in range(num_samples):
-                frame[i] += audio[(pos + i) % audio_len] * state.current_volume
-
-            self._chunk_positions[chunk] = (pos + num_samples) % audio_len
-
-        self._compost_buffer.append(frame)
 
     def _stop_compost_recording(self) -> Optional[str]:
         """Stop recording and save compost audio output."""
         self.compost_recording = False
+        buffers = self._audio_manager.stop_recording() if self._audio_manager else []
+        self._audio_manager = None
 
-        if not self._compost_buffer:
+        if not buffers:
             _logger.warning("No compost audio recorded")
             return None
 
@@ -354,7 +302,7 @@ class ExportManager:
             _logger.error("soundfile not installed - run: uv add soundfile")
             return None
 
-        output = np.concatenate(self._compost_buffer)
+        output = np.concatenate(buffers)
 
         # Normalize only if clipping
         peak = np.max(np.abs(output))
@@ -373,7 +321,4 @@ class ExportManager:
             _logger.error("Failed to save compost recording: %s", e)
             return None
 
-        self._compost_buffer = []
-        self._audio_cache.clear()
-        self._chunk_positions.clear()
         return output_path

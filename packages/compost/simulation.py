@@ -103,12 +103,7 @@ class Simulation:
 
     def _toggle_compost_recording(self) -> None:
         """Toggle compost output recording."""
-        self.export_manager.toggle_compost_recording()
-
-    def update_compost_recording(self, dt: float) -> None:
-        """Update compost recording each frame."""
-        if self.export_manager.compost_recording:
-            self.export_manager.capture_compost_frame(self.audio_manager, dt)
+        self.export_manager.toggle_compost_recording(self.audio_manager)
 
     def on_upload_received(self, image_bytes: bytes, target_width: int = None, target_height: int = None) -> None:
         """Handle incoming image upload (from HTTP server)."""

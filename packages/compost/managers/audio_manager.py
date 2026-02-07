@@ -66,6 +66,9 @@ class AudioManager:
         self.loops: int = hover_cfg.get("loops", -1)
         self.smoother = self._build_smoother(hover_cfg)
 
+        self._recording = False
+        self._recording_buffer: List[np.ndarray] = []
+
         self._stream: Optional[sd.OutputStream] = None
         self._start_output_stream()
 
@@ -137,6 +140,24 @@ class AudioManager:
                 state.previous_volume = vol
             for chunk in finished:
                 del self.active_chunks[chunk]
+            if self._recording:
+                self._recording_buffer.append(outdata.copy())
+
+    def start_recording(self) -> None:
+        """Start capturing audio output."""
+        with self._lock:
+            self._recording_buffer = []
+            self._recording = True
+        _logger.info("Audio output recording started")
+
+    def stop_recording(self) -> List[np.ndarray]:
+        """Stop capturing and return the recorded buffers."""
+        with self._lock:
+            self._recording = False
+            buffers = self._recording_buffer
+            self._recording_buffer = []
+        _logger.info("Audio output recording stopped (%d buffers)", len(buffers))
+        return buffers
 
     def _load_sound(self, path: str) -> np.ndarray:
         """Load and cache audio as float32 array matching the output format."""
@@ -223,6 +244,7 @@ class AudioManager:
             # to avoid a race between the check and the start.
             with self._lock:
                 if chunk in self.active_chunks:
+                    self.active_chunks[chunk].fading_out = False
                     self.active_chunks[chunk].update_volume(volume, self.smoother)
                     continue
             self._start_chunk(chunk, volume)
