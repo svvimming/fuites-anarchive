@@ -1,11 +1,12 @@
 """Export system for glues (images and audio) and compost output recording."""
-import os
-import time
-import pygame
-import random
 import math
+import os
+import random
+import time
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import Dict, Any, List, Optional, Callable, Tuple
+import pygame
 
 from managers.audio_manager import AudioManager
 from utils.logging_utils import get_logger
@@ -51,7 +52,7 @@ class ExportManager:
         worms: Optional[List] = None,
         space: Optional[Any] = None,
         chunks: Optional[List] = None,
-        on_complete: Optional[Callable[[int], None]] = None
+        on_complete: Optional[Callable[[int], None]] = None,
     ) -> int:
         """
         Export each glue's glued chunks to a PNG (without glue visuals) and
@@ -96,12 +97,12 @@ class ExportManager:
                 rect = rotated_surface.get_rect(center=(int(pos.x), int(pos.y)))
                 rotated_surfaces.append((rotated_surface, rect))
 
-            # Create a full-screen transparent surface; blitting will clip to simulation bounds
+            # Blit onto a full-screen transparent surface (clips to simulation bounds)
             offscreen_full = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             for rotated_surface, rect in rotated_surfaces:
                 offscreen_full.blit(rotated_surface, rect)
 
-            # Compute the tightest bounding box of visible pixels and crop
+            # Crop to tightest bounding box of visible pixels
             crop_rect = offscreen_full.get_bounding_rect(min_alpha=1)
             if crop_rect.width <= 0 or crop_rect.height <= 0:
                 continue
@@ -169,7 +170,7 @@ class ExportManager:
         glued_chunks: List,
         timestamp: int,
         rand_suffix: int,
-        exported_count: int
+        exported_count: int,
     ) -> None:
         """
         Export a mixed audio file from all sound chunks in a glue.
@@ -194,7 +195,6 @@ class ExportManager:
         try:
             import librosa
             import soundfile as sf
-            import numpy as np
         except ImportError:
             _logger.warning("librosa and soundfile required for audio mixing")
             return
@@ -230,15 +230,15 @@ class ExportManager:
 
                 # Random start position within the available time
                 audio_length = len(y)
-                max_start_samples = max(0, output_samples - audio_length)
-                start_sample = random.randint(0, max_start_samples) if max_start_samples > 0 else 0
-                end_sample = min(start_sample + audio_length, output_samples)
+                max_start = max(0, output_samples - audio_length)
+                start = random.randint(0, max_start) if max_start > 0 else 0
+                end = min(start + audio_length, output_samples)
+                mixed_audio[start:end] += y[:end - start]
 
-                # Add to mix with overlap handling
-                mix_length = end_sample - start_sample
-                mixed_audio[start_sample:end_sample] += y[:mix_length]
-
-                _logger.debug("Mixed audio %d/%d: %s at %.2fs", i+1, len(audio_data), os.path.basename(audio_files[i]), start_sample/target_sr)
+                _logger.debug(
+                    "Mixed audio %d/%d: %s at %.2fs",
+                    i + 1, len(audio_data), os.path.basename(audio_files[i]), start / target_sr,
+                )
 
             # Normalize only if clipping
             peak = np.max(np.abs(mixed_audio))
@@ -281,8 +281,7 @@ class ExportManager:
         """
         if not self.compost_recording:
             return self._start_compost_recording(), None
-        else:
-            return False, self._stop_compost_recording()
+        return False, self._stop_compost_recording()
 
     def _start_compost_recording(self) -> bool:
         """Start recording compost audio output."""
@@ -374,4 +373,6 @@ class ExportManager:
             return None
 
         self._compost_buffer = []
+        self._audio_cache.clear()
+        self._chunk_positions.clear()
         return output_path

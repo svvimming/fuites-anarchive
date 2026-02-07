@@ -336,5 +336,6 @@ class Simulation:
             self.space.remove(chunk.shape, chunk.body)
         _logger.info("Removed %d chunks from the simulation", len(self.chunks))
         self.chunks.clear()
+        self.audio_manager.stop_all()
         self.worm_manager.clear()
         self.glues.clear()
