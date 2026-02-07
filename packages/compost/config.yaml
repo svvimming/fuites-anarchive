@@ -35,8 +35,8 @@ simulation:
       velocity_min: -200
       velocity_max: 200
       explosion:
-        speed_min: 20
-        speed_max: 100
+        speed_min: 0
+        speed_max: 0
 
 queue:
   background_workers: 4    # Number of parallel background processes

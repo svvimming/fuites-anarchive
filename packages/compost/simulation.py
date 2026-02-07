@@ -185,17 +185,20 @@ class Simulation:
     # ----------------------------------------------------------------
     def update_chunks(self) -> None:
         """Update (draw) all chunks in the simulation and process worm behavior."""
-        # Check if we need to spawn a new worm after export
-        self.worm_manager.check_worm_completion()
-
         # Apply torus wrapping (internally checks if enabled)
         self.boundary_manager.handle_torus_wrapping()
 
         # Cache torus_world state for this frame
         torus_world = self.boundary_manager.torus_world
 
-        # Draw non-glued chunks
+        # Compute glued chunk IDs and available chunks
         glued_chunk_ids = self.get_all_glued_chunk_ids()
+        available_chunks = self.get_available_chunks(glued_chunk_ids)
+
+        # Check worm lifecycle with accurate available food count
+        self.worm_manager.check_worm_completion(len(available_chunks))
+
+        # Draw non-glued chunks
         for chunk in self.chunks:
             if id(chunk) not in glued_chunk_ids:
                 volume = self.audio_manager.get_volume(chunk)
@@ -205,7 +208,6 @@ class Simulation:
         self._draw_glued_chunks(glued_chunk_ids, torus_world)
 
         # Update worm + glues (delegated to WormManager)
-        available_chunks = self.get_available_chunks(glued_chunk_ids)
         self.worm_manager.update_worm_and_glues(
             self.glues,
             available_chunks,
@@ -301,9 +303,13 @@ class Simulation:
 
     def _do_export(self, glues_to_export: List[Glue], schedule_worms: bool) -> None:
         """Perform the actual export."""
+        # Schedule worms based on glues removed, not PNGs saved —
+        # an empty glue (attracted nothing) still completes a cycle.
+        num_glues = len(glues_to_export)
+
         def on_export_complete(count: int) -> None:
-            if schedule_worms and count > 0:
-                self.worm_manager.schedule_worms(count)
+            if schedule_worms and num_glues > 0:
+                self.worm_manager.schedule_worms(num_glues)
 
         # Pass the ACTUAL glues list so export_manager can modify it
         count = self.export_manager.export_glues(

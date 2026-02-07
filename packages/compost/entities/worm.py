@@ -408,6 +408,8 @@ class Worm:
 
     def mark_as_dead(self) -> None:
         """Mark the worm as dead and create glue at the last meal site if enabled."""
+        if self.is_dead:
+            return
         self.is_dead = True
         _logger.debug("Worm died after consuming %d chunks", len(self.history))
 
@@ -464,26 +466,34 @@ class Worm:
     def select_next_chunk(self, chunks: List[Chunk]) -> Optional[Chunk]:
         """
         Select the next chunk to consume based on color contrast rules.
-        
+
         Args:
             chunks (List[Chunk]): Available chunks to choose from.
-            
+
         Returns:
             Optional[Chunk]: The selected chunk, or None if no valid chunk found.
         """
-        if self.is_dead or not chunks:
+        if self.is_dead:
             return None
-            
+
+        # Die immediately if already at capacity (handles max_chunks=0)
+        if len(self.history) >= self.max_chunks:
+            self.mark_as_dead()
+            return None
+
+        # Die if no food available
+        if not chunks:
+            self.mark_as_dead()
+            return None
+
         # For first chunk, select randomly
         if self.last_color is None:
             return random.choice(chunks)
-            
+
         # Find all valid chunks based on contrast
         valid_chunks = [chunk for chunk in chunks if self.is_valid_next_chunk(chunk)]
         if not valid_chunks:
-            # If no valid chunks are found, the worm dies
-            # print("No valid chunks found - worm dies!")
             self.mark_as_dead()
             return None
-            
-        return random.choice(valid_chunks) 
+
+        return random.choice(valid_chunks)

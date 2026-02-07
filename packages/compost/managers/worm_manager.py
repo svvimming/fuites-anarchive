@@ -56,29 +56,36 @@ class WormManager:
         total = self._spawn_batch_total
         _logger.info("Spawned worm %d of %d", spawned_so_far, total)
 
-    def check_worm_completion(self) -> None:
+    def check_worm_completion(self, available_chunk_count: int) -> None:
         """Advance scheduling when the active worm finishes eating."""
         if not self._active_worm:
             return
         if self._active_worm.is_dead:
-            if self._spawn_pending > 0:
+            if self._spawn_pending > 0 and available_chunk_count > 0:
                 self._spawn_next_worm()
             else:
+                if self._spawn_pending > 0:
+                    _logger.info("Cancelled %d pending worms (no food)", self._spawn_pending)
                 self._active_worm = None
-                # Reset batch counters
                 self._spawn_batch_total = 0
                 self._spawn_pending = 0
-                _logger.debug("All scheduled worms completed")
 
     def spawn_worms_for_upload(self, upload_type: str, total_particles: int) -> None:
         """
         Spawn worms for an upload. During superabundance, spawn more; otherwise one.
         Worms are scheduled to spawn sequentially (wait for one to finish before next).
+        Cancels any stale pending worms from previous batches (e.g. post-export).
 
         Args:
             upload_type: Type of upload ("image" or "sound")
             total_particles: Current total particle/chunk count
         """
+        # Cancel stale pending from previous batches
+        if self._spawn_pending > 0:
+            _logger.info("Cancelled %d stale pending worms from previous batch", self._spawn_pending)
+            self._spawn_pending = 0
+            self._spawn_batch_total = 0
+
         superabundance_cfg = self.config["worm"].get("superabundance", {})
         threshold = superabundance_cfg.get("threshold", 1000)
         worms_per_upload = superabundance_cfg.get("worms_per_upload", 2)
