@@ -99,7 +99,7 @@ class InputManager:
         input_path = os.path.join(self.input_dir, f"audio_in_{timestamp}.wav")
 
         try:
-            sf.write(input_path, audio_data, self.sample_rate)
+            sf.write(input_path, audio_data, self.sample_rate, subtype='FLOAT')
             _logger.info("Audio input recording saved: %s (%.1f sec)", input_path, len(audio_data) / self.sample_rate)
         except Exception as e:
             _logger.error("Failed to save audio input recording: %s", e)

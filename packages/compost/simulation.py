@@ -80,8 +80,12 @@ class Simulation:
         self.audio_manager.handle_audio_hover(mouse_pos, self.chunks)
 
     def cleanup_finished_audio(self) -> None:
-        """Clean up finished audio channels."""
+        """Clean up finished audio and periodically evict stale cache entries."""
         self.audio_manager.cleanup_finished_audio()
+        self._evict_counter = getattr(self, '_evict_counter', 0) + 1
+        if self._evict_counter % (self.config["simulation"]["fps"] * 30) == 0:
+            active_paths = {c.audio_path for c in self.chunks if c.audio_path}
+            self.audio_manager.evict_cache(active_paths)
 
     def toggle_torus_world(self) -> None:
         """Toggle between torus world and rigid wall boundaries."""

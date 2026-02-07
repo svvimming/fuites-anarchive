@@ -626,7 +626,7 @@ def segment_spectrogram_felzenszwalb_2d(
         freq_label = "mel" if use_mel else "f"
         filename = f"{prefix}_shape_{shape_index:03d}_t{(t1 - t0 + 1)}_{freq_label}{freq_span}.wav"
         out_path = os.path.join(output_dir, filename)
-        sf.write(out_path, y_seg, sr)
+        sf.write(out_path, y_seg, sr, subtype='FLOAT')
         saved_paths.append(out_path)
 
         # Build segment metadata

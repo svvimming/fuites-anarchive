@@ -37,11 +37,14 @@ class ChunkAudioState:
     audio_data: np.ndarray
     position: int = 0
     current_volume: float = 0.0
+    previous_volume: float = 0.0
     target_volume: float = 0.0
     looping: bool = True
+    fading_out: bool = False
 
     def update_volume(self, target: float, smoother: Optional[VolumeSmoother] = None) -> None:
         self.target_volume = target
+        self.previous_volume = self.current_volume
         self.current_volume = smoother.smooth(self.current_volume, target) if smoother else target
 
 
@@ -101,18 +104,27 @@ class AudioManager:
             finished = []
             for chunk, state in self.active_chunks.items():
                 vol = state.current_volume
-                if vol <= 0:
+                prev_vol = state.previous_volume
+                if vol <= 0 and prev_vol <= 0:
+                    if state.fading_out:
+                        finished.append(chunk)
                     continue
                 data = state.audio_data
                 data_len = len(data)
                 if data_len == 0:
                     finished.append(chunk)
                     continue
+                # Build per-sample volume ramp to avoid clicks
+                ramp = np.linspace(prev_vol, vol, frames, dtype=np.float32)
+                if data.ndim == 2:
+                    ramp_shaped = ramp[:, np.newaxis]
+                else:
+                    ramp_shaped = ramp
                 pos = state.position
                 written = 0
                 while written < frames:
                     to_copy = min(frames - written, data_len - pos)
-                    outdata[written:written + to_copy] += data[pos:pos + to_copy] * vol
+                    outdata[written:written + to_copy] += data[pos:pos + to_copy] * ramp_shaped[written:written + to_copy]
                     pos += to_copy
                     written += to_copy
                     if pos >= data_len:
@@ -122,6 +134,7 @@ class AudioManager:
                             finished.append(chunk)
                             break
                 state.position = pos
+                state.previous_volume = vol
             for chunk in finished:
                 del self.active_chunks[chunk]
 
@@ -170,11 +183,14 @@ class AudioManager:
             return False
 
     def _stop_chunk(self, chunk) -> None:
-        """Stop a playing chunk."""
+        """Mark a chunk for fade-out (removed by callback after ramp to zero)."""
         with self._lock:
-            if chunk in self.active_chunks:
-                del self.active_chunks[chunk]
-                _logger.debug("Stopped: %s", os.path.basename(chunk.audio_path))
+            state = self.active_chunks.get(chunk)
+            if state and not state.fading_out:
+                state.fading_out = True
+                state.previous_volume = state.current_volume
+                state.current_volume = 0.0
+                _logger.debug("Fading out: %s", os.path.basename(chunk.audio_path))
 
     def handle_audio_hover(self, mouse_pos: Tuple[int, int], chunks: List) -> None:
         """Handle proximity-based audio playback for chunks near the cursor."""
@@ -230,6 +246,14 @@ class AudioManager:
             ]
             for chunk in finished:
                 del self.active_chunks[chunk]
+
+    def evict_cache(self, active_paths: set) -> None:
+        """Remove cached audio for files no longer in the simulation."""
+        stale = [p for p in self.sound_cache if p not in active_paths]
+        for p in stale:
+            del self.sound_cache[p]
+        if stale:
+            _logger.info("Evicted %d cached audio files", len(stale))
 
     def stop_all(self) -> None:
         """Stop all playing audio."""

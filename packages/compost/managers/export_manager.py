@@ -43,6 +43,7 @@ class ExportManager:
         self._audio_cache: Dict[str, np.ndarray] = {}
         self._chunk_positions: Dict[Any, int] = {}
         self._sample_rate = config.get("sound", {}).get("hover", {}).get("mixer", {}).get("frequency", 48000)
+        self._glue_sample_rate = config.get("sound", {}).get("recording", {}).get("glue", {}).get("sample_rate", None)
 
     def export_glues(
         self,
@@ -215,8 +216,8 @@ class ExportManager:
             if max_duration == 0:
                 return
 
-            # Use the most common sample rate (or first one if tie)
-            target_sr = max(set(sample_rates), key=sample_rates.count)
+            # Use configured glue sample rate, or most common source rate
+            target_sr = self._glue_sample_rate or max(set(sample_rates), key=sample_rates.count)
 
             # Create output buffer
             output_samples = int(max_duration * target_sr)
@@ -248,7 +249,7 @@ class ExportManager:
             # Save mixed audio
             audio_filename = f"glue_{timestamp:010d}_{rand_suffix:06d}_{exported_count}_mixed.wav"
             audio_filepath = os.path.join(self.glue_dir, audio_filename)
-            sf.write(audio_filepath, mixed_audio, target_sr)
+            sf.write(audio_filepath, mixed_audio, target_sr, subtype='FLOAT')
             _logger.info("Exported mixed audio: %s", audio_filepath)
 
         except Exception as exc:
@@ -366,7 +367,7 @@ class ExportManager:
         output_path = os.path.join(comp_dir, f"compost_mix_{timestamp}.wav")
 
         try:
-            sf.write(output_path, output, self._sample_rate)
+            sf.write(output_path, output, self._sample_rate, subtype='FLOAT')
             _logger.info("Compost recording saved: %s (%.1f sec)", output_path, len(output) / self._sample_rate)
         except Exception as e:
             _logger.error("Failed to save compost recording: %s", e)

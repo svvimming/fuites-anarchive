@@ -179,12 +179,13 @@ sound:
       size: 32
       channels: 2
       buffer: 512
-      max_channels: 256
   recording:
     input:
       device: 3  # Device name or index (run: uv run python -m sounddevice)
       sample_rate: 48000  # Match pygame mixer frequency
-      channels: 1  # Mono recording
+      channels: 1  # Mono/Stereo recording
       input_dir: "input_recordings"  # Where audio input recordings are saved before processing
     output:
       sample_rate: 48000  # Output sample rate
+    glue:
+      sample_rate: 48000  # Glue audio export sample rate (null to keep source rate)
