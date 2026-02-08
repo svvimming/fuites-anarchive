@@ -32,8 +32,6 @@ simulation:
       friction: 5.0
       mass: 1.0
       shape_filter_group: 1
-      velocity_min: -200
-      velocity_max: 200
       explosion:
         speed_min: 20
         speed_max: 100

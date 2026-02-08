@@ -1,8 +1,6 @@
 """Upload queue and background processing management."""
-import math
 import multiprocessing
 import os
-import random
 import threading
 import uuid
 import io
@@ -318,7 +316,7 @@ class QueueManager:
             else:
                 _logger.warning("Unknown item type from background: %s", type(item))
 
-        # Spawn completed batches as explosions
+        # Spawn completed batches
         for batch_complete in completed_batches:
             batch_id = batch_complete.batch_id
             buffered = self._batch_buffers.pop(batch_id, [])
@@ -327,96 +325,15 @@ class QueueManager:
                 upload_type = upload_type[0]
 
             if buffered:
-                self._spawn_batch_explosion(buffered)
+                new_chunks = Chunk.spawn_batch_explosion(
+                    buffered, self.config, self.space, self.width, self.height
+                )
+                self.chunks.extend(new_chunks)
 
-            _logger.info("Batch %s complete (%d chunks, explosion spawn)", batch_id, len(buffered))
+            _logger.info("Batch %s complete (%d chunks)", batch_id, len(buffered))
 
             if self._on_batch_complete:
                 self._on_batch_complete(upload_type)
-
-    def _spawn_batch_explosion(self, batch_items: List[ChunkData]) -> None:
-        """
-        Spawn all chunks from a batch as an explosion: reconstruct spatial layout
-        at a random screen position, then assign outward velocities.
-        """
-        explosion_cfg = (
-            self.config.get("simulation", {})
-            .get("physics", {})
-            .get("chunk", {})
-            .get("explosion", {})
-        )
-        speed_min = float(explosion_cfg.get("speed_min", 50))
-        speed_max = float(explosion_cfg.get("speed_max", 200))
-
-        # Collect source offsets (fall back to (0, 0) if missing)
-        offsets = []
-        for item in batch_items:
-            if item.source_offset is not None:
-                offsets.append(item.source_offset)
-            else:
-                offsets.append((0.0, 0.0))
-
-        # Compute batch centroid and relative offsets
-        cx = sum(o[0] for o in offsets) / len(offsets)
-        cy = sum(o[1] for o in offsets) / len(offsets)
-        rel_offsets = [(o[0] - cx, o[1] - cy) for o in offsets]
-
-        # Compute bounding box of relative offsets to constrain spawn center
-        rel_xs = [r[0] for r in rel_offsets]
-        rel_ys = [r[1] for r in rel_offsets]
-        min_rel_x, max_rel_x = min(rel_xs), max(rel_xs)
-        min_rel_y, max_rel_y = min(rel_ys), max(rel_ys)
-
-        # Allowed spawn center range (ensure all chunks stay on screen)
-        spawn_min_x = -min_rel_x
-        spawn_max_x = self.width - max_rel_x
-        spawn_min_y = -min_rel_y
-        spawn_max_y = self.height - max_rel_y
-
-        if spawn_min_x > spawn_max_x:
-            spawn_x = (spawn_min_x + spawn_max_x) / 2
-        else:
-            spawn_x = random.uniform(spawn_min_x, spawn_max_x)
-
-        if spawn_min_y > spawn_max_y:
-            spawn_y = (spawn_min_y + spawn_max_y) / 2
-        else:
-            spawn_y = random.uniform(spawn_min_y, spawn_max_y)
-
-        # Create all chunks with explosion positions and velocities
-        for item, rel in zip(batch_items, rel_offsets):
-            pos_x = spawn_x + rel[0]
-            pos_y = spawn_y + rel[1]
-
-            # Velocity: outward from spawn center
-            dist = math.sqrt(rel[0] ** 2 + rel[1] ** 2)
-            if dist > 1e-6:
-                dir_x = rel[0] / dist
-                dir_y = rel[1] / dist
-            else:
-                angle = random.uniform(0, 2 * math.pi)
-                dir_x = math.cos(angle)
-                dir_y = math.sin(angle)
-
-            speed = random.uniform(speed_min, speed_max)
-            vel_x = dir_x * speed
-            vel_y = dir_y * speed
-
-            chunk = Chunk.from_segment(
-                surface_bytes=item.surface_bytes,
-                surface_size=item.surface_size,
-                vertices=item.vertices,
-                config=self.config,
-                space=self.space,
-                downsized=item.downsized,
-                cached_hsv_color=item.cached_hsv_color,
-                audio_path=item.audio_path,
-                curve_data=item.curve_data,
-                original_line_width=item.original_line_width,
-                spawn_position=(pos_x, pos_y),
-                spawn_velocity=(vel_x, vel_y),
-            )
-            self.chunks.append(chunk)
 
     def cleanup(self) -> None:
         """

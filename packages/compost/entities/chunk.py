@@ -1,9 +1,9 @@
 import pygame
 import pymunk
 import math
+import random
 from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
-import random
 from utils.geometry_utils import build_curve_surface
 from utils.logging_utils import get_logger
 from utils.math_utils import lerp
@@ -14,79 +14,6 @@ _logger = get_logger(__name__)
 class Chunk:
     """Handles a single polygon chunk with physics and a surface."""
 
-    def __init__(
-        self,
-        segment_surface: pygame.Surface,
-        vertices: List[Tuple[float, float]],
-        config: Dict[str, Any],
-        space: pymunk.Space,
-        downsized: bool = False,  # Indicates if the segment has been downsized
-        audio_path: str = None  # Path to audio file for sound chunks
-    ) -> None:
-        """
-        Initialize an Chunk instance.
-        
-        Args:
-            segment_surface (pygame.Surface): Cropped surface of the image segment.
-            vertices (List[Tuple[float, float]]): The polygon vertices for the chunk.
-            config (Dict[str, Any]): The entire config dictionary loaded from YAML.
-            space (pymunk.Space): The Pymunk physics space.
-            downsized (bool): Indicates if the segment has been downsized.
-        """
-        self.config = config
-        self.space = space
-        self.segment_surface = segment_surface
-        self.audio_path = audio_path  # Store audio file path for sound chunks
-        # Store original line properties for sound chunks (curve data for redrawing)
-        self.original_line_width = None
-        self.curve_data = None  # Will store (points_xy01, rgba, width, height, padding) for redrawing
-        self._cached_surfaces = {}  # Cache surfaces by line_width to avoid redrawing every frame
-        self._last_volume = -1.0  # Track last volume to avoid unnecessary redraws
-
-        sim_cfg = config["simulation"]
-        self.width = sim_cfg["window"]["width"]
-        self.height = sim_cfg["window"]["height"]
-        self.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
-        vel_min = sim_cfg["physics"]["chunk"]["velocity_min"]
-        vel_max = sim_cfg["physics"]["chunk"]["velocity_max"]
-
-        if downsized:
-            # Resize the segment_surface to a smaller size
-            downsample_factor = config["image"]["compression"].get("downsample_factor", 0.5)
-            new_width = max(1, int(segment_surface.get_width() * downsample_factor))
-            new_height = max(1, int(segment_surface.get_height() * downsample_factor))
-            self.segment_surface = pygame.transform.scale(segment_surface, (new_width, new_height))
-            # print(f"Downsized chunk to ({new_width}, {new_height})")
-            # Optionally, scale down the vertices as well
-            self.vertices = [(x * downsample_factor, y * downsample_factor) for (x, y) in vertices]
-        else:
-            self.segment_surface = segment_surface
-            self.vertices = vertices
-
-        # Cache the HSV color once to avoid expensive recalculations
-        from utils.color_utils import calculate_chunk_color
-        self.cached_hsv_color = calculate_chunk_color(self.segment_surface)
-
-        # Store original chunk properties for volume-based scaling
-        # Original opacity: default to 255 (full opacity)
-        # Chunks are created with full opacity, this represents the baseline
-        self.original_opacity = 255
-        
-        # Original line width: will be set when chunk is created from sound curve
-        # For image chunks, this will remain None
-        if self.original_line_width is None:
-            # Try to get from config if it's a sound chunk
-            if self.audio_path:
-                snd_cfg = config.get("sound", {})
-                surf_cfg = snd_cfg.get("chunk_rendering", {})
-                self.original_line_width = int(surf_cfg.get("line_width", 5))
-
-        # Compute a valid random position using bounding-box constraints
-        random_x, random_y = self._get_random_position_in_bounds(self.vertices)
-
-        # Setup physics body and shape using shared method
-        self._setup_physics_body(self.vertices, random_x, random_y, vel_min, vel_max)
-
     @classmethod
     def from_segment(
         cls,
@@ -95,13 +22,13 @@ class Chunk:
         vertices: List[Tuple[float, float]],
         config: Dict[str, Any],
         space: "pymunk.Space",
+        spawn_position: Tuple[float, float],
+        spawn_velocity: Tuple[float, float],
         downsized: bool = False,
         cached_hsv_color: Optional[Tuple[float, float, float]] = None,
         audio_path: Optional[str] = None,
         curve_data: Optional[Tuple] = None,
         original_line_width: Optional[int] = None,
-        spawn_position: Optional[Tuple[float, float]] = None,
-        spawn_velocity: Optional[Tuple[float, float]] = None,
     ) -> "Chunk":
         """
         Create a Chunk from segmentation result data.
@@ -164,9 +91,6 @@ class Chunk:
         chunk.width = sim_cfg["window"]["width"]
         chunk.height = sim_cfg["window"]["height"]
         chunk.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
-        vel_min = sim_cfg["physics"]["chunk"]["velocity_min"]
-        vel_max = sim_cfg["physics"]["chunk"]["velocity_max"]
-
         # Handle gradual shrinkage for downsized chunks
         if downsized:
             compress_cfg = config.get("image", {}).get("compression", {})
@@ -193,91 +117,135 @@ class Chunk:
 
         chunk.original_opacity = 255
 
-        # Position: use explicit spawn_position or fall back to random
-        if spawn_position is not None:
-            pos_x, pos_y = spawn_position
-        else:
-            pos_x, pos_y = chunk._get_random_position_in_bounds(physics_vertices)
-
-        # Setup physics body (velocity handled below)
-        chunk._setup_physics_body(physics_vertices, pos_x, pos_y, vel_min, vel_max)
-
-        # Override velocity if explicit spawn_velocity provided
-        if spawn_velocity is not None:
-            chunk.body.velocity = spawn_velocity
+        chunk._setup_physics_body(physics_vertices, spawn_position, spawn_velocity)
 
         return chunk
 
-    def _get_random_position_in_bounds(
-        self,
-        vertices: List[Tuple[float, float]]
-    ) -> Tuple[float, float]:
+    @classmethod
+    def spawn_batch_explosion(
+        cls,
+        batch_items: List,
+        config: Dict[str, Any],
+        space: "pymunk.Space",
+        screen_width: int,
+        screen_height: int,
+    ) -> List["Chunk"]:
         """
-        Compute a valid random (x,y) for this chunk, ensuring it remains within screen boundaries.
-        The UI bar is treated as an overlay, so objects can be placed across the full screen.
+        Spawn all chunks from a batch as an explosion: reconstruct spatial layout
+        at a random screen position, then assign outward velocities.
 
         Args:
-            vertices (List[Tuple[float, float]]): Polygon vertices for this chunk.
+            batch_items: List of ChunkData from background processing
+            config: Configuration dictionary
+            space: Pymunk physics space
+            screen_width: Screen width for bounds clamping
+            screen_height: Screen height for bounds clamping
 
         Returns:
-            (random_x, random_y): A valid position where the chunk can be placed.
+            List of created Chunk instances
         """
-        # 1) Compute bounding box
-        xs = [v[0] for v in vertices]
-        ys = [v[1] for v in vertices]
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
+        explosion_cfg = (
+            config.get("simulation", {})
+            .get("physics", {})
+            .get("chunk", {})
+            .get("explosion", {})
+        )
+        speed_min = float(explosion_cfg.get("speed_min", 50))
+        speed_max = float(explosion_cfg.get("speed_max", 200))
 
-        # 2) Determine allowable placement range
-        allowed_min_x = -min_x
-        allowed_max_x = self.width - max_x
-        allowed_min_y = -min_y  # Allow placement from top of screen
-        allowed_max_y = self.height - max_y
+        # Collect source offsets (fall back to (0, 0) if missing)
+        offsets = [
+            item.source_offset if item.source_offset is not None else (0.0, 0.0)
+            for item in batch_items
+        ]
 
-        # 3) Generate a valid random position
-        if allowed_min_x > allowed_max_x or allowed_min_y > allowed_max_y:
-            # If polygon is too large, clamp to a default position
-            random_x = max(0, allowed_min_x)
-            random_y = max(0, allowed_min_y)  # Start from top of screen
+        # Compute batch centroid and relative offsets
+        cx = sum(o[0] for o in offsets) / len(offsets)
+        cy = sum(o[1] for o in offsets) / len(offsets)
+        rel_offsets = [(o[0] - cx, o[1] - cy) for o in offsets]
+
+        # Compute bounding box of relative offsets to constrain spawn center
+        rel_xs = [r[0] for r in rel_offsets]
+        rel_ys = [r[1] for r in rel_offsets]
+        min_rel_x, max_rel_x = min(rel_xs), max(rel_xs)
+        min_rel_y, max_rel_y = min(rel_ys), max(rel_ys)
+
+        # Allowed spawn center range (ensure all chunks stay on screen)
+        spawn_min_x = -min_rel_x
+        spawn_max_x = screen_width - max_rel_x
+        spawn_min_y = -min_rel_y
+        spawn_max_y = screen_height - max_rel_y
+
+        if spawn_min_x > spawn_max_x:
+            spawn_x = (spawn_min_x + spawn_max_x) / 2
         else:
-            random_x = random.uniform(allowed_min_x, allowed_max_x)
-            random_y = random.uniform(allowed_min_y, allowed_max_y)
+            spawn_x = random.uniform(spawn_min_x, spawn_max_x)
 
-        return random_x, random_y
+        if spawn_min_y > spawn_max_y:
+            spawn_y = (spawn_min_y + spawn_max_y) / 2
+        else:
+            spawn_y = random.uniform(spawn_min_y, spawn_max_y)
+
+        # Create all chunks with explosion positions and velocities
+        chunks = []
+        for item, rel in zip(batch_items, rel_offsets):
+            pos_x = spawn_x + rel[0]
+            pos_y = spawn_y + rel[1]
+
+            # Velocity: outward from spawn center
+            dist = math.sqrt(rel[0] ** 2 + rel[1] ** 2)
+            if dist > 1e-6:
+                dir_x = rel[0] / dist
+                dir_y = rel[1] / dist
+            else:
+                angle = random.uniform(0, 2 * math.pi)
+                dir_x = math.cos(angle)
+                dir_y = math.sin(angle)
+
+            speed = random.uniform(speed_min, speed_max)
+
+            chunk = cls.from_segment(
+                surface_bytes=item.surface_bytes,
+                surface_size=item.surface_size,
+                vertices=item.vertices,
+                config=config,
+                space=space,
+                downsized=item.downsized,
+                cached_hsv_color=item.cached_hsv_color,
+                audio_path=item.audio_path,
+                curve_data=item.curve_data,
+                original_line_width=item.original_line_width,
+                spawn_position=(pos_x, pos_y),
+                spawn_velocity=(dir_x * speed, dir_y * speed),
+            )
+            chunks.append(chunk)
+
+        return chunks
 
     def _setup_physics_body(
         self,
         vertices: List[Tuple[float, float]],
-        pos_x: float,
-        pos_y: float,
-        vel_min: float,
-        vel_max: float
+        position: Tuple[float, float],
+        velocity: Tuple[float, float],
     ) -> None:
         """
         Set up pymunk body and shape for the chunk.
 
         Args:
             vertices: Polygon vertices for the physics shape
-            pos_x: Initial x position
-            pos_y: Initial y position
-            vel_min: Minimum velocity for random initial velocity
-            vel_max: Maximum velocity for random initial velocity
+            position: Initial position
+            velocity: Initial velocity
         """
-        # Get physics constants from config
         physics_cfg = self.config.get("simulation", {}).get("physics", {}).get("chunk", {})
         mass = physics_cfg.get("mass", 1.0)
         elasticity = physics_cfg.get("elasticity", 1.0)
         friction = physics_cfg.get("friction", 5.0)
         shape_filter_group = physics_cfg.get("shape_filter_group", 1)
 
-        # Create body
         moment = pymunk.moment_for_poly(mass, vertices)
         self.body = pymunk.Body(mass, moment)
-        self.body.position = (pos_x, pos_y)
-        self.body.velocity = (
-            random.uniform(vel_min, vel_max),
-            random.uniform(vel_min, vel_max),
-        )
+        self.body.position = position
+        self.body.velocity = velocity
 
         # Create shape
         self.shape = pymunk.Poly(self.body, vertices)
