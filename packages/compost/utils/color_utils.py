@@ -52,39 +52,78 @@ def calculate_color_contrast(hsv1: Tuple[float, float, float],
                            hsv2: Tuple[float, float, float],
                            config: Dict[str, Any]) -> float:
     """
-    Calculate color difference between two HSV colors, considering hue's cyclic nature.
+    Calculate color difference between two HSV colors.
+
+    Supports two methods (set via config appetite.method):
+    - "cone": Conical HSV distance. Maps colors onto a cone
+      (x=V*S*cos(H), y=V*S*sin(H), z=V). Hue differences vanish
+      near grey/black. No weights needed.
+    - "weighted": Weighted sum of circular hue, saturation, and value
+      differences. Requires hue_weight, saturation_weight, value_weight.
 
     Args:
         hsv1: First color's (Hue: 0-360, Saturation: 0-1, Value: 0-1)
         hsv2: Second color's (Hue: 0-360, Saturation: 0-1, Value: 0-1)
-        config: Configuration dictionary containing appetite weights
+        config: Configuration dictionary
 
     Returns:
-        float: Color difference from 0.0 to 1.0, where:
-               0.0 = identical colors
-               1.0 = maximally different colors
+        float: Color difference from 0.0 to 1.0
+    """
+    appetite_cfg = config["worm"]["appetite"]
+    method = appetite_cfg.get("method", "cone")
+
+    if method == "weighted":
+        return _weighted_contrast(hsv1, hsv2, appetite_cfg)
+    return _cone_contrast(hsv1, hsv2)
+
+
+def _cone_contrast(hsv1: Tuple[float, float, float],
+                   hsv2: Tuple[float, float, float]) -> float:
+    """Conical HSV distance, normalized per-point to 0-1.
+
+    Each point is normalized by its own maximum possible distance
+    (to the opposite hue at S=1, V=1), then averaged. This means
+    50% difference = 50% of the most different each color can be.
     """
     h1, s1, v1 = hsv1
     h2, s2, v2 = hsv2
 
-    # Convert hues to radians for cyclic calculation
     h1_rad = h1 * np.pi / 180
     h2_rad = h2 * np.pi / 180
 
-    # Calculate hue difference using circular mean
-    hue_diff = np.arccos(np.cos(h1_rad - h2_rad)) / np.pi  # Normalize to 0-1
+    dx = v1 * s1 * np.cos(h1_rad) - v2 * s2 * np.cos(h2_rad)
+    dy = v1 * s1 * np.sin(h1_rad) - v2 * s2 * np.sin(h2_rad)
+    dz = v1 - v2
 
-    # Get weights from config
-    appetite_cfg = config["worm"]["appetite"]
-    hue_weight = appetite_cfg["hue_weight"]
-    saturation_weight = appetite_cfg["saturation_weight"]
-    value_weight = appetite_cfg["value_weight"]
+    raw = float(np.sqrt(dx * dx + dy * dy + dz * dz))
 
-    # Calculate weighted differences
+    # Normalize by the reference point's max possible distance
+    # (to opposite hue at S=1, V=1 on the cone rim)
+    dmax = float(np.sqrt((v1 * s1 + 1) ** 2 + (v1 - 1) ** 2))
+
+    return raw / dmax
+
+
+def _weighted_contrast(hsv1: Tuple[float, float, float],
+                       hsv2: Tuple[float, float, float],
+                       appetite_cfg: Dict[str, Any]) -> float:
+    """Weighted sum of circular hue, saturation, and value differences."""
+    h1, s1, v1 = hsv1
+    h2, s2, v2 = hsv2
+
+    h1_rad = h1 * np.pi / 180
+    h2_rad = h2 * np.pi / 180
+
+    hue_diff = float(np.arccos(np.clip(np.cos(h1_rad - h2_rad), -1, 1)) / np.pi)
+
+    hue_weight = appetite_cfg.get("hue_weight", 0.8)
+    sat_weight = appetite_cfg.get("saturation_weight", 0.1)
+    val_weight = appetite_cfg.get("value_weight", 0.1)
+
     return (
-        hue_weight * hue_diff +  # Hue difference
-        saturation_weight * abs(s1 - s2) +  # Saturation difference
-        value_weight * abs(v1 - v2)    # Value difference
+        hue_weight * hue_diff +
+        sat_weight * abs(s1 - s2) +
+        val_weight * abs(v1 - v2)
     )
 
 
