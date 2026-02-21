@@ -123,7 +123,9 @@ class Simulation:
     def _on_batch_complete(self, upload_type: str) -> None:
         """Called when a processing batch completes."""
         _logger.info("Spawning worms for %s upload", upload_type)
-        self.worm_manager.spawn_worms_for_upload(upload_type, len(self.chunks))
+        glued_ids = self.get_all_glued_chunk_ids()
+        available = len(self.chunks) - len(glued_ids)
+        self.worm_manager.spawn_worms_for_upload(upload_type, len(self.chunks), available)
 
     # ----------------------------------------------------------------
     # UI methods
@@ -217,6 +219,9 @@ class Simulation:
             torus_world
         )
 
+        # Draw consumption particle effects
+        self.worm_manager.update_and_draw_particles(self.screen)
+
         # Auto-export check (delegated to WormManager)
         expired_glues, schedule_worms = self.worm_manager.get_glues_for_auto_export(
             self.glues,
@@ -302,7 +307,8 @@ class Simulation:
 
         def on_export_complete(count: int) -> None:
             if schedule_worms and num_glues > 0:
-                self.worm_manager.schedule_worms(num_glues)
+                available = len(self.chunks) - len(self.get_all_glued_chunk_ids())
+                self.worm_manager.schedule_worms(num_glues, available_chunks=available)
 
         self.export_manager.export_glues(
             glues=glues_to_export,

@@ -21,6 +21,7 @@ simulation:
       text_height: 18
       spacing: 6
       show_hsv_text: false
+      show_contrast_markers: true  # Show wild/stretch/min/max borders and % on swatches
   fps: 60
   torus_world: false
   physics:
@@ -34,7 +35,7 @@ simulation:
       shape_filter_group: 1
       explosion:
         speed_min: 5
-        speed_max: 80
+        speed_max: 70
 
 queue:
   background_workers: 4    # Number of parallel background processes
@@ -57,15 +58,30 @@ server:
   download_timeout_sec: 15
   
 worm:
-  max_chunks: 15
+  max_meals: 15             # Hard ceiling on meals per worm
+  max_meal_pct: 0.02        # Worm can eat at most this fraction of available chunks
+  min_meals: 5              # Floor — worm always gets at least this many meals
   appetite:
     method: cone  # "cone" (no weights) or "weighted" (uses hue/sat/val weights)
-    min_difference: 0.5  # 0.6 for weighted
-    max_difference: 1
+    initial_min: 0.25  # First worm appetite for contrast floor
+    initial_max: 0.75  # First worm appetite for contrast ceiling
+    jitter_wide: 0.001   # Jitter chance when band is full (max-min=100%)
+    jitter_narrow: 0.1 # Jitter chance when band is collapsed (max-min=0%)
+    jitter_curve: 6     # Exponent: 1=linear, higher=stays low longer, ramps sharply near 0
     # Only used when method: weighted
     # hue_weight: 0.6
     # saturation_weight: 0.2
     # value_weight: 0.2
+  consumption_particles:
+    enabled: true
+    min_count: 1         # Particles for smallest chunks
+    max_count: 100        # Particles for largest chunks
+    max_size: 500        # Chunk dimension (pixels) that gets max_count
+    speed: 1.0           # Max random drift speed (pixels/frame)
+    lifetime_frames: 100 # Max frames a particle lives
+    radius: 1            # Base particle dot radius (pixels)
+    radius_jitter: 2     # Random ±variation in pixels (0 = uniform size)
+    drag: 0.97           # Drift damping per frame (1.0 = no drag, 0.5 = near instant stop)
   # --- SUPERABUNDANCE: When there are more than threshold particles ---
   # During superabundance, multiple worms are spawned to handle the increased load
   superabundance:
@@ -183,7 +199,7 @@ sound:
       buffer: 512
   recording:
     input:
-      device: 3  # Device name or index (run: uv run python -m sounddevice)
+      device: 2 # Device name or index (run: uv run python -m sounddevice)
       sample_rate: 48000  # Match pygame mixer frequency
       channels: 1  # Mono/Stereo recording
       input_dir: "input_recordings"  # Where audio input recordings are saved before processing

@@ -1,7 +1,7 @@
 """Color manipulation and analysis utilities."""
 import numpy as np
 import pygame
-from typing import Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any
 from skimage.color import rgb2hsv, hsv2rgb
 from utils.logging_utils import get_logger
 
@@ -125,6 +125,32 @@ def _weighted_contrast(hsv1: Tuple[float, float, float],
         sat_weight * abs(s1 - s2) +
         val_weight * abs(v1 - v2)
     )
+
+
+def compute_consecutive_extremes(
+    hsv_colors: List[Tuple[float, float, float]],
+    config: Dict[str, Any],
+) -> Optional[Tuple[float, float]]:
+    """
+    Compute min and max consecutive cone distances in an ordered color sequence.
+
+    Measures the contrast between each meal and the next (not all pairs),
+    reflecting the worm's actual sequential eating pattern.
+
+    Args:
+        hsv_colors: Ordered list of (Hue: 0-360, Saturation: 0-1, Value: 0-1).
+        config: Configuration dictionary (passed to calculate_color_contrast).
+
+    Returns:
+        (min_distance, max_distance) or None if fewer than 2 colors.
+    """
+    if len(hsv_colors) < 2:
+        return None
+    distances = [
+        calculate_color_contrast(hsv_colors[i], hsv_colors[i + 1], config)
+        for i in range(len(hsv_colors) - 1)
+    ]
+    return (min(distances), max(distances))
 
 
 def hsv_to_rgb_int(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:

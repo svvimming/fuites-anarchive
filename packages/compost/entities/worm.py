@@ -14,10 +14,14 @@ _logger = get_logger(__name__)
 
 class WormHistory:
     """Represents a single chunk's history entry for the worm."""
-    def __init__(self, chunk_surface: pygame.Surface, hsv_color: Tuple[float, float, float]):
+    def __init__(self, chunk_surface: pygame.Surface, hsv_color: Tuple[float, float, float],
+                 wild: bool = False, stretch: bool = False, contrast_pct: Optional[float] = None):
         self.chunk_surface = chunk_surface
         self.hsv_color = hsv_color
         self.rgb_color = hsv_to_rgb_int(hsv_color)
+        self.wild = wild
+        self.stretch = stretch
+        self.contrast_pct = contrast_pct  # Cone distance % for wild/stretch picks
 
 
 class Glue:
@@ -309,20 +313,29 @@ class Worm:
     """
     A worm that consumes chunks based on their color contrast and records their colors.
     """
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any],
+                 appetite_min: float = 0.0, appetite_max: float = 1.0,
+                 available_chunks: int = 0):
         """
         Initialize a new worm.
-        
+
         Args:
             config (Dict[str, Any]): The configuration dictionary.
+            appetite_min: Inherited minimum contrast (cone distance %).
+            appetite_max: Inherited maximum contrast (cone distance %).
+            available_chunks: Number of available (non-glued) chunks at spawn time.
         """
-        self.config = config  # Store the config
+        self.config = config
         worm_cfg = config["worm"]
-        self.max_chunks = worm_cfg["max_chunks"]
+        hard_max = worm_cfg["max_meals"]
+        min_meals = worm_cfg.get("min_meals", 5)
+        max_meal_pct = worm_cfg.get("max_meal_pct", 0.02)
+        # Dynamic max: % of available chunks, floored by min_meals, capped by hard max
+        pct_limit = max(min_meals, int(available_chunks * max_meal_pct))
+        self.max_meals = min(hard_max, pct_limit)
         appetite_cfg = worm_cfg["appetite"]
-        self.min_difference = appetite_cfg["min_difference"]  # Minimum color difference required
-        self.max_difference = appetite_cfg["max_difference"]  # Maximum color difference allowed
-        
+        self.appetite_min = appetite_min
+        self.appetite_max = appetite_max
         # Panel configuration
         panel_cfg = config["simulation"]["ui"]["worm_history_panel"]
         self.panel_enabled = panel_cfg["enabled"]
@@ -331,80 +344,83 @@ class Worm:
         self.panel_y = display_area["y"]
         self.panel_width = display_area["width"]
         self.panel_height = display_area["height"]
-        
+
         # History panel settings
         self.chunk_preview_size = panel_cfg["chunk_preview_size"]
         self.text_height = panel_cfg["text_height"]
         self.spacing = panel_cfg["spacing"]
         self.show_hsv_text = panel_cfg.get("show_hsv_text", True)
-        
+        self.show_contrast_markers = panel_cfg.get("show_contrast_markers", True)
+
         # Colors
         self.panel_bg_color = tuple(config["colors"]["PANEL_BG"])
-        
+
+        # Jitter: chance scales as appetite band narrows
+        self.jitter_wide = appetite_cfg.get("jitter_wide", 0.05)
+        self.jitter_narrow = appetite_cfg.get("jitter_narrow", 0.50)
+        self.jitter_curve = appetite_cfg.get("jitter_curve", 3)
+
         # State
         self.history: List[WormHistory] = []
         self.last_color: Optional[Tuple[float, float, float]] = None
         self.is_dead = False
-        
+        self._next_is_wild: bool = False
+        self._next_is_stretch: bool = False
+        self._next_contrast_pct: Optional[float] = None
         # Last chunk reference and glue
         self.last_chunk: Optional[Chunk] = None
         self.glue: Optional[Glue] = None
-        
+
         # Glue configuration
         self.glue_enabled = worm_cfg.get("glue", {}).get("enabled", False)
 
+    @property
+    def jitter_chance(self) -> float:
+        spread = self.appetite_max - self.appetite_min
+        return self.jitter_wide + (self.jitter_narrow - self.jitter_wide) * ((1.0 - spread) ** self.jitter_curve)
+
     def is_valid_next_chunk(self, chunk: Chunk) -> bool:
         """
-        Check if chunk has color difference within the allowed range compared to the previous chunk.
-        
-        Args:
-            chunk (Chunk): The chunk to evaluate.
-            
-        Returns:
-            bool: True if the chunk's color difference is between min and max thresholds.
+        Check if chunk has color contrast within the appetite range vs the last meal.
+
+        Returns True for the first chunk (no last_color yet).
         """
         if self.last_color is None:
             return True
-            
-        # Get this chunk's cached color
         chunk_color = chunk.cached_hsv_color
-        
-        # Calculate color difference between chunks
         difference = calculate_color_contrast(self.last_color, chunk_color, self.config)
-        
-        # Print debug info
-        # print(f"Last color (HSV): {self.last_color}")
-        # print(f"Current color (HSV): {chunk_color}")
-        # print(f"Color difference: {difference:.2f}")
-        # print(f"Valid range: {self.min_difference} to {self.max_difference}")
-        
-        # Check if difference is within thresholds
-        return self.min_difference <= difference <= self.max_difference
+        return self.appetite_min <= difference <= self.appetite_max
 
     def consume_chunk(self, chunk: Chunk) -> None:
         """
         Consume a chunk, recording its color information.
-        
+
         Args:
             chunk (Chunk): The chunk to consume.
         """
         if self.is_dead:
             return
-            
-        # Store reference to the last chunk consumed
+
         self.last_chunk = chunk
-            
-        # Get the cached HSV color
         hsv_color = chunk.cached_hsv_color
+
         self.last_color = hsv_color
-        # print(f"Consumed chunk with HSV color: {hsv_color}")
-        
+
         # Create history entry with HSV color
-        history_entry = WormHistory(chunk.segment_surface, hsv_color)
+        is_stretch = self._next_is_stretch
+        history_entry = WormHistory(
+            chunk.segment_surface, hsv_color,
+            wild=self._next_is_wild,
+            stretch=is_stretch,
+            contrast_pct=self._next_contrast_pct,
+        )
+        self._next_is_wild = False
+        self._next_is_stretch = False
+        self._next_contrast_pct = None
         self.history.append(history_entry)
-        
-        # Check if worm should die
-        if len(self.history) >= self.max_chunks:
+
+        # Stretch meal is the last meal — die immediately after eating it
+        if is_stretch or len(self.history) >= self.max_meals:
             self.mark_as_dead()
 
     def mark_as_dead(self) -> None:
@@ -433,27 +449,84 @@ class Worm:
         # Draw panel background (use compact width if HSV text hidden)
         panel_rect = pygame.Rect(self.panel_x + x_offset, self.panel_y, self.get_panel_width(), self.panel_height)
         pygame.draw.rect(surface, self.panel_bg_color, panel_rect)
-        # Draw each history entry
+        # Draw appetite range header
         font = pygame.font.SysFont(None, self.text_height)
-        y_offset = self.panel_y + self.spacing
-        for entry in self.history:
+        appetite_text = f"[{self.appetite_min:.0%}-{self.appetite_max:.0%}] j:{self.jitter_chance:.0%}"
+        appetite_surf = font.render(appetite_text, True, (180, 180, 180))
+        surface.blit(appetite_surf, (self.panel_x + self.spacing + x_offset, self.panel_y + self.spacing))
+        # Compute consecutive distances and find min/max indices
+        cons_dists = []
+        cons_min_idx = -1
+        cons_max_idx = -1
+        if len(self.history) >= 2:
+            cons_dists = [
+                calculate_color_contrast(
+                    self.history[i].hsv_color, self.history[i + 1].hsv_color, self.config
+                )
+                for i in range(len(self.history) - 1)
+            ]
+            min_d = min(cons_dists)
+            max_d = max(cons_dists)
+            if min_d != max_d:
+                cons_min_idx = cons_dists.index(min_d) + 1
+                cons_max_idx = cons_dists.index(max_d) + 1
+
+        # Draw each history entry
+        y_offset = self.panel_y + self.spacing + self.text_height + self.spacing
+        for idx, entry in enumerate(self.history):
             # Draw chunk preview
-            preview = pygame.transform.scale(entry.chunk_surface, 
+            preview = pygame.transform.scale(entry.chunk_surface,
                                           (self.chunk_preview_size, self.chunk_preview_size))
             preview_rect = preview.get_rect(topleft=(self.panel_x + self.spacing + x_offset, y_offset))
             surface.blit(preview, preview_rect)
+
+            # Chunk preview border: wild (red) or stretch (yellow)
+            if self.show_contrast_markers:
+                if entry.wild:
+                    pygame.draw.rect(surface, (255, 60, 60), preview_rect, 2)
+                elif entry.stretch:
+                    pygame.draw.rect(surface, (255, 200, 40), preview_rect, 2)
+
             # Draw color swatch
             swatch_rect = pygame.Rect(preview_rect.right + self.spacing, y_offset,
                                     self.chunk_preview_size, self.chunk_preview_size)
             pygame.draw.rect(surface, entry.rgb_color, swatch_rect)
-            # Draw HSV values (optional)
-            if self.show_hsv_text:
+
+            # Swatch border and contrast percentage overlay
+            is_min = idx == cons_min_idx
+            is_max = idx == cons_max_idx
+            swatch_pct = None
+            pct_color = None
+            if self.show_contrast_markers:
+                # Swatch border: green for max, blue for min consecutive distance
+                if is_max:
+                    pygame.draw.rect(surface, (60, 255, 120), swatch_rect, 2)
+                elif is_min:
+                    pygame.draw.rect(surface, (100, 160, 255), swatch_rect, 2)
+
+                # Contrast % text: wild/stretch show their own, min/max show consecutive
+                if entry.wild:
+                    swatch_pct, pct_color = entry.contrast_pct, (255, 60, 60)
+                elif entry.stretch:
+                    swatch_pct, pct_color = entry.contrast_pct, (255, 200, 40)
+                elif is_max:
+                    swatch_pct, pct_color = cons_dists[idx - 1], (60, 255, 120)
+                elif is_min:
+                    swatch_pct, pct_color = cons_dists[idx - 1], (100, 160, 255)
+
+            if swatch_pct is not None:
+                pct_text = f"{swatch_pct:.0%}"
+                pct_surf = font.render(pct_text, True, pct_color)
+                pct_rect = pct_surf.get_rect(center=swatch_rect.center)
+                surface.blit(pct_surf, pct_rect)
+            elif self.show_hsv_text:
                 h, s, v = entry.hsv_color
                 hsv_text = f"H:{h:.0f}° S:{s:.2f} V:{v:.2f}"
                 text = font.render(hsv_text, True, (255, 255, 255))
                 text_rect = text.get_rect(midleft=(swatch_rect.right + self.spacing,
                                                  y_offset + self.chunk_preview_size // 2))
                 surface.blit(text, text_rect)
+
             # Advance to next row
             y_offset += self.chunk_preview_size + self.spacing
 
@@ -468,33 +541,93 @@ class Worm:
         """
         Select the next chunk to consume based on color contrast rules.
 
+        - First chunk: random pick.
+        - Subsequent: must fall within [appetite_min, appetite_max] of last meal.
+        - Stretching: when no valid food in range, eat the nearest out-of-range
+          chunk as a last meal, then die immediately.
+
         Args:
-            chunks (List[Chunk]): Available chunks to choose from.
+            chunks: Available chunks to choose from.
 
         Returns:
-            Optional[Chunk]: The selected chunk, or None if no valid chunk found.
+            The selected chunk, or None if no valid chunk found.
         """
         if self.is_dead:
             return None
 
-        # Die immediately if already at capacity (handles max_chunks=0)
-        if len(self.history) >= self.max_chunks:
+        # Die immediately if already at capacity
+        if len(self.history) >= self.max_meals:
             self.mark_as_dead()
             return None
 
-        # Die if no food available
+        # No food available — die regardless of meal count
         if not chunks:
             self.mark_as_dead()
             return None
 
-        # For first chunk, select randomly
+        # First chunk: select randomly
         if self.last_color is None:
             return random.choice(chunks)
 
-        # Find all valid chunks based on contrast
-        valid_chunks = [chunk for chunk in chunks if self.is_valid_next_chunk(chunk)]
-        if not valid_chunks:
+        # Jitter: chance scales as appetite band narrows (spread 1.0->wide, 0.0->narrow)
+        if random.random() < self.jitter_chance:
+            best_diff, best_chunk = max(
+                (calculate_color_contrast(self.last_color, c.cached_hsv_color, self.config), c)
+                for c in chunks
+            )
+            self._next_is_wild = True
+            self._next_contrast_pct = best_diff
+            _logger.debug("Worm jitter! eating furthest chunk, contrast=%.4f", best_diff)
+            return best_chunk
+
+        # Find valid chunks within appetite range, weighted by contrast
+        valid_chunks = []
+        weights = []
+        for chunk in chunks:
+            diff = calculate_color_contrast(self.last_color, chunk.cached_hsv_color, self.config)
+            if self.appetite_min <= diff <= self.appetite_max:
+                valid_chunks.append(chunk)
+                weights.append(diff)
+        if valid_chunks:
+            try:
+                return random.choices(valid_chunks, weights=weights, k=1)[0]
+            except ValueError:
+                return random.choice(valid_chunks)
+
+        # No valid chunks — stretch (eat one last out-of-range meal, then die)
+        return self._stretch_and_pick(chunks)
+
+    def _stretch_and_pick(self, chunks: List[Chunk]) -> Optional[Chunk]:
+        """
+        Pick the nearest out-of-range chunk as a last meal (worm dies after eating it).
+
+        Finds the chunk whose contrast to last_color is closest to the
+        current [appetite_min, appetite_max] range boundary.
+        Does not modify appetite — the worm dies after this meal.
+        """
+        best_chunk = None
+        best_gap = float("inf")
+        best_diff = 0.0
+
+        for chunk in chunks:
+            diff = calculate_color_contrast(self.last_color, chunk.cached_hsv_color, self.config)
+            if diff < self.appetite_min:
+                gap = self.appetite_min - diff
+            else:
+                gap = diff - self.appetite_max
+            if gap < best_gap:
+                best_gap = gap
+                best_chunk = chunk
+                best_diff = diff
+
+        if best_chunk is None:
             self.mark_as_dead()
             return None
 
-        return random.choice(valid_chunks)
+        self._next_is_stretch = True
+        self._next_contrast_pct = best_diff
+        _logger.debug(
+            "Worm stretch pick: contrast=%.4f, range=[%.4f, %.4f] (meal %d)",
+            best_diff, self.appetite_min, self.appetite_max, len(self.history) + 1,
+        )
+        return best_chunk

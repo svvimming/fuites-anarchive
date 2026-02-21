@@ -28,7 +28,8 @@ dependencies = [
 dev = [
     "ipykernel>=7.1.0",
     "scikit-learn>=1.5.2",
-    "plotly>=6.1.1",
+    "plotly>=6.5.2",
+    "dash>=4.0.0",
     "demucs>=4.0.1",
 ]
 
