@@ -62,15 +62,28 @@ uv run run_sim.py
 
 ### Keyboard Shortcuts
 
+**Actions**
+
 | Key | Action |
 |-----|--------|
 | `U` | Upload file(s) |
-| `E` | Export glued compositions (saved to `exports/` folder) |
-| `D` | Toggle debug view of thingie boundaries |
-| `T` | Toggle torus world (wraparound edges) |
-| `H` | Toggle history panel |
-| `G` | Toggle glue visuals |
-| `ESC` | Toggle UI |
+| `E` | Export glued compositions (saved to `exports/glues/`) |
+| `I` | Start/stop audio input recording (saved to `input_recordings/`) |
+| `O` | Start/stop compost recording (saved to `exports/compost_compositions/`) |
+| `C` | Clear canvas |
+| `Q` | Quit |
+
+**Toggles**
+
+| Key | Toggle |
+|-----|--------|
+| `D` | Enable/Disable Dark mode |
+| `T` | Enable/Disable Torus world (wraparound edges) |
+| `H` | Show/Hide History panel |
+| `G` | Show/Hide Glue visuals |
+| `K` | Show/Hide Debug chunk boundaries |
+| `P` | Show/Hide Processing indicator |
+| `ESC` | Show/Hide UI |
 
 ### HTTP Upload
 
@@ -79,8 +92,24 @@ The simulation runs a local server (default: `http://127.0.0.1:5055`) that accep
 ## Configuration
 
 Edit `config.yaml` to customize:
-- Window size and FPS
+- Window size and FPS (use `auto` for window dimensions to automatically fit your display)
 - Physics parameters (gravity, elasticity, friction)
 - Worm behavior and appetite thresholds
-- Glue visual effects
 - Audio/image segmentation parameters
+- Other visual configurations
+
+### Audio Devices
+
+Set the audio device by index in `config.yaml`:
+- `sound.recording.input.device` — input device for mic recording
+- `sound.hover.mixer.device` — output device for chunk audio (none for system default)
+
+Sample rates and channels can also be configured:
+- `sound.hover.mixer.frequency` / `sound.hover.mixer.channels` — playback (default: 48000 Hz, stereo: 2)
+- `sound.recording.input.sample_rate` / `sound.recording.input.channels` — recording (default: 48000 Hz, mono: 1)
+
+To list available devices on the system with their index:
+
+```bash
+uv run python -m sounddevice
+```
