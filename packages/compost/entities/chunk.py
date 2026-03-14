@@ -90,7 +90,6 @@ class Chunk:
         sim_cfg = config["simulation"]
         chunk.width = sim_cfg["window"]["width"]
         chunk.height = sim_cfg["window"]["height"]
-        chunk.ui_bar_height = sim_cfg["ui"]["ui_bar_height"]
         # Handle gradual shrinkage for downsized chunks
         if downsized:
             compress_cfg = config.get("image", {}).get("compression", {})
@@ -413,7 +412,7 @@ class Chunk:
             rect = rotated_surface.get_rect(center=(int(x), int(y)))
             surface.blit(rotated_surface, rect)
             if debug_mode:
-                self._draw_debug_outline(surface, x, y) 
+                self._draw_debug_outline(surface, x, y)
 
 
 class GluedChunk:

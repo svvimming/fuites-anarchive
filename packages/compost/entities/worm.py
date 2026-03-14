@@ -45,7 +45,7 @@ class Glue:
         self.vicinity_cfg = self.glue_cfg["color_attraction"]
         self.min_difference = self.vicinity_cfg["min_difference"]
         self.max_difference = self.vicinity_cfg["max_difference"]
-        
+
         # Flocking parameters (shared by all glued chunks)
         flocking_cfg = self.glue_cfg["flocking"]
         self.maxspeed = flocking_cfg["maxspeed"]
@@ -105,7 +105,7 @@ class Glue:
         mean_s = sum_s / n
         mean_v = sum_v / n
         self.glow_rgb = hsv_to_rgb_int((mean_h, mean_s, mean_v))
-    
+
     def _find_nearest_meal_index(self, chunk: Chunk) -> Optional[Tuple[int, float]]:
         """
         Find the meal index with smallest color difference within vicinity thresholds.
@@ -222,7 +222,7 @@ class Glue:
         # Record cap time if now full
         if len(self.glued_chunks) >= self.max_glued_chunks:
             self._record_cap_time()
-    
+
     def update(self, torus_world: bool = False) -> None:
         """Update the behavior of all glued chunks."""
         self.pulse_time += self.pulse_speed
@@ -254,7 +254,7 @@ class Glue:
             gc.chunk.body.apply_force_at_world_point(
                 (forces[i, 0], forces[i, 1]), gc.chunk.body.position
             )
-            
+
     def _get_cached_glow(self, outer_radius: int) -> pygame.Surface:
         """Get or create cached glow surface for given radius."""
         if outer_radius not in self._glow_cache:
@@ -378,18 +378,6 @@ class Worm:
     def jitter_chance(self) -> float:
         spread = self.appetite_max - self.appetite_min
         return self.jitter_wide + (self.jitter_narrow - self.jitter_wide) * ((1.0 - spread) ** self.jitter_curve)
-
-    def is_valid_next_chunk(self, chunk: Chunk) -> bool:
-        """
-        Check if chunk has color contrast within the appetite range vs the last meal.
-
-        Returns True for the first chunk (no last_color yet).
-        """
-        if self.last_color is None:
-            return True
-        chunk_color = chunk.cached_hsv_color
-        difference = calculate_color_contrast(self.last_color, chunk_color, self.config)
-        return self.appetite_min <= difference <= self.appetite_max
 
     def consume_chunk(self, chunk: Chunk) -> None:
         """
@@ -571,10 +559,11 @@ class Worm:
 
         # Jitter: chance scales as appetite band narrows (spread 1.0->wide, 0.0->narrow)
         if random.random() < self.jitter_chance:
-            best_diff, best_chunk = max(
-                (calculate_color_contrast(self.last_color, c.cached_hsv_color, self.config), c)
-                for c in chunks
+            best_chunk = max(
+                chunks,
+                key=lambda c: calculate_color_contrast(self.last_color, c.cached_hsv_color, self.config)
             )
+            best_diff = calculate_color_contrast(self.last_color, best_chunk.cached_hsv_color, self.config)
             self._next_is_wild = True
             self._next_contrast_pct = best_diff
             _logger.debug("Worm jitter! eating furthest chunk, contrast=%.4f", best_diff)

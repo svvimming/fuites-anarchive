@@ -1,4 +1,5 @@
 """Main simulation orchestrator."""
+import time
 import pygame
 import pymunk
 from typing import List, Dict, Any, Set, Optional
@@ -45,13 +46,14 @@ class Simulation:
         self.screen = screen
         self.font = font
         self.debug_mode = False
+        self.dark_mode = config["simulation"].get("dark_mode", False)
         self.glue_visuals_enabled = config["worm"]["glue"]["visual"].get("enabled", True)
         self.ui_enabled = config["simulation"]["ui"].get("enabled", True)
+        self.processing_indicator_enabled = config["simulation"]["ui"]["processing_indicator"].get("enabled", True)
 
         # Local references
         self.width = config["simulation"]["window"]["width"]
         self.height = config["simulation"]["window"]["height"]
-        self.ui_bar_height = config["simulation"]["ui"]["ui_bar_height"]
         self.colors = config["colors"]
 
         # Core state
@@ -78,7 +80,6 @@ class Simulation:
     def handle_audio_hover(self, mouse_pos) -> None:
         """Handle proximity-based audio playback."""
         self.audio_manager.handle_audio_hover(mouse_pos, self.chunks)
-
 
     def toggle_torus_world(self) -> None:
         """Toggle between torus world and rigid wall boundaries."""
@@ -143,6 +144,7 @@ class Simulation:
             len(self.chunks),
             audio_in_recording=self.input_manager.recording,
             audio_out_recording=self.export_manager.compost_recording,
+            dark_mode=self.dark_mode,
         )
 
     def handle_button_click(self, mouse_pos) -> None:
@@ -233,6 +235,18 @@ class Simulation:
         # Draw worm history panels
         self._draw_history_panels()
 
+        # Processing indicator (independent of UI toggle)
+        if self.processing_indicator_enabled and self.queue_manager.active_batch_count > 0:
+            ind = self.config["simulation"]["ui"]["processing_indicator"]
+            margin = ind["margin"]
+            self.ui_manager.draw_hourglass(
+                self.width - ind["width"] - margin,
+                margin,
+                time.time(),
+                ind["width"],
+                ind["height"],
+            )
+
     def _draw_glued_chunks(self, glued_chunk_ids: Set[int], torus_world: bool) -> None:
         """Draw glued chunks and glue visuals."""
         if self.glue_visuals_enabled:
@@ -274,19 +288,6 @@ class Simulation:
     def get_available_chunks(self, glued_chunk_ids: Set[int]) -> List[Chunk]:
         """Get chunks available for worm/glue interaction (not already glued)."""
         return [chunk for chunk in self.chunks if id(chunk) not in glued_chunk_ids]
-
-    def get_chunks_at_mouse(self, mouse_pos) -> List[Chunk]:
-        """Find ALL chunks under the mouse cursor."""
-        point_queries = self.space.point_query(mouse_pos, 0, pymunk.ShapeFilter())
-        found_chunks = []
-        if point_queries:
-            for point_query in point_queries:
-                if point_query.shape:
-                    for chunk in self.chunks:
-                        if chunk.shape == point_query.shape:
-                            found_chunks.append(chunk)
-                            break
-        return found_chunks
 
     # ----------------------------------------------------------------
     # Export methods

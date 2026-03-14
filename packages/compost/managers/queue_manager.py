@@ -335,6 +335,11 @@ class QueueManager:
             if self._on_batch_complete:
                 self._on_batch_complete(upload_type)
 
+    @property
+    def active_batch_count(self) -> int:
+        """Number of batches currently being processed."""
+        return len(self._batch_upload_types)
+
     def cleanup(self) -> None:
         """
         Clean up resources before shutdown.

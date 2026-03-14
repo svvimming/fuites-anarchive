@@ -1,15 +1,26 @@
 simulation:
   export_dir: "exports"  # Base directory for all exports
   window:
-    width: 1728
-    height: 1117
+    width: auto
+    height: auto
   ui:
     enabled: true
-    ui_bar_height: 60
-    buttons:
-      width: 120
-      height: 40
-      gap: 10
+    pill_bar:
+      height: 32
+      corner_radius: 16
+      top_margin: 12
+      bg_alpha: 160
+      icon_size: 20
+      button_size: 40
+      button_gap: 16
+      padding_h: 24
+      status_dot_radius: 5
+      status_dot_gap: 12
+    processing_indicator:
+      enabled: true
+      width: 44
+      height: 60
+      margin: 16
     worm_history_panel:
       enabled: false
       display_area:
@@ -21,7 +32,8 @@ simulation:
       text_height: 18
       spacing: 6
       show_hsv_text: false
-      show_contrast_markers: true  # Show wild/stretch/min/max borders and % on swatches
+      show_contrast_markers: false  # Show wild/stretch/min/max borders and % on swatches
+  dark_mode: false
   fps: 60
   torus_world: false
   physics:
@@ -56,7 +68,7 @@ server:
   port: 5055
   max_download_bytes: 26214400 # 25MB
   download_timeout_sec: 15
-  
+
 worm:
   max_meals: 15             # Hard ceiling on meals per worm
   max_meal_pct: 0.02        # Worm can eat at most this fraction of available chunks
@@ -66,7 +78,7 @@ worm:
     initial_min: 0.25  # First worm appetite for contrast floor
     initial_max: 0.75  # First worm appetite for contrast ceiling
     jitter_wide: 0.001   # Jitter chance when band is full (max-min=100%)
-    jitter_narrow: 0.1 # Jitter chance when band is collapsed (max-min=0%)
+    jitter_narrow: 0.15 # Jitter chance when band is collapsed (max-min=0%)
     jitter_curve: 6     # Exponent: 1=linear, higher=stays low longer, ramps sharply near 0
     # Only used when method: weighted
     # hue_weight: 0.6
@@ -199,7 +211,7 @@ sound:
       buffer: 512
   recording:
     input:
-      device: 2 # Device name or index (run: uv run python -m sounddevice)
+      device: 4 # Device name or index (run: uv run python -m sounddevice)
       sample_rate: 48000  # Match pygame mixer frequency
       channels: 1  # Mono/Stereo recording
       input_dir: "input_recordings"  # Where audio input recordings are saved before processing
