@@ -1,7 +1,29 @@
-import SiteSettings from '@/data/settings.json'
+// ///////////////////////////////////////////////////////////////////// Imports
+// -----------------------------------------------------------------------------
+import SettingsData from '@/data/settings.json'
 
-const fonts = SiteSettings.fonts
-const defaultFont = fonts.find(font => font.default)
+// /////////////////////////////////////////////////////////////////// Functions
+// -----------------------------------------------------------------------------
+/**
+ * Get the active fonts from the site data
+ * @returns {Array} The active fonts
+ */
+const getActiveFonts = () => {
+  try {
+    const generalStore = useGeneralStore()
+    const siteFonts = generalStore?.siteData?.settings?.fonts
+    if (Array.isArray(siteFonts) && siteFonts.length > 0) {
+      return siteFonts
+    }
+  } catch {}
+  return Array.isArray(SettingsData?.fonts) ? SettingsData.fonts : []
+}
+/**
+ * Get the default font from the list of fonts
+ * @param {Array} list - The list of fonts
+ * @returns {Object} The default font
+ */
+const getDefaultFont = (list) => (Array.isArray(list) && list.find(f => f.default)) || list[0]
 
 /**
  * Handle text node
@@ -11,9 +33,11 @@ const defaultFont = fonts.find(font => font.default)
  * @returns {Object} The text node data
  */
 const handleTextNode = (node, ctx, collector) => {
+  const fontsList = getActiveFonts()
+  const defaultFont = getDefaultFont(fontsList)
   const fontSize = (parseInt(collector.fontSize) || 16) * (collector.fontSize?.includes('pt') ? 1.33 : 1)
-  const fontFamily = collector.fontFamily || defaultFont.styleAttribute
-  const font = fonts.find(item => item.styleAttribute === fontFamily || item.fontFaceDeclaration === fontFamily)
+  const fontFamily = collector.fontFamily || defaultFont?.styleAttribute
+  const font = fontsList.find(item => item.styleAttribute === fontFamily || item.fontFaceDeclaration === fontFamily)
   // Set font properties
   ctx.font = `${fontSize}px ${font?.fontFaceDeclaration || defaultFont.styleAttribute}`
   // Measure text width
@@ -86,6 +110,15 @@ const handleNode = (node, ctx, collector = {}) => {
   return data
 }
 
+// ////////////////////////////////////////////////////////////////////// Exports
+// -----------------------------------------------------------------------------
+/**
+ * Render the text element to the canvas
+ * @param {Canvas} canvas - The canvas to render the text to
+ * @param {Element} element - The element to render the text from
+ * @param {Object} config - The configuration object
+ * @returns {Canvas} The canvas with the text rendered
+ */
 export const useRenderTextElementToCanvas = (canvas, element, config) => {
   const ctx = canvas.getContext('2d')
   const lines = []
@@ -119,8 +152,9 @@ export const useRenderTextElementToCanvas = (canvas, element, config) => {
 
       if (el.br) { continue }
       
-      // Set text properties
-      ctx.font = 'normal 16px Source Sans Pro, sans-serif'
+      // Set a sensible dynamic default before final font assignment
+      const defaultFamily = el.font?.styleAttribute || 'sans-serif'
+      ctx.font = `normal ${el.fontSize || 16}px ${defaultFamily}`
       const bold = el.bold ? 'bold ' : ''
       const font = bold + `${el.italic ? 'italic' : 'normal'} ${el.fontSize}px ${el.font.styleAttribute}`
       ctx.font = font

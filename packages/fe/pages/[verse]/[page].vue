@@ -118,7 +118,17 @@ watch(data, async (val) => {
   if (val) {
     if (verse.value.data?.name) {
       // Set site data and fetch page data
-      await generalStore.setSiteData({ key: 'settings', value: SettingsData })
+      await generalStore.setSiteData({
+        key: 'settings',
+        value: Object.assign({}, SettingsData, {
+          fonts: useResolveVerseFonts(verse.value.data)
+        })
+      })
+      // Set CSS variable for body font-family to verse preference
+      if (process.client) {
+        const declaration = resolveVerseBodyFontDeclaration(verse.value.data)
+        document.documentElement.style.setProperty('--fa-body-font', declaration)
+      }
       await verseStore.getPage({ page: route.params.page })
       // Check local storage for auth token and try to authenticate if found
       const localStorageAuthToken = localStorage.getItem('fuitesAnarchiveAuthToken')
@@ -592,6 +602,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (document.body.classList.contains('no-scroll')) {
     document.body.classList.remove('no-scroll')
+  }
+  // Reset body font to global default when leaving verse page
+  if (typeof window !== 'undefined') {
+    document.documentElement.style.setProperty('--fa-body-font', getGlobalDefaultBodyFontDeclaration())
   }
   loadedIds.value = []
   window.removeEventListener('resize', resizeEventListener.value)

@@ -7,6 +7,32 @@ const Schema = Mongoose.Schema
 
 // ////////////////////////////////////////////////////////////////////// Schema
 // -----------------------------------------------------------------------------
+// ---------------------------------------------------------------- Verse FontRef
+const VerseFontSchema = new Schema({
+  class: {
+    type: String,
+    required: true
+  },
+  display: {
+    type: String,
+    required: true
+  },
+  styleAttribute: {
+    type: String,
+    required: true
+  },
+  fontFaceDeclaration: {
+    type: String,
+    required: true
+  },
+  default: {
+    type: Boolean,
+    required: false
+  }
+}, {
+  _id: false
+})
+
 const VerseSchema = new Schema({
   name: {
     type: String,
@@ -29,6 +55,19 @@ const VerseSchema = new Schema({
     required: false
   },
   settings: {
+    /**
+     * Optional list of font selections for this verse.
+     * Single allowed type: Array of COMPLETE font objects as found in
+     * `packages/fe/data/settings.json` -> fonts[]:
+     *   { class, display, styleAttribute, fontFaceDeclaration, default? }
+     * - `class` must match the defaults list.
+     * - If omitted or empty, frontend falls back to global defaults.
+     */
+    fonts: {
+      type: [VerseFontSchema],
+      required: false,
+      default: undefined
+    },
     tunneler: {
       portalChainLength: {
         type: Number,

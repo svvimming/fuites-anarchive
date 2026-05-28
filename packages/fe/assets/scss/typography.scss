@@ -103,6 +103,47 @@ $fontAssetPath: '@/assets/fonts';
   font-weight: 400;
 }
 
+// ------------------------------------------------------------------- Cormorant
+@font-face {
+  font-family: 'Cormorant';
+  src: url('#{$fontAssetPath}/Cormorant/Cormorant-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Cormorant';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/Cormorant/Cormorant-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+// ---------------------------------------------------------------- Crimson Text
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('#{$fontAssetPath}/CrimsonText/CrimsonText-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/CrimsonText/CrimsonText-Italic.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('#{$fontAssetPath}/CrimsonText/CrimsonText-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  font-style: italic;
+  src: url('#{$fontAssetPath}/CrimsonText/CrimsonText-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+}
+
 // -------------------------------------------------------------------- Families
 @mixin fontFamily_NanumMyeongjo { font-family: 'Nanum Myeongjo', serif; }
 @mixin fontFamily_Merriweather { font-family: 'Merriweather', serif; }
@@ -113,6 +154,8 @@ $fontAssetPath: '@/assets/fonts';
 @mixin fontFamily_SourceSansPro { font-family: 'Source Sans Pro', sans-serif; }
 @mixin fontFamily_SourceSerifPro { font-family: 'Source Serif Pro', serif; }
 @mixin fontFamily_FrauncesItalic { font-family: 'Fraunces Italic', serif; }
+@mixin fontFamily_Cormorant { font-family: 'Cormorant', serif; }
+@mixin fontFamily_CrimsonText { font-family: 'Crimson Text', serif; }
 
 // ---------------------------------------------------------------------- Sizing
 
@@ -143,6 +186,12 @@ $fontAssetPath: '@/assets/fonts';
 }
 .source-code {
   @include fontFamily_SourceCodePro;
+}
+.cormorant {
+  @include fontFamily_Cormorant;
+}
+.crimson-text {
+  @include fontFamily_CrimsonText;
 }
 
 .source-sans-pro {
