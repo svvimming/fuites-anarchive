@@ -22,7 +22,7 @@
     <div class="font-families">
       <DropdownSelector
         ref="dropdownRef"
-        default-option="Nanum"
+        :default-option="defaultFontDisplay"
         :display-selected="true"
         class="font-family-selector">
         <template #toggle-button="{ togglePanel, panelOpen, selected }">
@@ -94,6 +94,14 @@ const sizeMax = 500
 
 // ==================================================================== Computed
 const fonts = computed(() => siteData.value?.settings?.fonts || [])
+const defaultFontDisplay = computed(() => {
+  const list = fonts.value
+  if (Array.isArray(list) && list.length > 0) {
+    const preferred = list.find(f => f.default === true)
+    return preferred?.display || list[0]?.display || 'Source Sans Pro'
+  }
+  return 'Source Sans Pro'
+})
 
 // ===================================================================== Methods
 /**
