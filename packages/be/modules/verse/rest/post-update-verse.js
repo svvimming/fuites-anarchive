@@ -29,9 +29,27 @@ MC.app.post('/post-update-verse', async (req, res) => {
       return SendData(res, 400, 'No valid properties provided for update')
     }
 
-    // Update the verse document
+    // Build a $set update with dot-notation so we do NOT replace the entire settings object
+    const updateDoc = {}
+    const isPlainObject = (val) => val && typeof val === 'object' && !Array.isArray(val)
+    const flatten = (prefix, obj) => {
+      Object.keys(obj).forEach((key) => {
+        const value = obj[key]
+        const path = `${prefix}.${key}`
+        if (isPlainObject(value)) {
+          flatten(path, value)
+        } else {
+          updateDoc[path] = value
+        }
+      })
+    }
+    if (isPlainObject(verseUpdates.settings)) {
+      flatten('settings', verseUpdates.settings)
+    }
+
+    // Update the verse document (non-destructive partial update)
     const updated = await MC.model.Verse
-      .findByIdAndUpdate(verseId, verseUpdates, { new: true })
+      .findByIdAndUpdate(verseId, { $set: updateDoc }, { new: true })
       .populate({
         path: 'page_refs',
         select: 'name'
