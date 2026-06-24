@@ -27,8 +27,8 @@ const props = defineProps({
   }
 })
 // ======================================================================== Data
-const freqX = ref(0.01)
-const freqY = ref(0.01)
+const freqX = ref(0.005)
+const freqY = ref(0.005)
 // const inc = ref(0)
 // const requestId = ref(false)
 
