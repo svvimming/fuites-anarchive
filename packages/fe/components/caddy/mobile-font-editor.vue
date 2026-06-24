@@ -61,6 +61,11 @@
         @click="textEditor.chain().focus().toggleUnderline().run()">
         <IconMobileUnderline />
       </button>
+      <button
+        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
+        @click="toggleJustify">
+        <IconMobileJustify />
+      </button>
     </div>
     
   </div>
@@ -124,6 +129,18 @@ const getSelectionAttributes = () => {
   const match = fonts.value.find(item => item.fontFaceDeclaration === family || item.styleAttribute === family)
   if (dropdownRef.value && match) {
     dropdownRef.value.setSelected(match.display)
+  }
+}
+
+/**
+ * @method toggleJustify
+ */
+
+const toggleJustify = () => {
+  if (textEditor.value.isActive({ textAlign: 'justify' })) {
+    textEditor.value.chain().focus().unsetTextAlign().run()
+  } else {
+    textEditor.value.chain().focus().setTextAlign('justify').run()
   }
 }
 

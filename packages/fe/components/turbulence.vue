@@ -29,23 +29,23 @@ const props = defineProps({
 // ======================================================================== Data
 const freqX = ref(0.01)
 const freqY = ref(0.01)
-const inc = ref(0)
-const requestId = ref(false)
+// const inc = ref(0)
+// const requestId = ref(false)
 
 // ===================================================================== Methods
-const animate = () => {
-  freqX.value = Math.sin(Math.PI * 0.38 * inc.value) * 0.00025 + props.baseX
-  freqY.value = Math.sin(Math.PI * 0.35 * inc.value - 1) * 0.0003 + props.baseY
-  inc.value = inc.value + 0.01
-  requestId.value = requestAnimationFrame(animate)
-}
+// const animate = () => {
+//   freqX.value = Math.sin(Math.PI * 0.38 * inc.value) * 0.00025 + props.baseX
+//   freqY.value = Math.sin(Math.PI * 0.35 * inc.value - 1) * 0.0003 + props.baseY
+//   inc.value = inc.value + 0.01
+//   requestId.value = requestAnimationFrame(animate)
+// }
 
-// ======================================================================= Hooks
-onMounted(() => { animate() })
+// // ======================================================================= Hooks
+// onMounted(() => { animate() })
 
-onBeforeUnmount(() => {
-  if (requestId.value) { cancelAnimationFrame(requestId.value) }
-})
+// onBeforeUnmount(() => {
+//   if (requestId.value) { cancelAnimationFrame(requestId.value) }
+// })
 </script>
 
 <style lang="scss" scoped>

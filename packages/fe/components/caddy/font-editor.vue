@@ -17,6 +17,11 @@
         @click="textEditor.chain().focus().toggleUnderline().run()">
         <IconUnderline />
       </button>
+      <button
+        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
+        @click="toggleJustify">
+        <IconJustify />
+      </button>
     </div>
     <!-- ===================================================== Font Families -->
     <div class="font-families">
@@ -132,6 +137,18 @@ const setSelectionFontSize = string => {
 }
 
 /**
+ * @method toggleJustify
+ */
+
+const toggleJustify = () => {
+  if (textEditor.value.isActive({ textAlign: 'justify' })) {
+    textEditor.value.chain().focus().unsetTextAlign().run()
+  } else {
+    textEditor.value.chain().focus().setTextAlign('justify').run()
+  }
+}
+
+/**
  * @method getSelectionAttributes
  */
 
@@ -189,6 +206,12 @@ onMounted(() => {
       :deep(svg) {
         width: calc(var(--parent-radius) * 0.6);
         height: calc(var(--parent-radius) * 0.3);
+      }
+    }
+    &.toggle-justify {
+      :deep(svg) {
+        width: calc(var(--parent-radius) * 0.46);
+        height: calc(var(--parent-radius) * 0.46);
       }
     }
   }
