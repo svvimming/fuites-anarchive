@@ -2,26 +2,28 @@
   <div class="font-editor" :style="{ '--parent-radius': `${parentRadius}px` }">
     <!-- ======================================================= Font Styles -->
     <div class="font-styles">
-      <button
-        :class="['style-button', 'toggle-italic', { 'style-active': textEditor.isActive('em') }]"
-        @click="textEditor.chain().focus().toggleItalic().run()">
-        <IconItalic />
-      </button>
-      <button
-        :class="['style-button', 'toggle-bold', { 'style-active': textEditor.isActive('strong') }]"
-        @click="textEditor.chain().focus().toggleBold().run()">
-        <IconBold />
-      </button>
-      <button
-        :class="['style-button', 'toggle-underline']"
-        @click="textEditor.chain().focus().toggleUnderline().run()">
-        <IconUnderline />
-      </button>
-      <button
-        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
-        @click="toggleJustify">
-        <IconJustify />
-      </button>
+      <div :class="['style-button', 'toggle-italic', { 'style-active': textEditor.isActive('em') }]">
+        <button @click="textEditor.chain().focus().toggleItalic().run()">
+          <IconItalic />
+        </button>
+      </div>
+      <div class="toggle-bold-justify">
+        <div :class="['style-button', 'toggle-bold', { 'style-active': textEditor.isActive('strong') }]">
+          <button @click="textEditor.chain().focus().toggleBold().run()">
+            <IconBold />
+          </button>
+        </div>
+        <div :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]">
+          <button @click="toggleJustify">
+            <IconJustify :active="textEditor.isActive({ textAlign: 'justify' })" />
+          </button>
+        </div>
+      </div>
+      <div :class="['style-button', 'toggle-underline', { 'style-active': textEditor.isActive('underline') }]">
+        <button @click="textEditor.chain().focus().toggleUnderline().run()">
+          <IconUnderline />
+        </button>
+      </div>
     </div>
     <!-- ===================================================== Font Families -->
     <div class="font-families">
@@ -209,9 +211,10 @@ onMounted(() => {
       }
     }
     &.toggle-justify {
+      margin-top: calc(var(--parent-radius) * 0.05);
       :deep(svg) {
-        width: calc(var(--parent-radius) * 0.46);
-        height: calc(var(--parent-radius) * 0.46);
+        width: calc(var(--parent-radius) * 0.25);
+        height: calc(var(--parent-radius) * 0.25);
       }
     }
   }
@@ -245,6 +248,12 @@ onMounted(() => {
   justify-content: center;
 }
 
+.toggle-bold-justify {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .font-styles,
 .font-sizes {
   z-index: 1;
@@ -262,6 +271,9 @@ onMounted(() => {
   &:hover {
     transform: scale(1.05);
     filter: drop-shadow(0px 1px 2px rgba(#2C2E35, 0.5));
+  }
+  button {
+    display: flex;
   }
 }
 

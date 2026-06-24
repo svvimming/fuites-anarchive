@@ -47,6 +47,11 @@
         <IconMobileFontDecrease />
       </button>
       <button
+        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
+        @click="toggleJustify">
+        <IconMobileJustify :active="textEditor.isActive({ textAlign: 'justify' })" />
+      </button>
+      <button
         :class="['style-button', 'toggle-italic', { 'style-active': textEditor.isActive('em') }]"
         @click="textEditor.chain().focus().toggleItalic().run()">
         <IconMobileItalic />
@@ -60,11 +65,6 @@
         :class="['style-button', 'toggle-underline']"
         @click="textEditor.chain().focus().toggleUnderline().run()">
         <IconMobileUnderline />
-      </button>
-      <button
-        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
-        @click="toggleJustify">
-        <IconMobileJustify />
       </button>
     </div>
     
@@ -178,7 +178,7 @@ onMounted(() => {
   left: 50%;
   transform-origin: center top;
   transform: translateX(-50%) scale(1.124);
-  width: torem(344);
+  width: torem(405);
   height: torem(82);
 }
 

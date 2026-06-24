@@ -4,6 +4,15 @@
     <rect x="6" y="8.5" width="20" height="2.5" rx="1" fill="#6B7080"/>
     <rect x="6" y="13.5" width="20" height="2.5" rx="1" fill="#6B7080"/>
     <rect x="6" y="18.5" width="20" height="2.5" rx="1" fill="#6B7080"/>
-    <rect x="6" y="23.5" width="13" height="2.5" rx="1" fill="#6B7080"/>
+    <rect x="6" y="23.5" :width="active ? 20 : 13" height="2.5" rx="1" fill="#6B7080"/>
   </svg>
 </template>
+
+<script setup>
+defineProps({
+  active: {
+    type: Boolean,
+    default: false
+  }
+})
+</script>

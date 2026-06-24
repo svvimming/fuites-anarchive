@@ -5,7 +5,7 @@
       <rect x="14" y="11" width="28" height="2.5" rx="1" fill="#4F5465"/>
       <rect x="14" y="16" width="28" height="2.5" rx="1" fill="#4F5465"/>
       <rect x="14" y="21" width="28" height="2.5" rx="1" fill="#4F5465"/>
-      <rect x="14" y="26" width="18" height="2.5" rx="1" fill="#4F5465"/>
+      <rect x="14" y="26" :width="active ? 28 : 18" height="2.5" rx="1" fill="#4F5465"/>
     </g>
     <defs>
       <filter id="filter0_ddii_justify" x="0.594727" y="0" width="54.8103" height="36" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -39,3 +39,12 @@
     </defs>
   </svg>
 </template>
+
+<script setup>
+defineProps({
+  active: {
+    type: Boolean,
+    default: false
+  }
+})
+</script>

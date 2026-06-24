@@ -1,15 +1,15 @@
 <template>
-  <svg width="354" height="92" viewBox="0 0 354 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="415" height="92" viewBox="0 0 415 92" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g filter="url(#filter0_diiii_2654_1456)">
-<path d="M349 84C338.215 84 335.173 74.6667 335 70V84H349Z" fill="#6B7080"/>
+<path d="M410 84C399.215 84 396.173 74.6667 396 70V84H410Z" fill="#6B7080"/>
 <path d="M5 84C15.7852 84 18.8272 74.6667 19 70V84H5Z" fill="#6B7080"/>
-<path d="M19 62C19 46.536 31.536 34 47 34H307C322.464 34 335 46.536 335 62V84H19V62Z" fill="#6B7080"/>
-<path d="M290 34C279.215 34 276.173 24.6667 276 20V34H290Z" fill="#6B7080"/>
-<path d="M62 34C72.7852 34 75.8272 24.6667 76 20V34H62Z" fill="#6B7080"/>
-<path d="M76 16C76 8.26801 82.268 2 90 2H262C269.732 2 276 8.26801 276 16V34H76V16Z" fill="#6B7080"/>
+<path d="M19 62C19 46.536 31.536 34 47 34H368C383.464 34 396 46.536 396 62V84H19V62Z" fill="#6B7080"/>
+<path d="M320.5 34C309.715 34 306.673 24.6667 306.5 20V34H320.5Z" fill="#6B7080"/>
+<path d="M92.5 34C103.285 34 106.327 24.6667 106.5 20V34H92.5Z" fill="#6B7080"/>
+<path d="M106.5 16C106.5 8.26801 112.768 2 120.5 2H292.5C300.232 2 306.5 8.26801 306.5 16V34H106.5V16Z" fill="#6B7080"/>
 </g>
 <defs>
-<filter id="filter0_diiii_2654_1456" x="0" y="-1" width="354" height="93" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter0_diiii_2654_1456" x="0" y="-1" width="415" height="93" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
 <feOffset dy="3"/>
