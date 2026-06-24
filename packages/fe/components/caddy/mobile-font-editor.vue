@@ -47,6 +47,11 @@
         <IconMobileFontDecrease />
       </button>
       <button
+        :class="['style-button', 'toggle-justify', { 'style-active': textEditor.isActive({ textAlign: 'justify' }) }]"
+        @click="toggleJustify">
+        <IconMobileJustify :active="textEditor.isActive({ textAlign: 'justify' })" />
+      </button>
+      <button
         :class="['style-button', 'toggle-italic', { 'style-active': textEditor.isActive('em') }]"
         @click="textEditor.chain().focus().toggleItalic().run()">
         <IconMobileItalic />
@@ -128,6 +133,18 @@ const getSelectionAttributes = () => {
 }
 
 /**
+ * @method toggleJustify
+ */
+
+const toggleJustify = () => {
+  if (textEditor.value.isActive({ textAlign: 'justify' })) {
+    textEditor.value.chain().focus().unsetTextAlign().run()
+  } else {
+    textEditor.value.chain().focus().setTextAlign('justify').run()
+  }
+}
+
+/**
  * @method getSelectedLabelFamily
  */
 
@@ -161,7 +178,7 @@ onMounted(() => {
   left: 50%;
   transform-origin: center top;
   transform: translateX(-50%) scale(1.124);
-  width: torem(344);
+  width: torem(405);
   height: torem(82);
 }
 

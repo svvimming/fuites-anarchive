@@ -34,6 +34,7 @@ import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
 import FontSize from 'tiptap-extension-font-size'
 import { Color } from '@tiptap/extension-color'
+import TextAlign from '@tiptap/extension-text-align'
 
 // ======================================================================= Setup
 const props = defineProps({
@@ -194,7 +195,8 @@ onMounted(async () => {
       TextStyle,
       FontFamily,
       FontSize,
-      Color
+      Color,
+      TextAlign.configure({ types: ['paragraph'] })
     ],
     parseOptions: {
       preserveWhitespace: 'full'

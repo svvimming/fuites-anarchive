@@ -18,6 +18,7 @@ const getActiveFonts = () => {
   } catch {}
   return Array.isArray(SettingsData?.fonts) ? SettingsData.fonts : []
 }
+
 /**
  * Get the default font from the list of fonts
  * @param {Array} list - The list of fonts
@@ -121,68 +122,153 @@ const handleNode = (node, ctx, collector = {}) => {
  */
 export const useRenderTextElementToCanvas = (canvas, element, config) => {
   const ctx = canvas.getContext('2d')
-  const lines = []
+
+  /**
+   * Apply font settings from a token to the canvas context
+   */
+  const applyFont = (token) => {
+    const defaultFamily = token.font?.styleAttribute || 'sans-serif'
+    ctx.font = `normal ${token.fontSize || 16}px ${defaultFamily}`
+    const bold = token.bold ? 'bold ' : ''
+    ctx.font = `${bold}${token.italic ? 'italic' : 'normal'} ${token.fontSize}px ${token.font.styleAttribute}`
+  }
+
+  // --------------------------------------------------------- Parse paragraphs
+  // Each paragraph tracks its text-align and pre-broken visual lines.
+  const paragraphs = []
   const children = element.children
   const cLen = children.length
+
   for (let i = 0; i < cLen; i++) {
-    const elements = []
     const p = children[i]
+    const align = p.style?.textAlign || 'left'
+
+    // Parse all inline elements within this paragraph
+    const elements = []
     const pNodes = p.childNodes
     const pLen = pNodes.length
     for (let j = 0; j < pLen; j++) {
-      const pNode = pNodes[j]
-      const el = handleNode(pNode, ctx)
-      elements.push(...el)
+      elements.push(...handleNode(pNodes[j], ctx))
     }
-    lines.push(elements)
-  }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  let currentX = 0
-  let currentY = 0
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const len = line.length
-    const lineHeight = (line.reduce((max, el) => Math.max(max, el.height || 0), 0)) * 1.2
-    currentX = 0
-    currentY += lineHeight
-    for (let j = 0; j < len; j++) {
-      const el = line[j]
-
-      if (el.br) { continue }
-      
-      // Set a sensible dynamic default before final font assignment
-      const defaultFamily = el.font?.styleAttribute || 'sans-serif'
-      ctx.font = `normal ${el.fontSize || 16}px ${defaultFamily}`
-      const bold = el.bold ? 'bold ' : ''
-      const font = bold + `${el.italic ? 'italic' : 'normal'} ${el.fontSize}px ${el.font.styleAttribute}`
-      ctx.font = font
-      ctx.fillStyle = el.color
-      ctx.textBaseline = 'bottom'
-      
+    // Flatten elements into individual word tokens, measuring each word
+    const tokens = []
+    for (const el of elements) {
+      if (el.br) {
+        tokens.push({ br: true, height: el.height })
+        continue
+      }
+      applyFont(el)
+      const spaceWidth = ctx.measureText(' ').width
       const words = el.text.split(' ')
       for (let k = 0; k < words.length; k++) {
         const word = words[k]
+        if (word === '') { continue }
         const wordWidth = ctx.measureText(word).width
-        if (currentX + wordWidth > config.width) {
-          currentX = 0
-          currentY += lineHeight
-        }
-        ctx.fillText(word, currentX, currentY)
-        // Measure the width of the space after the word
-        const spaceWidth = ctx.measureText(' ').width
-        // Draw underline if it exists
-        if (el.underline) {
-          ctx.strokeStyle = el.color
-          ctx.lineWidth = el.fontSize / 16
+        tokens.push({ ...el, text: word, wordWidth, spaceWidth })
+      }
+    }
+
+    // Break tokens into visual lines via word-wrap, respecting config.width
+    const visualLines = []
+    let currentLineTokens = []
+    let currentLineWidth = 0
+    let lastWasBr = false
+
+    for (const token of tokens) {
+      if (token.br) {
+        visualLines.push({ words: currentLineTokens })
+        currentLineTokens = []
+        currentLineWidth = 0
+        lastWasBr = true
+        continue
+      }
+      lastWasBr = false
+
+      const neededWidth = currentLineWidth > 0
+        ? currentLineWidth + token.spaceWidth + token.wordWidth
+        : token.wordWidth
+
+      if (currentLineWidth > 0 && neededWidth > config.width) {
+        // Word doesn't fit — wrap to next line
+        visualLines.push({ words: currentLineTokens })
+        currentLineTokens = [token]
+        currentLineWidth = token.wordWidth
+      } else {
+        currentLineTokens.push(token)
+        currentLineWidth = neededWidth
+      }
+    }
+
+    // Flush remaining tokens, or an empty line if the last token was a <br>
+    if (!lastWasBr || currentLineTokens.length > 0) {
+      visualLines.push({ words: currentLineTokens })
+    }
+
+    paragraphs.push({ align, visualLines })
+  }
+
+  // ------------------------------------------------------------------ Render
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  let currentY = 0
+
+  for (const para of paragraphs) {
+    const { align, visualLines } = para
+    const vLen = visualLines.length
+
+    for (let vi = 0; vi < vLen; vi++) {
+      const words = visualLines[vi].words
+      // The last visual line of a paragraph is never justified (standard typography)
+      const isLastLine = vi === vLen - 1
+
+      const lineHeight = words.length > 0
+        ? words.reduce((max, t) => Math.max(max, t.height || 0), 0) * 1.2
+        : 16 * 1.2 // fallback height for blank lines
+
+      currentY += lineHeight
+
+      if (words.length === 0) { continue }
+
+      // Justify all but the last line; single-word lines are never justified
+      const shouldJustify = align === 'justify' && !isLastLine && words.length > 1
+
+      let extraSpacePerGap = 0
+      if (shouldJustify) {
+        const totalWordWidth = words.reduce((sum, t) => sum + t.wordWidth, 0)
+        extraSpacePerGap = (config.width - totalWordWidth) / (words.length - 1)
+      }
+
+      let currentX = 0
+      for (let wi = 0; wi < words.length; wi++) {
+        const token = words[wi]
+
+        // Set a sensible dynamic default before final font assignment
+        const defaultFamily = token.font?.styleAttribute || 'sans-serif'
+        ctx.font = `normal ${token.fontSize || 16}px ${defaultFamily}`
+        applyFont(token)
+        ctx.fillStyle = token.color
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(token.text, currentX, currentY)
+
+        const gapWidth = shouldJustify ? extraSpacePerGap : token.spaceWidth
+
+        if (token.underline) {
+          ctx.strokeStyle = token.color
+          ctx.lineWidth = token.fontSize / 16
           ctx.beginPath()
           ctx.moveTo(currentX, currentY)
-          ctx.lineTo(currentX + wordWidth + spaceWidth, currentY)
+          // Extend underline to cover the gap after the word (except for the last word)
+          const underlineWidth = wi < words.length - 1
+            ? token.wordWidth + gapWidth
+            : token.wordWidth
+          ctx.lineTo(currentX + underlineWidth, currentY)
           ctx.stroke()
         }
-        // Add to currentX the width of the word plus the width of the space after it
-        currentX += wordWidth + (k < words.length - 1 ? spaceWidth : 0)
+
+        if (wi < words.length - 1) {
+          currentX += token.wordWidth + gapWidth
+        }
       }
     }
   }
