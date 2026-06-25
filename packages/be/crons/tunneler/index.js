@@ -233,7 +233,9 @@ const updateVersePortals = async () => {
     const verses = await MC.model.Verse.find({})
     const len = verses.length
     for (let i = 0; i < len; i++) {
-      await updatePortalsBetweenPages(verses[i])
+      if (verses[i].settings.tunneler.portalChainLength > 0) {
+        await updatePortalsBetweenPages(verses[i])
+      }
     }
   } catch (e) {
     console.log('============================== [function: updateVersePortals]')

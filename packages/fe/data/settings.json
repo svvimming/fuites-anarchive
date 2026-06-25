@@ -379,7 +379,7 @@
               "label": "Portal chain length",
               "name": "portalChainLength",
               "description": "How far back in the history of a thingie's locations the tunneler will look to keep connections between pages. For example, if set to 5, the last 5 pages a thingie has been on will be connected in the order they were visited.",
-              "min": 1,
+              "min": 0,
               "max": 10,
               "step": 1,
               "default": 3,
