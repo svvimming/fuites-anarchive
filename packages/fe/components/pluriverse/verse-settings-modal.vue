@@ -66,7 +66,7 @@
           <div
             v-for="cron in cronSettings.available"
             :key="cron.name"
-            class="cron">
+            :class="['cron', cron.name]">
             <span class="cron-name">{{ cron.label }}</span>
             <span class="description">{{ cron.description }}</span>
             <div
@@ -81,7 +81,7 @@
                 v-if="verseSettings && typeof verseSettings[cron.name] === 'object'"
                 class="range-wrapper">
                 <input
-                  v-model="rangeValues[`${cron.name}-${setting.name}`]"
+                  v-model.number="rangeValues[`${cron.name}-${setting.name}`]"
                   type="range"
                   :min="setting.min"
                   :max="setting.max"
@@ -195,7 +195,7 @@ const submitGenerateInvite = async() => {
  */
 
 const updateRangeValues = (key, e) => {
-  rangeValues.value[key] = e.target.value
+  rangeValues.value[key] = Number(e.target.value)
 }
 
 /**
@@ -210,9 +210,9 @@ const initRangeValues = () => {
         const key = `${cron.name}-${setting.name}`
         const verseCron = verseSettings.value[cron.name]
         if (typeof verseCron === 'object' && verseCron.hasOwnProperty(setting.name)) {
-          rangeValues.value[key] = verseCron[setting.name]
+          rangeValues.value[key] = Number(verseCron[setting.name])
         } else {
-          rangeValues.value[key] = setting.default
+          rangeValues.value[key] = Number(setting.default)
         }
       })
     })
@@ -251,6 +251,9 @@ const getDisplayValue = (key, unit) => {
   const value = rangeValues.value[key]
   if (unit) {
     if (value <= 1) {
+      if (key === 'tunneler-portalChainLength') {
+        return value === 0 ? 'Off' : '1 page'
+      }
       return `${value} ${unit.slice(0, -1)}`
     } else {
       return `${value} ${unit}`
