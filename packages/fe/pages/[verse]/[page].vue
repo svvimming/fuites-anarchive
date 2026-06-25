@@ -145,6 +145,11 @@ watch(data, async (val) => {
   }
 }, { immediate: true })
 
+// position scene on page load
+watch(() => page.value.loading, loading => {
+  if (!loading) { initScenePosition() }
+})
+
 // position scene to center on editing thingie on mobile devices
 watch(editing, id => {
   if (small.value && id) {
@@ -480,6 +485,57 @@ const setCanvasDimensions = () => {
 }
 
 /**
+ * @method hasForcedScenePosition
+ * @desc Returns true when the page document has explicit forced scene coordinates
+ */
+
+const hasForcedScenePosition = () => {
+  const { forced_x: forcedX, forced_y: forcedY } = bounds.value
+  return forcedX != null && forcedY != null
+}
+
+/**
+ * @method getInitialScenePosition
+ * @desc Resolves the starting layer position from page bounds or forced coordinates
+ */
+
+const getInitialScenePosition = () => {
+  if (hasForcedScenePosition()) {
+    const { forced_x: forcedX, forced_y: forcedY } = bounds.value
+    const scale = sceneData.value.scale
+    return {
+      x: -forcedX + (canvasConfig.value.width * 0.5) / scale,
+      y: -forcedY + (canvasConfig.value.height * 0.5) / scale
+    }
+  }
+  return {
+    x: -0.5 * (bounds.value.x - canvasConfig.value.width),
+    y: -0.5 * (bounds.value.y - canvasConfig.value.height)
+  }
+}
+
+/**
+ * @method initScenePosition
+ * @desc Initializes scene position once page bounds are available
+ */
+
+const initScenePosition = () => {
+  if (!canvasConfig.value.width || page.value.loading || !page.value.data?.bounds) { return }
+
+  if (sceneData.value.initialized && !hasForcedScenePosition()) {
+    initLayer.value = { x: sceneData.value.x, y: sceneData.value.y }
+    return
+  }
+
+  const position = getInitialScenePosition()
+  initLayer.value = position
+  verseStore.updateSceneData(Object.assign({ initialized: true }, position))
+  nextTick(() => {
+    if (layerRef.value) { positionScene(position) }
+  })
+}
+
+/**
  * @method initController
  * @desc Initializes the arrow key controller for the given key
  */
@@ -522,15 +578,8 @@ onMounted(() => {
   // Set canvas dimensions based on current viewport dimensions
   setCanvasDimensions()
   // Initialize scene position and scale
-  if (sceneData.value.initialized) {
-    initLayer.value = { x: sceneData.value.x, y: sceneData.value.y }
-  } else {
-    initLayer.value = {
-      x: -0.5 * (bounds.value.x - canvasConfig.value.width),
-      y: -0.5 * (bounds.value.y - canvasConfig.value.height)
-    }
-    verseStore.updateSceneData(Object.assign({ initialized: true }, initLayer.value))
-  }
+  initScenePosition()
+  // Set canvas scale
   Object.assign(canvasConfig.value, { scaleX: sceneData.value.scale, scaleY: sceneData.value.scale })
   // Add event listeners
   resizeEventListener.value = useThrottleFn(() => {

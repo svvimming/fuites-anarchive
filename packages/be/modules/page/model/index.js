@@ -65,6 +65,14 @@ const PageSchema = new Schema({
       type: Number,
       required: true,
       default: 2000
+    },
+    forced_x: {
+      type: Number,
+      required: false
+    },
+    forced_y: {
+      type: Number,
+      required: false
     }
   },
   temperature: {
